@@ -31,6 +31,7 @@ interface DataTableProps<TData, TValue> {
   isRefreshing?: boolean;
   onBulkAction?: (action: string, contactIds: string[], payload?: any) => void;
   onAddSheet?: (sheetName: string) => void;
+  onDeleteSheet?: (sheetName: string) => void;
   onUpdateContact?: (id: string, data: Partial<Contact>) => void;
   uniqueSheets?: string[];
   activeTab?: string;
@@ -45,6 +46,7 @@ export function DataTable<TData, TValue>({
   isRefreshing,
   onBulkAction,
   onAddSheet,
+  onDeleteSheet,
   onUpdateContact,
   uniqueSheets = [],
   activeTab,
@@ -98,6 +100,7 @@ export function DataTable<TData, TValue>({
         isRefreshing={isRefreshing}
         onBulkAction={onBulkAction}
         onAddSheet={onAddSheet}
+        onDeleteSheet={onDeleteSheet}
         activeTab={activeTab}
         onTabChange={onTabChange}
       />

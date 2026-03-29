@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, ChevronDown, Zap, RefreshCw, Plus, Trash2, Palette } from "lucide-react";
+import { Search, ChevronDown, Zap, RefreshCw, Plus, Trash2, X } from "lucide-react";
 import { Contact } from "@shared/api";
 import {
   Dialog,
@@ -21,6 +21,16 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;
@@ -29,6 +39,7 @@ interface DataTableToolbarProps<TData> {
   isRefreshing?: boolean;
   onBulkAction?: (action: string, contactIds: string[], payload?: any) => void;
   onAddSheet?: (sheetName: string) => void;
+  onDeleteSheet?: (sheetName: string) => void;
   activeTab?: string;
   onTabChange?: (tab: string) => void;
 }
@@ -40,6 +51,7 @@ export function DataTableToolbar<TData>({
   isRefreshing,
   onBulkAction,
   onAddSheet,
+  onDeleteSheet,
   activeTab = "all",
   onTabChange,
 }: DataTableToolbarProps<TData>) {
@@ -48,6 +60,7 @@ export function DataTableToolbar<TData>({
   
   const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
   const [newSheetName, setNewSheetName] = useState("");
+  const [deleteSheetConfirm, setDeleteSheetConfirm] = useState<string | null>(null);
   
   // Extract unique sheets from data
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -92,8 +105,17 @@ export function DataTableToolbar<TData>({
             <TabsList className="flex flex-wrap h-auto p-1">
               <TabsTrigger value="all" className="text-xs">All Contacts</TabsTrigger>
               {(table.options.meta as any)?.uniqueSheets?.map((sheet: string) => (
-                <TabsTrigger key={sheet} value={sheet} className="text-xs">
+                <TabsTrigger key={sheet} value={sheet} className="text-xs group relative pr-1">
                   {sheet}
+                  {activeTab === sheet && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setDeleteSheetConfirm(sheet); }}
+                      className="ml-1.5 opacity-0 group-hover:opacity-100 transition-opacity rounded-sm hover:bg-destructive/20 p-0.5"
+                      title={`Delete sheet "${sheet}"`}
+                    >
+                      <X className="h-3 w-3 text-destructive" />
+                    </button>
+                  )}
                 </TabsTrigger>
               ))}
             </TabsList>
@@ -137,6 +159,33 @@ export function DataTableToolbar<TData>({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Sheet Confirmation */}
+      <AlertDialog open={!!deleteSheetConfirm} onOpenChange={(o) => !o && setDeleteSheetConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Sheet "{deleteSheetConfirm}"?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove the sheet tab. Contacts currently assigned to this sheet will become unassigned. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (deleteSheetConfirm && onDeleteSheet) {
+                  onDeleteSheet(deleteSheetConfirm);
+                  if (onTabChange) onTabChange("all");
+                }
+                setDeleteSheetConfirm(null);
+              }}
+            >
+              <Trash2 className="mr-2 h-4 w-4" /> Delete Sheet
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Bottom Row: AI Filter + Bulk Actions */}
       <div className="flex items-center justify-between">

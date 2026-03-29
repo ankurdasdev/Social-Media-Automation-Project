@@ -112,20 +112,34 @@ export default function Contacts() {
     onSuccess: () => {
       toast({ title: "Lead Added", description: `${newLead.name} has been added.` });
       setIsAddLeadOpen(false);
-      setNewLead({ 
-        name: "", 
-        castingName: "", 
-        whatsapp: "", 
-        email: "", 
-        instaHandle: "", 
-        actingContext: "", 
-        project: "", 
-        age: "",
+      setNewLead({
+      name: "",
+      castingName: "",
+      whatsapp: "",
+      email: "",
+      instaHandle: "",
+      actingContext: "",
+      project: "",
+      age: "",
         sheetName: ""
-      });
+    });
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
     },
   });
+
+  const handleDeleteSheet = (sheetName: string) => {
+    // Remove from localSheets
+    setLocalSheets(prev => prev.filter(s => s !== sheetName));
+    // Unassign all contacts that belong to this sheet
+    const contactsInSheet = (contactsData || []).filter(c => c.sheetName === sheetName);
+    contactsInSheet.forEach(c => {
+      fetch(`/api/contacts/${c.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sheetName: "" }),
+      }).then(() => queryClient.invalidateQueries({ queryKey: ["contacts"] }));
+    });
+  };
 
   const bulkMutation = useMutation({
     mutationFn: async ({ action, ids, payload }: { action: string, ids: string[], payload?: any }) => {
@@ -255,6 +269,7 @@ export default function Contacts() {
               activeTab={activeTab}
               onTabChange={setActiveTab}
               onAddSheet={(sheet) => setLocalSheets(prev => [...prev, sheet])}
+              onDeleteSheet={handleDeleteSheet}
             />
           )}
         </div>

@@ -24,6 +24,7 @@ const VARIABLES = [
   { label: "{{actingContext}}", description: "Acting context" },
   { label: "{{project}}", description: "Project name" },
   { label: "{{age}}", description: "Age range" },
+  { label: "{{salutation}}", description: "Salutation (Hi / Hey / Dear Sir/Mam)" },
 ];
 
 interface TemplateEditorProps {
@@ -62,18 +63,35 @@ export function TemplateEditor({
   }, [open, template]);
 
   // Insert variable at cursor position in textarea
-  const insertVariable = (variable: string) => {
+  const insertVariable = (variable: string, atIndex?: number) => {
     const ta = textareaRef.current;
     if (!ta) return;
-    const start = ta.selectionStart ?? content.length;
-    const end = ta.selectionEnd ?? content.length;
+    const start = atIndex !== undefined ? atIndex : (ta.selectionStart ?? content.length);
+    const end = atIndex !== undefined ? atIndex : (ta.selectionEnd ?? content.length);
     const newContent = content.slice(0, start) + variable + content.slice(end);
     setContent(newContent);
-    // Restore focus and move cursor after inserted variable
     setTimeout(() => {
       ta.focus();
       ta.setSelectionRange(start + variable.length, start + variable.length);
     }, 0);
+  };
+
+  // Drag handlers
+  const handleDragStart = (e: React.DragEvent, variable: string) => {
+    e.dataTransfer.setData("text/plain", variable);
+    e.dataTransfer.effectAllowed = "copy";
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLTextAreaElement>) => {
+    e.preventDefault();
+    const variable = e.dataTransfer.getData("text/plain");
+    if (!variable) return;
+    const ta = textareaRef.current;
+    if (!ta) return;
+    // Get caret position from drop coordinates
+    ta.focus();
+    const dropPos = (ta as any).selectionStart ?? content.length;
+    insertVariable(variable, dropPos);
   };
 
   const handleSave = async () => {
@@ -156,14 +174,16 @@ export function TemplateEditor({
                   key={v.label}
                   type="button"
                   onClick={() => insertVariable(v.label)}
+                  onDragStart={(e) => handleDragStart(e, v.label)}
+                  draggable
                   disabled={isAttachment}
-                  className="group"
-                  title={v.description}
+                  className="group cursor-grab active:cursor-grabbing"
+                  title={`${v.description} — click or drag into message`}
                 >
                   <Badge
                     variant="secondary"
-                    className="cursor-pointer font-mono text-xs group-hover:bg-primary group-hover:text-primary-foreground transition-colors disabled:opacity-40"
-                    style={{ opacity: isAttachment ? 0.4 : 1, cursor: isAttachment ? "not-allowed" : "pointer" }}
+                    className="font-mono text-xs group-hover:bg-primary group-hover:text-primary-foreground transition-colors select-none"
+                    style={{ opacity: isAttachment ? 0.4 : 1, cursor: isAttachment ? "not-allowed" : "grab" }}
                   >
                     {v.label}
                   </Badge>
@@ -179,11 +199,13 @@ export function TemplateEditor({
               ref={textareaRef}
               value={content}
               onChange={(e) => setContent(e.target.value)}
+              onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; }}
+              onDrop={handleDrop}
               disabled={isAttachment}
               placeholder={
                 isAttachment
                   ? "Not applicable — this template sends an attachment."
-                  : "Type your message here. Click variable chips above to insert dynamic fields..."
+                  : "Type your message here. Click or drag variable chips above to insert dynamic fields..."
               }
               className="min-h-[140px] resize-y font-mono text-sm"
             />
