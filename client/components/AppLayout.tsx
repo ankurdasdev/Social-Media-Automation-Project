@@ -9,7 +9,18 @@ import {
   Table,
   LogOut,
   User,
+  SlidersHorizontal,
+  Mail,
+  MessageSquare,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  Loader2,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { getOrCreateUserId } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { WhatsAppStatusResponse } from "@shared/api";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,11 +49,36 @@ const navItems = [
     href: "/analytics",
     icon: BarChart3,
   },
+  {
+    label: "Settings",
+    href: "/settings",
+    icon: SlidersHorizontal,
+  },
 ];
 
 export default function AppLayout({ children }: AppLayoutProps) {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const userId = getOrCreateUserId();
+
+  // ── Global Status Polling ──────────────────────────────────────────────────
+  const { data: googleStatus } = useQuery({
+    queryKey: ["google-status", userId],
+    queryFn: async () => {
+      const res = await fetch(`/api/auth/google/status?userId=${userId}`);
+      return res.json() as Promise<{ connected: boolean; needsReauth: boolean }>;
+    },
+    refetchInterval: 60000, 
+  });
+
+  const { data: waStatus } = useQuery({
+    queryKey: ["whatsapp-status", userId],
+    queryFn: async () => {
+      const res = await fetch("/api/whatsapp/status");
+      return res.json() as Promise<WhatsAppStatusResponse>;
+    },
+    refetchInterval: 30000,
+  });
 
   const handleLogout = () => {
     localStorage.removeItem("auth_token");
@@ -99,6 +135,42 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
             {/* Right Actions */}
             <div className="flex items-center gap-4">
+              {/* Global Status Badges */}
+              <div className="hidden sm:flex items-center gap-2 mr-2">
+                {/* Google Status */}
+                {googleStatus?.connected ? (
+                  googleStatus.needsReauth ? (
+                    <Badge variant="outline" className="h-6 border-yellow-500/50 text-yellow-500 bg-yellow-500/5 gap-1 px-2">
+                      <AlertTriangle className="h-3 w-3" />
+                      <span className="text-[10px] font-bold uppercase">Drive</span>
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="h-6 border-blue-500/50 text-blue-500 bg-blue-500/5 gap-1 px-2">
+                      <CheckCircle2 className="h-3 w-3" />
+                      <span className="text-[10px] font-bold uppercase">Drive</span>
+                    </Badge>
+                  )
+                ) : (
+                  <Badge variant="outline" className="h-6 border-zinc-800 text-zinc-500 bg-zinc-900 gap-1 px-2">
+                    <XCircle className="h-3 w-3" />
+                    <span className="text-[10px] font-bold uppercase">Drive</span>
+                  </Badge>
+                )}
+
+                {/* WhatsApp Status */}
+                {waStatus?.isConnected ? (
+                  <Badge variant="outline" className="h-6 border-emerald-500/50 text-emerald-500 bg-emerald-500/5 gap-1 px-2">
+                    <CheckCircle2 className="h-3 w-3" />
+                    <span className="text-[10px] font-bold uppercase">WA</span>
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="h-6 border-zinc-800 text-zinc-500 bg-zinc-900 gap-1 px-2">
+                    <XCircle className="h-3 w-3" />
+                    <span className="text-[10px] font-bold uppercase">WA</span>
+                  </Badge>
+                )}
+              </div>
+
               {/* User Menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

@@ -17,6 +17,7 @@ import Dashboard from "./pages/Dashboard";
 import Controller from "./pages/Controller";
 import Contacts from "./pages/Contacts";
 import Analytics from "./pages/Analytics";
+import Settings from "./pages/Settings";
 
 import NotFound from "./pages/NotFound";
 
@@ -74,6 +75,10 @@ const App = () => (
           <Route
             path="/analytics"
             element={<ProtectedRoute element={<Analytics />} />}
+          />
+          <Route
+            path="/settings"
+            element={<ProtectedRoute element={<Settings />} />}
           />
 
           {/* Default Routes */}
