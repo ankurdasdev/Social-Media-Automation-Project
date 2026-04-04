@@ -23,7 +23,34 @@ import {
   handleUpdateTemplate,
   handleDeleteTemplate,
 } from "./routes/templates";
+import {
+  handleGoogleAuth,
+  handleGoogleCallback,
+  handleGoogleStatus,
+  handleGoogleDisconnect,
+  handleSetDriveFolder,
+} from "./routes/google-auth";
+import {
+  handleSearchDriveFiles,
+  handleListDriveFolders,
+} from "./routes/drive";
+import {
+  handleWhatsAppStatus,
+  handleWhatsAppConnect,
+  handleWhatsAppQR,
+  handleWhatsAppDisconnect,
+} from "./routes/whatsapp-auth";
+import {
+  handleInstagramStatus,
+  handleInstagramConnect,
+  handleInstagramDisconnect,
+} from "./routes/instagram-auth";
+import { handleSendOutreach } from "./routes/outreach";
 import { runIngestionJob } from "./jobs/ingestion-job";
+import { initDb } from "./db/index";
+
+// Initialize database on startup
+initDb().catch(console.error);
 
 export function createServer() {
   const app = express();
@@ -37,6 +64,15 @@ export function createServer() {
   app.get("/api/ping", (_req, res) => {
     const ping = process.env.PING_MESSAGE ?? "ping";
     res.json({ message: ping });
+  });
+
+  app.get("/api/system/init-db", async (_req, res) => {
+    try {
+      await initDb();
+      res.json({ message: "Database initialized successfully" });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
   });
 
   app.get("/api/demo", handleDemo);
@@ -62,6 +98,29 @@ export function createServer() {
   app.post("/api/templates", handleCreateTemplate);
   app.put("/api/templates/:id", handleUpdateTemplate);
   app.delete("/api/templates/:id", handleDeleteTemplate);
+
+  // ── Google OAuth + Drive ───────────────────────────────────────────────────────
+  app.get("/api/auth/google", handleGoogleAuth);
+  app.get("/api/auth/google/callback", handleGoogleCallback);
+  app.get("/api/auth/google/status", handleGoogleStatus);
+  app.delete("/api/auth/google", handleGoogleDisconnect);
+  app.put("/api/auth/google/folder", handleSetDriveFolder);
+  app.get("/api/drive/files", handleSearchDriveFiles);
+  app.get("/api/drive/folders", handleListDriveFolders);
+
+  // ── WhatsApp Auth ──────────────────────────────────────────────────────────
+  app.get("/api/whatsapp/status", handleWhatsAppStatus);
+  app.post("/api/whatsapp/connect", handleWhatsAppConnect);
+  app.get("/api/whatsapp/qr", handleWhatsAppQR);
+  app.delete("/api/whatsapp/disconnect", handleWhatsAppDisconnect);
+
+  // ── Instagram Auth ─────────────────────────────────────────────────────────
+  app.get("/api/instagram/status", handleInstagramStatus);
+  app.post("/api/instagram/connect", handleInstagramConnect);
+  app.delete("/api/instagram/disconnect", handleInstagramDisconnect);
+ 
+  // ── Outreach ───────────────────────────────────────────────────────────────
+  app.post("/api/outreach/send", handleSendOutreach);
 
   // ── Daily Cron Scheduler ───────────────────────────────────────────────────
   // Runs every day at midnight IST (18:30 UTC)

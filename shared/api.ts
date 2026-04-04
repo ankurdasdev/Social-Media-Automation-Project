@@ -11,6 +11,17 @@ export interface DemoResponse {
   message: string;
 }
 
+// ─── Google Drive ─────────────────────────────────────────────────────────────
+
+export interface DriveFile {
+  id: string;
+  name: string;
+  mimeType: string;
+  size?: string;
+  webViewLink?: string;
+  downloadUrl: string;
+}
+
 // ─── Source Group Management ─────────────────────────────────────────────────
 
 export type Platform = "whatsapp" | "instagram";
@@ -60,6 +71,7 @@ export interface ErrorResponse {
 
 export interface Contact {
   id: string;
+  user_id: string;
   automationTrigger: boolean;
   whatsappNeeded: string;
   emailNeeded: string;
@@ -114,6 +126,15 @@ export interface Contact {
   source?: "manual" | "auto-whatsapp" | "auto-instagram";
   ingestedAt?: string;
   sheetName?: string;
+
+  // Multi-User / Drive Attachments (JSONB in DB)
+  drive_attachments_wa?: DriveFile[];
+  drive_attachments_email?: DriveFile[];
+  drive_attachments_ig?: DriveFile[];
+
+  // Outreach Tracking
+  contacted_dates?: string[];
+  contact_links?: Record<string, string>;
 }
 
 export interface ContactsResponse {
@@ -152,6 +173,7 @@ export type TemplateCategory = "whatsapp" | "email" | "instagram";
 
 export interface Template {
   id: string;
+  user_id: string;
   name: string;
   category: TemplateCategory;
   content: string;
@@ -185,4 +207,54 @@ export interface TemplatesResponse {
 
 export interface TemplateResponse {
   template: Template;
+}
+
+// ─── WhatsApp Auth (Evolution API) ──────────────────────────────────────────
+
+export type WhatsAppStatus = "open" | "connecting" | "disconnected" | "pairing" | "close";
+
+export interface WhatsAppInstanceStatus {
+  instanceName: string;
+  status: WhatsAppStatus;
+  isPaused: boolean;
+  webhookUrl?: string;
+}
+
+export interface WhatsAppQRResponse {
+  qrcode: {
+    base64: string;
+    code: string;
+    count: number;
+  };
+}
+
+export interface WhatsAppStatusResponse {
+  instance: WhatsAppInstanceStatus | null;
+  isConnected: boolean;
+}
+
+// ─── Instagram Auth (instagrapi-rest) ───────────────────────────────────────
+
+export interface InstagramStatusResponse {
+  isConnected: boolean;
+  username: string | null;
+  connectedAt: string | null;
+}
+
+export interface InstagramLoginRequest {
+  username: string;
+  password?: string;
+  verificationCode?: string;
+  proxy?: string;
+}
+
+export interface InstagramLoginResponse {
+  success: boolean;
+  message?: string;
+  twoFactorRequired?: boolean;
+  twoFactorInfo?: {
+    two_factor_identifier: string;
+    obfuscated_phone_number?: string;
+    method?: string;
+  };
 }

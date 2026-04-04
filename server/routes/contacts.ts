@@ -21,8 +21,14 @@ import type { ContactsResponse, ContactResponse, ErrorResponse, IngestionStatusR
 
 // ─── GET /api/contacts ────────────────────────────────────────────────────────
 
-export const handleGetContacts: RequestHandler = (req, res) => {
-  let contacts = getAllContacts();
+export const handleGetContacts: RequestHandler = async (req, res) => {
+  const userId = (req.query.userId as string) || process.env.DEFAULT_USER_ID;
+  if (!userId) {
+    res.status(400).json({ error: "userId is required. Please set DEFAULT_USER_ID in .env or pass it as a query param." });
+    return;
+  }
+
+  let contacts = await getAllContacts(userId);
 
   const { search, status, project, source } = req.query as Record<string, string>;
 
@@ -56,27 +62,38 @@ export const handleGetContacts: RequestHandler = (req, res) => {
 
 // ─── POST /api/contacts ───────────────────────────────────────────────────────
 
-export const handleCreateContact: RequestHandler = (req, res) => {
-  const { name, email } = req.body;
+export const handleCreateContact: RequestHandler = async (req, res) => {
+  const userId = req.body.userId || process.env.DEFAULT_USER_ID; 
+  const { name } = req.body;
+  
+  if (!userId) {
+    res.status(400).json({ error: "userId is required. Please set DEFAULT_USER_ID in .env or pass it in the body." });
+    return;
+  }
   if (!name) {
-    const response: ErrorResponse = { error: "name is required" };
-    res.status(400).json(response);
+    res.status(400).json({ error: "name is required" });
     return;
   }
 
-  const contact = createContact(req.body);
+  const contact = await createContact(userId, req.body);
   const response: ContactResponse = { contact };
   res.status(201).json(response);
 };
 
 // ─── PUT /api/contacts/:id ────────────────────────────────────────────────────
 
-export const handleUpdateContact: RequestHandler = (req, res) => {
+export const handleUpdateContact: RequestHandler = async (req, res) => {
+  const userId = req.body.userId || req.query.userId || process.env.DEFAULT_USER_ID;
   const { id } = req.params;
-  const updated = updateContact(id, req.body);
+
+  if (!userId) {
+    res.status(400).json({ error: "userId is required. Please set DEFAULT_USER_ID or pass it." });
+    return;
+  }
+
+  const updated = await updateContact(userId, id, req.body);
   if (!updated) {
-    const response: ErrorResponse = { error: "Contact not found" };
-    res.status(404).json(response);
+    res.status(404).json({ error: "Contact not found" });
     return;
   }
   const response: ContactResponse = { contact: updated };
@@ -85,12 +102,18 @@ export const handleUpdateContact: RequestHandler = (req, res) => {
 
 // ─── DELETE /api/contacts/:id ─────────────────────────────────────────────────
 
-export const handleDeleteContact: RequestHandler = (req, res) => {
+export const handleDeleteContact: RequestHandler = async (req, res) => {
+  const userId = (req.query.userId as string) || (req.body.userId as string) || process.env.DEFAULT_USER_ID;
   const { id } = req.params;
-  const deleted = deleteContact(id);
+
+  if (!userId) {
+    res.status(400).json({ error: "userId is required. Please set DEFAULT_USER_ID or pass it." });
+    return;
+  }
+
+  const deleted = await deleteContact(userId, id);
   if (!deleted) {
-    const response: ErrorResponse = { error: "Contact not found" };
-    res.status(404).json(response);
+    res.status(404).json({ error: "Contact not found" });
     return;
   }
   res.status(204).send();
@@ -98,17 +121,16 @@ export const handleDeleteContact: RequestHandler = (req, res) => {
 
 // ─── POST /api/ingestion/trigger ──────────────────────────────────────────────
 
-export const handleTriggerIngestion: RequestHandler = async (_req, res) => {
+export const handleTriggerIngestion: RequestHandler = async (req, res) => {
+  // Global trigger for now, though it will process all users
   const { isRunning } = getIngestionState();
   if (isRunning) {
     res.status(409).json({ error: "Ingestion job is already running" });
     return;
   }
 
-  // Fire and forget — respond immediately, job runs in background
   res.json({ message: "Ingestion job started", startedAt: new Date().toISOString() });
 
-  // Run in background (don't await — response is already sent)
   runIngestionJob().catch((err) =>
     console.error("[ingestion] Background run error:", err)
   );
@@ -119,7 +141,6 @@ export const handleTriggerIngestion: RequestHandler = async (_req, res) => {
 export const handleIngestionStatus: RequestHandler = (_req, res) => {
   const { isRunning, lastRun } = getIngestionState();
 
-  // Next midnight IST = 18:30 UTC today or tomorrow
   const now = new Date();
   const nextRun = new Date();
   nextRun.setUTCHours(18, 30, 0, 0); // midnight IST

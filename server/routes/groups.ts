@@ -1,5 +1,6 @@
 import { RequestHandler } from "express";
 import { z } from "zod";
+import { query, queryOne } from "../db/index";
 import type {
   SourceGroup,
   GroupsResponse,
@@ -7,89 +8,26 @@ import type {
   ErrorResponse,
 } from "@shared/api";
 
-// ─── In-Memory Store ─────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const _groups: SourceGroup[] = [
-  {
-    id: "seed-wa-1",
-    name: "Casting Calls - Mumbai",
-    platform: "whatsapp",
-    type: "group",
-    url: "",
-    description: "Main casting call group for Mumbai-based auditions",
-    enabled: true,
-    createdAt: "2024-01-15T10:00:00Z",
-    updatedAt: "2024-01-15T10:00:00Z",
-  },
-  {
-    id: "seed-wa-2",
-    name: "Actor Network India",
-    platform: "whatsapp",
-    type: "group",
-    url: "",
-    description: "Pan-India actor networking group",
-    enabled: true,
-    createdAt: "2024-01-10T10:00:00Z",
-    updatedAt: "2024-01-10T10:00:00Z",
-  },
-  {
-    id: "seed-wa-3",
-    name: "Bollywood Extras Club",
-    platform: "whatsapp",
-    type: "group",
-    url: "",
-    description: "Group for extra/junior artist casting calls",
-    enabled: false,
-    createdAt: "2024-02-01T10:00:00Z",
-    updatedAt: "2024-02-01T10:00:00Z",
-  },
-  {
-    id: "seed-ig-1",
-    name: "casting_calls_india",
-    platform: "instagram",
-    type: "account",
-    url: "https://instagram.com/casting_calls_india",
-    description: "Popular IG page posting daily casting calls",
-    enabled: true,
-    createdAt: "2024-01-16T10:00:00Z",
-    updatedAt: "2024-01-16T10:00:00Z",
-  },
-  {
-    id: "seed-ig-2",
-    name: "bollywood_auditions",
-    platform: "instagram",
-    type: "account",
-    url: "https://instagram.com/bollywood_auditions",
-    description: "Bollywood audition announcements",
-    enabled: false,
-    createdAt: "2024-01-12T10:00:00Z",
-    updatedAt: "2024-01-12T10:00:00Z",
-  },
-  {
-    id: "seed-ig-3",
-    name: "#castingcallmumbai",
-    platform: "instagram",
-    type: "hashtag",
-    url: "https://instagram.com/explore/tags/castingcallmumbai",
-    description: "Hashtag for Mumbai casting calls",
-    enabled: true,
-    createdAt: "2024-02-05T10:00:00Z",
-    updatedAt: "2024-02-05T10:00:00Z",
-  },
-];
-
-let nextId = 100;
-
-/** Read-only accessor for the ingestion job and other services */
-export function getGroupsList(): SourceGroup[] {
-  return _groups;
+function mapRowToGroup(row: any): SourceGroup {
+  return {
+    id: row.id,
+    name: row.name,
+    platform: row.platform,
+    type: row.type,
+    url: row.url || "",
+    description: row.description || "",
+    enabled: row.enabled,
+    createdAt: row.created_at?.toISOString(),
+    updatedAt: row.updated_at?.toISOString(),
+  };
 }
-
-// rename the raw array so names don't clash
 
 // ─── Validation Schemas ──────────────────────────────────────────────────────
 
 const createGroupSchema = z.object({
+  userId: z.string().uuid("Invalid User ID"),
   name: z.string().min(1, "Name is required").max(200),
   platform: z.enum(["whatsapp", "instagram"]),
   type: z.enum(["group", "account", "hashtag", "channel"]),
@@ -98,6 +36,7 @@ const createGroupSchema = z.object({
 });
 
 const updateGroupSchema = z.object({
+  userId: z.string().uuid("Invalid User ID"),
   name: z.string().min(1).max(200).optional(),
   type: z.enum(["group", "account", "hashtag", "channel"]).optional(),
   url: z.string().max(500).optional(),
@@ -109,111 +48,114 @@ const updateGroupSchema = z.object({
 
 /**
  * GET /api/groups
- * Query params: platform (optional), search (optional)
  */
-export const handleGetGroups: RequestHandler = (req, res) => {
-  let result = [..._groups];
+export const handleGetGroups: RequestHandler = async (req, res) => {
+  const userId = req.query.userId as string;
+  if (!userId) {
+    res.status(400).json({ error: "userId is required" });
+    return;
+  }
+
+  let sql = "SELECT * FROM source_groups WHERE user_id = $1";
+  const params: any[] = [userId];
 
   const platform = req.query.platform as string | undefined;
   if (platform && (platform === "whatsapp" || platform === "instagram")) {
-    result = result.filter((g) => g.platform === platform);
+    sql += " AND platform = $2";
+    params.push(platform);
   }
 
   const search = req.query.search as string | undefined;
   if (search) {
-    const q = search.toLowerCase();
-    result = result.filter(
-      (g) =>
-        g.name.toLowerCase().includes(q) ||
-        (g.description && g.description.toLowerCase().includes(q))
-    );
+    sql += ` AND (LOWER(name) LIKE LOWER($${params.length + 1}) OR LOWER(description) LIKE LOWER($${params.length + 1}))`;
+    params.push(`%${search}%`);
   }
 
-  const response: GroupsResponse = { groups: result };
-  res.json(response);
+  sql += " ORDER BY created_at DESC";
+
+  try {
+    const rows = await query(sql, params);
+    const groups = rows.map(mapRowToGroup);
+    res.json({ groups });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch groups" });
+  }
 };
 
 /**
  * POST /api/groups
  */
-export const handleCreateGroup: RequestHandler = (req, res) => {
+export const handleCreateGroup: RequestHandler = async (req, res) => {
   const parsed = createGroupSchema.safeParse(req.body);
 
   if (!parsed.success) {
-    const response: ErrorResponse = {
-      error: parsed.error.errors.map((e) => e.message).join(", "),
-    };
-    res.status(400).json(response);
+    res.status(400).json({ error: parsed.error.errors.map((e) => e.message).join(", ") });
     return;
   }
 
-  const now = new Date().toISOString();
-  const newGroup: SourceGroup = {
-    id: `grp-${nextId++}`,
-    name: parsed.data.name,
-    platform: parsed.data.platform,
-    type: parsed.data.type,
-    url: parsed.data.url || "",
-    description: parsed.data.description || "",
-    enabled: true,
-    createdAt: now,
-    updatedAt: now,
-  };
+  const { userId, name, platform, type, url, description } = parsed.data;
 
-  _groups.push(newGroup);
-
-  const response: GroupResponse = { group: newGroup };
-  res.status(201).json(response);
+  try {
+    const row = await queryOne(
+      `INSERT INTO source_groups (user_id, name, platform, type, url, description) 
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [userId, name, platform, type, url, description]
+    );
+    res.status(201).json({ group: mapRowToGroup(row) });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to create group" });
+  }
 };
 
 /**
  * PUT /api/groups/:id
  */
-export const handleUpdateGroup: RequestHandler = (req, res) => {
+export const handleUpdateGroup: RequestHandler = async (req, res) => {
   const { id } = req.params;
-  const index = _groups.findIndex((g) => g.id === id);
-
-  if (index === -1) {
-    const response: ErrorResponse = { error: "Group not found" };
-    res.status(404).json(response);
-    return;
-  }
-
   const parsed = updateGroupSchema.safeParse(req.body);
 
   if (!parsed.success) {
-    const response: ErrorResponse = {
-      error: parsed.error.errors.map((e) => e.message).join(", "),
-    };
-    res.status(400).json(response);
+    res.status(400).json({ error: parsed.error.errors.map((e) => e.message).join(", ") });
     return;
   }
 
-  const updated: SourceGroup = {
-    ..._groups[index],
-    ...parsed.data,
-    updatedAt: new Date().toISOString(),
-  };
+  const { userId, ...data } = parsed.data;
+  const fields = Object.keys(data);
+  if (fields.length === 0) {
+    const row = await queryOne("SELECT * FROM source_groups WHERE user_id = $1 AND id = $2", [userId, id]);
+    if (!row) return res.status(404).json({ error: "Group not found" });
+    return res.json({ group: mapRowToGroup(row) });
+  }
 
-  _groups[index] = updated;
+  const setClause = fields.map((f, i) => `${f} = $${i + 3}`).join(", ");
+  const sql = `UPDATE source_groups SET ${setClause}, updated_at = NOW() WHERE user_id = $1 AND id = $2 RETURNING *`;
+  const values = [userId, id, ...fields.map((f) => (data as any)[f])];
 
-  const response: GroupResponse = { group: updated };
-  res.json(response);
+  try {
+    const row = await queryOne(sql, values);
+    if (!row) return res.status(404).json({ error: "Group not found" });
+    res.json({ group: mapRowToGroup(row) });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to update group" });
+  }
 };
 
 /**
  * DELETE /api/groups/:id
  */
-export const handleDeleteGroup: RequestHandler = (req, res) => {
+export const handleDeleteGroup: RequestHandler = async (req, res) => {
   const { id } = req.params;
-  const index = _groups.findIndex((g) => g.id === id);
+  const userId = req.query.userId as string;
 
-  if (index === -1) {
-    const response: ErrorResponse = { error: "Group not found" };
-    res.status(404).json(response);
+  if (!userId) {
+    res.status(400).json({ error: "userId is required" });
     return;
   }
 
-  _groups.splice(index, 1);
-  res.status(204).send();
+  try {
+    const result = await query("DELETE FROM source_groups WHERE user_id = $1 AND id = $2", [userId, id]);
+    res.status(204).send();
+  } catch (err) {
+    res.status(500).json({ error: "Failed to delete group" });
+  }
 };

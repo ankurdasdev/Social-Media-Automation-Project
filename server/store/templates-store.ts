@@ -1,94 +1,76 @@
-/**
- * Templates In-Memory Store
- * CRUD for WhatsApp, Email, and Instagram outreach templates.
- */
-
+import { query, queryOne } from "../db/index";
 import type { Template, CreateTemplateRequest, UpdateTemplateRequest } from "@shared/api";
 
-function uid(): string {
-  return `tpl-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-}
-
-const now = new Date().toISOString();
-
-const templates: Template[] = [
-  {
-    id: "tpl-wa-1",
-    name: "WA Intro Pitch",
-    category: "whatsapp",
-    content: "Hi {{name}}, we're casting for {{project}} and believe your profile as {{actingContext}} is a great fit. Are you available for a quick call?",
-    isAttachment: false,
-    createdAt: now,
-    updatedAt: now,
-  },
-  {
-    id: "tpl-wa-2",
-    name: "WA Follow Up",
-    category: "whatsapp",
-    content: "Hey {{name}}, just following up on our casting outreach for {{project}}. Would love to discuss the {{castingName}} role with you!",
-    isAttachment: false,
-    createdAt: now,
-    updatedAt: now,
-  },
-  {
-    id: "tpl-email-1",
-    name: "Email Formal Pitch",
-    category: "email",
-    content: "Dear {{name}},\n\nWe are currently casting for {{project}} and are interested in you for the role of {{castingName}}.\n\nYour profile matches what we are looking for ({{actingContext}}, age {{age}}). We would love to schedule a meeting.\n\nBest regards,\nThe Casting Team",
-    isAttachment: false,
-    createdAt: now,
-    updatedAt: now,
-  },
-  {
-    id: "tpl-ig-1",
-    name: "IG DM Intro",
-    category: "instagram",
-    content: "Hey {{name}}! We came across your profile and think you'd be perfect for {{castingName}} in {{project}}. Interested in learning more? 🎬",
-    isAttachment: false,
-    createdAt: now,
-    updatedAt: now,
-  },
-];
-
-export function getAllTemplates(category?: string): Template[] {
-  if (category) return templates.filter((t) => t.category === category);
-  return [...templates];
-}
-
-export function getTemplateById(id: string): Template | undefined {
-  return templates.find((t) => t.id === id);
-}
-
-export function createTemplate(data: CreateTemplateRequest): Template {
-  const t: Template = {
-    id: uid(),
-    name: data.name,
-    category: data.category,
-    content: data.content ?? "",
-    isAttachment: data.isAttachment ?? false,
-    attachmentUrl: data.attachmentUrl,
-    attachmentDetailText: data.attachmentDetailText,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+function mapRowToTemplate(row: any): Template {
+  return {
+    id: row.id,
+    user_id: row.user_id,
+    name: row.name,
+    category: row.category,
+    content: row.content || "",
+    isAttachment: row.is_attachment || false,
+    attachmentUrl: row.attachment_url,
+    attachmentDetailText: row.attachment_detail_text,
+    createdAt: row.created_at?.toISOString(),
+    updatedAt: row.updated_at?.toISOString(),
   };
-  templates.push(t);
-  return t;
 }
 
-export function updateTemplate(id: string, data: UpdateTemplateRequest): Template | null {
-  const idx = templates.findIndex((t) => t.id === id);
-  if (idx === -1) return null;
-  templates[idx] = {
-    ...templates[idx],
-    ...data,
-    updatedAt: new Date().toISOString(),
-  };
-  return templates[idx];
+export async function getAllTemplates(userId: string, category?: string): Promise<Template[]> {
+  let sql = "SELECT * FROM templates WHERE user_id = $1";
+  const params: any[] = [userId];
+
+  if (category) {
+    sql += " AND category = $2";
+    params.push(category);
+  }
+
+  sql += " ORDER BY created_at DESC";
+  const rows = await query(sql, params);
+  return rows.map(mapRowToTemplate);
 }
 
-export function deleteTemplate(id: string): boolean {
-  const idx = templates.findIndex((t) => t.id === id);
-  if (idx === -1) return false;
-  templates.splice(idx, 1);
+export async function getTemplateById(userId: string, id: string): Promise<Template | null> {
+  const row = await queryOne("SELECT * FROM templates WHERE user_id = $1 AND id = $2", [userId, id]);
+  return row ? mapRowToTemplate(row) : null;
+}
+
+export async function createTemplate(userId: string, data: CreateTemplateRequest): Promise<Template> {
+  const sql = `
+    INSERT INTO templates (user_id, name, category, content, is_attachment, attachment_url, attachment_detail_text)
+    VALUES ($1, $2, $3, $4, $5, $6, $7)
+    RETURNING *
+  `;
+  const values = [
+    userId,
+    data.name,
+    data.category,
+    data.content || "",
+    data.isAttachment || false,
+    data.attachmentUrl,
+    data.attachmentDetailText
+  ];
+  const row = await queryOne(sql, values);
+  return mapRowToTemplate(row);
+}
+
+export async function updateTemplate(userId: string, id: string, data: UpdateTemplateRequest): Promise<Template | null> {
+  const fields = Object.keys(data).filter(f => f !== 'id' && f !== 'userId');
+  if (fields.length === 0) return getTemplateById(userId, id);
+
+  const setClause = fields.map((f, i) => {
+    const snake = f.replace(/[A-Z]/g, l => `_${l.toLowerCase()}`);
+    return `${snake} = $${i + 3}`;
+  }).join(", ");
+
+  const sql = `UPDATE templates SET ${setClause}, updated_at = NOW() WHERE user_id = $1 AND id = $2 RETURNING *`;
+  const values = [userId, id, ...fields.map(f => (data as any)[f])];
+
+  const row = await queryOne(sql, values);
+  return row ? mapRowToTemplate(row) : null;
+}
+
+export async function deleteTemplate(userId: string, id: string): Promise<boolean> {
+  const result = await query("DELETE FROM templates WHERE user_id = $1 AND id = $2", [userId, id]);
   return true;
 }

@@ -1,29 +1,12 @@
 /**
- * Instagram Client via instagrapi Hosted API
- *
- * instagrapi wraps Instagram's private API in a REST service.
- * Hosted: https://instagrapi.com  (get API key from dashboard)
- *
- * SETUP:
- *  1. Sign up at https://instagrapi.com
- *  2. Get your API key from Settings → API Keys
- *  3. Set env vars: INSTAGRAPI_API_URL, INSTAGRAPI_API_KEY,
- *                   INSTAGRAM_USERNAME, INSTAGRAM_PASSWORD
- *
- * SELF-HOSTED ALTERNATIVE:
- *  pip install instagrapi fastapi uvicorn
- *  Then set INSTAGRAPI_API_URL=http://localhost:8000
- *
- * What we monitor:
- *  - "account"  → recent posts from that IG account's feed
- *  - "hashtag"  → recent posts with that hashtag
- *  - "group"    → incoming DM group thread messages
+ * Instagram Client via instagrapi-rest Hosted on VPS
+ * 
+ * This client handles per-user sessions by storing 'settings' (cookies/session data)
+ * in the database and passing them to the instagrapi-rest instance.
  */
 
-const BASE_URL = process.env.INSTAGRAPI_API_URL ?? "https://api.instagrapi.com";
-const API_KEY = process.env.INSTAGRAPI_API_KEY ?? "";
-const IG_USERNAME = process.env.INSTAGRAM_USERNAME ?? "";
-const IG_PASSWORD = process.env.INSTAGRAM_PASSWORD ?? "";
+const BASE_URL = process.env.INSTAGRAPI_API_URL || "http://localhost:8000";
+const API_KEY = process.env.INSTAGRAPI_API_KEY || "";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -61,99 +44,127 @@ function headers() {
   };
 }
 
-/** Session login payload — sent with each request to the hosted API */
-function authBody(extra: Record<string, unknown> = {}) {
-  return {
-    username: IG_USERNAME,
-    password: IG_PASSWORD,
-    ...extra,
-  };
+/**
+ * Executes a request to instagrapi-rest with a stored session.
+ */
+async function igRequest(endpoint: string, sessionData: string, body: any = {}) {
+  const url = `${BASE_URL}${endpoint}`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: headers(),
+    body: JSON.stringify({
+      ...body,
+      settings: JSON.parse(sessionData),
+    }),
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`instagrapi error (${res.status}): ${errorText}`);
+  }
+
+  return res.json();
 }
 
 // ─── API Calls ────────────────────────────────────────────────────────────────
 
 /**
- * Fetch recent posts from a public/private account after `sinceTimestamp`.
- *
- * @param username      - Instagram username (without @)
- * @param sinceTimestamp - Unix timestamp in seconds
+ * Login and get session settings.
+ */
+export async function login(username: string, password?: string, verificationCode?: string) {
+  const url = `${BASE_URL}/v1/auth/login`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: headers(),
+    body: JSON.stringify({
+      username,
+      password,
+      verification_code: verificationCode,
+    }),
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    return { success: false, ...data };
+  }
+
+  return { success: true, session: JSON.stringify(data) };
+}
+
+/**
+ * Fetch recent posts from a public/private account.
  */
 export async function getAccountPosts(
   username: string,
-  sinceTimestamp: number
+  sinceTimestamp: number,
+  sessionData: string
 ): Promise<IGPost[]> {
-  const url = `${BASE_URL}/v1/user/medias`;
-
-  const res = await fetch(url, {
-    method: "POST",
-    headers: headers(),
-    body: JSON.stringify(authBody({ username_or_id: username, amount: 50 })),
-  });
-
-  if (!res.ok) {
-    console.error(`instagrapi getAccountPosts failed for @${username}: ${res.status}`);
+  try {
+    const posts: IGPost[] = await igRequest("/v1/user/medias", sessionData, {
+      username_or_id: username,
+      amount: 50,
+    });
+    return posts.filter((p) => p.taken_at >= sinceTimestamp);
+  } catch (err) {
+    console.error(`IG getAccountPosts failed:`, err);
     return [];
   }
-
-  const posts: IGPost[] = await res.json();
-  return posts.filter((p) => p.taken_at >= sinceTimestamp);
 }
 
 /**
- * Fetch recent posts for a hashtag after `sinceTimestamp`.
- *
- * @param hashtag        - Hashtag without the # symbol (e.g. "castingcallmumbai")
- * @param sinceTimestamp - Unix timestamp in seconds
+ * Fetch recent posts for a hashtag.
  */
 export async function getHashtagPosts(
   hashtag: string,
-  sinceTimestamp: number
+  sinceTimestamp: number,
+  sessionData: string
 ): Promise<IGPost[]> {
   const cleanTag = hashtag.replace(/^#/, "");
-  const url = `${BASE_URL}/v1/hashtag/medias/recent`;
-
-  const res = await fetch(url, {
-    method: "POST",
-    headers: headers(),
-    body: JSON.stringify(authBody({ name: cleanTag, amount: 50 })),
-  });
-
-  if (!res.ok) {
-    console.error(`instagrapi getHashtagPosts failed for #${cleanTag}: ${res.status}`);
+  try {
+    const posts: IGPost[] = await igRequest("/v1/hashtag/medias/recent", sessionData, {
+      name: cleanTag,
+      amount: 50,
+    });
+    return posts.filter((p) => p.taken_at >= sinceTimestamp);
+  } catch (err) {
+    console.error(`IG getHashtagPosts failed:`, err);
     return [];
   }
-
-  const posts: IGPost[] = await res.json();
-  return posts.filter((p) => p.taken_at >= sinceTimestamp);
 }
 
 /**
- * Fetch messages from a DM group thread after `sinceTimestamp`.
- * Thread IDs come from the source registry (group type sources).
- *
- * @param threadId       - Instagram DM thread ID
- * @param sinceTimestamp - Unix timestamp in seconds
+ * Fetch messages from a DM group thread.
  */
 export async function getGroupMessages(
   threadId: string,
-  sinceTimestamp: number
+  sinceTimestamp: number,
+  sessionData: string
 ): Promise<IGMessage[]> {
-  const url = `${BASE_URL}/v1/direct/thread`;
-
-  const res = await fetch(url, {
-    method: "POST",
-    headers: headers(),
-    body: JSON.stringify(authBody({ thread_id: threadId, amount: 100 })),
-  });
-
-  if (!res.ok) {
-    console.error(`instagrapi getGroupMessages failed for thread ${threadId}: ${res.status}`);
+  try {
+    const thread: IGThread = await igRequest("/v1/direct/thread", sessionData, {
+      thread_id: threadId,
+      amount: 100,
+    });
+    const sinceUs = sinceTimestamp * 1_000_000;
+    return (thread.messages ?? []).filter((m) => m.timestamp >= sinceUs);
+  } catch (err) {
+    console.error(`IG getGroupMessages failed:`, err);
     return [];
   }
+}
 
-  const thread: IGThread = await res.json();
-  const sinceUs = sinceTimestamp * 1_000_000; // convert to microseconds
-  return (thread.messages ?? []).filter((m) => m.timestamp >= sinceUs);
+/**
+ * Send a DM to a user by their username (resolves to PK first).
+ */
+export async function sendDirectMessage(
+  usernames: string[],
+  text: string,
+  sessionData: string
+): Promise<any> {
+  return igRequest("/v1/direct/message", sessionData, {
+    usernames,
+    text,
+  });
 }
 
 /** Simple connectivity check */

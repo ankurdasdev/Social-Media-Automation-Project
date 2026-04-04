@@ -17,13 +17,12 @@
 
 const BASE_URL = process.env.EVOLUTION_API_URL ?? "http://localhost:8080";
 const API_KEY = process.env.EVOLUTION_API_KEY ?? "";
-const INSTANCE = process.env.EVOLUTION_INSTANCE ?? "Evolution1";
 
 // ─── Types returned by Evolution API ─────────────────────────────────────────
-
+// ... types ...
 export interface WAMessage {
   key: {
-    remoteJid: string; // group JID like "120363xxxx@g.us"
+    remoteJid: string; 
     id: string;
   };
   message: {
@@ -31,13 +30,13 @@ export interface WAMessage {
     extendedTextMessage?: { text: string };
     imageMessage?: { caption?: string };
   };
-  messageTimestamp: number; // unix seconds
-  pushName?: string; // sender display name
+  messageTimestamp: number; 
+  pushName?: string; 
 }
 
 export interface WAGroup {
-  id: string; // JID: "120363xxxx@g.us"
-  subject: string; // group name
+  id: string; 
+  subject: string; 
   participants: { id: string; admin?: string }[];
 }
 
@@ -64,10 +63,9 @@ export function extractMessageText(msg: WAMessage): string {
 
 /**
  * List all WhatsApp groups the instance is currently in.
- * Returns groups with their JID and name.
  */
-export async function getGroups(): Promise<WAGroup[]> {
-  const url = `${BASE_URL}/group/fetchAllGroups/${INSTANCE}?getParticipants=false`;
+export async function getGroups(instanceName: string): Promise<WAGroup[]> {
+  const url = `${BASE_URL}/group/fetchAllGroups/${instanceName}?getParticipants=false`;
   const res = await fetch(url, { headers: headers() });
   if (!res.ok) {
     throw new Error(`Evolution API getGroups failed: ${res.status} ${await res.text()}`);
@@ -76,17 +74,14 @@ export async function getGroups(): Promise<WAGroup[]> {
 }
 
 /**
- * Fetch messages from a specific group sent after `fromTimestamp` (unix seconds).
- * Evolution API endpoint: POST /chat/findMessages/{instance}
- *
- * @param groupJid  - The group's JID, e.g. "120363xxxx@g.us"
- * @param fromTimestamp - Unix timestamp in seconds (start of window)
+ * Fetch messages from a specific group.
  */
 export async function getGroupMessages(
+  instanceName: string,
   groupJid: string,
   fromTimestamp: number
 ): Promise<WAMessage[]> {
-  const url = `${BASE_URL}/chat/findMessages/${INSTANCE}`;
+  const url = `${BASE_URL}/chat/findMessages/${instanceName}`;
 
   const body = {
     where: {
@@ -109,22 +104,63 @@ export async function getGroupMessages(
   }
 
   const data = await res.json();
-  // Response is { messages: { records: WAMessage[] } }
   return data?.messages?.records ?? [];
 }
 
 /**
- * Check if the Evolution API instance is connected (not just running).
- * Returns true if WhatsApp is authenticated via QR.
+ * Send a text message to a WhatsApp JID.
  */
-export async function isConnected(): Promise<boolean> {
-  try {
-    const url = `${BASE_URL}/instance/connectionState/${INSTANCE}`;
-    const res = await fetch(url, { headers: headers() });
-    if (!res.ok) return false;
-    const data = await res.json();
-    return data?.instance?.state === "open";
-  } catch {
-    return false;
+export async function sendMessage(
+  instanceName: string,
+  number: string,
+  text: string
+): Promise<any> {
+  const url = `${BASE_URL}/message/sendText/${instanceName}`;
+  const body = {
+    number,
+    text,
+    linkPreview: false,
+  };
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: headers(),
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Evolution API sendMessage failed: ${res.status} ${await res.text()}`);
   }
+  return res.json();
+}
+
+/**
+ * Send a media message (image/document) via URL.
+ */
+export async function sendMedia(
+  instanceName: string,
+  number: string,
+  mediaUrl: string,
+  caption?: string,
+  fileName?: string
+): Promise<any> {
+  const url = `${BASE_URL}/message/sendMedia/${instanceName}`;
+  const body = {
+    number,
+    media: mediaUrl,
+    mediaType: "image", // can be image, video, audio, document
+    caption,
+    fileName,
+  };
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: headers(),
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Evolution API sendMedia failed: ${res.status} ${await res.text()}`);
+  }
+  return res.json();
 }
