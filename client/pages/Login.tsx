@@ -28,7 +28,9 @@ export default function Login() {
     setTimeout(() => {
       setIsLoading(false);
       // Store auth token (mock)
+      const mockUserId = "e64bbea8-9caf-4201-84b9-ffaca1b6b45f"; // Consistency with DB
       localStorage.setItem("auth_token", "mock_token_" + Date.now());
+      localStorage.setItem("userId", mockUserId);
       navigate("/dashboard");
     }, 1000);
   };

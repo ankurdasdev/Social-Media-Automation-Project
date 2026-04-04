@@ -43,6 +43,7 @@ export interface ParsedContact {
   email: string;              // email if mentioned
   instaHandle: string;        // @handle if mentioned
   notes: string;              // any other key info (brief)
+  originalText?: string;      // Back-reference to the message text
 }
 
 // ─── System Prompt ────────────────────────────────────────────────────────────
@@ -127,6 +128,7 @@ export async function parseMessages(
   for (const msg of messages) {
     const parsed = await parseMessage(msg.text, msg.source);
     if (parsed) {
+      parsed.originalText = msg.text;
       results.push(parsed);
     }
     // Small delay to avoid rate limits on free tier

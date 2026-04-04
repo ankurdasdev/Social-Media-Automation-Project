@@ -29,10 +29,12 @@ import {
   FileText,
   Loader2,
   Instagram,
+  Send,
 } from "lucide-react";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import type { Template, TemplatesResponse } from "@shared/api";
+import { DriveFilePicker } from "@/components/drive/DriveFilePicker";
 
 interface ContactDrawerProps {
   contact: Contact | null;
@@ -86,6 +88,7 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [isSaving, setIsSaving] = React.useState(false);
+  const [isSending, setIsSending] = React.useState<string | null>(null);
   const [form, setForm] = React.useState<FormState>({});
 
   // Sync form state whenever the contact changes
@@ -95,7 +98,7 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
     }
   }, [contact]);
 
-  const set = (field: keyof Contact) => (val: string | boolean) => {
+  const set = (field: keyof Contact) => (val: any) => {
     setForm((prev) => ({ ...prev, [field]: val }));
   };
 
@@ -109,13 +112,40 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
         body: JSON.stringify(form),
       });
       if (!res.ok) throw new Error("Failed to save");
-      await queryClient.invalidateQueries({ queryKey: ["contacts"] });
       toast({ title: "Saved", description: "Contact updated successfully." });
       onOpenChange(false);
     } catch (err) {
       toast({ title: "Error", description: "Could not save changes.", variant: "destructive" });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleSend = async (channel: "whatsapp" | "email" | "instagram") => {
+    if (!contact?.id) return;
+    setIsSending(channel);
+    try {
+      const res = await fetch(`/api/outreach/send`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contactId: contact.id,
+          userId: contact.user_id,
+          channel,
+          // Send latest form state
+          ...form,
+        }),
+      });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Failed to send");
+      }
+      toast({ title: "Sent", description: `Message sent via ${channel} successfully.` });
+      await queryClient.invalidateQueries({ queryKey: ["contacts"] });
+    } catch (err: any) {
+      toast({ title: "Send Error", description: err.message, variant: "destructive" });
+    } finally {
+      setIsSending(null);
     }
   };
 
@@ -253,17 +283,30 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
                     )}
                   </div>
 
-                  <div className="space-y-1 pt-2 border-t">
-                    <Label className="text-xs text-muted-foreground">WP Attachment</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        value={form.specialAttachmentWA ?? ""}
-                        onChange={(e) => set("specialAttachmentWA")(e.target.value)}
-                        placeholder="Headshot URL or PDF"
-                        className="h-8 shadow-none"
-                      />
-                      <Button size="sm" variant="outline" className="h-8 px-2"><Paperclip className="h-4 w-4" /></Button>
-                    </div>
+                  <div className="space-y-1 pt-2 border-t text-xs">
+                    <Label className="text-[10px] text-muted-foreground uppercase font-semibold">WP Attachment (Drive)</Label>
+                    <DriveFilePicker
+                      userId={contact.user_id}
+                      selectedFiles={form.drive_attachments_wa || []}
+                      onChange={(files) => set("drive_attachments_wa")(files)}
+                      placeholder="Search Drive for headshot/PDF..."
+                    />
+                  </div>
+
+                  <div className="pt-2">
+                    <Button
+                      size="sm"
+                      className="w-full bg-green-600 hover:bg-green-700 text-white gap-2"
+                      onClick={() => handleSend("whatsapp")}
+                      disabled={!!isSending}
+                    >
+                      {isSending === "whatsapp" ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Send className="h-4 w-4" />
+                      )}
+                      Send via WhatsApp
+                    </Button>
                   </div>
                 </TabsContent>
 
@@ -333,17 +376,30 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
                     )}
                   </div>
 
-                  <div className="space-y-1 pt-2 border-t">
-                    <Label className="text-xs text-muted-foreground">Email Attachment</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        value={form.specialAttachmentGmail ?? ""}
-                        onChange={(e) => set("specialAttachmentGmail")(e.target.value)}
-                        placeholder="Portfolio requested..."
-                        className="h-8 shadow-none"
-                      />
-                      <Button size="sm" variant="outline" className="h-8 px-2"><Paperclip className="h-4 w-4" /></Button>
-                    </div>
+                  <div className="space-y-1 pt-2 border-t text-xs">
+                    <Label className="text-[10px] text-muted-foreground uppercase font-semibold">Email Attachment (Drive)</Label>
+                    <DriveFilePicker
+                      userId={contact.user_id}
+                      selectedFiles={form.drive_attachments_email || []}
+                      onChange={(files) => set("drive_attachments_email")(files)}
+                      placeholder="Search Drive for portfolio..."
+                    />
+                  </div>
+
+                  <div className="pt-2">
+                    <Button
+                      size="sm"
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white gap-2"
+                      onClick={() => handleSend("email")}
+                      disabled={!!isSending}
+                    >
+                      {isSending === "email" ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Send className="h-4 w-4" />
+                      )}
+                      Send via Gmail
+                    </Button>
                   </div>
                 </TabsContent>
 
@@ -405,17 +461,30 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
                     )}
                   </div>
 
-                  <div className="space-y-1 pt-2 border-t">
-                    <Label className="text-xs text-muted-foreground">Insta Attachment</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        value={form.specialAttachmentIG ?? ""}
-                        onChange={(e) => set("specialAttachmentIG")(e.target.value)}
-                        placeholder="Headshot URL or PDF"
-                        className="h-8 shadow-none"
-                      />
-                      <Button size="sm" variant="outline" className="h-8 px-2"><Paperclip className="h-4 w-4" /></Button>
-                    </div>
+                  <div className="space-y-1 pt-2 border-t text-xs">
+                    <Label className="text-[10px] text-muted-foreground uppercase font-semibold">Insta Attachment (Drive)</Label>
+                    <DriveFilePicker
+                      userId={contact.user_id}
+                      selectedFiles={form.drive_attachments_ig || []}
+                      onChange={(files) => set("drive_attachments_ig")(files)}
+                      placeholder="Search Drive for headshot/PDF..."
+                    />
+                  </div>
+
+                  <div className="pt-2">
+                    <Button
+                      size="sm"
+                      className="w-full bg-pink-600 hover:bg-pink-700 text-white gap-2"
+                      onClick={() => handleSend("instagram")}
+                      disabled={!!isSending}
+                    >
+                      {isSending === "instagram" ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Send className="h-4 w-4" />
+                      )}
+                      Send via Instagram
+                    </Button>
                   </div>
                 </TabsContent>
               </div>

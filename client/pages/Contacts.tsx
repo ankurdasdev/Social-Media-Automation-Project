@@ -25,6 +25,7 @@ import { type Contact, type ContactsResponse, type IngestionStatusResponse } fro
 import { DataTable } from "@/components/contacts/DataTable";
 import { columns } from "@/components/contacts/columns";
 import { useToast } from "@/hooks/use-toast";
+import { getOrCreateUserId } from "@/lib/utils";
 
 export default function Contacts() {
   const queryClient = useQueryClient();
@@ -32,6 +33,7 @@ export default function Contacts() {
 
   const [activeTab, setActiveTab] = useState("all");
   const [localSheets, setLocalSheets] = useState<string[]>([]);
+  const userId = getOrCreateUserId();
   
   const [isAddLeadOpen, setIsAddLeadOpen] = useState(false);
   const [newLead, setNewLead] = useState({
@@ -47,9 +49,9 @@ export default function Contacts() {
   });
 
   const { data: contactsData, isLoading: contactsLoading } = useQuery({
-    queryKey: ["contacts"],
+    queryKey: ["contacts", userId],
     queryFn: async (): Promise<Contact[]> => {
-      const res = await fetch("/api/contacts");
+      const res = await fetch(`/api/contacts?userId=${userId}`);
       if (!res.ok) throw new Error("Failed to fetch contacts");
       const data: ContactsResponse = await res.json();
       return data.contacts;
@@ -65,9 +67,9 @@ export default function Contacts() {
 
   const { data: ingestionStatus, refetch: refetchStatus, isFetching: isRefreshingStatus } =
     useQuery<IngestionStatusResponse>({
-      queryKey: ["ingestion-status"],
+      queryKey: ["ingestion-status", userId],
       queryFn: async () => {
-        const res = await fetch("/api/ingestion/status");
+        const res = await fetch(`/api/ingestion/status?userId=${userId}`);
         if (!res.ok) throw new Error("Failed to fetch ingestion status");
         return res.json();
       },
@@ -99,6 +101,7 @@ export default function Contacts() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           ...leadConfig, 
+          userId,
           source: "manual", 
           status: "pending",
           whatsappRun: !!leadConfig.whatsapp,
@@ -259,10 +262,10 @@ export default function Contacts() {
               isRefreshing={isRefreshingStatus || contactsLoading}
               onBulkAction={(action, ids, payload) => bulkMutation.mutate({ action, ids, payload })}
               onUpdateContact={(id, data) => {
-                fetch(`/api/contacts/${id}`, {
+                fetch(`/api/contacts/${id}?userId=${userId}`, {
                   method: "PUT",
                   headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify(data),
+                  body: JSON.stringify({ ...data, userId }),
                 }).then(() => queryClient.invalidateQueries({ queryKey: ["contacts"] }));
               }}
               uniqueSheets={dynamicSheets}

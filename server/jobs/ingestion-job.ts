@@ -1,21 +1,4 @@
-/**
- * Daily Auto-Ingestion Job
- *
- * Orchestrates the full pipeline:
- *  1. Reads all enabled source groups from the registry
- *  2. Fetches last-24h messages from WhatsApp groups (Evolution API)
- *  3. Fetches last-24h posts from Instagram sources (instagrapi)
- *  4. Passes each message through the AI parser (OpenRouter)
- *  5. Upserts extracted contacts with yellow highlight
- *  6. Logs the run result
- *
- * Scheduled via node-cron: runs daily at midnight IST (18:30 UTC)
- * Can also be triggered manually via POST /api/ingestion/trigger
- */
-
-import type { IngestionRunResult } from "@shared/api";
-import type { SourceGroup } from "@shared/api";
-import { getGroupsList } from "../routes/groups";
+import { query, queryOne } from "../db/index";
 import { upsertContact } from "../store/contacts-store";
 import { getGroupMessages as getWAMessages, extractMessageText } from "../services/whatsapp-client";
 import {
@@ -24,6 +7,7 @@ import {
   getGroupMessages as getIGGroupMessages,
 } from "../services/instagram-client";
 import { parseMessages } from "../services/ai-parser";
+import type { IngestionRunResult } from "@shared/api";
 
 // ─── State ────────────────────────────────────────────────────────────────────
 
@@ -42,14 +26,10 @@ function get24hAgoTimestamp(): number {
 
 // ─── Main Job ─────────────────────────────────────────────────────────────────
 
-/**
- * Run the full ingestion pipeline for all enabled groups.
- * Safe to call multiple times — skips if already running.
- */
 export async function runIngestionJob(): Promise<IngestionRunResult> {
   if (isRunning) {
-    console.log("[ingestion] Already running, skipping...");
-    return lastRunResult ?? ({
+    console.log("[ingestion] Job already in progress. Skipping.");
+    return lastRunResult || {
       runAt: new Date().toISOString(),
       durationMs: 0,
       sourcesProcessed: 0,
@@ -58,8 +38,8 @@ export async function runIngestionJob(): Promise<IngestionRunResult> {
       contactsCreated: 0,
       contactsUpdated: 0,
       contactsSkipped: 0,
-      errors: ["Job already running"],
-    });
+      errors: ["Already running"],
+    };
   }
 
   isRunning = true;
@@ -74,130 +54,108 @@ export async function runIngestionJob(): Promise<IngestionRunResult> {
   let contactsUpdated = 0;
   let contactsSkipped = 0;
 
-  console.log("[ingestion] Starting daily ingestion run at", runAt);
-
   try {
     const since = get24hAgoTimestamp();
-    const allGroups: SourceGroup[] = getGroupsList().filter((g) => g.enabled);
+    
+    // 1. Get all users who have enabled source groups
+    const activeUsers = await query("SELECT DISTINCT user_id FROM source_groups WHERE enabled = TRUE");
+    console.log(`[ingestion] Processing ${activeUsers.length} users...`);
 
-    const waGroups = allGroups.filter((g) => g.platform === "whatsapp");
-    const igSources = allGroups.filter((g) => g.platform === "instagram");
-
-    // ── WhatsApp Groups ──────────────────────────────────────────────────────
-    const waMessages: Array<{ text: string; source: "whatsapp" }> = [];
-
-    for (const group of waGroups) {
+    for (const { user_id: userId } of activeUsers) {
       try {
-        // group.url holds the invite link; Evolution API needs the JID
-        // The JID is stored in group.url as "jid:120363xxxx@g.us" prefix
-        // OR we fall back to group name lookup via getGroups()
-        const jidMatch = group.url?.match(/jid:([^,\s]+)/);
-        if (!jidMatch) {
-          errors.push(`WhatsApp group "${group.name}" has no JID set in URL field (use "jid:XXXXXXXX@g.us")`);
-          continue;
-        }
-        const groupJid = jidMatch[1];
+        console.log(`[ingestion] Processing User ID: ${userId}`);
 
-        console.log(`[ingestion] Fetching WA group: ${group.name} (${groupJid})`);
-        const rawMsgs = await getWAMessages(groupJid, since);
+        // 2. Fetch User's Integrations
+        const waInstance = await queryOne("SELECT instance_name FROM whatsapp_instances WHERE user_id = $1 AND status = 'connected'", [userId]);
+        const igSession = await queryOne("SELECT session_data FROM instagram_sessions WHERE user_id = $1 AND status = 'connected'", [userId]);
 
-        for (const msg of rawMsgs) {
-          const text = extractMessageText(msg);
-          if (text.trim().length >= 20) {
-            waMessages.push({ text, source: "whatsapp" });
+        // 3. Fetch User's Enabled Groups
+        const groups = await query("SELECT * FROM source_groups WHERE user_id = $1 AND enabled = TRUE", [userId]);
+        
+        const userWAMessages: Array<{ text: string; source: "whatsapp" }> = [];
+        const userIGMessages: Array<{ text: string; source: "instagram" }> = [];
+
+        for (const grp of groups) {
+          try {
+            if (grp.platform === "whatsapp") {
+              if (!waInstance) continue;
+              const jidMatch = grp.url?.match(/jid:([^,\s]+)/);
+              const groupJid = jidMatch ? jidMatch[1] : null;
+              if (!groupJid) continue;
+
+              const rawMsgs = await getWAMessages(waInstance.instance_name, groupJid, since);
+              for (const m of rawMsgs) {
+                const text = extractMessageText(m);
+                if (text.trim().length >= 20) userWAMessages.push({ text, source: "whatsapp" });
+              }
+              sourcesProcessed++;
+              messagesScanned += rawMsgs.length;
+            } 
+            else if (grp.platform === "instagram") {
+              if (!igSession?.session_data) continue;
+              let posts: any[] = [];
+              const session: string = igSession.session_data;
+
+              if (grp.type === "hashtag") {
+                posts = await getHashtagPosts(grp.name.replace("#", ""), since, session);
+              } else if (grp.type === "group") {
+                const threadMatch = grp.url?.match(/thread:([^,\s]+)/);
+                if (threadMatch) {
+                  const msgs = await getIGGroupMessages(threadMatch[1], since, session);
+                  for (const m of msgs) {
+                    if (m.text) userIGMessages.push({ text: m.text, source: "instagram" });
+                  }
+                  messagesScanned += msgs.length;
+                }
+              } else {
+                posts = await getAccountPosts(grp.name.replace("@", ""), since, session);
+              }
+
+              for (const p of posts) {
+                if (p.caption_text && p.caption_text.trim().length >= 20) {
+                  userIGMessages.push({ text: p.caption_text, source: "instagram" });
+                }
+              }
+              sourcesProcessed++;
+              messagesScanned += posts.length;
+            }
+          } catch (e: any) {
+            errors.push(`User ${userId} - Group ${grp.name}: ${e.message}`);
           }
         }
 
-        sourcesProcessed++;
-        messagesScanned += rawMsgs.length;
-      } catch (err: any) {
-        errors.push(`WA group "${group.name}": ${err.message}`);
+        // 4. Batch AI Parsing for User
+        const allUserMessages = [...userWAMessages, ...userIGMessages];
+        if (allUserMessages.length > 0) {
+          const parsed = await parseMessages(allUserMessages);
+          castingCallsFound += parsed.length;
+
+          // 5. Upsert Contacts for User
+          for (const p of parsed) {
+            const source = userWAMessages.some(m => m.text === p.originalText) ? "auto-whatsapp" : "auto-instagram";
+            const result = await upsertContact(userId, {
+              name: p.name,
+              castingName: p.castingName,
+              project: p.project || "Casting Data",
+              age: p.age,
+              actingContext: p.actingContext,
+              whatsapp: p.whatsapp,
+              email: p.email,
+              instaHandle: p.instaHandle,
+              notes: p.notes,
+            }, source as any);
+
+            if (result.action === "created") contactsCreated++;
+            else if (result.action === "updated") contactsUpdated++;
+            else contactsSkipped++;
+          }
+        }
+      } catch (e: any) {
+        errors.push(`User ${userId} general error: ${e.message}`);
       }
     }
-
-    // ── Instagram Sources ────────────────────────────────────────────────────
-    const igMessages: Array<{ text: string; source: "instagram" }> = [];
-
-    for (const src of igSources) {
-      try {
-        let posts: Array<{ caption_text?: string; taken_at: number }> = [];
-
-        if (src.type === "hashtag") {
-          const tag = src.name.replace(/^#/, "");
-          console.log(`[ingestion] Fetching IG hashtag: #${tag}`);
-          posts = await getHashtagPosts(tag, since);
-        } else if (src.type === "group") {
-          // DM group — URL should hold the thread ID: "thread:XXXXXXXX"
-          const threadMatch = src.url?.match(/thread:([^,\s]+)/);
-          if (!threadMatch) {
-            errors.push(`IG group "${src.name}" has no thread ID set in URL field (use "thread:XXXXXXXX")`);
-            continue;
-          }
-          console.log(`[ingestion] Fetching IG DM thread: ${src.name}`);
-          const msgs = await getIGGroupMessages(threadMatch[1], since);
-          for (const m of msgs) {
-            if (m.text) igMessages.push({ text: m.text, source: "instagram" });
-          }
-          sourcesProcessed++;
-          messagesScanned += msgs.length;
-          continue;
-        } else {
-          // account type
-          const username = src.name.replace(/^@/, "");
-          console.log(`[ingestion] Fetching IG account: @${username}`);
-          posts = await getAccountPosts(username, since);
-        }
-
-        for (const post of posts) {
-          if (post.caption_text && post.caption_text.trim().length >= 20) {
-            igMessages.push({ text: post.caption_text, source: "instagram" });
-          }
-        }
-
-        sourcesProcessed++;
-        messagesScanned += posts.length;
-      } catch (err: any) {
-        errors.push(`IG source "${src.name}": ${err.message}`);
-      }
-    }
-
-    // ── AI Parsing ───────────────────────────────────────────────────────────
-    const allMessages = [...waMessages, ...igMessages];
-    console.log(`[ingestion] Parsing ${allMessages.length} messages with AI...`);
-
-    const parsed = await parseMessages(allMessages);
-    castingCallsFound = parsed.length;
-
-    console.log(`[ingestion] Found ${castingCallsFound} casting calls. Upserting contacts...`);
-
-    // ── Upsert Contacts ──────────────────────────────────────────────────────
-    for (const p of parsed) {
-      const source = waMessages.some((m) => m.source === "whatsapp")
-        ? "auto-whatsapp"
-        : "auto-instagram";
-
-      const result = upsertContact(
-        {
-          name: p.name,
-          castingName: p.castingName,
-          project: p.project || "Casting Data",
-          age: p.age,
-          actingContext: p.actingContext,
-          whatsapp: p.whatsapp,
-          email: p.email,
-          instaHandle: p.instaHandle,
-          notes: p.notes,
-        },
-        source as "auto-whatsapp" | "auto-instagram"
-      );
-
-      if (result.action === "created") contactsCreated++;
-      else if (result.action === "updated") contactsUpdated++;
-      else contactsSkipped++;
-    }
-  } catch (err: any) {
-    errors.push(`Fatal: ${err.message}`);
-    console.error("[ingestion] Fatal error:", err);
+  } catch (e: any) {
+    errors.push(`Critical job error: ${e.message}`);
   } finally {
     isRunning = false;
   }
@@ -215,7 +173,5 @@ export async function runIngestionJob(): Promise<IngestionRunResult> {
   };
 
   lastRunResult = result;
-  console.log("[ingestion] Run complete:", result);
-
   return result;
 }

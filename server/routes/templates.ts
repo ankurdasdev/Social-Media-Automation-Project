@@ -4,7 +4,6 @@ import {
   createTemplate,
   updateTemplate,
   deleteTemplate,
-  getTemplateById,
 } from "../store/templates-store";
 import type {
   TemplatesResponse,
@@ -13,46 +12,90 @@ import type {
   UpdateTemplateRequest,
 } from "@shared/api";
 
-// GET /api/templates?category=whatsapp
-export const handleGetTemplates: RequestHandler = (req, res) => {
+// GET /api/templates
+export const handleGetTemplates: RequestHandler = async (req, res) => {
+  const userId = req.query.userId as string;
   const { category } = req.query as Record<string, string>;
-  const templates = getAllTemplates(category);
-  const response: TemplatesResponse = { templates };
-  res.json(response);
+
+  if (!userId) {
+    res.status(400).json({ error: "userId is required" });
+    return;
+  }
+
+  try {
+    const templates = await getAllTemplates(userId, category);
+    const response: TemplatesResponse = { templates };
+    res.json(response);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch templates" });
+  }
 };
 
 // POST /api/templates
-export const handleCreateTemplate: RequestHandler = (req, res) => {
+export const handleCreateTemplate: RequestHandler = async (req, res) => {
+  const userId = req.body.userId;
   const body = req.body as CreateTemplateRequest;
+
+  if (!userId) {
+    res.status(400).json({ error: "userId is required" });
+    return;
+  }
   if (!body.name || !body.category) {
     res.status(400).json({ error: "name and category are required" });
     return;
   }
-  const template = createTemplate(body);
-  const response: TemplateResponse = { template };
-  res.status(201).json(response);
+
+  try {
+    const template = await createTemplate(userId, body);
+    const response: TemplateResponse = { template };
+    res.status(201).json(response);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to create template" });
+  }
 };
 
 // PUT /api/templates/:id
-export const handleUpdateTemplate: RequestHandler = (req, res) => {
+export const handleUpdateTemplate: RequestHandler = async (req, res) => {
+  const userId = req.body.userId || req.query.userId;
   const { id } = req.params;
   const body = req.body as UpdateTemplateRequest;
-  const template = updateTemplate(id, body);
-  if (!template) {
-    res.status(404).json({ error: "Template not found" });
+
+  if (!userId) {
+    res.status(400).json({ error: "userId is required" });
     return;
   }
-  const response: TemplateResponse = { template };
-  res.json(response);
+
+  try {
+    const template = await updateTemplate(userId, id, body);
+    if (!template) {
+      res.status(404).json({ error: "Template not found" });
+      return;
+    }
+    const response: TemplateResponse = { template };
+    res.json(response);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to update template" });
+  }
 };
 
 // DELETE /api/templates/:id
-export const handleDeleteTemplate: RequestHandler = (req, res) => {
+export const handleDeleteTemplate: RequestHandler = async (req, res) => {
+  const userId = req.query.userId as string;
   const { id } = req.params;
-  const deleted = deleteTemplate(id);
-  if (!deleted) {
-    res.status(404).json({ error: "Template not found" });
+
+  if (!userId) {
+    res.status(400).json({ error: "userId is required" });
     return;
   }
-  res.status(204).send();
+
+  try {
+    const deleted = await deleteTemplate(userId, id);
+    if (!deleted) {
+      res.status(404).json({ error: "Template not found" });
+      return;
+    }
+    res.status(204).send();
+  } catch (err) {
+    res.status(500).json({ error: "Failed to delete template" });
+  }
 };
