@@ -177,7 +177,7 @@ export function DataTable<TData, TValue>({
                       <div className="w-16 h-16 rounded-full border-2 border-dashed border-muted-foreground flex items-center justify-center group-hover:scale-110 transition-transform">
                         <Search className="w-8 h-8 text-muted-foreground" />
                       </div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground">Registry Null :: No Records Found</p>
+                      <p className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground">No Records Found</p>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -193,7 +193,7 @@ export function DataTable<TData, TValue>({
               <div className="w-4 h-4 rounded-full bg-primary animate-pulse" />
            </div>
            <div className="flex-1 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
-             <span className="text-foreground">{table.getFilteredSelectedRowModel().rows.length}</span> nodes locked :: <span className="text-foreground">{table.getFilteredRowModel().rows.length}</span> total segments
+             <span className="text-foreground">{table.getFilteredSelectedRowModel().rows.length}</span> selected :: <span className="text-foreground">{table.getFilteredRowModel().rows.length}</span> total contacts
            </div>
         </div>
         
@@ -203,7 +203,7 @@ export function DataTable<TData, TValue>({
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
-            DECREMENT LAYER
+            PREVIOUS
           </button>
           <div className="flex items-center gap-2 px-4 h-12 rounded-xl bg-muted/30 border border-white/5 font-black text-[10px]">
             <span className="text-primary">{table.getState().pagination.pageIndex + 1}</span>
@@ -215,7 +215,7 @@ export function DataTable<TData, TValue>({
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
-            INCREMENT LAYER
+            NEXT
           </button>
         </div>
       </div>

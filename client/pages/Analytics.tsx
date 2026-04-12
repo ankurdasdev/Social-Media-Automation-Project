@@ -102,10 +102,10 @@ export default function Analytics() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div className="space-y-2">
             <h1 className="text-4xl font-black tracking-tighter text-foreground sm:text-5xl">
-              Performance <span className="text-primary italic">Intelligence</span>
+              Performance <span className="text-primary italic">Analytics</span>
             </h1>
             <p className="text-muted-foreground font-medium max-w-lg">
-              Deconstruct outreach efficiency and conversion signals across all encrypted channels.
+              Deconstruct outreach efficiency across all channels.
             </p>
           </div>
           <div className="flex gap-2 p-1 bg-muted/50 rounded-2xl border border-border/50 shrink-0">
@@ -173,9 +173,9 @@ export default function Analytics() {
             <CardHeader className="p-8 pb-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <CardTitle className="text-2xl font-black tracking-tight">Signal Distribution</CardTitle>
+                  <CardTitle className="text-2xl font-black tracking-tight">Message Volume</CardTitle>
                   <CardDescription className="font-medium">
-                    Inbound extraction volume across active protocols.
+                    Number of messages sent across different platforms.
                   </CardDescription>
                 </div>
               </div>
@@ -244,8 +244,8 @@ export default function Analytics() {
           <Card className="glass-card border-white/10 dark:border-white/5 shadow-xl">
             <CardHeader className="p-8 pb-4">
               <div className="space-y-1">
-                <CardTitle className="text-2xl font-black tracking-tight">Success Vector</CardTitle>
-                <CardDescription className="font-medium">Stream conversion efficiency.</CardDescription>
+                <CardTitle className="text-2xl font-black tracking-tight">Success Rate</CardTitle>
+                <CardDescription className="font-medium">Overall success rate of your outreach.</CardDescription>
               </div>
             </CardHeader>
             <CardContent className="p-8 pt-0">

@@ -182,7 +182,7 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
           {/* Profile Section */}
           <section className="space-y-6">
             <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
-              <User className="h-3 w-3" /> Profile Intelligence
+              <User className="h-3 w-3" /> Contact Profile
             </h4>
             <div className="grid grid-cols-2 gap-6">
               <div className="space-y-2">
@@ -220,7 +220,7 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
           {/* Outreach Tabs */}
           <section className="space-y-6">
             <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
-              <FileText className="h-3 w-3" /> Outreach Terminal
+              <FileText className="h-3 w-3" /> Outreach Status
             </h4>
 
             <Tabs defaultValue="whatsapp" className="w-full">
@@ -511,7 +511,7 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
           {/* Notes */}
           <section className="space-y-6">
             <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
-              <FileText className="h-3 w-3" /> Intelligence Logs
+              <FileText className="h-3 w-3" /> Activity Logs
             </h4>
             <div className="space-y-2">
               <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Internal Notes</Label>

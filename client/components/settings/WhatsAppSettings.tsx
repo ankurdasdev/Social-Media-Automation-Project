@@ -43,7 +43,7 @@ export function WhatsAppSettings() {
 
   const handleConnect = async () => {
     if (!mobileNumber.trim()) {
-        return toast.error("Mobile number required for node extraction.");
+        return toast.error("Mobile number required for connection.");
     }
     setConnecting(true);
     setQrCode(null);
@@ -56,10 +56,10 @@ export function WhatsAppSettings() {
       const data: WhatsAppQRResponse = await res.json();
       if (data.qrcode?.base64) {
         setQrCode(data.qrcode.base64);
-        toast.success("Protocol established. Scan QR to initialize uplink.");
+        toast.success("Connection started. Scan QR to connect.");
       }
     } catch (err) {
-      toast.error("Failed to bridge WhatsApp cluster.");
+      toast.error("Failed to connect WhatsApp.");
       setConnecting(false);
     }
   };
@@ -69,9 +69,9 @@ export function WhatsAppSettings() {
       await fetch("/api/whatsapp/disconnect", { method: "DELETE" });
       setStatus({ instance: null, isConnected: false });
       setQrCode(null);
-      toast.success("Uplink terminated.");
+      toast.success("WhatsApp disconnected.");
     } catch (err) {
-      toast.error("Failed to sever connection.");
+      toast.error("Failed to disconnect.");
     }
   };
 
@@ -83,7 +83,7 @@ export function WhatsAppSettings() {
         setQrCode(data.qrcode.base64);
       }
     } catch (err) {
-      toast.error("Handshake refresh failed.");
+      toast.error("QR refresh failed.");
     }
   };
 
@@ -91,7 +91,7 @@ export function WhatsAppSettings() {
     return (
       <div className="flex flex-col items-center justify-center p-20 gap-4 opacity-50">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="text-[10px] font-black uppercase tracking-[0.4em]">Mounting Communication Modules...</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.4em]">Loading WhatsApp Settings...</p>
       </div>
     );
   }
@@ -112,7 +112,7 @@ export function WhatsAppSettings() {
                  <MessageSquare className="h-10 w-10 text-emerald-500" />
               </div>
               <h2 className="text-4xl font-black tracking-tighter mb-4 flex items-center gap-3">
-                WHATSAPP <span className="text-emerald-500 text-glow">UPLINK</span>
+                WHATSAPP <span className="text-emerald-500 text-glow">CONNECTION</span>
                 {isConnected && (
                   <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30">
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -121,8 +121,8 @@ export function WhatsAppSettings() {
                 )}
               </h2>
               <p className="text-muted-foreground/80 text-sm font-medium leading-relaxed mb-8">
-                Establish a direct neural link to WhatsApp via the Evolution cluster. 
-                Enable group parsing, context isolation, and automated outreach triggers.
+                Connect your WhatsApp account to enable automated messaging and lead management. 
+                Scale your outreach with our automated system.
               </p>
               
               <div className="space-y-4">
@@ -131,8 +131,8 @@ export function WhatsAppSettings() {
                        <CheckCircle2 className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                     </div>
                     <div>
-                       <p className="text-[10px] font-black uppercase tracking-widest text-foreground">Real-time Sync</p>
-                       <p className="text-[10px] text-muted-foreground font-bold">Latency {"<"} 100ms</p>
+                       <p className="text-[10px] font-black uppercase tracking-widest text-foreground">Messaging Status</p>
+                       <p className="text-[10px] text-muted-foreground font-bold">Active</p>
                     </div>
                  </div>
                  <div className="flex items-center gap-4 group">
@@ -140,8 +140,8 @@ export function WhatsAppSettings() {
                        <QrCode className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                     </div>
                     <div>
-                       <p className="text-[10px] font-black uppercase tracking-widest text-foreground">Encrypted Bridge</p>
-                       <p className="text-[10px] text-muted-foreground font-bold">SHA-256 Validated</p>
+                       <p className="text-[10px] font-black uppercase tracking-widest text-foreground">Connection Security</p>
+                       <p className="text-[10px] text-muted-foreground font-bold">Encrypted</p>
                     </div>
                  </div>
               </div>
@@ -169,18 +169,18 @@ export function WhatsAppSettings() {
                        onClick={handleDisconnect}
                        className="h-14 px-10 rounded-2xl border-white/10 hover:border-destructive/50 hover:bg-destructive/10 text-muted-foreground hover:text-destructive font-black text-[11px] uppercase tracking-widest transition-all active:scale-95 group relative z-10"
                      >
-                       <LogOut className="h-4 w-4 mr-3" /> SEVER UPLINK
+                       <LogOut className="h-4 w-4 mr-3" /> DISCONNECT
                      </Button>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                      <div className="p-8 rounded-3xl bg-muted/20 border border-white/5 hover:border-emerald-500/30 transition-all group shadow-inner">
-                        <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-emerald-500/70 mb-4">Transmission Layer</h4>
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-emerald-500/70 mb-4">Message Protocol</h4>
                         <p className="text-base font-black text-foreground group-hover:translate-x-1 transition-transform">Multi-Session V2.0</p>
-                        <p className="text-[10px] font-bold text-muted-foreground mt-1">Advanced socket buffering active.</p>
+                        <p className="text-[10px] font-bold text-muted-foreground mt-1">Optimized connection active.</p>
                      </div>
                      <div className="p-8 rounded-3xl bg-muted/20 border border-white/5 hover:border-blue-500/30 transition-all group shadow-inner">
-                        <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-500/70 mb-4">Node Integrity</h4>
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-500/70 mb-4">Connection Status</h4>
                         <p className="text-base font-black text-foreground group-hover:translate-x-1 transition-transform">Health State :: Optimal</p>
                         <p className="text-[10px] font-bold text-muted-foreground mt-1">Zero dropped packets detected.</p>
                      </div>
@@ -189,9 +189,9 @@ export function WhatsAppSettings() {
               ) : qrCode ? (
                 <div className="flex flex-col items-center justify-center space-y-10 animate-in zoom-in-95 duration-500">
                    <div className="text-center space-y-4">
-                     <h3 className="text-3xl font-black tracking-tighter">SECURE <span className="text-primary italic">HANDSHAKE</span></h3>
+                     <h3 className="text-3xl font-black tracking-tighter">WHATSAPP <span className="text-primary italic">LINK</span></h3>
                      <p className="text-sm font-medium text-muted-foreground max-w-sm mx-auto leading-relaxed">
-                       Intercept and scan the cryptographic token below using your WhatsApp mobile terminal to authenticate the session.
+                       Scan the QR code below using your WhatsApp app to connect.
                      </p>
                    </div>
                    
@@ -236,9 +236,9 @@ export function WhatsAppSettings() {
                   </div>
                   
                   <div className="space-y-4">
-                    <h3 className="text-4xl font-black tracking-tighter">NODE <span className="text-primary italic">OFFLINE</span></h3>
+                    <h3 className="text-4xl font-black tracking-tighter">CONNECTION <span className="text-primary italic">OFFLINE</span></h3>
                     <p className="text-sm font-medium text-muted-foreground max-w-sm mx-auto leading-relaxed">
-                      Bridge your WhatsApp cluster to the automation grid. Enter your mobile identifier to generate a unique instance token.
+                      Connect your WhatsApp account. Enter your mobile number to generate a QR code.
                     </p>
                   </div>
 
@@ -260,12 +260,12 @@ export function WhatsAppSettings() {
                        {connecting ? (
                          <>
                            <Loader2 className="h-6 w-6 mr-4 animate-spin" />
-                           BOOTING NEURAL INSTANCE...
+                           GENERATING QR CODE...
                          </>
                        ) : (
                          <>
                            <Zap className="h-6 w-6 mr-4 fill-background group-hover:animate-pulse" />
-                           INITIALIZE BRIDGE
+                           CONNECT WHATSAPP
                          </>
                        )}
                      </Button>

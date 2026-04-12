@@ -44,21 +44,21 @@ export default function Dashboard() {
 
   const stats = [
     {
-      label: "TOTAL EXTRACTIONS",
+      label: "TOTAL CONTACTS",
       value: "2,481",
       icon: Users,
       color: "bg-blue-500/10 text-blue-500",
       trend: "+12.5%",
     },
     {
-      label: "PROTOCOL UPTIME",
-      value: "99.9%",
+      label: "SYSTEM STATUS",
+      value: "ONLINE",
       icon: Zap,
       color: "bg-emerald-500/10 text-emerald-500",
       trend: "STABLE",
     },
     {
-      label: "CONVERSION VELOCITY",
+      label: "OUTREACH RATE",
       value: "14.2%",
       icon: TrendingUp,
       color: "bg-purple-500/10 text-purple-500",
@@ -77,29 +77,29 @@ export default function Dashboard() {
             <div className="flex-1 space-y-8 text-center lg:text-left">
               <div className="inline-flex items-center gap-3 px-4 py-2 rounded-2xl bg-primary/10 border border-primary/20">
                 <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(139,92,246,1)]" />
-                <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Neural Engine Segment 01 :: Online</span>
+                <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Casting Automation System :: Operational</span>
               </div>
               
               <h1 className="text-5xl md:text-7xl font-black text-foreground tracking-tighter leading-[0.9] text-glow">
-                DOMINATE THE <br />
-                <span className="italic text-primary">CASTING</span> <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-accent">LIFECYCLE</span>
+                AUTOMATE YOUR <br />
+                <span className="italic text-primary">CASTING</span> <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-accent">OUTREACH</span>
               </h1>
 
               <p className="text-lg text-muted-foreground/80 max-w-2xl leading-relaxed font-medium">
-                CastHub orchestrates cross-platform intelligence clusters to identify, extract, and convert casting opportunities with surgical precision. 
-                Initialize your outreach sequence below.
+                CastHub helps you manage cross-platform contacts to identify, track, and convert casting opportunities with ease. 
+                Get started with your outreach below.
               </p>
 
               <div className="flex flex-wrap gap-4 justify-center lg:justify-start pt-4">
                 <Link to="/controller">
                   <Button size="lg" className="h-16 px-10 rounded-[1.5rem] bg-foreground text-background hover:bg-foreground/90 gap-4 text-sm font-black shadow-2xl shadow-primary/20 transition-all hover:-translate-y-1 active:scale-95">
                     <Zap className="w-5 h-5 fill-background" />
-                    INITIALIZE TERMINAL
+                    GO TO CONTROLLER
                   </Button>
                 </Link>
                 <Link to="/contacts">
                   <Button size="lg" variant="outline" className="h-16 px-10 rounded-[1.5rem] bg-background/30 backdrop-blur-md border border-white/10 hover:bg-muted/50 text-sm font-black transition-all hover:-translate-y-1 active:scale-95">
-                    ACCESS INTELLIGENCE
+                    VIEW CONTACTS
                   </Button>
                 </Link>
               </div>
@@ -111,7 +111,7 @@ export default function Dashboard() {
                <div className="glass-card relative w-full h-full rounded-[4rem] flex items-center justify-center border-white/20 shadow-[-20px_-20px_60px_-15px_rgba(139,92,246,0.3)]">
                   <div className="text-center space-y-4">
                      <p className="text-8xl font-black tracking-tighter text-glow translate-y-2">84%</p>
-                     <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Conversion Delta</p>
+                     <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Outreach Success</p>
                      <div className="flex justify-center gap-1">
                         {[1,2,3,4,5].map(i => <div key={i} className={`w-1 h-3 rounded-full ${i <= 4 ? 'bg-primary' : 'bg-muted/40'} animate-pulse`} style={{ animationDelay: `${i * 100}ms` }} />)}
                      </div>
@@ -155,19 +155,19 @@ export default function Dashboard() {
           })}
         </div>
 
-        {/* Intelligence Stream & Quick Actions */}
+        {/* Contacts & Quick Actions */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-           {/* Navigation Cluster */}
+           {/* Navigation */}
            <div className="lg:col-span-4 space-y-6">
               <div className="flex items-center gap-3 px-2">
                 <LayoutDashboard className="w-4 h-4 text-primary" />
-                <h2 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Protocol Navigation</h2>
+                <h2 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Quick Navigation</h2>
               </div>
               <div className="space-y-4">
                   {[
-                    { label: "Opcodes (Controller)", desc: "Manage extraction sequences", icon: Settings, link: "/controller", color: "text-primary", bg: "bg-primary/5" },
-                    { label: "Segments (Contacts)", desc: "Manage intelligence nodes", icon: Table, link: "/contacts", color: "text-blue-500", bg: "bg-blue-500/5" },
-                    { label: "Telemetry (Analytics)", desc: "View conversion telemetry", icon: BarChart3, link: "/analytics", color: "text-orange-500", bg: "bg-orange-500/5" },
+                    { label: "Controller", desc: "Manage your message sources", icon: Settings, link: "/controller", color: "text-primary", bg: "bg-primary/5" },
+                    { label: "Contacts", desc: "Manage your contact list", icon: Table, link: "/contacts", color: "text-blue-500", bg: "bg-blue-500/5" },
+                    { label: "Analytics", desc: "View your performance stats", icon: BarChart3, link: "/analytics", color: "text-orange-500", bg: "bg-orange-500/5" },
                   ].map((nav, i) => (
                     <Link key={i} to={nav.link} className="block group">
                       <div className="p-6 glass-card rounded-3xl border-white/5 hover:border-white/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-5 shadow-lg">
@@ -189,9 +189,9 @@ export default function Dashboard() {
               <div className="flex items-center justify-between px-2">
                 <div className="flex items-center gap-3">
                     <RefreshCw className="w-4 h-4 text-emerald-500 animate-spin-slow" />
-                    <h2 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Recent Extraction Hits</h2>
+                    <h2 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Recent Contacts</h2>
                 </div>
-                <Link to="/contacts" className="text-[10px] font-black text-primary hover:underline tracking-widest uppercase">SCAN FULL ARCHIVE</Link>
+                <Link to="/contacts" className="text-[10px] font-black text-primary hover:underline tracking-widest uppercase">VIEW ALL</Link>
               </div>
               <Card className="glass-card border-white/5 rounded-[2.5rem] overflow-hidden shadow-2xl">
                 <CardContent className="p-0">
@@ -227,19 +227,19 @@ export default function Dashboard() {
            </div>
         </div>
 
-        {/* Protocol Visualizer Section */}
+        {/* Workflow Section */}
         <section className="space-y-10 pt-10">
            <div className="text-center space-y-3">
               <p className="text-[10px] font-black text-primary uppercase tracking-[0.4em]">Integrated Pipeline</p>
-              <h2 className="text-4xl font-black tracking-tighter">MISSION-CRITICAL WORKFLOW</h2>
-              <p className="text-muted-foreground font-medium max-w-xl mx-auto">CastHub operates on a tri-stage cycle designed for maximum conversion velocity.</p>
+              <h2 className="text-4xl font-black tracking-tighter">OUR WORKFLOW</h2>
+              <p className="text-muted-foreground font-medium max-w-xl mx-auto">CastHub operates on a simple cycle designed for maximum outreach efficiency.</p>
            </div>
            
            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
               {[
-                { step: "01", title: "CONFIGURE", desc: "Define extraction parameters and initialize neural monitoring clusters for target groups.", icon: SlidersHorizontal, color: "from-primary to-purple-600" },
-                { step: "02", title: "CRAWL", desc: "Autonomous scanning nodes parse global project data, identifying high-intent opportunities.", icon: TrendingUp, color: "from-secondary to-blue-600" },
-                { step: "03", title: "CONVERT", desc: "Initiate multi-channel outreach protocols using AI-optimized blueprint models.", icon: Zap, color: "from-accent to-orange-600" },
+                { step: "01", title: "CONFIGURE", desc: "Add your contacts and organize them into sheets for better management.", icon: SlidersHorizontal, color: "from-primary to-purple-600" },
+                { step: "02", title: "SYNC", desc: "Sync your contacts and monitor their status in real-time.", icon: TrendingUp, color: "from-secondary to-blue-600" },
+                { step: "03", title: "REACH OUT", desc: "Send automated messages to your contacts via WhatsApp or Instagram.", icon: Zap, color: "from-accent to-orange-600" },
               ].map((item, i) => (
                 <div key={i} className="glass-card h-[320px] p-10 rounded-[3rem] relative overflow-hidden group flex flex-col justify-between border-white/5 hover:border-primary/30 transition-all duration-700">
                    <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${item.color} opacity-0 group-hover:opacity-10 -z-10 group-hover:scale-[2] transition-all duration-1000 blur-2xl`} />

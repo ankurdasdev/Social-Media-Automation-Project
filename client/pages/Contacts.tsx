@@ -87,8 +87,8 @@ export default function Contacts() {
     },
     onSuccess: () => {
       toast({
-        title: "SYNC INITIALIZED",
-        description: "Protocol clusters are now scanning live project streams.",
+        title: "SYNC STARTED",
+        description: "Scanning for new casting opportunities.",
       });
       queryClient.invalidateQueries({ queryKey: ["ingestion-status"] });
     },
@@ -113,7 +113,7 @@ export default function Contacts() {
       return res.json();
     },
     onSuccess: () => {
-      toast({ title: "METADATA COMMIT", description: `${newLead.name} added to neural segment.` });
+      toast({ title: "CONTACT ADDED", description: `${newLead.name} added to sheet.` });
       setIsAddLeadOpen(false);
       setNewLead({
       name: "",
@@ -162,8 +162,8 @@ export default function Contacts() {
     },
     onSuccess: (_, variables) => {
       toast({
-        title: "BATCH COMMIT SUCCESSFUL",
-        description: `Processed ${variables.ids.length} nodes successfully.`,
+        title: "BULK ACTION SUCCESSFUL",
+        description: `Processed ${variables.ids.length} contacts successfully.`,
       });
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
     },
@@ -171,8 +171,8 @@ export default function Contacts() {
 
   const handleBulkTrigger = (contactIds: string[]) => {
     toast({
-      title: "OUTREACH DISPATCHED",
-      description: `Dispatched ${contactIds.length} sequences via AI blueprint engine.`,
+      title: "OUTREACH SENT",
+      description: `Dispatched ${contactIds.length} messages via outreach system.`,
     });
   };
 
@@ -212,12 +212,12 @@ export default function Contacts() {
           <div className="space-y-4 text-center lg:text-left">
             <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[10px] font-black tracking-[0.2em] uppercase">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Intelligence Grid :: Active
+              Contact List :: Active
             </div>
-            <h1 className="text-5xl font-black tracking-tighter text-foreground text-glow whitespace-nowrap">EXTRACTED <span className="text-primary italic">NODES</span></h1>
+            <h1 className="text-5xl font-black tracking-tighter text-foreground text-glow whitespace-nowrap">LEAD <span className="text-primary italic">CONTACTS</span></h1>
             <p className="text-muted-foreground/80 text-sm font-medium max-w-xl leading-relaxed">
-              Real-time synchronization of casting opportunities across monitored clusters. 
-              Assign blueprints and initiate automated outreach protocols.
+              Real-time synchronization of casting opportunities across your sheets. 
+              Assign templates and initiate automated outreach messages.
             </p>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-4">
@@ -233,10 +233,10 @@ export default function Contacts() {
               ) : (
                 <RefreshCw className="mr-3 h-5 w-5 text-primary group-hover:rotate-180 transition-transform duration-700" />
               )}
-              SYNC REPOSITORY
+              SYNC CONTACTS
             </Button>
             <Button size="lg" onClick={handleOpenAddLead} className="h-16 bg-foreground text-background hover:bg-foreground/90 shadow-2xl shadow-primary/20 rounded-2xl font-black px-10 transition-all hover:-translate-y-1 active:scale-[0.98]">
-              <Plus className="mr-3 h-6 w-6" /> INJECT LEAD
+              <Plus className="mr-3 h-6 w-6" /> ADD CONTACT
             </Button>
           </div>
         </div>
@@ -250,9 +250,9 @@ export default function Contacts() {
                     <Loader2 className="h-7 w-7 text-blue-500 animate-spin" />
                  </div>
                  <div className="space-y-1">
-                    <h3 className="text-base font-black text-blue-500 uppercase tracking-tighter">Cluster Scanning In Progress</h3>
+                    <h3 className="text-base font-black text-blue-500 uppercase tracking-tighter">Sync In Progress</h3>
                     <p className="text-xs font-bold text-blue-400 opacity-70 tracking-widest uppercase">
-                      Intercepting project data from remote nodes...
+                      Loading contacts from your sources...
                     </p>
                  </div>
               </div>
@@ -265,7 +265,7 @@ export default function Contacts() {
           {contactsLoading ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-4 opacity-50">
               <Loader2 className="h-12 w-12 animate-spin text-primary" />
-              <p className="text-[10px] font-black uppercase tracking-[0.4em]">Mounting Archive Segment...</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.4em]">Loading Contacts...</p>
             </div>
           ) : (
             <DataTable 
@@ -295,16 +295,16 @@ export default function Contacts() {
       <Dialog open={isAddLeadOpen} onOpenChange={setIsAddLeadOpen}>
         <DialogContent className="sm:max-w-[500px] glass-card border-white/10 dark:border-white/5 rounded-[2.5rem] p-0 overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
           <DialogHeader className="p-8 pb-4 bg-muted/30">
-            <DialogTitle className="text-3xl font-black tracking-tighter">MANUAL <span className="text-primary italic">INJECTION</span></DialogTitle>
+            <DialogTitle className="text-3xl font-black tracking-tighter">ADD NEW <span className="text-primary italic">CONTACT</span></DialogTitle>
             <DialogDescription className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
-              Assign metadata parameters to establish a new intelligence node.
+              Fill in the details to establish a new contact record.
             </DialogDescription>
           </DialogHeader>
           
           <div className="p-8 max-h-[70vh] overflow-y-auto space-y-8 scrollbar-hide">
             <div className="space-y-6">
                 <div className="space-y-3">
-                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Primary Node Label</Label>
+                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Contact Name</Label>
                     <Input value={newLead.name} onChange={e => setNewLead({...newLead, name: e.target.value})} className="h-12 rounded-xl bg-muted/40 border-border/50 font-bold focus:ring-primary shadow-inner" placeholder="E.g. John Doe" />
                 </div>
                 
@@ -314,7 +314,7 @@ export default function Contacts() {
                         <Input value={newLead.castingName} onChange={e => setNewLead({...newLead, castingName: e.target.value})} className="h-12 rounded-xl bg-muted/40 border-border/50 font-bold" />
                     </div>
                     <div className="space-y-3">
-                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Neural Segment</Label>
+                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Sheet Name</Label>
                         <Select value={newLead.sheetName} onValueChange={(val) => setNewLead({ ...newLead, sheetName: val })}>
                           <SelectTrigger className="h-12 rounded-xl bg-muted/40 border-border/50 font-bold">
                             <SelectValue placeholder="Unassigned" />
@@ -328,7 +328,7 @@ export default function Contacts() {
 
                 <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-3">
-                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">WhatsApp Uplink</Label>
+                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">WhatsApp Number</Label>
                         <Input value={newLead.whatsapp} onChange={e => setNewLead({...newLead, whatsapp: e.target.value})} className="h-12 rounded-xl bg-muted/40 border-border/50 font-bold" placeholder="+91..." />
                     </div>
                     <div className="space-y-3">
@@ -338,22 +338,22 @@ export default function Contacts() {
                 </div>
 
                 <div className="space-y-3">
-                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Email Endpoint</Label>
+                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Email Address</Label>
                     <Input type="email" value={newLead.email} onChange={e => setNewLead({...newLead, email: e.target.value})} className="h-12 rounded-xl bg-muted/40 border-border/50 font-bold" placeholder="protocol@example.com" />
                 </div>
 
                 <div className="space-y-3">
-                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Mission Context / Role</Label>
+                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Context / Role</Label>
                     <Input value={newLead.actingContext} onChange={e => setNewLead({...newLead, actingContext: e.target.value})} className="h-12 rounded-xl bg-muted/40 border-border/50 font-bold" placeholder="E.g. Lead Antagonist" />
                 </div>
             </div>
           </div>
 
           <DialogFooter className="p-8 bg-muted/30 border-t border-white/5 gap-4">
-            <Button variant="ghost" onClick={() => setIsAddLeadOpen(false)} className="h-12 rounded-xl font-black text-[11px] uppercase tracking-widest">ABORT MISSION</Button>
+            <Button variant="ghost" onClick={() => setIsAddLeadOpen(false)} className="h-12 rounded-xl font-black text-[11px] uppercase tracking-widest">CANCEL</Button>
             <Button onClick={submitAddLead} disabled={addLeadMutation.isPending} className="h-12 rounded-xl bg-primary text-white font-black px-8 shadow-xl hover:shadow-primary/30 transition-all flex-1">
               {addLeadMutation.isPending ? <Loader2 className="mr-3 h-5 w-5 animate-spin"/> : <Plus className="mr-3 h-5 w-5" />}
-              COMMIT NODE
+              ADD CONTACT
             </Button>
           </DialogFooter>
         </DialogContent>
