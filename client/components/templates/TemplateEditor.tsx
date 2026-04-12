@@ -142,33 +142,35 @@ export function TemplateEditor({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
-            {template ? "Edit Template" : `Create ${categoryLabel} Template`}
+      <DialogContent className="sm:max-w-[720px] glass-card border-white/10 dark:border-white/5 p-0 overflow-hidden shadow-2xl rounded-[2rem] max-h-[90vh] flex flex-col">
+        <DialogHeader className="p-10 pb-4">
+          <DialogTitle className="text-3xl font-black tracking-tight">
+            {template ? "Modify Blueprint" : `New ${categoryLabel} Model`}
           </DialogTitle>
-          <DialogDescription>
-            Use the variable chips below to insert dynamic placeholders into your message.
+          <DialogDescription className="text-muted-foreground font-medium uppercase tracking-widest text-[10px]">
+             Configure protocol parameters for automated outreach sequences.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-5 py-2">
+        <div className="px-10 py-6 space-y-8 overflow-y-auto">
           {/* Template Name */}
-          <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Template Name</Label>
+          <div className="space-y-3">
+            <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Blueprint Identifier</Label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. WA Intro Pitch"
-              className="h-9"
+              className="h-14 rounded-2xl bg-muted/30 border-border/50 focus:ring-primary font-bold shadow-inner"
             />
           </div>
 
           {/* Variable Chips */}
-          <div className="space-y-2">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Dynamic Variables</Label>
-            <p className="text-[11px] text-muted-foreground">Click a variable to insert it at your cursor position in the message below.</p>
-            <div className="flex flex-wrap gap-2">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+                <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Dynamic Injection Tokens</Label>
+                <span className="text-[10px] font-bold text-primary animate-pulse">DRAG & DROP READY</span>
+            </div>
+            <div className="flex flex-wrap gap-2.5">
               {VARIABLES.map((v) => (
                 <button
                   key={v.label}
@@ -182,8 +184,8 @@ export function TemplateEditor({
                 >
                   <Badge
                     variant="secondary"
-                    className="font-mono text-xs group-hover:bg-primary group-hover:text-primary-foreground transition-colors select-none"
-                    style={{ opacity: isAttachment ? 0.4 : 1, cursor: isAttachment ? "not-allowed" : "grab" }}
+                    className="font-black text-[11px] px-3 py-1.5 rounded-xl bg-muted/50 border-border/50 group-hover:bg-primary group-hover:text-primary-foreground group-hover:scale-105 transition-all select-none tracking-tight"
+                    style={{ opacity: isAttachment ? 0.3 : 1, cursor: isAttachment ? "not-allowed" : "grab" }}
                   >
                     {v.label}
                   </Badge>
@@ -193,71 +195,73 @@ export function TemplateEditor({
           </div>
 
           {/* Message Content */}
-          <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Message Body</Label>
-            <Textarea
-              ref={textareaRef}
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; }}
-              onDrop={handleDrop}
-              disabled={isAttachment}
-              placeholder={
-                isAttachment
-                  ? "Not applicable — this template sends an attachment."
-                  : "Type your message here. Click or drag variable chips above to insert dynamic fields..."
-              }
-              className="min-h-[140px] resize-y font-mono text-sm"
-            />
-            {!isAttachment && (
-              <p className="text-[11px] text-muted-foreground">
-                Variables will be replaced with actual values when the message is sent.
-              </p>
-            )}
+          <div className="space-y-3">
+            <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Protocol Body</Label>
+            <div className="relative group">
+                <Textarea
+                  ref={textareaRef}
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; }}
+                  onDrop={handleDrop}
+                  disabled={isAttachment}
+                  placeholder={
+                    isAttachment
+                      ? "PROTOCOL RESTRICTED: Sending attachment stream."
+                      : "Initialize extraction sequence here. Inject tokens for dynamic personalization..."
+                  }
+                  className="min-h-[200px] rounded-3xl bg-muted/30 border-border/50 focus:ring-primary font-medium p-8 shadow-inner resize-none leading-relaxed transition-all"
+                />
+                {!isAttachment && (
+                  <div className="absolute bottom-4 right-6 text-[10px] font-black text-muted-foreground/50 tracking-widest uppercase pointer-events-none">
+                    {content.length} CHARACTERS
+                  </div>
+                )}
+            </div>
           </div>
 
           {/* Attachment Toggle */}
-          <div className="border rounded-lg p-4 space-y-3">
-            <div className="flex items-center space-x-3">
+          <div className="glass-card bg-muted/20 border-border/40 rounded-3xl p-8 space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <label htmlFor="is-attachment" className="text-sm font-black tracking-tight leading-none cursor-pointer">
+                  ATTACHMENT STREAM
+                </label>
+                <p className="text-[11px] font-medium text-muted-foreground">
+                  Transmit binary data instead of text-based protocol.
+                </p>
+              </div>
               <Checkbox
                 id="is-attachment"
                 checked={isAttachment}
                 onCheckedChange={(c) => setIsAttachment(!!c)}
-                className="data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
+                className="w-6 h-6 rounded-lg data-[state=checked]:bg-primary data-[state=checked]:border-primary"
               />
-              <div>
-                <label htmlFor="is-attachment" className="text-sm font-medium leading-none cursor-pointer">
-                  This template is an attachment
-                </label>
-                <p className="text-[11px] text-muted-foreground mt-0.5">
-                  When checked, the template will send a file attachment instead of a text message.
-                </p>
-              </div>
             </div>
 
             {isAttachment && (
-              <div className="space-y-3 pt-2 border-t">
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Attachment URL / File Path</Label>
-                  <div className="flex gap-2">
+              <div className="space-y-6 pt-6 border-t border-border/50 animate-in fade-in duration-300">
+                <div className="space-y-3">
+                  <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground text-primary">ENDPOINT URL</Label>
+                  <div className="flex gap-3">
                     <Input
                       value={attachmentUrl}
                       onChange={(e) => setAttachmentUrl(e.target.value)}
-                      placeholder="https://... or /path/to/file.pdf"
-                      className="h-8 text-sm"
+                      placeholder="https://..."
+                      className="h-14 rounded-2xl bg-muted/30 border-border/50 focus:ring-primary font-bold shadow-inner"
                     />
-                    <Button size="sm" variant="outline" className="h-8 px-2 shrink-0">
-                      <Paperclip className="h-4 w-4" />
+                    <Button size="icon" variant="outline" className="h-14 w-14 rounded-2xl shrink-0 border-border/50 hover:bg-muted">
+                      <Paperclip className="h-5 w-5" />
                     </Button>
                   </div>
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Attachment Detail Text</Label>
+                <div className="space-y-3">
+                  <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground text-primary">PROTOCOL CONTEXT (CAPTION)</Label>
                   <Textarea
                     value={attachmentDetailText}
                     onChange={(e) => setAttachmentDetailText(e.target.value)}
-                    placeholder="Caption or detail text to send along with the attachment..."
-                    className="min-h-[80px] resize-y text-sm"
+                    placeholder="Provide additional metadata for this attachment..."
+                    className="min-h-[100px] rounded-2xl bg-muted/30 border-border/50 focus:ring-primary font-medium p-6 shadow-inner resize-none"
                   />
                 </div>
               </div>
@@ -265,14 +269,25 @@ export function TemplateEditor({
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {template ? "Save Changes" : "Create Template"}
+        <DialogFooter className="p-10 pt-4 bg-muted/20">
+          <Button variant="ghost" onClick={() => onOpenChange(false)} className="h-14 flex-1 rounded-2xl font-bold bg-muted/50">
+            DISCARD
+          </Button>
+          <Button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="h-14 flex-[2] rounded-2xl font-black bg-foreground text-background hover:bg-foreground/90 shadow-xl transition-all active:scale-95"
+          >
+            {isSaving ? (
+              <Loader2 className="w-5 h-5 mr-3 animate-spin" />
+            ) : (
+              <div className="w-3 h-3 rounded-full bg-emerald-500 mr-3 animate-pulse" />
+            )}
+            {template ? "COMMIT SYNC" : "INITIALIZE BLUEPRINT"}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
+

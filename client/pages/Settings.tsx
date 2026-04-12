@@ -96,166 +96,151 @@ export default function Settings() {
 
   return (
     <AppLayout>
-      <div className="max-w-4xl mx-auto p-6 space-y-8">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold tracking-tight text-white flex items-center gap-3">
-            <Globe className="h-8 w-8 text-indigo-500" />
-            Integrations & Settings
+      <div className="max-w-5xl mx-auto p-2 md:p-6 lg:p-10 space-y-12 pb-24 relative">
+        <div className="flex flex-col gap-4 text-center md:text-left">
+          <div className="inline-flex items-center self-center md:self-start gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 text-[10px] font-black tracking-widest uppercase">
+            <ShieldCheck className="w-3 h-3" />
+            Security Verified
+          </div>
+          <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground flex flex-col md:flex-row items-center gap-4">
+            <span className="text-primary"><Globe className="h-10 w-10 md:h-12 md:w-12" /></span>
+            Integrations Center
           </h1>
-          <p className="text-zinc-400 text-base">
-            Manage your connected platforms and automation preferences.
+          <p className="text-muted-foreground text-lg max-w-2xl">
+            Configure your AI casting bridge by connecting your professional networks.
           </p>
         </div>
 
-        <Tabs defaultValue="google" className="space-y-6">
-          <TabsList className="bg-zinc-900 border border-zinc-800 p-1 h-12">
-            <TabsTrigger value="google" className="data-[state=active]:bg-zinc-800 gap-2 h-10 px-6">
-              <Mail className="h-4 w-4 text-blue-400" />
-              Google & Drive
+        <Tabs defaultValue="google" className="space-y-10">
+          <TabsList className="bg-muted/50 border border-border/50 p-1.5 h-14 rounded-2xl w-full md:w-auto overflow-x-auto justify-start md:justify-center">
+            <TabsTrigger value="google" className="data-[state=active]:bg-background data-[state=active]:shadow-lg rounded-xl gap-2 h-11 px-8 font-bold transition-all">
+              <Mail className="h-4 w-4 text-primary" />
+              Google
             </TabsTrigger>
-            <TabsTrigger value="whatsapp" className="data-[state=active]:bg-zinc-800 gap-2 h-10 px-6">
-              <MessageSquare className="h-4 w-4 text-emerald-400" />
+            <TabsTrigger value="whatsapp" className="data-[state=active]:bg-background data-[state=active]:shadow-lg rounded-xl gap-2 h-11 px-8 font-bold transition-all">
+              <MessageSquare className="h-4 w-4 text-emerald-500" />
               WhatsApp
             </TabsTrigger>
-            <TabsTrigger value="instagram" className="data-[state=active]:bg-zinc-800 gap-2 h-10 px-6">
-              <Instagram className="h-4 w-4 text-pink-400" />
+            <TabsTrigger value="instagram" className="data-[state=active]:bg-background data-[state=active]:shadow-lg rounded-xl gap-2 h-11 px-8 font-bold transition-all">
+              <Instagram className="h-4 w-4 text-pink-500" />
               Instagram
             </TabsTrigger>
           </TabsList>
 
           {/* ── Google Tab ────────────────────────────────────────────────── */}
-          <TabsContent value="google" className="space-y-6">
-            <Card className="border-zinc-800 bg-zinc-900/50">
-              <CardHeader>
-                <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
-                  <Mail className="h-5 w-5 text-blue-400" />
-                  Google Workspace
-                </CardTitle>
-                <CardDescription className="text-zinc-400">
-                  Connect Google Drive for attachments and Gmail for automated email outreach.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {googleLoading ? (
-                  <div className="flex items-center gap-3 text-zinc-400 py-4">
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    <span>Verifying connection...</span>
-                  </div>
-                ) : googleStatus?.connected ? (
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between p-4 rounded-xl bg-zinc-950 border border-zinc-800">
-                      <div className="flex items-center gap-4">
-                        <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
-                          <CheckCircle2 className="h-6 w-6 text-blue-500" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-white">{googleStatus.userName}</p>
-                          <p className="text-xs text-zinc-500">{googleStatus.userEmail}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {googleStatus.needsReauth && (
-                          <Button size="sm" onClick={handleConnectGoogle} className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
-                            <RefreshCw className="h-4 w-4" /> Re-auth
-                          </Button>
-                        )}
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={handleDisconnectGoogle}
-                          className="text-zinc-500 hover:text-red-400 hover:bg-red-400/10 gap-2"
-                        >
-                          <LogOut className="h-4 w-4" /> Disconnect
-                        </Button>
-                      </div>
+          <TabsContent value="google" className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <Card className="glass-card border-white/10 dark:border-white/5 rounded-3xl overflow-hidden shadow-2xl">
+              <div className="flex flex-col md:flex-row">
+                 <div className="p-8 md:p-12 md:w-1/3 border-b md:border-b-0 md:border-r border-border/50 bg-muted/20">
+                    <div className="w-16 h-16 rounded-3xl bg-primary/10 flex items-center justify-center mb-6 shadow-inner shadow-primary/20">
+                       <Mail className="h-8 w-8 text-primary" />
                     </div>
+                    <CardTitle className="text-2xl font-black mb-3">Google Workspace</CardTitle>
+                    <CardDescription className="text-sm leading-relaxed">
+                      Connect your Google account to enable automated email outreach via Gmail and document management via Drive.
+                    </CardDescription>
+                 </div>
+                 
+                 <div className="p-8 md:p-12 flex-1 flex flex-col justify-center">
+                   {googleLoading ? (
+                     <div className="flex flex-col items-center gap-4 text-muted-foreground py-10">
+                       <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                       <span className="text-xs font-bold uppercase tracking-widest">Verifying Connection...</span>
+                     </div>
+                   ) : googleStatus?.connected ? (
+                     <div className="space-y-8">
+                       <div className="p-6 rounded-2xl bg-background/50 border border-border/50 flex flex-col md:flex-row items-center justify-between gap-6">
+                         <div className="flex items-center gap-5">
+                            <div className="h-16 w-16 rounded-full border-2 border-emerald-500/30 p-1">
+                               <div className="w-full h-full rounded-full bg-emerald-500/10 flex items-center justify-center">
+                                  <CheckCircle2 className="h-8 w-8 text-emerald-500" />
+                               </div>
+                            </div>
+                           <div>
+                             <p className="text-lg font-black">{googleStatus.userName}</p>
+                             <p className="text-sm text-muted-foreground font-medium">{googleStatus.userEmail}</p>
+                           </div>
+                         </div>
+                         <div className="flex items-center gap-3">
+                           {googleStatus.needsReauth && (
+                             <Button onClick={handleConnectGoogle} className="h-12 px-6 rounded-xl bg-primary hover:bg-primary/90 text-white gap-2 font-bold shadow-lg shadow-primary/20">
+                               <RefreshCw className="h-4 w-4" /> RE-AUTHENTICATE
+                             </Button>
+                           )}
+                           <Button
+                             variant="ghost"
+                             onClick={handleDisconnectGoogle}
+                             className="h-12 px-6 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-2 font-bold transition-all"
+                           >
+                             <LogOut className="h-4 w-4" /> DISCONNECT
+                           </Button>
+                         </div>
+                       </div>
 
-                    {!googleStatus.needsReauth && (
-                      <div className="space-y-4">
-                        <div className="flex gap-2">
-                          <Badge className="bg-blue-500/10 text-blue-400 border-none px-3 py-1">
-                            <HardDrive className="h-3.5 w-3.5 mr-1.5" /> Drive Active
-                          </Badge>
-                          <Badge className="bg-blue-500/10 text-blue-400 border-none px-3 py-1">
-                            <Mail className="h-3.5 w-3.5 mr-1.5" /> Gmail Active
-                          </Badge>
-                        </div>
-
-                        <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-950/50 space-y-4">
-                          <div className="flex items-center gap-2 text-xs font-bold text-zinc-500 uppercase tracking-widest">
-                            <FolderOpen className="h-4 w-4" /> Drive Attachments Folder
-                          </div>
-                          <p className="text-sm text-zinc-400">
-                            Select the default folder to browse when picking attachments for your leads.
-                          </p>
-                          <Select
-                            value={googleStatus.driveFolderId ?? ""}
-                            onValueChange={handleSetFolder}
-                          >
-                            <SelectTrigger className="bg-zinc-900 border-zinc-800 text-zinc-300">
-                              <SelectValue placeholder="Choose a folder..." />
-                            </SelectTrigger>
-                            <SelectContent className="bg-zinc-900 border-zinc-800 text-zinc-300">
-                              {foldersData?.folders.map((f) => (
-                                <SelectItem key={f.id} value={f.id}>
-                                  📁 {f.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          {googleStatus.driveFolderName && (
-                            <p className="text-sm text-emerald-500 flex items-center gap-2 font-medium">
-                              <CheckCircle2 className="h-4 w-4" />
-                              Selected: {googleStatus.driveFolderName}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center p-10 border-2 border-dashed border-zinc-800 rounded-2xl bg-zinc-950/30 space-y-4">
-                    <div className="h-16 w-16 bg-zinc-900 rounded-3xl flex items-center justify-center border border-zinc-800">
-                      <Mail className="h-8 w-8 text-zinc-500" />
-                    </div>
-                    <div className="text-center space-y-2">
-                      <h3 className="text-lg font-semibold text-white">Not Connected</h3>
-                      <p className="text-sm text-zinc-500 max-w-sm">
-                        Grant permission to access your Google Drive and Gmail to automate your outreach workflow.
-                      </p>
-                    </div>
-                    <Button onClick={handleConnectGoogle} className="bg-white text-black hover:bg-zinc-200 px-8 py-6 rounded-xl text-base font-bold shadow-lg shadow-white/5 transition-transform active:scale-95">
-                      Connect Google Account
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
+                       {!googleStatus.needsReauth && (
+                           <div className="flex flex-wrap gap-4 pt-2">
+                             <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-blue-500/5 border border-blue-500/10 text-blue-500">
+                               <HardDrive className="h-5 w-5" />
+                               <span className="text-sm font-bold uppercase tracking-wider">Drive Bridge Active</span>
+                             </div>
+                             <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-indigo-500/5 border border-indigo-500/10 text-indigo-500">
+                               <Mail className="h-5 w-5" />
+                               <span className="text-sm font-bold uppercase tracking-wider">Gmail Bridge Active</span>
+                             </div>
+                           </div>
+                       )}
+                     </div>
+                   ) : (
+                     <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-border rounded-3xl bg-muted/10 space-y-6 text-center">
+                       <div className="h-20 w-20 bg-muted rounded-[2rem] flex items-center justify-center border border-border group-hover:rotate-12 transition-transform">
+                         <Globe className="h-10 w-10 text-muted-foreground" />
+                       </div>
+                       <div className="space-y-2">
+                         <h3 className="text-xl font-bold">Bridge Not Established</h3>
+                         <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                           Establish a secure Oauth 2.0 connection with Google to unlock CastHub's automation sequence.
+                         </p>
+                       </div>
+                       <Button onClick={handleConnectGoogle} className="h-14 px-10 bg-foreground text-background hover:bg-foreground/90 rounded-2xl text-base font-black shadow-2xl transition-all active:scale-95">
+                         CONNECT GOOGLE WORKSPACE
+                       </Button>
+                     </div>
+                   )}
+                 </div>
+              </div>
             </Card>
           </TabsContent>
 
           {/* ── WhatsApp Tab ──────────────────────────────────────────────── */}
-          <TabsContent value="whatsapp" className="space-y-6">
+          <TabsContent value="whatsapp" className="animate-in fade-in slide-in-from-bottom-4 duration-300">
             <WhatsAppSettings />
           </TabsContent>
 
           {/* ── Instagram Tab ─────────────────────────────────────────────── */}
-          <TabsContent value="instagram" className="space-y-6">
+          <TabsContent value="instagram" className="animate-in fade-in slide-in-from-bottom-4 duration-300">
             <InstagramSettings />
           </TabsContent>
         </Tabs>
 
-        <Separator className="bg-zinc-800" />
-
         {/* ── Security / Info ───────────────────────────────────────────── */}
-        <div className="flex items-center gap-4 p-4 rounded-xl bg-indigo-500/5 border border-indigo-500/10">
-          <ShieldCheck className="h-6 w-6 text-indigo-400 shrink-0" />
-          <div className="space-y-1">
-            <p className="text-sm font-semibold text-white">Secure Isolation Active</p>
-            <p className="text-xs text-zinc-500">
-              Your credentials and tokens are encrypted and isolated to User ID: <code className="bg-zinc-900 px-1.5 py-0.5 rounded text-indigo-400">{userId}</code>
-            </p>
-          </div>
-        </div>
+        <section className="glass-card p-10 rounded-[2.5rem] border-white/5 relative overflow-hidden">
+           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-10" />
+           <div className="flex flex-col md:flex-row items-center gap-8">
+              <div className="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20">
+                 <ShieldCheck className="h-10 w-10 text-primary" />
+              </div>
+              <div className="space-y-3 text-center md:text-left">
+                <h3 className="text-2xl font-black">Secure Data Vault</h3>
+                <p className="text-muted-foreground leading-relaxed max-w-2xl">
+                  CastHub utilizes AES-256 encryption for all OAuth tokens. Your credentials never touch our databases in plain text and are physically isolated to your unique environment.
+                </p>
+                <div className="flex items-center justify-center md:justify-start gap-2 pt-2">
+                   <Badge variant="outline" className="px-3 py-1 rounded-full border-primary/30 text-primary bg-primary/5 font-bold text-[10px] uppercase">User ID: {userId}</Badge>
+                   <Badge variant="outline" className="px-3 py-1 rounded-full border-border text-muted-foreground font-bold text-[10px] uppercase">Enclave: Production-01</Badge>
+                </div>
+              </div>
+           </div>
+        </section>
       </div>
     </AppLayout>
   );

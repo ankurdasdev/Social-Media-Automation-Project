@@ -25,4 +25,6 @@ dist-ssr
 
 .config/
 .env
+.env.production
+*.production
 !.env.example

@@ -83,7 +83,7 @@ async function handleWhatsAppOutreach(userId: string, contact: Contact) {
   );
   if (!instance) throw new Error("WhatsApp not connected or instance not open");
 
-  const number = contact.whatsapp.replace(/\D/g, "");
+  const number = (contact.whatsapp || "").replace(/\D/g, "");
   if (!number) throw new Error("No valid WhatsApp number found");
 
   const message = contact.hasCustomMessageWA ? contact.editableMessageWP : contact.templateSelectionWP;
@@ -168,7 +168,7 @@ async function handleInstagramOutreach(userId: string, contact: Contact) {
   );
   if (!session) throw new Error("Instagram not connected");
 
-  const handle = contact.instaHandle.replace("@", "");
+  const handle = (contact.instaHandle || "").replace("@", "");
   if (!handle) throw new Error("No Instagram handle found");
 
   const message = contact.hasCustomMessageIG ? contact.editableMessageIG : contact.templateSelectionIG;

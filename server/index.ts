@@ -46,6 +46,7 @@ import {
   handleInstagramDisconnect,
 } from "./routes/instagram-auth";
 import { handleSendOutreach } from "./routes/outreach";
+import { handleSignup, handleLogin, handleMe } from "./routes/auth";
 import { runIngestionJob } from "./jobs/ingestion-job";
 import { initDb } from "./db/index";
 
@@ -76,6 +77,11 @@ export function createServer() {
   });
 
   app.get("/api/demo", handleDemo);
+
+  // ── Authentication ──────────────────────────────────────────────────────────
+  app.post("/api/auth/signup", handleSignup);
+  app.post("/api/auth/login", handleLogin);
+  app.get("/api/auth/me", handleMe);
 
   // ── Source Group Management ────────────────────────────────────────────────
   app.get("/api/groups", handleGetGroups);

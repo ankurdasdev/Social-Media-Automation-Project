@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { Table } from "@tanstack/react-table";
+import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -97,21 +98,23 @@ export function DataTableToolbar<TData>({
   };
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Top Row: Tabs + Refresh */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+    <div className="flex flex-col gap-6 animate-in slide-in-from-top-2 duration-500">
+      {/* Top Row: Neural Segments + Global Refresh */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div className="flex items-center gap-3 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-auto">
-            <TabsList className="flex flex-wrap h-auto p-1">
-              <TabsTrigger value="all" className="text-xs">All Contacts</TabsTrigger>
+            <TabsList className="flex h-14 p-1.5 bg-muted/20 border border-white/5 rounded-2xl backdrop-blur-xl">
+              <TabsTrigger value="all" className="h-11 px-6 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] data-[state=active]:bg-foreground data-[state=active]:text-background transition-all">
+                Registry Alpha
+              </TabsTrigger>
               {(table.options.meta as any)?.uniqueSheets?.map((sheet: string) => (
-                <TabsTrigger key={sheet} value={sheet} className="text-xs group relative pr-1">
+                <TabsTrigger key={sheet} value={sheet} className="h-11 px-6 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] group relative transition-all">
                   {sheet}
                   {activeTab === sheet && (
                     <button
                       onClick={(e) => { e.stopPropagation(); setDeleteSheetConfirm(sheet); }}
-                      className="ml-1.5 opacity-0 group-hover:opacity-100 transition-opacity rounded-sm hover:bg-destructive/20 p-0.5"
-                      title={`Delete sheet "${sheet}"`}
+                      className="ml-3 opacity-0 group-hover:opacity-100 transition-all rounded-lg hover:bg-destructive/20 p-1 hover:scale-110"
+                      title={`Decommission segment "${sheet}"`}
                     >
                       <X className="h-3 w-3 text-destructive" />
                     </button>
@@ -120,59 +123,69 @@ export function DataTableToolbar<TData>({
               ))}
             </TabsList>
           </Tabs>
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setIsAddSheetOpen(true)} title="Add New Sheet">
-            <Plus className="h-4 w-4" />
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-14 w-14 rounded-2xl border border-dashed border-white/10 hover:border-primary/50 hover:bg-primary/5 transition-all shrink-0" 
+            onClick={() => setIsAddSheetOpen(true)} 
+            title="Deploy New Segment"
+          >
+            <Plus className="h-6 w-6 text-primary" />
           </Button>
         </div>
 
         <Button 
           variant="outline" 
-          size="sm" 
-          className="h-8 gap-1"
+          size="lg" 
+          className="h-14 px-8 gap-3 rounded-2xl border-white/10 bg-muted/20 hover:bg-muted/40 font-black text-[10px] tracking-[0.2em] transition-all active:scale-95 shrink-0"
           onClick={onRefresh}
           disabled={isRefreshing}
         >
-          <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-          Refresh
+          <RefreshCw className={cn("h-4 w-4 text-primary", isRefreshing ? "animate-spin" : "group-hover:rotate-180 transition-transform duration-700")} />
+          FORCE SYNC
         </Button>
       </div>
 
       <Dialog open={isAddSheetOpen} onOpenChange={setIsAddSheetOpen}>
-        <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle>Add New Sheet</DialogTitle>
-            <DialogDescription>
-              Create a new sheet tab to organize contacts. You can move contacts here via Bulk Actions.
+        <DialogContent className="sm:max-w-[450px] glass-card border-white/10 rounded-[2.5rem] p-0 overflow-hidden shadow-2xl">
+          <DialogHeader className="p-8 pb-4 bg-muted/30">
+            <DialogTitle className="text-3xl font-black tracking-tighter">DEPLOY <span className="text-primary italic">SEGMENT</span></DialogTitle>
+            <DialogDescription className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
+              Establish a new intelligence cluster for node organization.
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4">
-            <Input 
-              placeholder="e.g. Talent Agencies" 
-              value={newSheetName} 
-              onChange={e => setNewSheetName(e.target.value)} 
-              onKeyDown={e => e.key === 'Enter' && handleCreateSheet()}
-            />
+          <div className="p-8 space-y-6">
+            <div className="space-y-3">
+                <Input 
+                  placeholder="E.g. High Priority Targets" 
+                  value={newSheetName} 
+                  onChange={e => setNewSheetName(e.target.value)} 
+                  onKeyDown={e => e.key === 'Enter' && handleCreateSheet()}
+                  className="h-14 rounded-xl bg-muted/40 border-border/50 font-bold focus:ring-primary shadow-inner"
+                />
+            </div>
+            <div className="flex gap-4">
+                <Button variant="ghost" onClick={() => setIsAddSheetOpen(false)} className="h-14 flex-1 rounded-xl font-black text-[11px] uppercase tracking-widest">ABORT</Button>
+                <Button onClick={handleCreateSheet} className="h-14 flex-1 rounded-xl bg-primary text-white font-black shadow-xl hover:shadow-primary/20">INITIALIZE</Button>
+            </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddSheetOpen(false)}>Cancel</Button>
-            <Button onClick={handleCreateSheet}>Create Sheet</Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Delete Sheet Confirmation */}
       <AlertDialog open={!!deleteSheetConfirm} onOpenChange={(o) => !o && setDeleteSheetConfirm(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="glass-card border-white/10 rounded-[2.5rem]">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Sheet "{deleteSheetConfirm}"?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will remove the sheet tab. Contacts currently assigned to this sheet will become unassigned. This action cannot be undone.
+            <AlertDialogTitle className="text-2xl font-black tracking-tighter uppercase">Decommission Cluster?</AlertDialogTitle>
+            <AlertDialogDescription className="text-xs font-medium leading-relaxed">
+              Terminating segment "<span className="text-primary font-black uppercase tracking-widest">{deleteSheetConfirm}</span>" 
+              will return all orphan nodes to Registry Alpha. Metadata will persist but structural grouping will be lost.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogFooter className="mt-6 gap-3">
+            <AlertDialogCancel className="h-12 rounded-xl border-white/10 font-black text-[10px] uppercase tracking-widest">CANCEL</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="h-12 rounded-xl bg-destructive text-white hover:bg-destructive/90 font-black text-[10px] uppercase tracking-widest shadow-xl shadow-destructive/20"
               onClick={() => {
                 if (deleteSheetConfirm && onDeleteSheet) {
                   onDeleteSheet(deleteSheetConfirm);
@@ -181,87 +194,89 @@ export function DataTableToolbar<TData>({
                 setDeleteSheetConfirm(null);
               }}
             >
-              <Trash2 className="mr-2 h-4 w-4" /> Delete Sheet
+              <Trash2 className="mr-2 h-4 w-4" /> CONFIRM TERMINATION
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Bottom Row: AI Filter + Bulk Actions */}
-      <div className="flex items-center justify-between">
-        <div className="flex flex-1 items-center space-x-2">
-          <div className="relative w-full max-w-sm">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search all columns..."
-              value={table.getState().globalFilter ?? ""}
-              onChange={(event) =>
-                table.setGlobalFilter(event.target.value)
-              }
-              className="pl-8 h-9 text-sm"
-            />
+      {/* Bottom Row: Query + Global Commands */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div className="relative w-full max-w-xl group">
+          <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
           </div>
+          <Input
+            placeholder="Query Registry Columns..."
+            value={table.getState().globalFilter ?? ""}
+            onChange={(event) =>
+              table.setGlobalFilter(event.target.value)
+            }
+            className="h-14 pl-14 rounded-2xl bg-muted/20 border-white/5 focus:bg-background focus:ring-primary font-bold shadow-inner transition-all"
+          />
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-4 w-full sm:w-auto">
           {hasSelection && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="default" className="h-9 gap-1 shadow-sm">
-                  <Zap className="h-4 w-4" />
-                  Bulk Actions ({selectedRows.length})
-                  <ChevronDown className="h-3 w-3 ml-1 opacity-50" />
+                <Button variant="default" className="h-14 px-8 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] bg-foreground text-background hover:bg-foreground/90 gap-4 shadow-2xl transition-all active:scale-95 flex-1 sm:flex-none">
+                  <Zap className="h-4 w-4 fill-background" />
+                  BATCH COMMANDS ({selectedRows.length})
+                  <ChevronDown className="h-3 w-3 opacity-50" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>Automation</DropdownMenuLabel>
+              <DropdownMenuContent align="end" className="w-64 glass-card border-white/10 p-3 rounded-3xl shadow-2xl animate-in zoom-in-95 duration-200">
+                <DropdownMenuLabel className="px-4 py-3 text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Neural Protocol</DropdownMenuLabel>
                 <DropdownMenuItem 
                   onClick={() => {
                     const ids = selectedRows.map(r => (r.original as any).id);
                     onTriggerAction?.(ids);
                   }}
-                  className="text-primary font-medium focus:text-primary focus:bg-primary/10 cursor-pointer"
+                  className="h-12 px-4 rounded-xl text-[10px] font-black uppercase tracking-[0.1em] text-primary focus:bg-primary/10 focus:text-primary cursor-pointer gap-3"
                 >
-                  <Zap className="mr-2 h-4 w-4" /> Trigger Automation
+                  <Zap className="h-4 w-4" /> TRIGGER OUTREACH SEQUENCE
                 </DropdownMenuItem>
 
-                <DropdownMenuSeparator />
+                <DropdownMenuSeparator className="my-3 bg-white/5" />
                 
-                <DropdownMenuLabel>Row Formatting (Color)</DropdownMenuLabel>
-                <div className="flex items-center gap-1 p-2">
-                  <DropdownMenuItem asChild onSelect={(e) => { e.preventDefault(); executeBulkAction("color", "yellow"); }}>
-                    <div className="w-6 h-6 rounded-full bg-yellow-400 cursor-pointer hover:ring-2 ring-offset-1" title="Yellow" />
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild onSelect={(e) => { e.preventDefault(); executeBulkAction("color", "green"); }}>
-                    <div className="w-6 h-6 rounded-full bg-green-400 cursor-pointer hover:ring-2 ring-offset-1" title="Green" />
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild onSelect={(e) => { e.preventDefault(); executeBulkAction("color", "red"); }}>
-                    <div className="w-6 h-6 rounded-full bg-red-400 cursor-pointer hover:ring-2 ring-offset-1" title="Red" />
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild onSelect={(e) => { e.preventDefault(); executeBulkAction("color", "blue"); }}>
-                    <div className="w-6 h-6 rounded-full bg-blue-400 cursor-pointer hover:ring-2 ring-offset-1" title="Blue" />
-                  </DropdownMenuItem>
+                <DropdownMenuLabel className="px-4 py-2 text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Node Metadata (Color)</DropdownMenuLabel>
+                <div className="flex items-center justify-around p-3">
+                  {[
+                    { color: "yellow", bg: "bg-yellow-400" },
+                    { color: "green", bg: "bg-emerald-400" },
+                    { color: "red", bg: "bg-rose-400" },
+                    { color: "blue", bg: "bg-blue-400" }
+                  ].map((c) => (
+                      <DropdownMenuItem key={c.color} asChild onSelect={(e) => { e.preventDefault(); executeBulkAction("color", c.color); }}>
+                        <div className={cn("w-8 h-8 rounded-full cursor-pointer hover:ring-4 ring-white/20 transition-all shadow-lg", c.bg)} title={c.color} />
+                      </DropdownMenuItem>
+                  ))}
                   <DropdownMenuItem asChild onSelect={(e) => { e.preventDefault(); executeBulkAction("color", "transparent"); }}>
-                    <div className="w-6 h-6 rounded-full bg-slate-200 cursor-pointer border border-slate-300 hover:ring-2 ring-offset-1 flex items-center justify-center text-[10px]" title="Clear Color">X</div>
+                    <div className="w-8 h-8 rounded-full bg-muted border border-white/10 cursor-pointer hover:ring-4 ring-white/20 flex items-center justify-center text-[10px] font-black transition-all shadow-lg" title="Reset Registry">X</div>
                   </DropdownMenuItem>
                 </div>
 
-                <DropdownMenuSeparator />
+                <DropdownMenuSeparator className="my-3 bg-white/5" />
 
-                <DropdownMenuLabel>Organization</DropdownMenuLabel>
-                {dynamicSheets.length > 0 && (
-                  <DropdownMenuItem onSelect={(e) => { e.preventDefault(); executeBulkAction("move", dynamicSheets[0]); }} className="cursor-pointer">
-                    Move to "{dynamicSheets[0]}"
-                  </DropdownMenuItem>
-                )}
+                <DropdownMenuLabel className="px-4 py-2 text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Migration Scopes</DropdownMenuLabel>
+                <div className="max-h-40 overflow-y-auto py-1">
+                    {dynamicSheets.length > 0 ? dynamicSheets.map((sheet: any) => (
+                      <DropdownMenuItem key={sheet} onSelect={(e) => { e.preventDefault(); executeBulkAction("move", sheet); }} className="h-10 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest text-muted-foreground focus:text-foreground cursor-pointer">
+                         TO :: {sheet}
+                      </DropdownMenuItem>
+                    )) : (
+                        <p className="px-4 py-2 text-[9px] font-bold text-muted-foreground/50 italic">No secondary segments active.</p>
+                    )}
+                </div>
                 
-                <DropdownMenuSeparator />
+                <DropdownMenuSeparator className="my-3 bg-white/5" />
                 
                 <DropdownMenuItem 
-                  className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer"
+                  className="h-12 px-4 rounded-xl text-[10px] font-black uppercase tracking-[0.1em] text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer gap-3"
                   onSelect={(e) => { e.preventDefault(); executeBulkAction("delete"); }}
                 >
-                  <Trash2 className="mr-2 h-4 w-4" /> Delete Selected
+                  <Trash2 className="h-4 w-4" /> PURGE SELECTED NODES
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

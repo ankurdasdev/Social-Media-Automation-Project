@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus, Loader2, RefreshCw } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -87,8 +87,8 @@ export default function Contacts() {
     },
     onSuccess: () => {
       toast({
-        title: "Ingestion Started",
-        description: "The background scraper has been triggered manually.",
+        title: "SYNC INITIALIZED",
+        description: "Protocol clusters are now scanning live project streams.",
       });
       queryClient.invalidateQueries({ queryKey: ["ingestion-status"] });
     },
@@ -113,7 +113,7 @@ export default function Contacts() {
       return res.json();
     },
     onSuccess: () => {
-      toast({ title: "Lead Added", description: `${newLead.name} has been added.` });
+      toast({ title: "METADATA COMMIT", description: `${newLead.name} added to neural segment.` });
       setIsAddLeadOpen(false);
       setNewLead({
       name: "",
@@ -139,7 +139,7 @@ export default function Contacts() {
       fetch(`/api/contacts/${c.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sheetName: "" }),
+        body: JSON.stringify({ sheetName: "", userId }),
       }).then(() => queryClient.invalidateQueries({ queryKey: ["contacts"] }));
     });
   };
@@ -148,9 +148,9 @@ export default function Contacts() {
     mutationFn: async ({ action, ids, payload }: { action: string, ids: string[], payload?: any }) => {
       const promises = ids.map((id) => {
         if (action === "delete") {
-          return fetch(`/api/contacts/${id}`, { method: "DELETE" });
+          return fetch(`/api/contacts/${id}?userId=${userId}`, { method: "DELETE" });
         } else if (action === "color" || action === "move") {
-          const body = action === "color" ? { rowColor: payload } : { sheetName: payload };
+          const body = action === "color" ? { rowColor: payload, userId } : { sheetName: payload, userId };
           return fetch(`/api/contacts/${id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -162,8 +162,8 @@ export default function Contacts() {
     },
     onSuccess: (_, variables) => {
       toast({
-        title: "Bulk Action Completed",
-        description: `Successfully processed ${variables.ids.length} contacts.`,
+        title: "BATCH COMMIT SUCCESSFUL",
+        description: `Processed ${variables.ids.length} nodes successfully.`,
       });
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
     },
@@ -171,10 +171,9 @@ export default function Contacts() {
 
   const handleBulkTrigger = (contactIds: string[]) => {
     toast({
-      title: "Automations Triggered",
-      description: `Dispatched ${contactIds.length} outreach sequences via AI composer.`,
+      title: "OUTREACH DISPATCHED",
+      description: `Dispatched ${contactIds.length} sequences via AI blueprint engine.`,
     });
-    console.log("Triggering IDs:", contactIds);
   };
 
   const handleManualRefresh = () => {
@@ -204,54 +203,69 @@ export default function Contacts() {
 
   return (
     <AppLayout>
-      <div className="flex h-full flex-col">
+      <div className="flex h-full flex-col space-y-10 pb-10 relative animate-in fade-in slide-in-from-bottom-4 duration-700">
+        {/* Decorative Background */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] -z-10 animate-pulse-slow" />
+
         {/* Header Section */}
-        <div className="flex items-center justify-between px-6 py-4 border-b bg-white">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">Contact Network</h1>
-            <p className="text-sm text-slate-500 mt-1">
-              Manage your casting pipeline, auto-ingested leads, and AI messaging.
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-8 px-6 pt-4">
+          <div className="space-y-4 text-center lg:text-left">
+            <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[10px] font-black tracking-[0.2em] uppercase">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Intelligence Grid :: Active
+            </div>
+            <h1 className="text-5xl font-black tracking-tighter text-foreground text-glow whitespace-nowrap">EXTRACTED <span className="text-primary italic">NODES</span></h1>
+            <p className="text-muted-foreground/80 text-sm font-medium max-w-xl leading-relaxed">
+              Real-time synchronization of casting opportunities across monitored clusters. 
+              Assign blueprints and initiate automated outreach protocols.
             </p>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex flex-wrap items-center justify-center gap-4">
             <Button
               variant="outline"
+              size="lg"
+              className="h-16 border-white/10 bg-background/30 backdrop-blur-xl hover:bg-muted/50 rounded-2xl font-black px-8 shadow-xl transition-all active:scale-[0.98] group"
               disabled={triggerIngestion.isPending || ingestionStatus?.isRunning}
               onClick={() => triggerIngestion.mutate()}
             >
-              {(triggerIngestion.isPending || ingestionStatus?.isRunning) && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              {(triggerIngestion.isPending || ingestionStatus?.isRunning) ? (
+                <Loader2 className="mr-3 h-5 w-5 animate-spin text-primary" />
+              ) : (
+                <RefreshCw className="mr-3 h-5 w-5 text-primary group-hover:rotate-180 transition-transform duration-700" />
               )}
-              Force Pipeline Sync
+              SYNC REPOSITORY
             </Button>
-            <Button onClick={handleOpenAddLead}>
-              <Plus className="mr-2 h-4 w-4" /> Add Lead Manually
+            <Button size="lg" onClick={handleOpenAddLead} className="h-16 bg-foreground text-background hover:bg-foreground/90 shadow-2xl shadow-primary/20 rounded-2xl font-black px-10 transition-all hover:-translate-y-1 active:scale-[0.98]">
+              <Plus className="mr-3 h-6 w-6" /> INJECT LEAD
             </Button>
           </div>
         </div>
 
-        {/* Dashboard Alerts / Info Cards */}
         {ingestionStatus?.isRunning && (
-          <div className="px-6 pt-4">
-            <Card className="border-blue-200 bg-blue-50">
-              <CardHeader className="py-3 px-4 flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle className="text-sm text-blue-800">Pipeline Ingestion Running</CardTitle>
-                  <CardDescription className="text-xs text-blue-600">
-                    Scraping WhatsApp groups and Instagram accounts. Auto-refreshing...
-                  </CardDescription>
-                </div>
-                <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />
-              </CardHeader>
-            </Card>
+          <div className="px-6">
+            <div className="p-6 rounded-3xl bg-blue-500/5 border border-blue-500/10 flex flex-row items-center justify-between group overflow-hidden relative">
+              <div className="absolute inset-0 bg-blue-500 opacity-[0.02] -z-10 group-hover:scale-x-110 transition-transform duration-1000 origin-left" />
+              <div className="flex items-center gap-6 relative z-10">
+                 <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shadow-lg">
+                    <Loader2 className="h-7 w-7 text-blue-500 animate-spin" />
+                 </div>
+                 <div className="space-y-1">
+                    <h3 className="text-base font-black text-blue-500 uppercase tracking-tighter">Cluster Scanning In Progress</h3>
+                    <p className="text-xs font-bold text-blue-400 opacity-70 tracking-widest uppercase">
+                      Intercepting project data from remote nodes...
+                    </p>
+                 </div>
+              </div>
+            </div>
           </div>
         )}
 
         {/* Data Grid Section */}
-        <div className="flex-1 p-6 overflow-hidden flex flex-col">
+        <div className="flex-1 px-6 pb-6 overflow-hidden flex flex-col min-h-[500px]">
           {contactsLoading ? (
-            <div className="flex h-40 items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <div className="flex-1 flex flex-col items-center justify-center gap-4 opacity-50">
+              <Loader2 className="h-12 w-12 animate-spin text-primary" />
+              <p className="text-[10px] font-black uppercase tracking-[0.4em]">Mounting Archive Segment...</p>
             </div>
           ) : (
             <DataTable 
@@ -279,65 +293,67 @@ export default function Contacts() {
       </div>
 
       <Dialog open={isAddLeadOpen} onOpenChange={setIsAddLeadOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Add Lead Manually</DialogTitle>
-            <DialogDescription>
-              Create a new contact in your CRM. You can also assign them to a sheet later.
+        <DialogContent className="sm:max-w-[500px] glass-card border-white/10 dark:border-white/5 rounded-[2.5rem] p-0 overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+          <DialogHeader className="p-8 pb-4 bg-muted/30">
+            <DialogTitle className="text-3xl font-black tracking-tighter">MANUAL <span className="text-primary italic">INJECTION</span></DialogTitle>
+            <DialogDescription className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
+              Assign metadata parameters to establish a new intelligence node.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto px-1">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right text-xs">Name</Label>
-              <Input value={newLead.name} onChange={e => setNewLead({...newLead, name: e.target.value})} className="col-span-3 h-8" />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right text-xs">Casting Name</Label>
-              <Input value={newLead.castingName} onChange={e => setNewLead({...newLead, castingName: e.target.value})} className="col-span-3 h-8" />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right text-xs">Sheet</Label>
-              <div className="col-span-3">
-                <Select value={newLead.sheetName} onValueChange={(val) => setNewLead({ ...newLead, sheetName: val })}>
-                  <SelectTrigger className="h-8">
-                    <SelectValue placeholder="No Sheet Assigned" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {dynamicSheets.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right text-xs">WhatsApp</Label>
-              <Input value={newLead.whatsapp} onChange={e => setNewLead({...newLead, whatsapp: e.target.value})} className="col-span-3 h-8" placeholder="+91..." />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right text-xs">Email</Label>
-              <Input type="email" value={newLead.email} onChange={e => setNewLead({...newLead, email: e.target.value})} className="col-span-3 h-8" />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right text-xs">Insta Handle</Label>
-              <Input value={newLead.instaHandle} onChange={e => setNewLead({...newLead, instaHandle: e.target.value})} className="col-span-3 h-8" placeholder="@username" />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right text-xs">Acting Context</Label>
-              <Input value={newLead.actingContext} onChange={e => setNewLead({...newLead, actingContext: e.target.value})} className="col-span-3 h-8" placeholder="e.g. Lead Detective" />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right text-xs">Project</Label>
-              <Input value={newLead.project} onChange={e => setNewLead({...newLead, project: e.target.value})} className="col-span-3 h-8" />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right text-xs">Age Range</Label>
-              <Input value={newLead.age} onChange={e => setNewLead({...newLead, age: e.target.value})} className="col-span-3 h-8" placeholder="e.g. 25-30" />
+          
+          <div className="p-8 max-h-[70vh] overflow-y-auto space-y-8 scrollbar-hide">
+            <div className="space-y-6">
+                <div className="space-y-3">
+                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Primary Node Label</Label>
+                    <Input value={newLead.name} onChange={e => setNewLead({...newLead, name: e.target.value})} className="h-12 rounded-xl bg-muted/40 border-border/50 font-bold focus:ring-primary shadow-inner" placeholder="E.g. John Doe" />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Casting Contact</Label>
+                        <Input value={newLead.castingName} onChange={e => setNewLead({...newLead, castingName: e.target.value})} className="h-12 rounded-xl bg-muted/40 border-border/50 font-bold" />
+                    </div>
+                    <div className="space-y-3">
+                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Neural Segment</Label>
+                        <Select value={newLead.sheetName} onValueChange={(val) => setNewLead({ ...newLead, sheetName: val })}>
+                          <SelectTrigger className="h-12 rounded-xl bg-muted/40 border-border/50 font-bold">
+                            <SelectValue placeholder="Unassigned" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {dynamicSheets.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">WhatsApp Uplink</Label>
+                        <Input value={newLead.whatsapp} onChange={e => setNewLead({...newLead, whatsapp: e.target.value})} className="h-12 rounded-xl bg-muted/40 border-border/50 font-bold" placeholder="+91..." />
+                    </div>
+                    <div className="space-y-3">
+                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Instagram Link</Label>
+                        <Input value={newLead.instaHandle} onChange={e => setNewLead({...newLead, instaHandle: e.target.value})} className="h-12 rounded-xl bg-muted/40 border-border/50 font-bold" placeholder="@username" />
+                    </div>
+                </div>
+
+                <div className="space-y-3">
+                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Email Endpoint</Label>
+                    <Input type="email" value={newLead.email} onChange={e => setNewLead({...newLead, email: e.target.value})} className="h-12 rounded-xl bg-muted/40 border-border/50 font-bold" placeholder="protocol@example.com" />
+                </div>
+
+                <div className="space-y-3">
+                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Mission Context / Role</Label>
+                    <Input value={newLead.actingContext} onChange={e => setNewLead({...newLead, actingContext: e.target.value})} className="h-12 rounded-xl bg-muted/40 border-border/50 font-bold" placeholder="E.g. Lead Antagonist" />
+                </div>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddLeadOpen(false)}>Cancel</Button>
-            <Button onClick={submitAddLead} disabled={addLeadMutation.isPending}>
-              {addLeadMutation.isPending && <Loader2 className="mr-2 h-3 w-3 animate-spin"/>}
-              Save Contact
+
+          <DialogFooter className="p-8 bg-muted/30 border-t border-white/5 gap-4">
+            <Button variant="ghost" onClick={() => setIsAddLeadOpen(false)} className="h-12 rounded-xl font-black text-[11px] uppercase tracking-widest">ABORT MISSION</Button>
+            <Button onClick={submitAddLead} disabled={addLeadMutation.isPending} className="h-12 rounded-xl bg-primary text-white font-black px-8 shadow-xl hover:shadow-primary/30 transition-all flex-1">
+              {addLeadMutation.isPending ? <Loader2 className="mr-3 h-5 w-5 animate-spin"/> : <Plus className="mr-3 h-5 w-5" />}
+              COMMIT NODE
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -345,3 +361,4 @@ export default function Contacts() {
     </AppLayout>
   );
 }
+

@@ -86,19 +86,70 @@ export async function createContact(userId: string, data: Partial<Contact>): Pro
 }
 
 export async function updateContact(userId: string, id: string, data: Partial<Contact>): Promise<Contact | null> {
-  // Build dynamic update query
-  const fields = Object.keys(data).filter(k => k !== 'id' && k !== 'user_id');
+  // Explicit camelCase → snake_case map for all Contact DB columns
+  const fieldMap: Record<string, string> = {
+    name: "name",
+    castingName: "casting_name",
+    whatsapp: "whatsapp",
+    email: "email",
+    instaHandle: "insta_handle",
+    actingContext: "acting_context",
+    project: "project",
+    age: "age",
+    sheetName: "sheet_name",
+    status: "status",
+    automationTrigger: "automation_trigger",
+    rowColor: "row_color",
+    whatsappRun: "whatsapp_run",
+    emailRun: "email_run",
+    instagramRun: "instagram_run",
+    templateSelectionWP: "template_selection_wp",
+    templateSelectionGmail: "template_selection_gmail",
+    templateSelectionIG: "template_selection_ig",
+    salutationWA: "salutation_wa",
+    salutationEmail: "salutation_email",
+    salutationIG: "salutation_ig",
+    hasCustomMessageWA: "has_custom_message_wa",
+    editableMessageWP: "editable_message_wp",
+    hasCustomMessageEmail: "has_custom_message_email",
+    editableMessageGmail: "editable_message_gmail",
+    editableGmailSubject: "editable_gmail_subject",
+    hasCustomMessageIG: "has_custom_message_ig",
+    editableMessageIG: "editable_message_ig",
+    specialAttachmentWA: "special_attachment_wa",
+    specialAttachmentGmail: "special_attachment_gmail",
+    specialAttachmentIG: "special_attachment_ig",
+    drive_attachments_wa: "drive_attachments_wa",
+    drive_attachments_email: "drive_attachments_email",
+    drive_attachments_ig: "drive_attachments_ig",
+    notes: "notes",
+    source: "source",
+    automationComment: "automation_comment",
+    lastContactedDate: "last_contacted",
+    contacted_dates: "contacted_dates",
+    contact_links: "contact_links",
+  };
+
+  // Only include fields we have an explicit mapping for (ignore frontend-only fields)
+  const fields = Object.keys(data).filter(k => k !== 'id' && k !== 'user_id' && fieldMap[k]);
   if (fields.length === 0) return getContactById(userId, id);
 
   const setClause = fields.map((f, i) => {
-    // map camelCase to snake_case if necessary
-    const snake = f.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
-    return `${snake} = $${i + 3}`;
+    const col = fieldMap[f];
+    // JSONB fields need explicit cast
+    const isJsonb = ["drive_attachments_wa", "drive_attachments_email", "drive_attachments_ig", "contacted_dates", "contact_links"].includes(col);
+    return `${col} = $${i + 3}${isJsonb ? "::jsonb" : ""}`;
   }).join(", ");
 
   const sql = `UPDATE contacts SET ${setClause}, updated_at = NOW() WHERE user_id = $1 AND id = $2 RETURNING *`;
-  const values = [userId, id, ...fields.map(f => (data as any)[f])];
-  
+  const values = [userId, id, ...fields.map(f => {
+    const val = (data as any)[f];
+    // Stringify JSON values for JSONB columns
+    const col = fieldMap[f];
+    const isJsonb = ["drive_attachments_wa", "drive_attachments_email", "drive_attachments_ig", "contacted_dates", "contact_links"].includes(col);
+    return isJsonb && val !== null && val !== undefined ? JSON.stringify(val) : val;
+  })];
+
   const row = await queryOne(sql, values);
   return row ? mapRowToContact(row) : null;
 }

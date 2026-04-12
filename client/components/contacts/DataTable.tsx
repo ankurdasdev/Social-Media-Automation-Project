@@ -19,6 +19,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Search } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Contact } from "@shared/api";
 import { DataTableToolbar } from "./DataTableToolbar";
 import { ContactDrawer } from "./ContactDrawer";
@@ -92,7 +94,7 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-700">
       <DataTableToolbar 
         table={table} 
         onTriggerAction={onTriggerAction} 
@@ -105,95 +107,115 @@ export function DataTable<TData, TValue>({
         onTabChange={onTabChange}
       />
       
-      <div className="rounded-md border bg-white overflow-x-auto shadow-sm">
-        <Table style={{ width: table.getCenterTotalSize(), minWidth: "100%" }}>
-          <TableHeader className="bg-slate-50 sticky top-0 z-10">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="hover:bg-transparent">
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead 
-                      key={header.id} 
-                      className="h-10 text-xs font-semibold uppercase text-slate-500 tracking-wider relative group border-r last:border-r-0"
-                      style={{ width: header.getSize() }}
-                    >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                      
-                      {/* Resizer Handle */}
-                      <div
-                        onMouseDown={header.getResizeHandler()}
-                        onTouchStart={header.getResizeHandler()}
-                        className={`absolute right-0 top-0 h-full w-1 cursor-col-resize user-select-none touch-action-none bg-slate-300 opacity-0 group-hover:opacity-100 hover:bg-slate-400 z-10 ${
-                          header.column.getIsResizing() ? "bg-blue-500 opacity-100" : ""
-                        }`}
-                      />
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => {
-                const rowOriginal = row.original as unknown as Contact;
-                const rColor = rowOriginal.rowColor;
-                const colorClass = rColor === "yellow" ? "bg-yellow-50/60" :
-                                 rColor === "green" ? "bg-green-50/60" :
-                                 rColor === "red" ? "bg-red-50/60" :
-                                 rColor === "blue" ? "bg-blue-50/60" : "";
+      <div className="glass-card rounded-[2.5rem] border-white/10 overflow-hidden shadow-2xl relative">
+        <div className="overflow-x-auto">
+          <Table style={{ width: table.getCenterTotalSize(), minWidth: "100%" }}>
+            <TableHeader className="bg-muted/30 border-b border-white/5 sticky top-0 z-10 backdrop-blur-3xl">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id} className="hover:bg-transparent border-b-0 h-16">
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead 
+                        key={header.id} 
+                        className="px-6 text-[10px] font-black uppercase text-muted-foreground tracking-[0.3em] relative group border-r border-white/5 last:border-r-0"
+                        style={{ width: header.getSize() }}
+                      >
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                        
+                        {/* Resizer Handle */}
+                        <div
+                          onMouseDown={header.getResizeHandler()}
+                          onTouchStart={header.getResizeHandler()}
+                          className={`absolute right-0 top-0 h-full w-1 cursor-col-resize user-select-none touch-action-none bg-primary opacity-0 group-hover:opacity-100 hover:scale-x-150 transition-all z-10 ${
+                            header.column.getIsResizing() ? "bg-primary opacity-100 w-1" : ""
+                          }`}
+                        />
+                      </TableHead>
+                    );
+                  })}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody className="bg-muted/10">
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => {
+                  const rowOriginal = row.original as unknown as Contact;
+                  const rColor = rowOriginal.rowColor;
+                  const colorClass = rColor === "yellow" ? "bg-yellow-500/10 border-l-4 border-l-yellow-400" :
+                                   rColor === "green" ? "bg-emerald-500/10 border-l-4 border-l-emerald-400" :
+                                   rColor === "red" ? "bg-rose-500/10 border-l-4 border-l-rose-400" :
+                                   rColor === "blue" ? "bg-blue-500/10 border-l-4 border-l-blue-400" : "border-l-4 border-l-transparent";
 
-                return (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                    className={`cursor-pointer hover:bg-slate-100/50 transition-colors h-14 ${colorClass}`}
-                    onClick={() => setSelectedContact(rowOriginal)}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className="py-2">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                );
-              })
-            ) : (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                  No contacts found.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+                  return (
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && "selected"}
+                      className={cn(
+                        "cursor-pointer border-b border-white/[0.03] hover:bg-white/[0.03] transition-all h-20 group relative",
+                        colorClass,
+                        row.getIsSelected() && "bg-primary/5 border-l-primary"
+                      )}
+                      onClick={() => setSelectedContact(rowOriginal)}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id} className="py-4 px-6 group-hover:translate-x-0.5 transition-transform">
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  );
+                })
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className="h-64 text-center">
+                    <div className="flex flex-col items-center justify-center gap-4 opacity-30 group">
+                      <div className="w-16 h-16 rounded-full border-2 border-dashed border-muted-foreground flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Search className="w-8 h-8 text-muted-foreground" />
+                      </div>
+                      <p className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground">Registry Null :: No Records Found</p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
       
-      <div className="flex items-center justify-between px-2">
-        <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-6 px-4 py-8 bg-muted/20 border border-white/5 rounded-[2rem] shadow-xl">
+        <div className="flex items-center gap-4">
+           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <div className="w-4 h-4 rounded-full bg-primary animate-pulse" />
+           </div>
+           <div className="flex-1 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+             <span className="text-foreground">{table.getFilteredSelectedRowModel().rows.length}</span> nodes locked :: <span className="text-foreground">{table.getFilteredRowModel().rows.length}</span> total segments
+           </div>
         </div>
-        <div className="flex items-center space-x-2">
-          {/* Simple Pagination */}
+        
+        <div className="flex items-center gap-3">
           <button
-            className="text-sm border px-3 py-1 rounded-md disabled:opacity-50"
+            className="h-12 px-6 rounded-xl border border-white/10 font-black text-[10px] uppercase tracking-widest hover:bg-muted/50 transition-all disabled:opacity-20 active:scale-95"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
-            Previous
+            DECREMENT LAYER
           </button>
+          <div className="flex items-center gap-2 px-4 h-12 rounded-xl bg-muted/30 border border-white/5 font-black text-[10px]">
+            <span className="text-primary">{table.getState().pagination.pageIndex + 1}</span>
+            <span className="opacity-20">/</span>
+            <span>{table.getPageCount()}</span>
+          </div>
           <button
-            className="text-sm border px-3 py-1 rounded-md disabled:opacity-50"
+            className="h-12 px-6 rounded-xl border border-white/10 font-black text-[10px] uppercase tracking-widest hover:bg-muted/50 transition-all disabled:opacity-20 active:scale-95"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
-            Next
+            INCREMENT LAYER
           </button>
         </div>
       </div>
