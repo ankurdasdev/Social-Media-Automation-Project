@@ -55,8 +55,14 @@ export async function initDb(): Promise<void> {
 }
 
 async function seedTestData(): Promise<void> {
-  // STRICT GUARD: Never seed in production
-  if (process.env.NODE_ENV === "production") return;
+  // Guard: Seed if not in production, OR if SEED_TEST_USER is explicitly true
+  const isProduction = process.env.NODE_ENV === "production";
+  const shouldSeedOverride = process.env.SEED_TEST_USER === "true";
+
+  if (isProduction && !shouldSeedOverride) {
+    console.log("ℹ️  Production environment detected. Skipping test user seeding (use SEED_TEST_USER=true to override).");
+    return;
+  }
 
   const testEmail = "testing@test.com";
   const testPassword = "testing";
