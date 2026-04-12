@@ -145,7 +145,7 @@ export function TemplateEditor({
       <DialogContent className="sm:max-w-[720px] glass-card border-white/10 dark:border-white/5 p-0 overflow-hidden shadow-2xl rounded-[2rem] max-h-[90vh] flex flex-col">
         <DialogHeader className="p-10 pb-4">
           <DialogTitle className="text-3xl font-black tracking-tight">
-            {template ? "Modify Blueprint" : `New ${categoryLabel} Model`}
+            {template ? "Edit Template" : `New ${categoryLabel} Template`}
           </DialogTitle>
           <DialogDescription className="text-muted-foreground font-medium uppercase tracking-widest text-[10px]">
              Configure protocol parameters for automated outreach sequences.
@@ -155,7 +155,7 @@ export function TemplateEditor({
         <div className="px-10 py-6 space-y-8 overflow-y-auto">
           {/* Template Name */}
           <div className="space-y-3">
-            <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Blueprint Identifier</Label>
+            <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Template Name</Label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -208,7 +208,7 @@ export function TemplateEditor({
                   placeholder={
                     isAttachment
                       ? "PROTOCOL RESTRICTED: Sending attachment stream."
-                      : "Initialize extraction sequence here. Inject tokens for dynamic personalization..."
+                      : "Compose your outreach message here. Use labels for dynamic personalization..."
                   }
                   className="min-h-[200px] rounded-3xl bg-muted/30 border-border/50 focus:ring-primary font-medium p-8 shadow-inner resize-none leading-relaxed transition-all"
                 />
@@ -283,7 +283,7 @@ export function TemplateEditor({
             ) : (
               <div className="w-3 h-3 rounded-full bg-emerald-500 mr-3 animate-pulse" />
             )}
-            {template ? "COMMIT SYNC" : "INITIALIZE BLUEPRINT"}
+            {template ? "SAVE CHANGES" : "CREATE TEMPLATE"}
           </Button>
         </DialogFooter>
       </DialogContent>

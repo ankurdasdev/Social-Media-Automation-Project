@@ -247,13 +247,13 @@ export function TemplateManager({ open, onOpenChange }: TemplateManagerProps) {
           <DialogHeader className="p-10 pb-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
               <div className="space-y-1">
-                <DialogTitle className="text-3xl font-black tracking-tighter">Blueprint <span className="text-primary italic">Library</span></DialogTitle>
+                <DialogTitle className="text-3xl font-black tracking-tighter">Template <span className="text-primary italic">Library</span></DialogTitle>
                 <DialogDescription className="text-muted-foreground font-medium uppercase tracking-widest text-[10px]">
                   Architect and manage cross-platform outreach templates.
                 </DialogDescription>
               </div>
               <Button onClick={handleCreateNew} className="h-12 px-6 rounded-xl font-black bg-foreground text-background hover:bg-foreground/90 gap-2 shadow-xl transition-all active:scale-95 shrink-0">
-                <Plus className="h-5 w-5" /> NEW BLUEPRINT
+                <Plus className="h-5 w-5" /> NEW TEMPLATE
               </Button>
             </div>
           </DialogHeader>
@@ -317,12 +317,12 @@ export function TemplateManager({ open, onOpenChange }: TemplateManagerProps) {
             <RenameDialogTitle className="text-2xl font-black tracking-tight">Modify Label</RenameDialogTitle>
           </RenameDialogHeader>
           <div className="py-6 space-y-3">
-            <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Blueprint Identifier</Label>
+            <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Template Name</Label>
             <Input
               value={renameValue}
               onChange={(e) => setRenameValue(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleRenameSave()}
-              placeholder="Blueprint name..."
+              placeholder="Template name..."
               className="h-14 rounded-2xl bg-muted/30 border-border/50 focus:ring-primary font-bold shadow-inner"
             />
           </div>
@@ -340,9 +340,9 @@ export function TemplateManager({ open, onOpenChange }: TemplateManagerProps) {
             <div className="w-16 h-16 rounded-3xl bg-destructive/10 flex items-center justify-center mb-2 mx-auto">
                <Trash2 className="w-8 h-8 text-destructive" />
             </div>
-            <AlertDialogTitle className="text-2xl font-black tracking-tight text-center">Terminate Blueprint?</AlertDialogTitle>
+            <AlertDialogTitle className="text-2xl font-black tracking-tight text-center">Delete Template?</AlertDialogTitle>
             <AlertDialogDescription className="text-center font-medium leading-relaxed">
-              Are you sure you want to permanently delete "{deleteTarget?.name}"? Intelligence streams using this model will be disrupted.
+              Are you sure you want to permanently delete "{deleteTarget?.name}"? Outreach tracking using this template will be affected.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-8 flex gap-3 justify-center">

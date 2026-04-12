@@ -274,10 +274,10 @@ export default function Controller() {
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           <div className="space-y-2">
             <h1 className="text-4xl font-black tracking-tighter text-foreground sm:text-5xl">
-              Source <span className="text-primary italic">Terminal</span>
+              Source <span className="text-primary italic">Manager</span>
             </h1>
             <p className="text-muted-foreground font-medium max-w-lg">
-              Manage cryptographic source streams from WhatsApp and Instagram for AI intelligence extraction.
+              Manage your message sources from WhatsApp and Instagram.
             </p>
           </div>
           <div className="flex items-center gap-3 shrink-0">
@@ -287,7 +287,7 @@ export default function Controller() {
                 className="h-12 px-6 rounded-xl font-bold bg-background/50 border-border/50 gap-2 hover:bg-muted transition-all"
             >
               <LayoutTemplate className="w-4 h-4 text-primary" />
-              Manage Blueprints
+              Manage Templates
             </Button>
             <Button 
                 onClick={openAddDialog} 
@@ -331,7 +331,7 @@ export default function Controller() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
               <Input
                 type="text"
-                placeholder="Search encrypted streams..."
+                placeholder="Search sources..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="h-14 pl-12 rounded-2xl bg-muted/30 border-border/50 focus:ring-primary focus:bg-background shadow-inner transition-all font-medium"
@@ -383,12 +383,12 @@ export default function Controller() {
           <DialogContent className="sm:max-w-[540px] glass-card border-white/10 dark:border-white/5 p-0 overflow-hidden shadow-2xl rounded-[2rem]">
             <DialogHeader className="p-10 pb-4">
               <DialogTitle className="text-3xl font-black tracking-tight">
-                {editingGroup ? "Modify Stream" : "New Intelligence Stream"}
+                {editingGroup ? "Edit Source" : "Add New Source"}
               </DialogTitle>
               <DialogDescription className="text-muted-foreground font-medium uppercase tracking-widest text-[10px]">
                 {editingGroup
-                  ? "Update protocol parameters for this data source."
-                  : `Initialize a new ${activeTab} ingestion channel.`}
+                  ? "Update settings for this source."
+                  : `Add a new ${activeTab} source.`}
               </DialogDescription>
             </DialogHeader>
 
@@ -396,7 +396,7 @@ export default function Controller() {
               {/* Name */}
               <div className="space-y-3">
                 <Label htmlFor="source-name" className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-                  Stream Identifier <span className="text-primary">*</span>
+                  Source Name <span className="text-primary">*</span>
                 </Label>
                 <Input
                   id="source-name"
@@ -414,7 +414,7 @@ export default function Controller() {
               <div className="grid grid-cols-2 gap-8">
                   {/* Type */}
                   <div className="space-y-3">
-                    <Label htmlFor="source-type" className="text-xs font-black uppercase tracking-widest text-muted-foreground">Stream Architecture</Label>
+                    <Label htmlFor="source-type" className="text-xs font-black uppercase tracking-widest text-muted-foreground">Source Type</Label>
                     <Select
                       value={formType}
                       onValueChange={(v) => setFormType(v as SourceType)}
@@ -450,11 +450,11 @@ export default function Controller() {
               {/* Description */}
               <div className="space-y-3">
                 <Label htmlFor="source-desc" className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-                  Stream Context
+                  Description
                 </Label>
                 <Textarea
                   id="source-desc"
-                  placeholder="Notes on extraction strategy..."
+                  placeholder="Add some notes about this source..."
                   rows={3}
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
@@ -477,7 +477,7 @@ export default function Controller() {
                 ) : (
                   <CheckCircle2 className="w-5 h-5 mr-3" />
                 )}
-                {editingGroup ? "COMMIT SYNC" : "INITIALIZE STREAM"}
+                {editingGroup ? "SAVE CHANGES" : "ADD SOURCE"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -493,9 +493,9 @@ export default function Controller() {
               <div className="w-16 h-16 rounded-3xl bg-destructive/10 flex items-center justify-center mb-2 mx-auto">
                  <Trash2 className="w-8 h-8 text-destructive" />
               </div>
-              <AlertDialogTitle className="text-3xl font-black tracking-tight text-center">Terminate Stream?</AlertDialogTitle>
+              <AlertDialogTitle className="text-3xl font-black tracking-tight text-center">Delete Source?</AlertDialogTitle>
               <AlertDialogDescription className="text-center font-medium leading-relaxed">
-                You are about to permanently disconnect the source <strong>{deleteTarget?.name}</strong>. Intelligence gathering from this protocol will cease immediately.
+                You are about to permanently delete the source <strong>{deleteTarget?.name}</strong>. Syncing from this source will stop immediately.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="mt-8 flex gap-4 justify-center sm:justify-center">
@@ -542,7 +542,7 @@ function PlatformInfo({ platform }: { platform: Platform }) {
                 Add your WhatsApp group names or invite links below. The
                 Evolution API (powered by Baileys) connects to these groups via
                 QR code authentication and pushes incoming messages via webhooks
-                for AI-powered casting call extraction.
+                for casting call syncing.
               </p>
             </div>
           </div>

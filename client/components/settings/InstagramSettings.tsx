@@ -109,21 +109,21 @@ export default function InstagramSettings() {
                 <Instagram className="h-8 w-8 text-pink-500" />
               </div>
               <div className="space-y-1">
-                <CardTitle className="text-3xl font-black tracking-tighter">Instagram <span className="text-pink-500 italic">Access</span></CardTitle>
+                <CardTitle className="text-3xl font-black tracking-tighter">Instagram <span className="text-pink-500 italic">Connection</span></CardTitle>
                 <CardDescription className="text-muted-foreground font-medium uppercase tracking-widest text-[10px]">
-                  Secure protocol management for Instagram automation.
+                  Connect your Instagram account to enable automated outreach.
                 </CardDescription>
               </div>
             </div>
             {status?.isConnected ? (
               <div className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 shadow-lg shadow-emerald-500/5 animate-in zoom-in duration-500">
                 <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,1)]" />
-                <span className="text-xs font-black uppercase tracking-widest">PROTOCOL ACTIVE</span>
+                <span className="text-xs font-black uppercase tracking-widest">CONNECTED</span>
               </div>
             ) : (
               <div className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-muted/30 border border-border/50 text-muted-foreground">
                 <div className="w-2.5 h-2.5 rounded-full bg-muted-foreground/30" />
-                <span className="text-xs font-black uppercase tracking-widest">OFFLINE</span>
+                <span className="text-xs font-black uppercase tracking-widest">DISCONNECTED</span>
               </div>
             )}
           </div>
@@ -134,25 +134,25 @@ export default function InstagramSettings() {
             <div className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="p-8 rounded-[2rem] bg-muted/20 border border-border/40 group hover:bg-muted/30 transition-all duration-300">
-                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-4">Linked Identifier</p>
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-4">Account</p>
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-2xl bg-pink-500/10 flex items-center justify-center border border-pink-500/20">
                       <User className="h-6 w-6 text-pink-500" />
                     </div>
                     <div className="flex flex-col">
                         <span className="text-2xl font-black tracking-tight">@{status.username}</span>
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Verified Session</span>
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Connected</span>
                     </div>
                   </div>
                 </div>
                 <div className="p-8 rounded-[2rem] bg-muted/20 border border-border/40 group hover:bg-muted/30 transition-all duration-300">
-                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-4">Stream Integrity</p>
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-4">Status</p>
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
                       <RefreshCw className="h-6 w-6 text-blue-500" />
                     </div>
                     <div className="flex flex-col">
-                        <span className="text-2xl font-black tracking-tight">{status.connectedAt ? "HEALTHY" : "SYNCING"}</span>
+                        <span className="text-2xl font-black tracking-tight">{status.connectedAt ? "CONNECTED" : "SYNCING"}</span>
                         <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                             Up: {status.connectedAt ? new Date(status.connectedAt).toLocaleDateString() : "Initializing..."}
                         </span>
@@ -170,10 +170,10 @@ export default function InstagramSettings() {
                     <AlertTriangle className="h-5 w-5 text-yellow-600" />
                   </div>
                   <div className="space-y-1">
-                    <p className="text-sm font-black tracking-tight text-yellow-700 dark:text-yellow-500 uppercase tracking-widest">Security Protocol Alpha</p>
+                    <p className="text-sm font-black tracking-tight text-yellow-700 dark:text-yellow-500 uppercase tracking-widest">Safety Notice</p>
                     <p className="text-xs font-medium text-yellow-600/80 leading-relaxed max-w-2xl">
-                      Automated scraping nodes mimic human latency. Excessive parallel requests may trigger IG-CHECKPOINTS. 
-                      Maintain a target rate of &lt;100 extractions per 6-hour cycle.
+                      To keep your account safe, please avoid sending too many messages at once. 
+                      Maintain a target rate of &lt;100 actions per 6-hour cycle.
                     </p>
                   </div>
                 </div>
@@ -185,7 +185,7 @@ export default function InstagramSettings() {
                   {!show2FA ? (
                     <div className="space-y-6">
                       <div className="space-y-3">
-                        <Label htmlFor="username" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">User Agent Identifier</Label>
+                        <Label htmlFor="username" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Username</Label>
                         <div className="relative group/field">
                           <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within/field:text-pink-500 transition-colors" />
                           <Input
@@ -199,7 +199,7 @@ export default function InstagramSettings() {
                         </div>
                       </div>
                       <div className="space-y-3">
-                        <Label htmlFor="password" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Access Key (Password)</Label>
+                        <Label htmlFor="password" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Password</Label>
                         <div className="relative group/field">
                           <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within/field:text-pink-500 transition-colors" />
                           <Input
@@ -217,7 +217,7 @@ export default function InstagramSettings() {
                   ) : (
                     <div className="space-y-4 animate-in slide-in-from-right duration-500">
                       <div className="space-y-3">
-                        <Label htmlFor="2fa" className="text-[10px] font-black uppercase tracking-[0.2em] text-pink-500">Verification Protocol Required</Label>
+                        <Label htmlFor="2fa" className="text-[10px] font-black uppercase tracking-[0.2em] text-pink-500">Two-Factor Authentication</Label>
                         <div className="relative">
                           <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-pink-500" />
                           <Input
@@ -230,7 +230,7 @@ export default function InstagramSettings() {
                           />
                         </div>
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest text-center">
-                          Retrieve sync tokens from your mobile device.
+                          Enter the code from your Instagram app.
                         </p>
                       </div>
                     </div>
@@ -252,7 +252,7 @@ export default function InstagramSettings() {
                     ) : (
                       <Instagram className="h-6 w-6" />
                     )}
-                    {show2FA ? "COMMIT AUTHENTICATION" : "INITIALIZE HANDSHAKE"}
+                    {show2FA ? "VERIFY" : "CONNECT"}
                   </Button>
                 </form>
             </div>
@@ -272,7 +272,7 @@ export default function InstagramSettings() {
               ) : (
                 <LogOut className="h-4 w-4 mr-3" />
               )}
-              Terminate Active Session
+              Disconnect Account
             </Button>
           </CardFooter>
         )}

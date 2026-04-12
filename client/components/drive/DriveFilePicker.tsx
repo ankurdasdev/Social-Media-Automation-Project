@@ -142,7 +142,7 @@ export function DriveFilePicker({
             <Input
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Query Drive clusters..."
+              placeholder="Search Drive files..."
               className="border-0 h-full px-0 shadow-none focus-visible:ring-0 text-sm font-bold bg-transparent placeholder:text-muted-foreground/50 tracking-tight"
             />
             {isLoading && <Loader2 className="h-4 w-4 animate-spin text-primary ml-2" />}
@@ -156,7 +156,7 @@ export function DriveFilePicker({
               <div className="space-y-2">
                 <p className="text-xl font-black tracking-tight">ENCRYPTION KEY MISSING</p>
                 <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest max-w-[240px] mx-auto leading-relaxed">
-                  Establish a secure connection in PROTOCOLS to access these clusters.
+                  Establish a secure connection in Settings to access these files.
                 </p>
               </div>
               <Link to="/settings" onClick={() => setOpen(false)}>
@@ -171,7 +171,7 @@ export function DriveFilePicker({
                 <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse" />
                 <Loader2 className="h-10 w-10 animate-spin text-primary relative z-10" />
               </div>
-              <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-80 animate-pulse">Scanning Cloud Clusters...</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-80 animate-pulse">Scanning Drive...</span>
             </div>
           ) : data?.files?.length === 0 ? (
             <div className="p-16 text-center space-y-4">
@@ -209,7 +209,7 @@ export function DriveFilePicker({
                           {file.name}
                         </p>
                         <p className={cn("text-[9px] uppercase font-black tracking-[0.2em]", isSelected ? "text-white/60" : "text-muted-foreground/60")}>
-                           {file.mimeType.split("/").pop()} cluster
+                           {file.mimeType.split("/").pop()} file type
                         </p>
                       </div>
                       {isSelected && (

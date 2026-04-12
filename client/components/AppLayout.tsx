@@ -39,22 +39,22 @@ interface AppLayoutProps {
 
 const navItems = [
   {
-    label: "Terminal",
+    label: "Controller",
     href: "/controller",
     icon: Settings,
   },
   {
-    label: "Intelligence",
+    label: "Contacts",
     href: "/contacts",
     icon: Table,
   },
   {
-    label: "Performance",
+    label: "Analytics",
     href: "/analytics",
     icon: BarChart3,
   },
   {
-    label: "Protocols",
+    label: "Settings",
     href: "/settings",
     icon: SlidersHorizontal,
   },
@@ -112,14 +112,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
             </div>
             <div className="flex flex-col">
               <span className="text-2xl font-black tracking-tighter leading-none">CAST<span className="text-primary italic">HUB</span></span>
-              <span className="text-[10px] font-black tracking-[0.3em] text-muted-foreground uppercase opacity-70">Outreach Terminal</span>
+              <span className="text-[10px] font-black tracking-[0.3em] text-muted-foreground uppercase opacity-70">Automation Dashboard</span>
             </div>
           </Link>
         </div>
 
         {/* Navigation */}
         <nav className="flex-1 space-y-2 relative">
-          <p className="px-4 mb-4 text-[10px] font-black text-muted-foreground/50 uppercase tracking-[0.2em]">Core Systems</p>
+          <p className="px-4 mb-4 text-[10px] font-black text-muted-foreground/50 uppercase tracking-[0.2em]">Navigation</p>
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.href;
@@ -147,7 +147,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
         {/* Status Indicators */}
         <div className="mt-auto pt-10 border-t border-border/30 space-y-6 relative">
              <div className="space-y-4">
-                <p className="px-4 text-[10px] font-black text-muted-foreground/50 uppercase tracking-[0.2em]">Encryption Clusters</p>
+                <p className="px-4 text-[10px] font-black text-muted-foreground/50 uppercase tracking-[0.2em]">Connection Status</p>
                 <div className="space-y-2 px-2">
                     {/* Drive Status */}
                     <div className={cn(
@@ -156,7 +156,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     )}>
                         <div className="flex items-center gap-3">
                             <div className={cn("w-2 h-2 rounded-full", googleStatus?.connected ? (googleStatus.needsReauth ? "bg-yellow-500 animate-pulse" : "bg-blue-500") : "bg-muted-foreground/30")} />
-                            <span className="text-[10px] font-black uppercase tracking-widest">DRIVE CORE</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest">GOOGLE DRIVE</span>
                         </div>
                         {googleStatus?.connected && <ShieldCheck className="w-3.5 h-3.5 text-blue-500" />}
                     </div>
@@ -168,7 +168,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     )}>
                         <div className="flex items-center gap-3">
                             <div className={cn("w-2 h-2 rounded-full animate-pulse", waStatus?.isConnected ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-muted-foreground/30")} />
-                            <span className="text-[10px] font-black uppercase tracking-widest text-foreground">WHATSAPP V1</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-foreground">WHATSAPP</span>
                         </div>
                         {waStatus?.isConnected && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />}
                     </div>
