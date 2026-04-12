@@ -1,4 +1,5 @@
 import { Pool } from "pg";
+import bcrypt from "bcryptjs";
 
 // DATABASE_URL format:
 // Local dev via SSH tunnel: postgresql://postgres:PASSWORD@localhost:5433/SocialOutreach
@@ -41,23 +42,57 @@ export async function queryOne<T = any>(
 }
 
 export async function initDb(): Promise<void> {
-  try {
-    await pool.connect();
-    console.log("✅ PostgreSQL connected");
-    await runMigrations();
-  } catch (err) {
+  const client = await pool.connect().catch((err) => {
     console.error("❌ PostgreSQL connection failed:", err);
     console.warn("⚠️  Falling back to in-memory stores.");
+    return null;
+  });
+  if (!client) return;
+  client.release(); // ← Critical: always release the test connection back to the pool
+  console.log("✅ PostgreSQL connected");
+  await runMigrations();
+  await seedTestData();
+}
+
+async function seedTestData(): Promise<void> {
+  // STRICT GUARD: Never seed in production
+  if (process.env.NODE_ENV === "production") return;
+
+  const testEmail = "testing@test.com";
+  const testPassword = "testing";
+  const testName = "Testing Admin";
+  // Fixed UUID for the testing user to ensure consistency across dev restarts
+  const testId = "00000000-0000-0000-0000-000000000000";
+
+  try {
+    const existing = await queryOne("SELECT id FROM users WHERE email = $1", [testEmail]);
+    if (!existing) {
+      const passwordHash = await bcrypt.hash(testPassword, 12);
+      await query(
+        `INSERT INTO users (id, email, name, password_hash) 
+         VALUES ($1, $2, $3, $4)`,
+        [testId, testEmail, testName, passwordHash]
+      );
+      console.log("🛠️  Testing admin user seeded: testing@test.com / testing");
+    }
+  } catch (err) {
+    console.error("❌ Failed to seed testing user:", err);
   }
 }
 
 async function runMigrations(): Promise<void> {
+  // Add new columns safely to existing tables first
+  await query(`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT;
+  `).catch(() => {}); // Ignore if users table doesn't exist yet — it will be created below
+
   const sql = `
     -- Users table (for multi-user support)
     CREATE TABLE IF NOT EXISTS users (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       email TEXT UNIQUE NOT NULL,
       name TEXT,
+      password_hash TEXT,
       created_at TIMESTAMPTZ DEFAULT NOW(),
       updated_at TIMESTAMPTZ DEFAULT NOW()
     );

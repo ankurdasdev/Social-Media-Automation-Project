@@ -243,17 +243,17 @@ export function TemplateManager({ open, onOpenChange }: TemplateManagerProps) {
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[680px] max-h-[85vh] overflow-hidden flex flex-col">
-          <DialogHeader>
-            <div className="flex items-center justify-between pr-6">
-              <div>
-                <DialogTitle className="text-lg">Manage Templates</DialogTitle>
-                <DialogDescription>
-                  Create and manage your WhatsApp, Email, and Instagram outreach templates.
+        <DialogContent className="sm:max-w-[720px] glass-card border-white/10 dark:border-white/5 p-0 overflow-hidden shadow-2xl rounded-[2rem] max-h-[90vh] flex flex-col">
+          <DialogHeader className="p-10 pb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+              <div className="space-y-1">
+                <DialogTitle className="text-3xl font-black tracking-tighter">Blueprint <span className="text-primary italic">Library</span></DialogTitle>
+                <DialogDescription className="text-muted-foreground font-medium uppercase tracking-widest text-[10px]">
+                  Architect and manage cross-platform outreach templates.
                 </DialogDescription>
               </div>
-              <Button size="sm" onClick={handleCreateNew} className="gap-1.5 shrink-0">
-                <Plus className="h-4 w-4" /> Create Template
+              <Button onClick={handleCreateNew} className="h-12 px-6 rounded-xl font-black bg-foreground text-background hover:bg-foreground/90 gap-2 shadow-xl transition-all active:scale-95 shrink-0">
+                <Plus className="h-5 w-5" /> NEW BLUEPRINT
               </Button>
             </div>
           </DialogHeader>
@@ -261,32 +261,32 @@ export function TemplateManager({ open, onOpenChange }: TemplateManagerProps) {
           <Tabs
             value={activeTab}
             onValueChange={(v) => setActiveTab(v as TemplateCategory)}
-            className="flex-1 flex flex-col overflow-hidden"
+            className="flex-1 flex flex-col overflow-hidden px-10 pb-10"
           >
-            <TabsList className="grid grid-cols-3 h-9 shrink-0">
-              <TabsTrigger value="whatsapp" className="text-xs gap-1.5 data-[state=active]:text-green-700">
-                <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
-                <Badge variant="secondary" className="ml-1 h-4 text-[10px] px-1">
+            <TabsList className="bg-muted/50 border border-border/50 p-1.5 h-14 rounded-2xl w-full mb-8">
+              <TabsTrigger value="whatsapp" className="flex-1 rounded-xl gap-2 font-black data-[state=active]:bg-background transition-all data-[state=active]:text-emerald-500">
+                <MessageCircle className="h-4 w-4" /> WHATSAPP
+                <Badge variant="secondary" className="ml-1 h-5 text-[10px] px-1.5 font-black bg-emerald-500/10 text-emerald-500 border-none">
                   {templates.filter((t) => t.category === "whatsapp").length}
                 </Badge>
               </TabsTrigger>
-              <TabsTrigger value="email" className="text-xs gap-1.5 data-[state=active]:text-blue-700">
-                <Mail className="h-3.5 w-3.5" /> Email
-                <Badge variant="secondary" className="ml-1 h-4 text-[10px] px-1">
+              <TabsTrigger value="email" className="flex-1 rounded-xl gap-2 font-black data-[state=active]:bg-background transition-all data-[state=active]:text-blue-500">
+                <Mail className="h-4 w-4" /> EMAIL
+                <Badge variant="secondary" className="ml-1 h-5 text-[10px] px-1.5 font-black bg-blue-500/10 text-blue-500 border-none">
                   {templates.filter((t) => t.category === "email").length}
                 </Badge>
               </TabsTrigger>
-              <TabsTrigger value="instagram" className="text-xs gap-1.5 data-[state=active]:text-pink-700">
-                <Instagram className="h-3.5 w-3.5" /> Instagram
-                <Badge variant="secondary" className="ml-1 h-4 text-[10px] px-1">
+              <TabsTrigger value="instagram" className="flex-1 rounded-xl gap-2 font-black data-[state=active]:bg-background transition-all data-[state=active]:text-pink-500">
+                <Instagram className="h-4 w-4" /> INSTAGRAM
+                <Badge variant="secondary" className="ml-1 h-5 text-[10px] px-1.5 font-black bg-pink-500/10 text-pink-500 border-none">
                   {templates.filter((t) => t.category === "instagram").length}
                 </Badge>
               </TabsTrigger>
             </TabsList>
 
-            <div className="overflow-y-auto flex-1 pt-2">
+            <div className="overflow-y-auto flex-1 pr-2 -mr-2 space-y-4">
               {(["whatsapp", "email", "instagram"] as TemplateCategory[]).map((cat) => (
-                <TabsContent key={cat} value={cat} className="m-0">
+                <TabsContent key={cat} value={cat} className="m-0 space-y-3">
                   <TemplateTabContent
                     category={cat}
                     templates={templates}
@@ -312,42 +312,46 @@ export function TemplateManager({ open, onOpenChange }: TemplateManagerProps) {
 
       {/* Rename Dialog */}
       <RenameDialog open={renameOpen} onOpenChange={setRenameOpen}>
-        <RenameDialogContent className="sm:max-w-[380px]">
+        <RenameDialogContent className="sm:max-w-[420px] glass-card border-white/10 dark:border-white/5 rounded-[2rem] p-10 shadow-2xl">
           <RenameDialogHeader>
-            <RenameDialogTitle>Rename Template</RenameDialogTitle>
+            <RenameDialogTitle className="text-2xl font-black tracking-tight">Modify Label</RenameDialogTitle>
           </RenameDialogHeader>
-          <div className="py-4 space-y-1.5">
-            <Label className="text-xs text-muted-foreground">New Name</Label>
+          <div className="py-6 space-y-3">
+            <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Blueprint Identifier</Label>
             <Input
               value={renameValue}
               onChange={(e) => setRenameValue(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleRenameSave()}
-              placeholder="Template name..."
+              placeholder="Blueprint name..."
+              className="h-14 rounded-2xl bg-muted/30 border-border/50 focus:ring-primary font-bold shadow-inner"
             />
           </div>
-          <RenameDialogFooter>
-            <Button variant="outline" onClick={() => setRenameOpen(false)}>Cancel</Button>
-            <Button onClick={handleRenameSave}>Save</Button>
+          <RenameDialogFooter className="gap-3">
+            <Button variant="ghost" onClick={() => setRenameOpen(false)} className="h-14 rounded-xl font-bold bg-muted/50">CANCEL</Button>
+            <Button onClick={handleRenameSave} className="h-14 rounded-xl font-black bg-primary text-primary-foreground shadow-lg px-8">SAVE CHANGES</Button>
           </RenameDialogFooter>
         </RenameDialogContent>
       </RenameDialog>
 
       {/* Delete Confirmation */}
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Template?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete "{deleteTarget?.name}". This action cannot be undone.
+        <AlertDialogContent className="glass-card border-white/10 dark:border-white/5 rounded-[2rem] p-10 shadow-2xl">
+          <AlertDialogHeader className="space-y-4">
+            <div className="w-16 h-16 rounded-3xl bg-destructive/10 flex items-center justify-center mb-2 mx-auto">
+               <Trash2 className="w-8 h-8 text-destructive" />
+            </div>
+            <AlertDialogTitle className="text-2xl font-black tracking-tight text-center">Terminate Blueprint?</AlertDialogTitle>
+            <AlertDialogDescription className="text-center font-medium leading-relaxed">
+              Are you sure you want to permanently delete "{deleteTarget?.name}"? Intelligence streams using this model will be disrupted.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogFooter className="mt-8 flex gap-3 justify-center">
+            <AlertDialogCancel className="h-14 rounded-xl font-bold bg-muted/50 border-none">CANCEL</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="h-14 rounded-xl font-black bg-destructive text-white hover:bg-destructive/90 shadow-xl shadow-destructive/20 px-8"
             >
-              Delete
+              CONFIRM TERMINATION
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -355,3 +359,4 @@ export function TemplateManager({ open, onOpenChange }: TemplateManagerProps) {
     </>
   );
 }
+

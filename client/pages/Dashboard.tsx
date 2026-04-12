@@ -16,7 +16,12 @@ import {
   Zap,
   TrendingUp,
   Users,
+  SlidersHorizontal,
+  LayoutDashboard,
+  RefreshCw,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 export default function Dashboard() {
   const recentContacts = [
@@ -39,77 +44,109 @@ export default function Dashboard() {
 
   const stats = [
     {
-      label: "Total Contacts",
-      value: "247",
+      label: "TOTAL EXTRACTIONS",
+      value: "2,481",
       icon: Users,
-      color: "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400",
+      color: "bg-blue-500/10 text-blue-500",
+      trend: "+12.5%",
     },
     {
-      label: "This Month",
-      value: "42",
-      icon: TrendingUp,
-      color: "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400",
-    },
-    {
-      label: "Success Rate",
-      value: "83.8%",
+      label: "PROTOCOL UPTIME",
+      value: "99.9%",
       icon: Zap,
-      color: "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400",
+      color: "bg-emerald-500/10 text-emerald-500",
+      trend: "STABLE",
+    },
+    {
+      label: "CONVERSION VELOCITY",
+      value: "14.2%",
+      icon: TrendingUp,
+      color: "bg-purple-500/10 text-purple-500",
+      trend: "+4.1%",
     },
   ];
 
   return (
     <AppLayout>
-      <div className="space-y-8">
-        {/* Welcome Section */}
-        <div className="relative rounded-2xl overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-secondary/20 to-accent/20 dark:from-primary/10 dark:via-secondary/10 dark:to-accent/10" />
-          <div className="relative p-8 md:p-12">
-            <div className="max-w-2xl">
-              <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-                Welcome back!
+      <div className="space-y-16 pb-24 animate-in fade-in duration-1000">
+        {/* Welcome Section / Hero Cluster */}
+        <section className="relative group p-10 md:p-16 rounded-[3rem] overflow-hidden border border-white/10 shadow-2xl bg-card/20 backdrop-blur-3xl">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/5 to-transparent dark:from-primary/10" />
+          
+          <div className="relative flex flex-col lg:flex-row items-center gap-16 z-10">
+            <div className="flex-1 space-y-8 text-center lg:text-left">
+              <div className="inline-flex items-center gap-3 px-4 py-2 rounded-2xl bg-primary/10 border border-primary/20">
+                <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(139,92,246,1)]" />
+                <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Neural Engine Segment 01 :: Online</span>
+              </div>
+              
+              <h1 className="text-5xl md:text-7xl font-black text-foreground tracking-tighter leading-[0.9] text-glow">
+                DOMINATE THE <br />
+                <span className="italic text-primary">CASTING</span> <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-accent">LIFECYCLE</span>
               </h1>
-              <p className="text-lg text-muted-foreground mb-6">
-                Your AI-powered casting automation platform is ready. Start by
-                configuring your WhatsApp and Instagram groups, and let the AI
-                agent find casting opportunities for you.
+
+              <p className="text-lg text-muted-foreground/80 max-w-2xl leading-relaxed font-medium">
+                CastHub orchestrates cross-platform intelligence clusters to identify, extract, and convert casting opportunities with surgical precision. 
+                Initialize your outreach sequence below.
               </p>
-              <div className="flex flex-wrap gap-3">
+
+              <div className="flex flex-wrap gap-4 justify-center lg:justify-start pt-4">
                 <Link to="/controller">
-                  <Button size="lg" className="gap-2">
-                    <Settings className="w-5 h-5" />
-                    Configure Groups
-                    <ArrowRight className="w-5 h-5" />
+                  <Button size="lg" className="h-16 px-10 rounded-[1.5rem] bg-foreground text-background hover:bg-foreground/90 gap-4 text-sm font-black shadow-2xl shadow-primary/20 transition-all hover:-translate-y-1 active:scale-95">
+                    <Zap className="w-5 h-5 fill-background" />
+                    INITIALIZE TERMINAL
                   </Button>
                 </Link>
                 <Link to="/contacts">
-                  <Button size="lg" variant="outline">
-                    View Contacts
+                  <Button size="lg" variant="outline" className="h-16 px-10 rounded-[1.5rem] bg-background/30 backdrop-blur-md border border-white/10 hover:bg-muted/50 text-sm font-black transition-all hover:-translate-y-1 active:scale-95">
+                    ACCESS INTELLIGENCE
                   </Button>
                 </Link>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Visual Element */}
+            <div className="hidden xl:block relative w-[380px] h-[380px]">
+               <div className="absolute inset-0 bg-primary/20 rounded-[4rem] rotate-12 blur-3xl opacity-30 animate-pulse" />
+               <div className="glass-card relative w-full h-full rounded-[4rem] flex items-center justify-center border-white/20 shadow-[-20px_-20px_60px_-15px_rgba(139,92,246,0.3)]">
+                  <div className="text-center space-y-4">
+                     <p className="text-8xl font-black tracking-tighter text-glow translate-y-2">84%</p>
+                     <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Conversion Delta</p>
+                     <div className="flex justify-center gap-1">
+                        {[1,2,3,4,5].map(i => <div key={i} className={`w-1 h-3 rounded-full ${i <= 4 ? 'bg-primary' : 'bg-muted/40'} animate-pulse`} style={{ animationDelay: `${i * 100}ms` }} />)}
+                     </div>
+                  </div>
+               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Global Statistics Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {stats.map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <Card key={index}>
-                <CardContent className="pt-6">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">
+              <Card key={index} className="glass-card border-white/10 dark:border-white/5 hover:border-primary/40 transition-all duration-500 group overflow-hidden rounded-[2.5rem]">
+                <CardContent className="p-10 relative">
+                  <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-110 transition-transform duration-700">
+                    <Icon className="w-20 h-20" />
+                  </div>
+                  <div className="flex items-center justify-between relative z-10">
+                    <div className="space-y-3">
+                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] opacity-70">
                         {stat.label}
                       </p>
-                      <p className="text-3xl font-bold text-foreground mt-2">
-                        {stat.value}
-                      </p>
+                      <div className="flex items-baseline gap-3">
+                        <p className="text-5xl font-black tracking-tighter">
+                            {stat.value}
+                        </p>
+                        <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-500 border-none font-black text-[9px] px-2 py-0.5 rounded-lg">
+                            {stat.trend}
+                        </Badge>
+                      </div>
                     </div>
-                    <div className={`p-3 rounded-lg ${stat.color}`}>
-                      <Icon className="w-5 h-5" />
+                    <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center shadow-xl transition-all duration-500 group-hover:rotate-12", stat.color)}>
+                      <Icon className="w-8 h-8" />
                     </div>
                   </div>
                 </CardContent>
@@ -118,145 +155,112 @@ export default function Dashboard() {
           })}
         </div>
 
-        {/* Quick Navigation */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="group cursor-pointer hover:border-primary/50 hover:shadow-lg transition-all">
-            <Link to="/controller">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                    <Settings className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg">Controller</CardTitle>
-                    <CardDescription>Manage group monitoring</CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-            </Link>
-          </Card>
+        {/* Intelligence Stream & Quick Actions */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+           {/* Navigation Cluster */}
+           <div className="lg:col-span-4 space-y-6">
+              <div className="flex items-center gap-3 px-2">
+                <LayoutDashboard className="w-4 h-4 text-primary" />
+                <h2 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Protocol Navigation</h2>
+              </div>
+              <div className="space-y-4">
+                  {[
+                    { label: "Opcodes (Controller)", desc: "Manage extraction sequences", icon: Settings, link: "/controller", color: "text-primary", bg: "bg-primary/5" },
+                    { label: "Segments (Contacts)", desc: "Manage intelligence nodes", icon: Table, link: "/contacts", color: "text-blue-500", bg: "bg-blue-500/5" },
+                    { label: "Telemetry (Analytics)", desc: "View conversion telemetry", icon: BarChart3, link: "/analytics", color: "text-orange-500", bg: "bg-orange-500/5" },
+                  ].map((nav, i) => (
+                    <Link key={i} to={nav.link} className="block group">
+                      <div className="p-6 glass-card rounded-3xl border-white/5 hover:border-white/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-5 shadow-lg">
+                        <div className={cn("p-4 rounded-2xl border border-white/10 group-hover:scale-110 transition-transform duration-500", nav.bg, nav.color)}>
+                          <nav.icon className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <p className="font-black text-base tracking-tight">{nav.label}</p>
+                          <p className="text-xs font-medium text-muted-foreground/60">{nav.desc}</p>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+              </div>
+           </div>
 
-          <Card className="group cursor-pointer hover:border-secondary/50 hover:shadow-lg transition-all">
-            <Link to="/contacts">
-              <CardHeader>
+           {/* Live Extraction Stream */}
+           <div className="lg:col-span-8 space-y-6">
+              <div className="flex items-center justify-between px-2">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-secondary/10 group-hover:bg-secondary/20 transition-colors">
-                    <Table className="w-5 h-5 text-secondary" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg">Contacts</CardTitle>
-                    <CardDescription>View all casting contacts</CardDescription>
-                  </div>
+                    <RefreshCw className="w-4 h-4 text-emerald-500 animate-spin-slow" />
+                    <h2 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Recent Extraction Hits</h2>
                 </div>
-              </CardHeader>
-            </Link>
-          </Card>
-
-          <Card className="group cursor-pointer hover:border-accent/50 hover:shadow-lg transition-all">
-            <Link to="/analytics">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-accent/10 group-hover:bg-accent/20 transition-colors">
-                    <BarChart3 className="w-5 h-5 text-accent" />
+                <Link to="/contacts" className="text-[10px] font-black text-primary hover:underline tracking-widest uppercase">SCAN FULL ARCHIVE</Link>
+              </div>
+              <Card className="glass-card border-white/5 rounded-[2.5rem] overflow-hidden shadow-2xl">
+                <CardContent className="p-0">
+                  <div className="divide-y divide-white/[0.03]">
+                    {recentContacts.map((contact, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-7 hover:bg-white/[0.02] transition-colors group"
+                      >
+                        <div className="flex items-center gap-5">
+                           <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-muted to-muted/50 border border-white/5 flex items-center justify-center font-black text-xl text-primary shadow-inner group-hover:scale-110 transition-transform duration-500">
+                              {contact.name.charAt(0)}
+                           </div>
+                           <div>
+                              <p className="font-black text-lg tracking-tight">{contact.name}</p>
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-widest">{contact.project}</span>
+                                <div className="w-1 h-1 rounded-full bg-emerald-500" />
+                                <span className="text-[9px] font-black text-emerald-500/70 uppercase">AUTO-SYNCED</span>
+                              </div>
+                           </div>
+                        </div>
+                        <div className="text-right">
+                           <div className="px-4 py-1.5 rounded-xl border border-white/10 bg-muted/20 text-[10px] font-black uppercase tracking-widest text-muted-foreground group-hover:text-foreground transition-colors">
+                            {contact.date}
+                           </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <div>
-                    <CardTitle className="text-lg">Analytics</CardTitle>
-                    <CardDescription>Track reach-out metrics</CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-            </Link>
-          </Card>
+                </CardContent>
+              </Card>
+           </div>
         </div>
 
-        {/* Recent Activity */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Contacts</CardTitle>
-            <CardDescription>Latest casting opportunities added</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {recentContacts.map((contact, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors"
-                >
-                  <div>
-                    <p className="font-medium text-foreground">{contact.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {contact.project}
-                    </p>
-                  </div>
-                  <p className="text-xs text-muted-foreground">{contact.date}</p>
+        {/* Protocol Visualizer Section */}
+        <section className="space-y-10 pt-10">
+           <div className="text-center space-y-3">
+              <p className="text-[10px] font-black text-primary uppercase tracking-[0.4em]">Integrated Pipeline</p>
+              <h2 className="text-4xl font-black tracking-tighter">MISSION-CRITICAL WORKFLOW</h2>
+              <p className="text-muted-foreground font-medium max-w-xl mx-auto">CastHub operates on a tri-stage cycle designed for maximum conversion velocity.</p>
+           </div>
+           
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+              {[
+                { step: "01", title: "CONFIGURE", desc: "Define extraction parameters and initialize neural monitoring clusters for target groups.", icon: SlidersHorizontal, color: "from-primary to-purple-600" },
+                { step: "02", title: "CRAWL", desc: "Autonomous scanning nodes parse global project data, identifying high-intent opportunities.", icon: TrendingUp, color: "from-secondary to-blue-600" },
+                { step: "03", title: "CONVERT", desc: "Initiate multi-channel outreach protocols using AI-optimized blueprint models.", icon: Zap, color: "from-accent to-orange-600" },
+              ].map((item, i) => (
+                <div key={i} className="glass-card h-[320px] p-10 rounded-[3rem] relative overflow-hidden group flex flex-col justify-between border-white/5 hover:border-primary/30 transition-all duration-700">
+                   <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${item.color} opacity-0 group-hover:opacity-10 -z-10 group-hover:scale-[2] transition-all duration-1000 blur-2xl`} />
+                   
+                   <div className="flex items-start justify-between">
+                        <div className="w-16 h-16 rounded-[1.5rem] border border-white/10 glass-card flex items-center justify-center shadow-xl group-hover:rotate-12 transition-transform duration-500">
+                            <item.icon className="w-8 h-8 text-foreground" />
+                        </div>
+                        <p className="text-6xl font-black opacity-[0.03] tracking-tighter group-hover:scale-125 transition-transform duration-700">{item.step}</p>
+                   </div>
+                   
+                   <div className="space-y-4">
+                      <h3 className="text-2xl font-black tracking-tight">{item.title}</h3>
+                      <p className="text-xs font-medium text-muted-foreground/80 leading-relaxed">{item.desc}</p>
+                   </div>
                 </div>
               ))}
-            </div>
-            <Link to="/contacts" className="block mt-4">
-              <Button variant="outline" className="w-full gap-2">
-                View all contacts
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-
-        {/* Info Section */}
-        <Card className="bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5 border-primary/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Zap className="w-5 h-5 text-primary" />
-              How CastHub Works
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <div className="flex gap-4">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold">
-                  1
-                </div>
-                <div>
-                  <p className="font-medium text-foreground">
-                    Configure Your Groups
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Add WhatsApp and Instagram groups where casting calls are
-                    posted
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-4">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-secondary/20 flex items-center justify-center text-secondary font-semibold">
-                  2
-                </div>
-                <div>
-                  <p className="font-medium text-foreground">
-                    AI Agent Scans Groups
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Our AI automatically scans for relevant casting calls in your
-                    configured groups
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-4">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center text-accent font-semibold">
-                  3
-                </div>
-                <div>
-                  <p className="font-medium text-foreground">
-                    Auto-Send Outreach
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Automatically draft and send personalized email and WhatsApp
-                    messages based on predefined templates
-                  </p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+           </div>
+        </section>
       </div>
     </AppLayout>
   );
 }
+

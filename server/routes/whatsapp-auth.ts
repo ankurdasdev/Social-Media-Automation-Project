@@ -5,19 +5,29 @@ import { pool } from "../db/index";
 
 const EVOLUTION_API_URL = process.env.EVOLUTION_API_URL;
 const EVOLUTION_API_KEY = process.env.EVOLUTION_API_KEY;
-const MOCK_USER_ID = process.env.USER_ID || "1";
 
 const getHeaders = () => ({
   "Content-Type": "application/json",
   apikey: EVOLUTION_API_KEY,
 });
 
+function getUserId(req: Parameters<RequestHandler>[0]): string | null {
+  return (
+    (req.query.userId as string) ||
+    (req.body?.userId as string) ||
+    process.env.DEFAULT_USER_ID ||
+    null
+  );
+}
+
 /**
  * GET /api/whatsapp/status
  */
 export const handleWhatsAppStatus: RequestHandler = async (req, res) => {
   try {
-    const userId = MOCK_USER_ID;
+    const userId = getUserId(req);
+    if (!userId) return res.status(400).json({ error: "userId is required" });
+
     const dbRes = await pool.query(
       "SELECT instance_name FROM whatsapp_instances WHERE user_id = $1",
       [userId]
@@ -54,44 +64,50 @@ export const handleWhatsAppStatus: RequestHandler = async (req, res) => {
 /**
  * POST /api/whatsapp/connect
  */
-export const handleWhatsAppConnect: RequestHandler = async (req, res) => {
-  try {
-    const userId = MOCK_USER_ID;
-    const instanceName = `user_${userId}_wa`;
-
+  export const handleWhatsAppConnect: RequestHandler = async (req, res) => {
     try {
-      await axios.post(
-        `${EVOLUTION_API_URL}/instance/create`,
-        { instanceName, qrcode: true },
+      const userId = getUserId(req);
+      if (!userId) return res.status(400).json({ error: "userId is required" });
+      const { mobileNumber } = req.body as { mobileNumber?: string };
+    const instanceName = mobileNumber ? `wa_${mobileNumber}` : "Evolution1"; // Dynamic instance name
+
+      // Ensure the instance exists – ignore 403 if already created
+      try {
+        await axios.post(
+          `${EVOLUTION_API_URL}/instance/create`,
+          { instanceName, qrcode: true },
+          { headers: getHeaders() }
+        );
+      } catch (createErr: any) {
+        if (createErr.response?.status !== 403) throw createErr;
+      }
+
+      // Store/Update the instance name for this user
+      await pool.query(
+        `INSERT INTO whatsapp_instances (user_id, instance_name) 
+         VALUES ($1, $2) ON CONFLICT (user_id) DO UPDATE SET instance_name = $2, updated_at = NOW()`,
+        [userId, instanceName]
+      );
+
+      // Retrieve QR code for the instance
+      const qrRes = await axios.get(
+        `${EVOLUTION_API_URL}/instance/connect/${instanceName}`,
         { headers: getHeaders() }
       );
-    } catch (createErr: any) {
-      if (createErr.response?.status !== 403) throw createErr;
+      res.json(qrRes.data);
+    } catch (err: any) {
+      console.error("WhatsApp Connect Error:", err.message);
+      res.status(500).json({ error: "Failed to connect WhatsApp" });
     }
-
-    await pool.query(
-      `INSERT INTO whatsapp_instances (user_id, instance_name) 
-       VALUES ($1, $2) ON CONFLICT (user_id) DO UPDATE SET instance_name = $2, updated_at = NOW()`,
-      [userId, instanceName]
-    );
-
-    const qrRes = await axios.get(
-      `${EVOLUTION_API_URL}/instance/connect/${instanceName}`,
-      { headers: getHeaders() }
-    );
-    res.json(qrRes.data);
-  } catch (err: any) {
-    console.error("WhatsApp Connect Error:", err.message);
-    res.status(500).json({ error: "Failed to connect WhatsApp" });
-  }
-};
+  };
 
 /**
  * GET /api/whatsapp/qr
  */
 export const handleWhatsAppQR: RequestHandler = async (req, res) => {
   try {
-    const userId = MOCK_USER_ID;
+    const userId = getUserId(req);
+    if (!userId) return res.status(400).json({ error: "userId is required" });
     const dbRes = await pool.query(
       "SELECT instance_name FROM whatsapp_instances WHERE user_id = $1",
       [userId]
@@ -118,7 +134,8 @@ export const handleWhatsAppQR: RequestHandler = async (req, res) => {
  */
 export const handleWhatsAppDisconnect: RequestHandler = async (req, res) => {
   try {
-    const userId = MOCK_USER_ID;
+    const userId = getUserId(req);
+    if (!userId) return res.status(400).json({ error: "userId is required" });
     const dbRes = await pool.query(
       "SELECT instance_name FROM whatsapp_instances WHERE user_id = $1",
       [userId]

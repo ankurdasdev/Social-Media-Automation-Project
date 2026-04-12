@@ -53,6 +53,7 @@ import {
   Radio,
   Loader2,
   LayoutTemplate,
+  CheckCircle2,
 } from "lucide-react";
 import type {
   SourceGroup,
@@ -266,30 +267,34 @@ export default function Controller() {
     (g) => g.platform === "instagram"
   ).length;
 
-  // ─── Render ──────────────────────────────────────────────────────────────
-
   return (
     <AppLayout>
-      <div className="space-y-6">
+      <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">
-              Controller Dashboard
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+          <div className="space-y-2">
+            <h1 className="text-4xl font-black tracking-tighter text-foreground sm:text-5xl">
+              Source <span className="text-primary italic">Terminal</span>
             </h1>
-            <p className="text-muted-foreground mt-1">
-              Manage your WhatsApp and Instagram source groups for casting call
-              monitoring.
+            <p className="text-muted-foreground font-medium max-w-lg">
+              Manage cryptographic source streams from WhatsApp and Instagram for AI intelligence extraction.
             </p>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <Button variant="outline" onClick={() => setIsTemplateManagerOpen(true)} className="gap-2">
-              <LayoutTemplate className="w-4 h-4" />
-              Manage Templates
+          <div className="flex items-center gap-3 shrink-0">
+            <Button 
+                variant="outline" 
+                onClick={() => setIsTemplateManagerOpen(true)} 
+                className="h-12 px-6 rounded-xl font-bold bg-background/50 border-border/50 gap-2 hover:bg-muted transition-all"
+            >
+              <LayoutTemplate className="w-4 h-4 text-primary" />
+              Manage Blueprints
             </Button>
-            <Button onClick={openAddDialog} className="gap-2">
-              <Plus className="w-4 h-4" />
-              Add Source
+            <Button 
+                onClick={openAddDialog} 
+                className="h-12 px-6 rounded-xl font-black bg-foreground text-background hover:bg-foreground/90 gap-2 shadow-xl transition-all active:scale-95"
+            >
+              <Plus className="w-5 h-5" />
+              ADD NEW SOURCE
             </Button>
           </div>
         </div>
@@ -301,178 +306,178 @@ export default function Controller() {
             setActiveTab(v as Platform);
             setSearchQuery("");
           }}
+          className="space-y-8"
         >
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            <TabsList className="grid w-full sm:w-auto grid-cols-2">
-              <TabsTrigger value="whatsapp" className="gap-2">
-                <MessageCircle className="w-4 h-4" />
-                WhatsApp
-                <Badge variant="secondary" className="ml-1 text-xs">
+          <div className="flex flex-col md:flex-row md:items-center gap-6 justify-between">
+            <TabsList className="bg-muted/50 border border-border/50 p-1.5 h-14 rounded-2xl w-full md:w-auto min-w-[320px]">
+              <TabsTrigger value="whatsapp" className="flex-1 rounded-xl gap-2 font-black data-[state=active]:bg-background transition-all">
+                <MessageCircle className="w-4 h-4 text-emerald-500" />
+                WHATSAPP
+                <Badge variant="secondary" className="ml-1 bg-emerald-500/10 text-emerald-500 border-none font-black">
                   {whatsappCount}
                 </Badge>
               </TabsTrigger>
-              <TabsTrigger value="instagram" className="gap-2">
-                <Instagram className="w-4 h-4" />
-                Instagram
-                <Badge variant="secondary" className="ml-1 text-xs">
+              <TabsTrigger value="instagram" className="flex-1 rounded-xl gap-2 font-black data-[state=active]:bg-background transition-all">
+                <Instagram className="w-4 h-4 text-pink-500" />
+                INSTAGRAM
+                <Badge variant="secondary" className="ml-1 bg-pink-500/10 text-pink-500 border-none font-black">
                   {instagramCount}
                 </Badge>
               </TabsTrigger>
             </TabsList>
 
             {/* Search */}
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <div className="relative w-full md:max-w-xs group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
               <Input
                 type="text"
-                placeholder="Search sources..."
+                placeholder="Search encrypted streams..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
+                className="h-14 pl-12 rounded-2xl bg-muted/30 border-border/50 focus:ring-primary focus:bg-background shadow-inner transition-all font-medium"
               />
             </div>
           </div>
 
-          {/* WhatsApp Tab Content */}
-          <TabsContent value="whatsapp" className="mt-6">
-            <PlatformInfo platform="whatsapp" />
-            <GroupList
-              groups={filteredGroups}
-              isLoading={isLoading}
-              error={error}
-              searchQuery={searchQuery}
-              onEdit={openEditDialog}
-              onDelete={setDeleteTarget}
-              onToggle={(id, enabled) =>
-                toggleMutation.mutate({ id, enabled })
-              }
-              platform="whatsapp"
-            />
-          </TabsContent>
+          <div className="grid grid-cols-1 gap-10">
+              <TabsContent value="whatsapp" className="m-0 focus-visible:outline-none">
+                <div className="space-y-8">
+                  <PlatformInfo platform="whatsapp" />
+                  <GroupList
+                    groups={filteredGroups}
+                    isLoading={isLoading}
+                    error={error}
+                    searchQuery={searchQuery}
+                    onEdit={openEditDialog}
+                    onDelete={setDeleteTarget}
+                    onToggle={(id, enabled) =>
+                      toggleMutation.mutate({ id, enabled })
+                    }
+                    platform="whatsapp"
+                  />
+                </div>
+              </TabsContent>
 
-          {/* Instagram Tab Content */}
-          <TabsContent value="instagram" className="mt-6">
-            <PlatformInfo platform="instagram" />
-            <GroupList
-              groups={filteredGroups}
-              isLoading={isLoading}
-              error={error}
-              searchQuery={searchQuery}
-              onEdit={openEditDialog}
-              onDelete={setDeleteTarget}
-              onToggle={(id, enabled) =>
-                toggleMutation.mutate({ id, enabled })
-              }
-              platform="instagram"
-            />
-          </TabsContent>
+              <TabsContent value="instagram" className="m-0 focus-visible:outline-none">
+                <div className="space-y-8">
+                  <PlatformInfo platform="instagram" />
+                  <GroupList
+                    groups={filteredGroups}
+                    isLoading={isLoading}
+                    error={error}
+                    searchQuery={searchQuery}
+                    onEdit={openEditDialog}
+                    onDelete={setDeleteTarget}
+                    onToggle={(id, enabled) =>
+                      toggleMutation.mutate({ id, enabled })
+                    }
+                    platform="instagram"
+                  />
+                </div>
+              </TabsContent>
+          </div>
         </Tabs>
 
         {/* Add/Edit Dialog */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="sm:max-w-[480px]">
-            <DialogHeader>
-              <DialogTitle>
-                {editingGroup ? "Edit Source" : "Add New Source"}
+          <DialogContent className="sm:max-w-[540px] glass-card border-white/10 dark:border-white/5 p-0 overflow-hidden shadow-2xl rounded-[2rem]">
+            <DialogHeader className="p-10 pb-4">
+              <DialogTitle className="text-3xl font-black tracking-tight">
+                {editingGroup ? "Modify Stream" : "New Intelligence Stream"}
               </DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="text-muted-foreground font-medium uppercase tracking-widest text-[10px]">
                 {editingGroup
-                  ? "Update the details for this source."
-                  : `Add a new ${activeTab === "whatsapp" ? "WhatsApp" : "Instagram"} source to monitor.`}
+                  ? "Update protocol parameters for this data source."
+                  : `Initialize a new ${activeTab} ingestion channel.`}
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-4 py-2">
+            <div className="px-10 py-6 space-y-8">
               {/* Name */}
-              <div className="space-y-2">
-                <Label htmlFor="source-name">
-                  Name <span className="text-destructive">*</span>
+              <div className="space-y-3">
+                <Label htmlFor="source-name" className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                  Stream Identifier <span className="text-primary">*</span>
                 </Label>
                 <Input
                   id="source-name"
                   placeholder={
                     activeTab === "whatsapp"
-                      ? "e.g. Casting Calls - Mumbai"
-                      : "e.g. @casting_calls_india"
+                      ? "e.g. Casting Master-list"
+                      : "e.g. @casting_director_pro"
                   }
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleSubmit();
-                  }}
+                  className="h-14 rounded-2xl bg-muted/30 border-border/50 focus:ring-primary font-bold shadow-inner"
                 />
               </div>
 
-              {/* Type */}
-              <div className="space-y-2">
-                <Label htmlFor="source-type">Type</Label>
-                <Select
-                  value={formType}
-                  onValueChange={(v) => setFormType(v as SourceType)}
-                >
-                  <SelectTrigger id="source-type">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {typeOptions.map((t) => (
-                      <SelectItem key={t} value={t}>
-                        {typeLabel(t)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <div className="grid grid-cols-2 gap-8">
+                  {/* Type */}
+                  <div className="space-y-3">
+                    <Label htmlFor="source-type" className="text-xs font-black uppercase tracking-widest text-muted-foreground">Stream Architecture</Label>
+                    <Select
+                      value={formType}
+                      onValueChange={(v) => setFormType(v as SourceType)}
+                    >
+                      <SelectTrigger id="source-type" className="h-14 rounded-2xl bg-muted/30 border-border/50 focus:ring-primary font-bold shadow-inner">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="glass-card">
+                        {typeOptions.map((t) => (
+                          <SelectItem key={t} value={t} className="font-bold">
+                            {typeLabel(t)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              {/* URL */}
-              <div className="space-y-2">
-                <Label htmlFor="source-url">
-                  URL / Link{" "}
-                  <span className="text-muted-foreground text-xs">
-                    (optional)
-                  </span>
-                </Label>
-                <Input
-                  id="source-url"
-                  placeholder={
-                    activeTab === "whatsapp"
-                      ? "e.g. https://chat.whatsapp.com/invite..."
-                      : "e.g. https://instagram.com/username"
-                  }
-                  value={formUrl}
-                  onChange={(e) => setFormUrl(e.target.value)}
-                />
+                  {/* URL */}
+                  <div className="space-y-3">
+                    <Label htmlFor="source-url" className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                      Endpoint URL
+                    </Label>
+                    <Input
+                      id="source-url"
+                      placeholder="https://..."
+                      value={formUrl}
+                      onChange={(e) => setFormUrl(e.target.value)}
+                      className="h-14 rounded-2xl bg-muted/30 border-border/50 focus:ring-primary font-bold shadow-inner"
+                    />
+                  </div>
               </div>
 
               {/* Description */}
-              <div className="space-y-2">
-                <Label htmlFor="source-desc">
-                  Description{" "}
-                  <span className="text-muted-foreground text-xs">
-                    (optional)
-                  </span>
+              <div className="space-y-3">
+                <Label htmlFor="source-desc" className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                  Stream Context
                 </Label>
                 <Textarea
                   id="source-desc"
-                  placeholder="Brief note about this source..."
-                  rows={2}
+                  placeholder="Notes on extraction strategy..."
+                  rows={3}
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
+                  className="rounded-2xl bg-muted/30 border-border/50 focus:ring-primary font-medium shadow-inner p-5 resize-none"
                 />
               </div>
             </div>
 
-            <DialogFooter>
-              <Button variant="outline" onClick={closeDialog}>
-                Cancel
+            <DialogFooter className="p-10 pt-4 bg-muted/20">
+              <Button variant="ghost" onClick={closeDialog} className="h-14 flex-1 rounded-2xl font-bold bg-muted/50">
+                DISCARD
               </Button>
               <Button
                 onClick={handleSubmit}
                 disabled={!formName.trim() || isSubmitting}
+                className="h-14 flex-[2] rounded-2xl font-black bg-foreground text-background hover:bg-foreground/90 shadow-xl transition-all active:scale-95"
               >
-                {isSubmitting && (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                {isSubmitting ? (
+                  <Loader2 className="w-5 h-5 mr-3 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="w-5 h-5 mr-3" />
                 )}
-                {editingGroup ? "Save Changes" : "Add Source"}
+                {editingGroup ? "COMMIT SYNC" : "INITIALIZE STREAM"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -483,37 +488,37 @@ export default function Controller() {
           open={!!deleteTarget}
           onOpenChange={(open) => !open && setDeleteTarget(null)}
         >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete Source</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to remove{" "}
-                <strong>{deleteTarget?.name}</strong>? This action cannot be
-                undone and the group will stop being monitored.
+          <AlertDialogContent className="glass-card border-white/10 dark:border-white/5 rounded-[2rem] p-10 shadow-2xl">
+            <AlertDialogHeader className="space-y-4">
+              <div className="w-16 h-16 rounded-3xl bg-destructive/10 flex items-center justify-center mb-2 mx-auto">
+                 <Trash2 className="w-8 h-8 text-destructive" />
+              </div>
+              <AlertDialogTitle className="text-3xl font-black tracking-tight text-center">Terminate Stream?</AlertDialogTitle>
+              <AlertDialogDescription className="text-center font-medium leading-relaxed">
+                You are about to permanently disconnect the source <strong>{deleteTarget?.name}</strong>. Intelligence gathering from this protocol will cease immediately.
               </AlertDialogDescription>
             </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogFooter className="mt-8 flex gap-4 justify-center sm:justify-center">
+              <AlertDialogCancel className="h-14 px-8 rounded-2xl font-bold bg-muted/50 border-none">CANCEL</AlertDialogCancel>
               <AlertDialogAction
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                className="h-14 px-8 rounded-2xl font-black bg-destructive text-white hover:bg-destructive/90 shadow-xl shadow-destructive/20 active:scale-95 transition-all"
                 onClick={() => {
                   if (deleteTarget) deleteMutation.mutate(deleteTarget.id);
                 }}
               >
                 {deleteMutation.isPending ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="w-5 h-5 mr-3 animate-spin" />
                 ) : (
-                  <Trash2 className="w-4 h-4 mr-2" />
+                  <Trash2 className="w-5 h-5 mr-3" />
                 )}
-                Delete
+                CONFIRM DELETION
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      </div>
 
-      {/* Template Manager */}
-      <TemplateManager open={isTemplateManagerOpen} onOpenChange={setIsTemplateManagerOpen} />
+        <TemplateManager open={isTemplateManagerOpen} onOpenChange={setIsTemplateManagerOpen} />
+      </div>
     </AppLayout>
   );
 }

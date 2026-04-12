@@ -36,11 +36,11 @@ export const handleGetContacts: RequestHandler = async (req, res) => {
     const q = search.toLowerCase();
     contacts = contacts.filter(
       (c) =>
-        c.name.toLowerCase().includes(q) ||
-        c.email.toLowerCase().includes(q) ||
-        c.whatsapp.includes(q) ||
-        c.instaHandle.toLowerCase().includes(q) ||
-        c.castingName.toLowerCase().includes(q)
+        (c.name || "").toLowerCase().includes(q) ||
+        (c.email || "").toLowerCase().includes(q) ||
+        (c.whatsapp || "").includes(q) ||
+        (c.instaHandle || "").toLowerCase().includes(q) ||
+        (c.castingName || "").toLowerCase().includes(q)
     );
   }
 
