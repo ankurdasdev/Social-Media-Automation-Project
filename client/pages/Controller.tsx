@@ -491,22 +491,7 @@ export default function Controller() {
                 />
               </div>
 
-              <div className="space-y-3">
-                <Label htmlFor="source-name" className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-                  Source Name <span className="text-primary">*</span>
-                </Label>
-                <Input
-                  id="source-name"
-                  placeholder={
-                    activeTab === "whatsapp"
-                      ? "e.g. Casting Master-list"
-                      : "e.g. casting_director_pro"
-                  }
-                  value={formName}
-                  onChange={(e) => setFormName(e.target.value)}
-                  className="h-14 rounded-2xl bg-muted/30 border-border/50 focus:ring-primary font-bold shadow-inner"
-                />
-              </div>
+
 
               {/* URL */}
               <div className="space-y-3">
