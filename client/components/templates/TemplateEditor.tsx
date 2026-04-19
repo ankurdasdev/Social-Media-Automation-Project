@@ -18,6 +18,8 @@ import { useToast } from "@/hooks/use-toast";
 import type { Template, CreateTemplateRequest, UpdateTemplateRequest } from "@shared/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { getOrCreateUserId } from "@/lib/utils";
+import { DriveFilePicker } from "@/components/drive/DriveFilePicker";
+import type { DriveFile } from "@shared/api";
 
 const VARIABLES = [
   { label: "{{name}}", description: "Talent name" },
@@ -47,9 +49,10 @@ export function TemplateEditor({
 
   const [name, setName] = React.useState("");
   const [content, setContent] = React.useState("");
+  const [emailSubject, setEmailSubject] = React.useState("");
   const [isAttachment, setIsAttachment] = React.useState(false);
-  const [attachmentUrl, setAttachmentUrl] = React.useState("");
-  const [attachmentDetailText, setAttachmentDetailText] = React.useState("");
+  const [driveFile, setDriveFile] = React.useState<DriveFile | null>(null);
+  const [driveFileName, setDriveFileName] = React.useState("");
   const [isSaving, setIsSaving] = React.useState(false);
 
   // Sync state when dialog opens / template changes
@@ -57,9 +60,20 @@ export function TemplateEditor({
     if (open) {
       setName(template?.name ?? "");
       setContent(template?.content ?? "");
+      setEmailSubject(template?.emailSubject ?? "");
       setIsAttachment(template?.isAttachment ?? false);
-      setAttachmentUrl(template?.attachmentUrl ?? "");
-      setAttachmentDetailText(template?.attachmentDetailText ?? "");
+      if (template?.driveFileId) {
+        setDriveFile({
+          id: template.driveFileId,
+          name: template.driveFileName || "",
+          mimeType: "",
+          downloadUrl: ""
+        });
+        setDriveFileName(template.driveFileName ?? "");
+      } else {
+        setDriveFile(null);
+        setDriveFileName("");
+      }
     }
   }, [open, template]);
 
@@ -103,9 +117,18 @@ export function TemplateEditor({
     setIsSaving(true);
     try {
       const userId = getOrCreateUserId();
+      const basePayload = {
+        name,
+        content,
+        isAttachment,
+        emailSubject: defaultCategory === "email" ? emailSubject : undefined,
+        driveFileId: isAttachment ? driveFile?.id : undefined,
+        driveFileName: isAttachment ? driveFileName : undefined,
+      };
+
       if (template) {
         // Edit mode
-        const body: UpdateTemplateRequest = { name, content, isAttachment, attachmentUrl, attachmentDetailText, userId };
+        const body: UpdateTemplateRequest = { ...basePayload, userId };
         const res = await fetch(`/api/templates/${template.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -116,12 +139,8 @@ export function TemplateEditor({
         // Create mode
         const body: CreateTemplateRequest = {
           userId,
-          name,
           category: defaultCategory,
-          content,
-          isAttachment,
-          attachmentUrl,
-          attachmentDetailText,
+          ...basePayload
         };
         const res = await fetch("/api/templates", {
           method: "POST",
@@ -162,7 +181,7 @@ export function TemplateEditor({
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. WA Intro Pitch"
+              placeholder={`e.g. ${categoryLabel} Template 1`}
               className="h-14 rounded-2xl bg-muted/30 border-border/50 focus:ring-primary font-bold shadow-inner"
             />
           </div>
@@ -186,8 +205,8 @@ export function TemplateEditor({
                   title={`${v.description} — click or drag into message`}
                 >
                   <Badge
-                    variant="secondary"
-                    className="font-black text-[11px] px-3 py-1.5 rounded-xl bg-muted/50 border-border/50 group-hover:bg-primary group-hover:text-primary-foreground group-hover:scale-105 transition-all select-none tracking-tight"
+                    variant="default"
+                    className="font-black text-[11px] px-3 py-1.5 rounded-xl transition-all select-none tracking-tight"
                     style={{ opacity: isAttachment ? 0.3 : 1, cursor: isAttachment ? "not-allowed" : "grab" }}
                   >
                     {v.label}
@@ -196,6 +215,18 @@ export function TemplateEditor({
               ))}
             </div>
           </div>
+
+          {defaultCategory === "email" && (
+            <div className="space-y-3">
+              <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Email Subject</Label>
+              <Input
+                value={emailSubject}
+                onChange={(e) => setEmailSubject(e.target.value)}
+                placeholder="e.g. Casting Call Opportunity"
+                className="h-14 rounded-2xl bg-muted/30 border-border/50 focus:ring-primary font-medium shadow-inner"
+              />
+            </div>
+          )}
 
           {/* Message Content */}
           <div className="space-y-3">
@@ -245,28 +276,29 @@ export function TemplateEditor({
             {isAttachment && (
               <div className="space-y-6 pt-6 border-t border-border/50 animate-in fade-in duration-300">
                 <div className="space-y-3">
-                  <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground text-primary">ENDPOINT URL</Label>
-                  <div className="flex gap-3">
-                    <Input
-                      value={attachmentUrl}
-                      onChange={(e) => setAttachmentUrl(e.target.value)}
-                      placeholder="https://..."
-                      className="h-14 rounded-2xl bg-muted/30 border-border/50 focus:ring-primary font-bold shadow-inner"
-                    />
-                    <Button size="icon" variant="outline" className="h-14 w-14 rounded-2xl shrink-0 border-border/50 hover:bg-muted">
-                      <Paperclip className="h-5 w-5" />
-                    </Button>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground text-primary">PROTOCOL CONTEXT (CAPTION)</Label>
-                  <Textarea
-                    value={attachmentDetailText}
-                    onChange={(e) => setAttachmentDetailText(e.target.value)}
-                    placeholder="Provide additional metadata for this attachment..."
-                    className="min-h-[100px] rounded-2xl bg-muted/30 border-border/50 focus:ring-primary font-medium p-6 shadow-inner resize-none"
+                  <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground text-primary">SELECT DRIVE FILE</Label>
+                  <DriveFilePicker
+                    userId={getOrCreateUserId()}
+                    selectedFiles={driveFile ? [driveFile] : []}
+                    onChange={(files) => {
+                      const file = files[0] || null;
+                      setDriveFile(file);
+                      if (file) setDriveFileName(file.name);
+                    }}
+                    placeholder="Search Google Drive..."
                   />
                 </div>
+                {driveFile && (
+                  <div className="space-y-3">
+                    <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground text-primary">ATTACHMENT NAME</Label>
+                    <Input
+                      value={driveFileName}
+                      onChange={(e) => setDriveFileName(e.target.value)}
+                      placeholder="Display name for this file"
+                      className="h-14 rounded-2xl bg-muted/30 border-border/50 focus:ring-primary font-bold shadow-inner"
+                    />
+                  </div>
+                )}
               </div>
             )}
           </div>

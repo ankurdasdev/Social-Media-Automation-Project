@@ -63,8 +63,16 @@ const navItems = [
 export default function AppLayout({ children }: AppLayoutProps) {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
   const userId = getOrCreateUserId();
   const currentUser = getCurrentUser();
+
+  const toggleTheme = () => {
+    const next = !isDark;
+    setIsDark(next);
+    document.documentElement.classList.toggle('dark', next);
+    localStorage.setItem('casthub-theme', next ? 'dark' : 'light');
+  };
 
   // ── Global Status Polling ──────────────────────────────────────────────────
   const { data: googleStatus } = useQuery({
@@ -230,7 +238,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
           <div className="flex items-center gap-4">
              {/* Dark Mode Toggle */}
              <button
-                onClick={() => document.documentElement.classList.toggle('dark')}
+                onClick={toggleTheme}
                 className="w-11 h-11 rounded-xl bg-muted/30 border border-border/30 flex items-center justify-center hover:bg-muted/50 transition-all text-foreground"
               >
                 <div className="relative w-5 h-5 flex items-center justify-center">

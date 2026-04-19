@@ -230,10 +230,12 @@ export const handleResetPassword: RequestHandler = async (req, res) => {
     // Generate a secure, time-limited reset token using JWT
     const token = jwt.sign({ userId: user.id }, RESET_SECRET, { expiresIn: "30m" });
 
-    // Determine base URL from request origin to construct a valid reset link
+    // Determine base URL from env or request origin
     const protocol = req.headers["x-forwarded-proto"] || req.protocol || "http";
-    const host = req.get("host") || "localhost:8080";
-    const baseUrl = `${protocol}://${host}`;
+    const host = req.get("x-forwarded-host") || req.get("host") || "localhost:8080";
+    let baseUrl = process.env.APP_URL || `${protocol}://${host}`;
+    if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+    
     const resetLink = `${baseUrl}/reset-password?token=${token}`;
 
     console.log(`[auth] Password reset requested for: ${email}`);

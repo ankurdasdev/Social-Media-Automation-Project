@@ -224,7 +224,7 @@ export default function Controller() {
     return result;
   }, [groups, activeTab, searchQuery]);
 
-  // ─── Sync Mutation ────────────────────────────────────────────────────────
+  // ─── Sync Mutations ────────────────────────────────────────────────────────
   
   const syncGroupsMutation = useMutation({
     mutationFn: async () => {
@@ -241,6 +241,25 @@ export default function Controller() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["groups"] });
       toast.success(`✅ Synced ${data.count} WhatsApp groups successfully!`);
+    },
+    onError: (err: any) => {
+      toast.error(`❌ Sync failed: ${err.message}`);
+    },
+  });
+
+  const syncInstagramMutation = useMutation({
+    mutationFn: async () => {
+      const userId = getOrCreateUserId();
+      const res = await fetch(`/api/instagram/sync-threads?userId=${userId}`, { 
+        method: "GET",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to sync threads");
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["groups"] });
+      toast.success(`✅ Synced ${data.count} Instagram threads successfully!`);
     },
     onError: (err: any) => {
       toast.error(`❌ Sync failed: ${err.message}`);
@@ -329,6 +348,17 @@ export default function Controller() {
               >
                 <RefreshCw className={cn("w-4 h-4", syncGroupsMutation.isPending && "animate-spin")} />
                 Sync Groups
+              </Button>
+            )}
+            {activeTab === "instagram" && (
+              <Button
+                variant="outline"
+                onClick={() => syncInstagramMutation.mutate()}
+                disabled={syncInstagramMutation.isPending}
+                className="h-12 px-6 rounded-xl font-bold bg-pink-500/5 border-pink-500/20 text-pink-600 gap-2 hover:bg-pink-500/10 transition-all"
+              >
+                <RefreshCw className={cn("w-4 h-4", syncInstagramMutation.isPending && "animate-spin")} />
+                Sync Threads
               </Button>
             )}
             <Button 
@@ -461,40 +491,35 @@ export default function Controller() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-8">
-                  {/* Type */}
-                  <div className="space-y-3">
-                    <Label htmlFor="source-type" className="text-xs font-black uppercase tracking-widest text-muted-foreground">Source Type</Label>
-                    <Select
-                      value={formType}
-                      onValueChange={(v) => setFormType(v as SourceType)}
-                    >
-                      <SelectTrigger id="source-type" className="h-14 rounded-2xl bg-muted/30 border-border/50 focus:ring-primary font-bold shadow-inner">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="glass-card">
-                        {typeOptions.map((t) => (
-                          <SelectItem key={t} value={t} className="font-bold">
-                            {typeLabel(t, activeTab)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+              <div className="space-y-3">
+                <Label htmlFor="source-name" className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                  Source Name <span className="text-primary">*</span>
+                </Label>
+                <Input
+                  id="source-name"
+                  placeholder={
+                    activeTab === "whatsapp"
+                      ? "e.g. Casting Master-list"
+                      : "e.g. casting_director_pro"
+                  }
+                  value={formName}
+                  onChange={(e) => setFormName(e.target.value)}
+                  className="h-14 rounded-2xl bg-muted/30 border-border/50 focus:ring-primary font-bold shadow-inner"
+                />
+              </div>
 
-                  {/* URL */}
-                  <div className="space-y-3">
-                    <Label htmlFor="source-url" className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-                      Endpoint URL
-                    </Label>
-                    <Input
-                      id="source-url"
-                      placeholder="https://..."
-                      value={formUrl}
-                      onChange={(e) => setFormUrl(e.target.value)}
-                      className="h-14 rounded-2xl bg-muted/30 border-border/50 focus:ring-primary font-bold shadow-inner"
-                    />
-                  </div>
+              {/* URL */}
+              <div className="space-y-3">
+                <Label htmlFor="source-url" className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                  Endpoint URL (Optional)
+                </Label>
+                <Input
+                  id="source-url"
+                  placeholder="https://..."
+                  value={formUrl}
+                  onChange={(e) => setFormUrl(e.target.value)}
+                  className="h-14 rounded-2xl bg-muted/30 border-border/50 focus:ring-primary font-bold shadow-inner"
+                />
               </div>
 
               {/* Description */}

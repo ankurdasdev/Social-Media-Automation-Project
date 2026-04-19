@@ -180,8 +180,11 @@ export interface Template {
   category: TemplateCategory;
   content: string;
   isAttachment: boolean;
+  emailSubject?: string;
   attachmentUrl?: string;
   attachmentDetailText?: string;
+  driveFileId?: string;
+  driveFileName?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -192,8 +195,11 @@ export interface CreateTemplateRequest {
   category: TemplateCategory;
   content?: string;
   isAttachment?: boolean;
+  emailSubject?: string;
   attachmentUrl?: string;
   attachmentDetailText?: string;
+  driveFileId?: string;
+  driveFileName?: string;
 }
 
 export interface UpdateTemplateRequest {
@@ -201,8 +207,11 @@ export interface UpdateTemplateRequest {
   name?: string;
   content?: string;
   isAttachment?: boolean;
+  emailSubject?: string;
   attachmentUrl?: string;
   attachmentDetailText?: string;
+  driveFileId?: string;
+  driveFileName?: string;
 }
 
 export interface TemplatesResponse {

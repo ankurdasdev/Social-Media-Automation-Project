@@ -1,6 +1,8 @@
 import { RequestHandler } from "express";
 import { z } from "zod";
 import { query, queryOne } from "../db/index";
+import axios from "axios";
+import { getAccountPosts } from "../services/instagram-client";
 import type {
   SourceGroup,
   GroupsResponse,
@@ -93,17 +95,58 @@ export const handleCreateGroup: RequestHandler = async (req, res) => {
     return;
   }
 
-  const { userId, name, platform, type, url, description } = parsed.data;
+  let finalUrl = url;
 
   try {
+    if (platform === "whatsapp") {
+      const instance = await queryOne<{ instance_name: string }>(
+        "SELECT instance_name FROM whatsapp_instances WHERE user_id = $1",
+        [userId]
+      );
+      if (!instance) {
+        return res.status(400).json({ error: "WhatsApp not connected. Please connect in Settings." });
+      }
+      
+      const evoUrl = process.env.EVOLUTION_API_URL || "https://evo.casthub.io";
+      const eApiKey = process.env.EVOLUTION_API_KEY || "";
+      const { data: waGroups } = await axios.get(`${evoUrl}/group/fetchAllGroups/${instance.instance_name}?getParticipants=false`, {
+        headers: { apikey: eApiKey },
+        validateStatus: () => true
+      });
+
+      if (!Array.isArray(waGroups)) {
+        return res.status(500).json({ error: "Failed to fetch groups from WhatsApp API." });
+      }
+
+      const foundGroup = waGroups.find((g: any) => g.subject === name);
+      if (!foundGroup) {
+        return res.status(400).json({ error: `WhatsApp group "${name}" not found on your connected account.` });
+      }
+      finalUrl = finalUrl || foundGroup.id;
+    } else if (platform === "instagram") {
+      // Basic verification for instagram accounts exists, though explicit thread checking is limited by instagrapi limits.
+      // We will assume the user provides a direct handle or we'll allow it if they just wanted to add a thread named.
+      const sessionRow = await queryOne("SELECT session_data FROM instagram_sessions WHERE user_id = $1", [userId]);
+      if (!sessionRow) {
+         return res.status(400).json({ error: "Instagram not connected. Please connect in Settings." });
+      }
+      // If it's an account, we try to fetch posts to verify it exists
+      if (type === "account") {
+        const posts = await getAccountPosts(name, 0, sessionRow.session_data).catch(() => []);
+        if (posts.length === 0) {
+           return res.status(400).json({ error: `Instagram account "${name}" could not be verified or is private.` });
+        }
+      }
+    }
+
     const row = await queryOne(
       `INSERT INTO source_groups (user_id, name, platform, type, url, description) 
        VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [userId, name, platform, type, url, description]
+      [userId, name, platform, type, finalUrl, description]
     );
     res.status(201).json({ group: mapRowToGroup(row) });
-  } catch (err) {
-    res.status(500).json({ error: "Failed to create group" });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || "Failed to create source" });
   }
 };
 

@@ -81,20 +81,32 @@ async function handleWhatsAppOutreach(userId: string, contact: Contact) {
   const rawNumber = (contact.whatsapp || "").replace(/\D/g, "");
   if (!rawNumber) throw new Error("No valid WhatsApp number found on this contact");
 
-  const message =
-    contact.hasCustomMessageWA
-      ? contact.editableMessageWP
-      : contact.templateSelectionWP;
-  if (!message) throw new Error("No WhatsApp message selected. Please set a template or custom message.");
+  let message = contact.editableMessageWP;
+  let templateObj: any = null;
+  if (!contact.hasCustomMessageWA && contact.templateSelectionWP) {
+    templateObj = await queryOne("SELECT content, is_attachment, attachment_url, drive_file_id, drive_file_name FROM templates WHERE name = $1 AND category = 'whatsapp' AND user_id = $2", [contact.templateSelectionWP, userId]);
+    if (templateObj) message = templateObj.content;
+  }
+  if (!message && !templateObj?.is_attachment) throw new Error("No WhatsApp message selected. Please set a template or custom message.");
 
   // Build proper JID — Indian numbers need country code
   const jid = rawNumber.includes("@") ? rawNumber : `${rawNumber}@s.whatsapp.net`;
 
   // Send primary message
-  await sendWA(instance.instance_name, jid, message);
+  if (message) {
+    await sendWA(instance.instance_name, jid, message);
+  }
 
   // Send Drive attachments
   const attachments: DriveFile[] = contact.drive_attachments_wa || [];
+  if (templateObj?.is_attachment && templateObj.drive_file_id) {
+    attachments.push({
+      id: templateObj.drive_file_id,
+      name: templateObj.drive_file_name || "Attachment",
+      mimeType: "",
+      downloadUrl: ""
+    });
+  }
   if (attachments.length > 0) {
     const drive = await getDriveClient(userId);
     for (const file of attachments) {
@@ -181,15 +193,18 @@ async function handleEmailOutreach(userId: string, contact: Contact) {
   const to = contact.email;
   if (!to) throw new Error("No email address found on this contact");
 
+  let body = contact.editableMessageGmail;
+  let templateObj: any = null;
+  if (!contact.hasCustomMessageEmail && contact.templateSelectionGmail) {
+    templateObj = await queryOne("SELECT content, email_subject, is_attachment, drive_file_id, drive_file_name FROM templates WHERE name = $1 AND category = 'email' AND user_id = $2", [contact.templateSelectionGmail, userId]);
+    if (templateObj) body = templateObj.content;
+  }
+  if (!body && !templateObj?.is_attachment) throw new Error("No email body selected. Please set a template or custom message.");
+
   const subject =
     contact.editableGmailSubject ||
+    templateObj?.email_subject ||
     `Casting Outreach: ${contact.project || contact.name || "New Project"}`;
-
-  const body =
-    contact.hasCustomMessageEmail
-      ? contact.editableMessageGmail
-      : contact.templateSelectionGmail;
-  if (!body) throw new Error("No email body selected. Please set a template or custom message.");
 
   // Get sender email from Google profile
   const profileRes = await gmail.users.getProfile({ userId: "me" });
@@ -198,6 +213,14 @@ async function handleEmailOutreach(userId: string, contact: Contact) {
   // Download Drive attachments
   const emailAttachments: { filename: string; content: Buffer; mimeType: string }[] = [];
   const driveAttachments: DriveFile[] = contact.drive_attachments_email || [];
+  if (templateObj?.is_attachment && templateObj.drive_file_id) {
+    driveAttachments.push({
+      id: templateObj.drive_file_id,
+      name: templateObj.drive_file_name || "Attachment",
+      mimeType: "",
+      downloadUrl: ""
+    });
+  }
 
   if (driveAttachments.length > 0) {
     const drive = await getDriveClient(userId);
@@ -247,15 +270,25 @@ async function handleInstagramOutreach(userId: string, contact: Contact) {
   const handle = (contact.instaHandle || "").replace(/^@/, "");
   if (!handle) throw new Error("No Instagram handle found on this contact");
 
-  const message =
-    contact.hasCustomMessageIG
-      ? contact.editableMessageIG
-      : contact.templateSelectionIG;
-  if (!message) throw new Error("No Instagram message selected. Please set a template or custom message.");
+  let message = contact.editableMessageIG;
+  let templateObj: any = null;
+  if (!contact.hasCustomMessageIG && contact.templateSelectionIG) {
+    templateObj = await queryOne("SELECT content, is_attachment, attachment_url, drive_file_id, drive_file_name FROM templates WHERE name = $1 AND category = 'instagram' AND user_id = $2", [contact.templateSelectionIG, userId]);
+    if (templateObj) message = templateObj.content;
+  }
+  if (!message && !templateObj?.is_attachment) throw new Error("No Instagram message selected. Please set a template or custom message.");
 
   // Append attachment links to the message text
-  let finalMessage = message;
+  let finalMessage = message || "";
   const attachments: DriveFile[] = contact.drive_attachments_ig || [];
+  if (templateObj?.is_attachment && templateObj.drive_file_id) {
+    attachments.push({
+      id: templateObj.drive_file_id,
+      name: templateObj.drive_file_name || "Attachment",
+      mimeType: "",
+      downloadUrl: `https://drive.google.com/uc?export=download&id=${templateObj.drive_file_id}`
+    });
+  }
   if (attachments.length > 0) {
     finalMessage += "\n\nAttachments:";
     for (const file of attachments) {
