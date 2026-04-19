@@ -38,6 +38,12 @@ export default function Settings() {
   const queryClient = useQueryClient();
   const userId = getOrCreateUserId();
 
+  // Read defaultTab from URL params (used by OAuth redirects back to /settings?defaultTab=instagram)
+  const defaultTab = React.useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("defaultTab") || "google";
+  }, []);
+
   // ── Google Status ──────────────────────────────────────────────────────────
   const { data: googleStatus, isLoading: googleLoading, refetch: refetchGoogle } = useQuery({
     queryKey: ["google-status", userId],
@@ -88,11 +94,15 @@ export default function Settings() {
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("auth") === "success") {
+      const serverUserId = params.get("userId");
+      if (serverUserId) {
+        localStorage.setItem("casthub_user_id", serverUserId);
+      }
       refetchGoogle();
       toast({ title: "Google Connected!", description: "Your account has been linked successfully." });
       window.history.replaceState({}, "", "/settings");
     }
-  }, []);
+  }, [refetchGoogle, toast]);
 
   return (
     <AppLayout>
@@ -111,7 +121,7 @@ export default function Settings() {
           </p>
         </div>
 
-        <Tabs defaultValue="google" className="space-y-10">
+        <Tabs defaultValue={defaultTab} className="space-y-10">
           <TabsList className="bg-muted/50 border border-border/50 p-1.5 h-14 rounded-2xl w-full md:w-auto overflow-x-auto justify-start md:justify-center">
             <TabsTrigger value="google" className="data-[state=active]:bg-background data-[state=active]:shadow-lg rounded-xl gap-2 h-11 px-8 font-bold transition-all">
               <Mail className="h-4 w-4 text-primary" />

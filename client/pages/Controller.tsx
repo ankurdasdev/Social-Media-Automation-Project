@@ -54,7 +54,9 @@ import {
   Loader2,
   LayoutTemplate,
   CheckCircle2,
+  RefreshCw,
 } from "lucide-react";
+import { cn, getOrCreateUserId } from "@/lib/utils";
 import type {
   SourceGroup,
   Platform,
@@ -68,7 +70,9 @@ import { TemplateManager } from "@/components/templates/TemplateManager";
 // ─── API Helpers ─────────────────────────────────────────────────────────────
 
 async function fetchGroups(platform?: Platform): Promise<SourceGroup[]> {
+  const userId = getOrCreateUserId();
   const params = new URLSearchParams();
+  params.set("userId", userId);
   if (platform) params.set("platform", platform);
   const res = await fetch(`/api/groups?${params}`);
   if (!res.ok) throw new Error("Failed to fetch groups");
@@ -77,10 +81,11 @@ async function fetchGroups(platform?: Platform): Promise<SourceGroup[]> {
 }
 
 async function createGroup(body: CreateGroupRequest): Promise<SourceGroup> {
+  const userId = getOrCreateUserId();
   const res = await fetch("/api/groups", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: JSON.stringify({ ...body, userId }),
   });
   if (!res.ok) throw new Error("Failed to create group");
   const data = await res.json();
@@ -91,10 +96,11 @@ async function updateGroup(
   id: string,
   body: UpdateGroupRequest
 ): Promise<SourceGroup> {
+  const userId = getOrCreateUserId();
   const res = await fetch(`/api/groups/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: JSON.stringify({ ...body, userId }),
   });
   if (!res.ok) throw new Error("Failed to update group");
   const data = await res.json();
@@ -102,7 +108,8 @@ async function updateGroup(
 }
 
 async function deleteGroup(id: string): Promise<void> {
-  const res = await fetch(`/api/groups/${id}`, { method: "DELETE" });
+  const userId = getOrCreateUserId();
+  const res = await fetch(`/api/groups/${id}?userId=${userId}`, { method: "DELETE" });
   if (!res.ok) throw new Error("Failed to delete group");
 }
 
@@ -117,11 +124,17 @@ function TypeIcon({ type }: { type: SourceType }) {
     case "hashtag":
       return <Hash className="w-3.5 h-3.5" />;
     case "channel":
-      return <Radio className="w-3.5 h-3.5" />;
+      return <Instagram className="w-3.5 h-3.5" />;
   }
 }
 
-function typeLabel(type: SourceType): string {
+function typeLabel(type: SourceType, platform?: Platform): string {
+  if (platform === "whatsapp" && type === "group") return "WhatsApp Group";
+  if (platform === "whatsapp" && type === "channel") return "WhatsApp Channel";
+  if (platform === "instagram" && type === "group") return "Instagram Group";
+  if (platform === "instagram" && type === "account") return "Instagram Account";
+  if (platform === "instagram" && type === "hashtag") return "Instagram Hashtag";
+  
   return type.charAt(0).toUpperCase() + type.slice(1);
 }
 
@@ -189,7 +202,7 @@ export default function Controller() {
 
   const toggleMutation = useMutation({
     mutationFn: ({ id, enabled }: { id: string; enabled: boolean }) =>
-      updateGroup(id, { enabled }),
+      updateGroup(id, { enabled, userId: getOrCreateUserId() }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["groups"] });
     },
@@ -209,6 +222,21 @@ export default function Controller() {
     }
     return result;
   }, [groups, activeTab, searchQuery]);
+
+  // ─── Sync Mutation ────────────────────────────────────────────────────────
+  
+  const syncGroupsMutation = useMutation({
+    mutationFn: async () => {
+      const userId = getOrCreateUserId();
+      const res = await fetch(`/api/whatsapp/sync-groups?userId=${userId}`, { method: "POST" });
+      if (!res.ok) throw new Error("Failed to sync groups");
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["groups"] });
+      // We could add a toast here
+    },
+  });
 
   // ─── Dialog Helpers ──────────────────────────────────────────────────────
 
@@ -242,6 +270,7 @@ export default function Controller() {
       updateMutation.mutate({
         id: editingGroup.id,
         body: {
+          userId: getOrCreateUserId(),
           name: formName,
           type: formType,
           url: formUrl,
@@ -250,6 +279,7 @@ export default function Controller() {
       });
     } else {
       createMutation.mutate({
+        userId: getOrCreateUserId(),
         name: formName,
         platform: activeTab,
         type: formType,
@@ -281,6 +311,17 @@ export default function Controller() {
             </p>
           </div>
           <div className="flex items-center gap-3 shrink-0">
+            {activeTab === "whatsapp" && (
+              <Button
+                variant="outline"
+                onClick={() => syncGroupsMutation.mutate()}
+                disabled={syncGroupsMutation.isPending}
+                className="h-12 px-6 rounded-xl font-bold bg-emerald-500/5 border-emerald-500/20 text-emerald-600 gap-2 hover:bg-emerald-500/10 transition-all"
+              >
+                <RefreshCw className={cn("w-4 h-4", syncGroupsMutation.isPending && "animate-spin")} />
+                Sync Groups
+              </Button>
+            )}
             <Button 
                 variant="outline" 
                 onClick={() => setIsTemplateManagerOpen(true)} 
@@ -425,7 +466,7 @@ export default function Controller() {
                       <SelectContent className="glass-card">
                         {typeOptions.map((t) => (
                           <SelectItem key={t} value={t} className="font-bold">
-                            {typeLabel(t)}
+                            {typeLabel(t, activeTab)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -664,7 +705,7 @@ function GroupList({
                 className="gap-1 text-xs shrink-0 font-normal"
               >
                 <TypeIcon type={group.type} />
-                {typeLabel(group.type)}
+                {typeLabel(group.type, group.platform)}
               </Badge>
             </div>
 

@@ -40,6 +40,7 @@ export interface SourceGroup {
 }
 
 export interface CreateGroupRequest {
+  userId: string;
   name: string;
   platform: Platform;
   type: SourceType;
@@ -48,6 +49,7 @@ export interface CreateGroupRequest {
 }
 
 export interface UpdateGroupRequest {
+  userId: string;
   name?: string;
   type?: SourceType;
   url?: string;
@@ -185,6 +187,7 @@ export interface Template {
 }
 
 export interface CreateTemplateRequest {
+  userId: string;
   name: string;
   category: TemplateCategory;
   content?: string;
@@ -194,6 +197,7 @@ export interface CreateTemplateRequest {
 }
 
 export interface UpdateTemplateRequest {
+  userId: string;
   name?: string;
   content?: string;
   isAttachment?: boolean;

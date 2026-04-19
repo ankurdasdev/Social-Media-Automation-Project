@@ -81,7 +81,7 @@ export default function Contacts() {
 
   const triggerIngestion = useMutation({
     mutationFn: async () => {
-      const res = await fetch("/api/ingestion/trigger", { method: "POST" });
+      const res = await fetch(`/api/ingestion/trigger?userId=${userId}`, { method: "POST" });
       if (!res.ok) throw new Error("Failed to trigger ingestion");
       return res.json();
     },

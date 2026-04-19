@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Loader2, QrCode, LogOut, CheckCircle2, XCircle, RefreshCw, MessageSquare, Zap } from "lucide-react";
+import { Loader2, QrCode, LogOut, CheckCircle2, RefreshCw, MessageSquare, Zap } from "lucide-react";
 import { WhatsAppStatusResponse, WhatsAppQRResponse } from "@shared/api";
 import { toast } from "sonner";
+import { getOrCreateUserId } from "@/lib/utils";
 
 export function WhatsAppSettings() {
   const [status, setStatus] = useState<WhatsAppStatusResponse | null>(null);
@@ -13,15 +12,42 @@ export function WhatsAppSettings() {
   const [loading, setLoading] = useState(true);
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [connecting, setConnecting] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncDone, setSyncDone] = useState(false);
+  const hasSyncedRef = React.useRef(false);
+
+  const autoSyncGroups = async (userId: string) => {
+    setSyncing(true);
+    setSyncDone(false);
+    try {
+      await fetch("/api/whatsapp/sync-groups", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+      setSyncDone(true);
+      toast.success("WhatsApp groups synced successfully!");
+    } catch (err) {
+      toast.error("Group sync failed. You can retry from the dashboard.");
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const fetchStatus = async () => {
     try {
-      const res = await fetch("/api/whatsapp/status");
+      const userId = getOrCreateUserId();
+      const res = await fetch(`/api/whatsapp/status?userId=${userId}`);
       const data: WhatsAppStatusResponse = await res.json();
       setStatus(data);
       if (data.isConnected) {
         setQrCode(null);
         setConnecting(false);
+        // Auto-sync groups exactly once when connection is first detected
+        if (!hasSyncedRef.current) {
+          hasSyncedRef.current = true;
+          autoSyncGroups(userId);
+        }
       }
     } catch (err) {
       console.error("Failed to fetch WhatsApp status:", err);
@@ -33,7 +59,6 @@ export function WhatsAppSettings() {
   useEffect(() => {
     fetchStatus();
     const interval = setInterval(() => {
-      // Poll faster if we are waiting for QR scan
       if (connecting || (status && !status.isConnected && status.instance)) {
         fetchStatus();
       }
@@ -43,20 +68,30 @@ export function WhatsAppSettings() {
 
   const handleConnect = async () => {
     if (!mobileNumber.trim()) {
-        return toast.error("Mobile number required for connection.");
+      return toast.error("Mobile number required for connection.");
     }
     setConnecting(true);
     setQrCode(null);
     try {
+      const userId = getOrCreateUserId();
       const res = await fetch("/api/whatsapp/connect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mobileNumber: mobileNumber.trim() })
+        body: JSON.stringify({ mobileNumber: mobileNumber.trim(), userId })
       });
-      const data: WhatsAppQRResponse = await res.json();
-      if (data.qrcode?.base64) {
-        setQrCode(data.qrcode.base64);
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.details || data.error || "Failed to connect WhatsApp.");
+        setConnecting(false);
+        return;
+      }
+      const qrData = data as WhatsAppQRResponse;
+      if (qrData.qrcode?.base64) {
+        setQrCode(qrData.qrcode.base64);
         toast.success("Connection started. Scan QR to connect.");
+      } else {
+        toast.error("QR code not returned. Check the server logs.");
+        setConnecting(false);
       }
     } catch (err) {
       toast.error("Failed to connect WhatsApp.");
@@ -66,9 +101,12 @@ export function WhatsAppSettings() {
 
   const handleDisconnect = async () => {
     try {
-      await fetch("/api/whatsapp/disconnect", { method: "DELETE" });
+      const userId = getOrCreateUserId();
+      await fetch(`/api/whatsapp/disconnect?userId=${userId}`, { method: "DELETE" });
       setStatus({ instance: null, isConnected: false });
       setQrCode(null);
+      hasSyncedRef.current = false;
+      setSyncDone(false);
       toast.success("WhatsApp disconnected.");
     } catch (err) {
       toast.error("Failed to disconnect.");
@@ -77,7 +115,8 @@ export function WhatsAppSettings() {
 
   const handleRefreshQR = async () => {
     try {
-      const res = await fetch("/api/whatsapp/qr");
+      const userId = getOrCreateUserId();
+      const res = await fetch(`/api/whatsapp/qr?userId=${userId}`);
       const data: WhatsAppQRResponse = await res.json();
       if (data.qrcode?.base64) {
         setQrCode(data.qrcode.base64);
@@ -121,10 +160,10 @@ export function WhatsAppSettings() {
                 )}
               </h2>
               <p className="text-muted-foreground/80 text-sm font-medium leading-relaxed mb-8">
-                Connect your WhatsApp account to enable automated messaging and lead management. 
+                Connect your WhatsApp account to enable automated messaging and lead management.
                 Scale your outreach with our automated system.
               </p>
-              
+
               <div className="space-y-4">
                  <div className="flex items-center gap-4 group">
                     <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
@@ -146,25 +185,45 @@ export function WhatsAppSettings() {
                  </div>
               </div>
            </div>
-           
+
            <div className="p-10 md:p-14 flex-1 flex flex-col justify-center min-h-[450px]">
               {isConnected ? (
-                <div className="space-y-10 animate-in zoom-in-95 duration-500">
+                <div className="space-y-6 animate-in zoom-in-95 duration-500">
+                  {/* Auto-sync progress banner */}
+                  {syncing && (
+                    <div className="flex items-center gap-4 p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 animate-in slide-in-from-top duration-500">
+                      <Loader2 className="h-6 w-6 text-emerald-500 animate-spin shrink-0" />
+                      <div>
+                        <p className="text-sm font-black text-emerald-500 uppercase tracking-widest">WhatsApp Sync In Progress</p>
+                        <p className="text-xs text-muted-foreground font-medium mt-0.5">Fetching all your WhatsApp groups — this takes just a moment...</p>
+                      </div>
+                    </div>
+                  )}
+                  {syncDone && !syncing && (
+                    <div className="flex items-center gap-4 p-5 rounded-2xl bg-blue-500/10 border border-blue-500/30 animate-in slide-in-from-top duration-500">
+                      <CheckCircle2 className="h-6 w-6 text-blue-500 shrink-0" />
+                      <div>
+                        <p className="text-sm font-black text-blue-500 uppercase tracking-widest">Groups Synced!</p>
+                        <p className="text-xs text-muted-foreground font-medium mt-0.5">Your WhatsApp groups are now available in the Source Groups section.</p>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="p-10 rounded-[2.5rem] bg-emerald-500/5 border border-emerald-500/10 flex flex-col md:flex-row items-center justify-between gap-10 relative overflow-hidden group">
                      <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
                      <div className="flex items-center gap-8 relative z-10">
                         <div className="h-28 w-28 rounded-full border-4 border-emerald-500/20 p-2 shadow-2xl shadow-emerald-500/20 bg-background/50 backdrop-blur-3xl animate-pulse-slow">
                            <div className="w-full h-full rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/30">
-                              <CheckCircle2 className="h-12 w-12 text-emerald-500 " />
+                              <CheckCircle2 className="h-12 w-12 text-emerald-500" />
                            </div>
                         </div>
                         <div>
                            <p className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em] mb-2">Protocol: Online</p>
                            <h3 className="text-3xl font-black tracking-tighter text-foreground">{instance?.instanceName}</h3>
-                           <p className="text-[11px] font-black text-muted-foreground mt-1 opacity-50 uppercase tracking-widest">Evolution Instance ID: {status.instance?.instanceName.split('_')[1] || 'Primary'}</p>
+                           <p className="text-[11px] font-black text-muted-foreground mt-1 opacity-50 uppercase tracking-widest">Evolution Instance ID: {instance?.instanceName.split('_')[1] || 'Primary'}</p>
                         </div>
                      </div>
-                     <Button 
+                     <Button
                        variant="outline"
                        onClick={handleDisconnect}
                        className="h-14 px-10 rounded-2xl border-white/10 hover:border-destructive/50 hover:bg-destructive/10 text-muted-foreground hover:text-destructive font-black text-[11px] uppercase tracking-widest transition-all active:scale-95 group relative z-10"
@@ -194,11 +253,11 @@ export function WhatsAppSettings() {
                        Scan the QR code below using your WhatsApp app to connect.
                      </p>
                    </div>
-                   
+
                    <div className="relative group p-10 bg-white rounded-[3rem] shadow-2xl shadow-emerald-500/30 ring-[12px] ring-emerald-500/5 transition-all hover:scale-[1.02] active:scale-95 cursor-none">
-                     <img 
-                       src={qrCode} 
-                       alt="WhatsApp QR Code" 
+                     <img
+                       src={qrCode}
+                       alt="WhatsApp QR Code"
                        className="w-64 h-64 grayscale group-hover:grayscale-0 transition-all duration-700"
                      />
                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity">
@@ -234,7 +293,7 @@ export function WhatsAppSettings() {
                        <QrCode className="h-12 w-12 text-muted-foreground group-hover:text-primary transition-colors" />
                      </div>
                   </div>
-                  
+
                   <div className="space-y-4">
                     <h3 className="text-4xl font-black tracking-tighter">CONNECTION <span className="text-primary italic">OFFLINE</span></h3>
                     <p className="text-sm font-medium text-muted-foreground max-w-sm mx-auto leading-relaxed">
@@ -252,8 +311,8 @@ export function WhatsAppSettings() {
                           className="h-20 pl-12 rounded-[1.5rem] bg-muted/30 border-white/5 focus:bg-background focus:ring-primary text-center text-3xl font-black tracking-[0.1em] shadow-inner transition-all"
                         />
                      </div>
-                     <Button 
-                       onClick={handleConnect} 
+                     <Button
+                       onClick={handleConnect}
                        disabled={connecting}
                        className="h-20 w-full bg-foreground text-background hover:bg-foreground/90 rounded-[1.5rem] text-lg font-black tracking-widest shadow-2xl transition-all active:scale-[0.98] group relative overflow-hidden"
                      >
@@ -278,4 +337,3 @@ export function WhatsAppSettings() {
     </div>
   );
 }
-

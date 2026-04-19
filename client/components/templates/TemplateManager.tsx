@@ -50,6 +50,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import type { Template, TemplateCategory, TemplatesResponse } from "@shared/api";
 import { TemplateEditor } from "./TemplateEditor";
+import { getOrCreateUserId } from "@/lib/utils";
 
 interface TemplateManagerProps {
   open: boolean;
@@ -57,8 +58,12 @@ interface TemplateManagerProps {
 }
 
 async function fetchTemplates(category?: string): Promise<Template[]> {
-  const params = category ? `?category=${category}` : "";
-  const res = await fetch(`/api/templates${params}`);
+  const userId = getOrCreateUserId();
+  const params = new URLSearchParams();
+  params.set("userId", userId);
+  if (category) params.set("category", category);
+  
+  const res = await fetch(`/api/templates?${params}`);
   if (!res.ok) throw new Error("Failed to fetch templates");
   const data: TemplatesResponse = await res.json();
   return data.templates;
@@ -208,10 +213,11 @@ export function TemplateManager({ open, onOpenChange }: TemplateManagerProps) {
   const handleRenameSave = async () => {
     if (!renameTarget || !renameValue.trim()) return;
     try {
+      const userId = getOrCreateUserId();
       const res = await fetch(`/api/templates/${renameTarget.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: renameValue.trim() }),
+        body: JSON.stringify({ name: renameValue.trim(), userId }),
       });
       if (!res.ok) throw new Error();
       await queryClient.invalidateQueries({ queryKey: ["templates"] });
@@ -230,7 +236,8 @@ export function TemplateManager({ open, onOpenChange }: TemplateManagerProps) {
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
     try {
-      const res = await fetch(`/api/templates/${deleteTarget.id}`, { method: "DELETE" });
+      const userId = getOrCreateUserId();
+      const res = await fetch(`/api/templates/${deleteTarget.id}?userId=${userId}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
       await queryClient.invalidateQueries({ queryKey: ["templates"] });
       toast({ title: "Deleted", description: `"${deleteTarget.name}" was removed.` });
