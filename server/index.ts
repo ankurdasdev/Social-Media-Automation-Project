@@ -39,14 +39,18 @@ import {
   handleWhatsAppConnect,
   handleWhatsAppQR,
   handleWhatsAppDisconnect,
+  handleWhatsAppSyncGroups,
+  handleWhatsAppSendMessage,
 } from "./routes/whatsapp-auth";
 import {
   handleInstagramStatus,
   handleInstagramConnect,
   handleInstagramDisconnect,
+  handleInstagramSyncThreads,
+  handleInstagramSendMessage,
 } from "./routes/instagram-auth";
 import { handleSendOutreach } from "./routes/outreach";
-import { handleSignup, handleLogin, handleMe } from "./routes/auth";
+import { handleSignup, handleLogin, handleMe, handleUpdateProfile, handleResetPassword, handleResetPasswordConfirm } from "./routes/auth";
 import { runIngestionJob } from "./jobs/ingestion-job";
 import { initDb } from "./db/index";
 
@@ -82,6 +86,9 @@ export function createServer() {
   app.post("/api/auth/signup", handleSignup);
   app.post("/api/auth/login", handleLogin);
   app.get("/api/auth/me", handleMe);
+  app.put("/api/auth/profile", handleUpdateProfile);
+  app.post("/api/auth/reset-password", handleResetPassword);
+  app.post("/api/auth/reset-password/confirm", handleResetPasswordConfirm);
 
   // ── Source Group Management ────────────────────────────────────────────────
   app.get("/api/groups", handleGetGroups);
@@ -114,16 +121,21 @@ export function createServer() {
   app.get("/api/drive/files", handleSearchDriveFiles);
   app.get("/api/drive/folders", handleListDriveFolders);
 
-  // ── WhatsApp Auth ──────────────────────────────────────────────────────────
+  // ── WhatsApp Auth ─────────────────────────────────────────────────────────
   app.get("/api/whatsapp/status", handleWhatsAppStatus);
   app.post("/api/whatsapp/connect", handleWhatsAppConnect);
   app.get("/api/whatsapp/qr", handleWhatsAppQR);
   app.delete("/api/whatsapp/disconnect", handleWhatsAppDisconnect);
+  app.post("/api/whatsapp/sync-groups", handleWhatsAppSyncGroups);
+  app.post("/api/whatsapp/send-message", handleWhatsAppSendMessage);
 
-  // ── Instagram Auth ─────────────────────────────────────────────────────────
+  // ── Instagram (instagrapi-rest, per-user sessions) ─────────────────────────────────
   app.get("/api/instagram/status", handleInstagramStatus);
   app.post("/api/instagram/connect", handleInstagramConnect);
   app.delete("/api/instagram/disconnect", handleInstagramDisconnect);
+  app.get("/api/instagram/sync-threads", handleInstagramSyncThreads);
+  app.post("/api/instagram/send-message", handleInstagramSendMessage);
+
  
   // ── Outreach ───────────────────────────────────────────────────────────────
   app.post("/api/outreach/send", handleSendOutreach);

@@ -193,6 +193,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" side="right" className="glass-card w-48 p-2 rounded-2xl">
+                         <DropdownMenuItem asChild className="rounded-xl gap-2 cursor-pointer font-bold mb-1 hover:bg-muted/50">
+                            <Link to="/profile" className="flex items-center gap-2 w-full">
+                                <User className="w-4 h-4" /> View Profile
+                            </Link>
+                         </DropdownMenuItem>
+                         <DropdownMenuSeparator className="bg-border/30 mx-2" />
                          <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive hover:bg-destructive/10 rounded-xl gap-2 cursor-pointer font-bold">
                             <LogOut className="w-4 h-4" /> Logout System
                          </DropdownMenuItem>

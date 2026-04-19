@@ -15,19 +15,18 @@ async function main() {
     const testId = '00000000-0000-0000-0000-000000000000';
 
     console.log('Checking for test user...');
-    const res = await pool.query('SELECT id FROM users WHERE email = $1', [testEmail]);
+    const hash = await bcrypt.hash(testPassword, 12);
     
-    if (res.rows.length === 0) {
-      console.log('User not found. Seeding...');
-      const hash = await bcrypt.hash(testPassword, 12);
-      await pool.query(
-        'INSERT INTO users (id, email, name, password_hash) VALUES ($1, $2, $3, $4)',
-        [testId, testEmail, testName, hash]
-      );
-      console.log('✅ Seed successful.');
-    } else {
-      console.log('✅ User already exists.');
-    }
+    await pool.query(
+      `INSERT INTO users (id, email, name, password_hash) 
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (id) DO UPDATE SET 
+         email = EXCLUDED.email, 
+         name = EXCLUDED.name, 
+         password_hash = EXCLUDED.password_hash`,
+      [testId, testEmail, testName, hash]
+    );
+    console.log('✅ Seed successful (User: testing@test.com / testing)');
   } catch (err) {
     console.error('❌ Error seeding user:', err);
   } finally {

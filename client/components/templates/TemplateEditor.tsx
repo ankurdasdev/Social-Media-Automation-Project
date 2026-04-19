@@ -14,9 +14,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Paperclip } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import type { Template, CreateTemplateRequest, UpdateTemplateRequest } from "@shared/api";
 import { useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
+import { getOrCreateUserId } from "@/lib/utils";
 
 const VARIABLES = [
   { label: "{{name}}", description: "Talent name" },
@@ -101,9 +102,10 @@ export function TemplateEditor({
     }
     setIsSaving(true);
     try {
+      const userId = getOrCreateUserId();
       if (template) {
         // Edit mode
-        const body: UpdateTemplateRequest = { name, content, isAttachment, attachmentUrl, attachmentDetailText };
+        const body: UpdateTemplateRequest = { name, content, isAttachment, attachmentUrl, attachmentDetailText, userId };
         const res = await fetch(`/api/templates/${template.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -113,6 +115,7 @@ export function TemplateEditor({
       } else {
         // Create mode
         const body: CreateTemplateRequest = {
+          userId,
           name,
           category: defaultCategory,
           content,

@@ -2,18 +2,38 @@ import { Pool } from "pg";
 import bcrypt from "bcryptjs";
 
 // DATABASE_URL format:
-// Local dev via SSH tunnel: postgresql://postgres:PASSWORD@localhost:5433/SocialOutreach
-// Production (Easypanel internal): postgresql://postgres:PASSWORD@hiker_social_outreach_automation:5432/SocialOutreach?sslmode=disable
+// Force connection to VPS proxy for local development to bypass any frozen/cached env variables in Vite
+const rawEnvUrl = process.env.DATABASE_URL;
+const isProduction = process.env.NODE_ENV === "production";
 
-const DATABASE_URL =
-  process.env.DATABASE_URL ||
-  "postgresql://postgres:b5e9209b350e6a97f7d6@hiker_social_outreach_automation:5432/SocialOutreach?sslmode=disable";
+let dbConfig: any = {};
+const DATABASE_URL = isProduction 
+  ? (rawEnvUrl || "postgresql://ankur:Password123!@casthub_db:5432/casthub_prod")
+  : "postgresql://ankur:Password123!@46.62.144.244:15432/casthub_prod";
+
+try {
+  // Manual parsing of the connection string to force credentials and avoid PG environment variable fallback
+  const url = new URL(DATABASE_URL);
+  dbConfig = {
+    user: url.username,
+    password: url.password,
+    host: url.hostname,
+    port: parseInt(url.port || "5432"),
+    database: url.pathname.slice(1),
+    ssl: false, // Internal or proxied connection
+  };
+} catch (err) {
+  console.error("🛠️ [ERROR] Failed to parse DATABASE_URL:", DATABASE_URL);
+  dbConfig = { connectionString: DATABASE_URL }; // Fallback
+}
+
+console.log(`🛠️ [DEBUG] Pool connecting to ${dbConfig.host}:${dbConfig.port} as user: ${dbConfig.user}`);
 
 export const pool = new Pool({
-  connectionString: DATABASE_URL,
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000,
+  ...dbConfig,
+  max: 5,
+  idleTimeoutMillis: 2000,
+  connectionTimeoutMillis: 10000,
 });
 
 pool.on("error", (err) => {
@@ -69,18 +89,19 @@ async function seedTestData(): Promise<void> {
   const testName = "Testing Admin";
   // Fixed UUID for the testing user to ensure consistency across dev restarts
   const testId = "00000000-0000-0000-0000-000000000000";
+  const passwordHash = await bcrypt.hash(testPassword, 12);
 
   try {
-    const existing = await queryOne("SELECT id FROM users WHERE email = $1", [testEmail]);
-    if (!existing) {
-      const passwordHash = await bcrypt.hash(testPassword, 12);
-      await query(
-        `INSERT INTO users (id, email, name, password_hash) 
-         VALUES ($1, $2, $3, $4)`,
-        [testId, testEmail, testName, passwordHash]
-      );
-      console.log("🛠️  Testing admin user seeded: testing@test.com / testing");
-    }
+    await query(
+      `INSERT INTO users (id, email, name, password_hash) 
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (id) DO UPDATE SET 
+         email = EXCLUDED.email,
+         name = EXCLUDED.name,
+         password_hash = EXCLUDED.password_hash`,
+      [testId, testEmail, testName, passwordHash]
+    );
+    console.log("🛠️  Testing admin user seeded/updated: testing@test.com / testing");
   } catch (err) {
     console.error("❌ Failed to seed testing user:", err);
   }

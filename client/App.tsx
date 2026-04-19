@@ -10,6 +10,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 // Auth Pages
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import ResetPassword from "./pages/ResetPassword";
 
 // App Pages
 import Dashboard from "./pages/Dashboard";
@@ -17,6 +18,7 @@ import Controller from "./pages/Controller";
 import Contacts from "./pages/Contacts";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
+import Profile from "./pages/Profile";
 
 import NotFound from "./pages/NotFound";
 import { isTokenValid } from "./lib/utils";
@@ -48,6 +50,7 @@ const App = () => (
           {/* Auth Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
           {/* Protected App Routes */}
           <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} />} />
@@ -55,6 +58,7 @@ const App = () => (
           <Route path="/contacts" element={<ProtectedRoute element={<Contacts />} />} />
           <Route path="/analytics" element={<ProtectedRoute element={<Analytics />} />} />
           <Route path="/settings" element={<ProtectedRoute element={<Settings />} />} />
+          <Route path="/profile" element={<ProtectedRoute element={<Profile />} />} />
 
           {/* Default redirect to dashboard (ProtectedRoute handles auth check) */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
