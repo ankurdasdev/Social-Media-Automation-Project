@@ -112,12 +112,12 @@ export async function getGroupMessages(
  */
 export async function sendMessage(
   instanceName: string,
-  number: string,
+  numberOrJid: string,
   text: string
 ): Promise<any> {
   const url = `${BASE_URL}/message/sendText/${instanceName}`;
   const body = {
-    number,
+    number: numberOrJid,
     text,
     linkPreview: false,
   };
@@ -129,7 +129,8 @@ export async function sendMessage(
   });
 
   if (!res.ok) {
-    throw new Error(`Evolution API sendMessage failed: ${res.status} ${await res.text()}`);
+    const errText = await res.text();
+    throw new Error(`Evolution API sendMessage failed: ${res.status} ${errText}`);
   }
   return res.json();
 }

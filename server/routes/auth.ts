@@ -266,10 +266,10 @@ export const handleResetPassword: RequestHandler = async (req, res) => {
 
     // Send the email
     const info = await transporter.sendMail({
-      from: '"CastHub Security" <noreply@casthub.com>',
+      from: `"CastHub" <${process.env.SMTP_USER || 'noreply@casthub.com'}>`,
       to: email,
       subject: "Reset Your Password - CastHub",
-      text: `You requested a password reset. Click this link to create a new password:\n\n${resetLink}\n\nIf you did not request this, please ignore this email.`,
+      text: `You requested a password reset. Click this link to create a new password:\n\n${resetLink}\n\nThis link expires in 30 minutes.`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <h2 style="color: #333;">Reset Your Password</h2>
@@ -284,15 +284,14 @@ export const handleResetPassword: RequestHandler = async (req, res) => {
       `,
     });
 
-    if (!process.env.SMTP_HOST) {
-       // Using Ethereal: grab the preview URL to show the user
+    if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+      // Real SMTP — don't leak the link
+      res.json({ message: "If an account exists, a reset link has been sent to your email." });
+    } else {
+       // Ethereal dev fallback — show preview link
        const previewUrl = nodemailer.getTestMessageUrl(info);
        console.log(`[auth] 🔗 Reset Mail Preview: ${previewUrl}`);
-       
-       // Return the preview URL in the message so they can click it right from the toast in dev mode!
-       res.json({ message: `Success! View your reset email here: ${previewUrl}` });
-    } else {
-       res.json({ message: "If an account exists, a reset link has been sent." });
+       res.json({ message: `Dev mode: View reset email here: ${previewUrl}` });
     }
   } catch (err: any) {
     console.error("[auth] Reset password error:", err);
