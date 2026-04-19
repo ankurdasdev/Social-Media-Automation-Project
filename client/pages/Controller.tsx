@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 import {
   Card,
   CardContent,
@@ -228,13 +229,21 @@ export default function Controller() {
   const syncGroupsMutation = useMutation({
     mutationFn: async () => {
       const userId = getOrCreateUserId();
-      const res = await fetch(`/api/whatsapp/sync-groups?userId=${userId}`, { method: "POST" });
-      if (!res.ok) throw new Error("Failed to sync groups");
-      return res.json();
+      const res = await fetch(`/api/whatsapp/sync-groups`, { 
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to sync groups");
+      return data;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["groups"] });
-      // We could add a toast here
+      toast.success(`✅ Synced ${data.count} WhatsApp groups successfully!`);
+    },
+    onError: (err: any) => {
+      toast.error(`❌ Sync failed: ${err.message}`);
     },
   });
 

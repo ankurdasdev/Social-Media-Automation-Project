@@ -201,22 +201,26 @@ export const handleWhatsAppSyncGroups: RequestHandler = async (req, res) => {
 
     const instanceName = dbRes.rows[0].instance_name;
 
-    // Fetch groups from Evolution API
+    // Fetch groups from Evolution API v2 — correct endpoint is /group/fetchAllGroups/
     let groupsData: any[] = [];
     try {
       const groupsRes = await axios.get(
-        `${EVOLUTION_API_URL}/group/fetchAll/${instanceName}?getParticipants=false`,
+        `${EVOLUTION_API_URL}/group/fetchAllGroups/${instanceName}?getParticipants=false`,
         { headers: getHeaders() }
       );
-      groupsData = groupsRes.data || [];
+      // Response is a plain array
+      groupsData = Array.isArray(groupsRes.data) ? groupsRes.data : [];
       console.log(`[whatsapp] Fetched ${groupsData.length} groups from Evolution API`);
     } catch (groupErr: any) {
-      console.error("[whatsapp] Could not fetch groups:", groupErr.response?.data || groupErr.message);
-      return res.status(500).json({ error: "Failed to fetch groups from WhatsApp. Make sure your account is connected and try again." });
+      const detail = groupErr.response?.data || groupErr.message;
+      console.error("[whatsapp] Could not fetch groups:", detail);
+      return res.status(500).json({ 
+        error: "Failed to fetch groups from WhatsApp. Make sure your account is connected and try again.",
+        detail 
+      });
     }
 
-    // Evolution API returns an array of group objects
-    // Format: [ { id: "123@g.us", subject: "GroupName", ... }, ... ]
+    // Evolution API returns: [ { id: "123@g.us", subject: "GroupName", ... }, ... ]
     let addedCount = 0;
 
     for (const group of groupsData) {
@@ -235,12 +239,12 @@ export const handleWhatsAppSyncGroups: RequestHandler = async (req, res) => {
     }
 
     res.json({ 
-      message: `Successfully synced ${addedCount} groups`,
+      message: `Successfully synced ${addedCount} WhatsApp groups`,
       count: addedCount 
     });
   } catch (err: any) {
     console.error("WhatsApp Sync Groups Error:", err.message);
-    res.status(500).json({ error: "Failed to sync WhatsApp groups" });
+    res.status(500).json({ error: "Failed to sync WhatsApp groups", detail: err.message });
   }
 };
 
