@@ -8,9 +8,12 @@ function mapRowToTemplate(row: any): Template {
     name: row.name,
     category: row.category,
     content: row.content || "",
+    emailSubject: row.email_subject,
     isAttachment: row.is_attachment || false,
     attachmentUrl: row.attachment_url,
     attachmentDetailText: row.attachment_detail_text,
+    driveFileId: row.drive_file_id,
+    driveFileName: row.drive_file_name,
     createdAt: row.created_at?.toISOString(),
     updatedAt: row.updated_at?.toISOString(),
   };
@@ -37,8 +40,11 @@ export async function getTemplateById(userId: string, id: string): Promise<Templ
 
 export async function createTemplate(userId: string, data: CreateTemplateRequest): Promise<Template> {
   const sql = `
-    INSERT INTO templates (user_id, name, category, content, is_attachment, attachment_url, attachment_detail_text)
-    VALUES ($1, $2, $3, $4, $5, $6, $7)
+    INSERT INTO templates (
+      user_id, name, category, content, email_subject, is_attachment, 
+      attachment_url, attachment_detail_text, drive_file_id, drive_file_name
+    )
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     RETURNING *
   `;
   const values = [
@@ -46,9 +52,12 @@ export async function createTemplate(userId: string, data: CreateTemplateRequest
     data.name,
     data.category,
     data.content || "",
+    data.emailSubject,
     data.isAttachment || false,
     data.attachmentUrl,
-    data.attachmentDetailText
+    data.attachmentDetailText,
+    data.driveFileId,
+    data.driveFileName
   ];
   const row = await queryOne(sql, values);
   return mapRowToTemplate(row);

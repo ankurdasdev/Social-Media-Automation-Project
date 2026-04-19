@@ -212,9 +212,12 @@ async function runMigrations(): Promise<void> {
       name TEXT NOT NULL,
       category TEXT NOT NULL CHECK (category IN ('whatsapp', 'email', 'instagram')),
       content TEXT DEFAULT '',
+      email_subject TEXT,
       is_attachment BOOLEAN DEFAULT FALSE,
       attachment_url TEXT,
       attachment_detail_text TEXT,
+      drive_file_id TEXT,
+      drive_file_name TEXT,
       created_at TIMESTAMPTZ DEFAULT NOW(),
       updated_at TIMESTAMPTZ DEFAULT NOW()
     );
