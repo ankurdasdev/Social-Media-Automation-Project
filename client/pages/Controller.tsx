@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import {
   Card,
   CardContent,
@@ -150,6 +150,7 @@ const instagramTypes: SourceType[] = ["account", "hashtag", "group"];
 
 export default function Controller() {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<Platform>("whatsapp");
   const [searchQuery, setSearchQuery] = useState("");
   const [isTemplateManagerOpen, setIsTemplateManagerOpen] = useState(false);
@@ -184,11 +185,18 @@ export default function Controller() {
     mutationFn: createGroup,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["groups"] });
-      toast.success(`✅ Source "${data.name}" added successfully!`);
+      toast({
+        title: "Success",
+        description: `✅ Source "${data.name}" added successfully!`,
+      });
       closeDialog();
     },
     onError: (err: any) => {
-      toast.error(`❌ Failed to add source: ${err.message}`);
+      toast({
+        title: "Failed to add source",
+        description: err.message,
+        variant: "destructive",
+      });
     }
   });
 
@@ -205,6 +213,10 @@ export default function Controller() {
     mutationFn: deleteGroup,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["groups"] });
+      toast({
+        title: "Source Deleted",
+        description: "The source has been removed successfully.",
+      });
       setDeleteTarget(null);
     },
   });
@@ -248,10 +260,17 @@ export default function Controller() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["groups"] });
-      toast.success(`✅ Synced ${data.count} WhatsApp groups successfully!`);
+      toast({
+        title: "Groups Synced",
+        description: `✅ Synced ${data.count} WhatsApp groups successfully!`,
+      });
     },
     onError: (err: any) => {
-      toast.error(`❌ Sync failed: ${err.message}`);
+      toast({
+        title: "Sync Failed",
+        description: `❌ ${err.message}`,
+        variant: "destructive",
+      });
     },
   });
 
@@ -267,10 +286,17 @@ export default function Controller() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["groups"] });
-      toast.success(`✅ Synced ${data.count} Instagram threads successfully!`);
+      toast({
+        title: "Threads Synced",
+        description: `✅ Synced ${data.count} Instagram threads successfully!`,
+      });
     },
     onError: (err: any) => {
-      toast.error(`❌ Sync failed: ${err.message}`);
+      toast({
+        title: "Sync Failed",
+        description: `❌ ${err.message}`,
+        variant: "destructive",
+      });
     },
   });
 
