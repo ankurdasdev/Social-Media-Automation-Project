@@ -162,6 +162,7 @@ export default function Controller() {
 
   // Form state
   const [formName, setFormName] = useState("");
+  const [formPlatform, setFormPlatform] = useState<Platform>("whatsapp");
   const [formType, setFormType] = useState<SourceType>("group");
   const [formUrl, setFormUrl] = useState("");
   const [formDescription, setFormDescription] = useState("");
@@ -274,6 +275,7 @@ export default function Controller() {
   function openAddDialog() {
     setEditingGroup(null);
     setFormName("");
+    setFormPlatform(activeTab);
     setFormType(activeTab === "whatsapp" ? "group" : "account");
     setFormUrl("");
     setFormDescription("");
@@ -283,6 +285,7 @@ export default function Controller() {
   function openEditDialog(group: SourceGroup) {
     setEditingGroup(group);
     setFormName(group.name);
+    setFormPlatform(group.platform);
     setFormType(group.type);
     setFormUrl(group.url || "");
     setFormDescription(group.description || "");
@@ -312,7 +315,7 @@ export default function Controller() {
       createMutation.mutate({
         userId: getOrCreateUserId(),
         name: formName,
-        platform: activeTab,
+        platform: formPlatform,
         type: formType,
         url: formUrl,
         description: formDescription,
@@ -484,6 +487,50 @@ export default function Controller() {
             </DialogHeader>
 
             <div className="px-10 py-6 space-y-8">
+              {/* Platform & Type */}
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <Label htmlFor="source-platform" className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                    Source Type <span className="text-primary">*</span>
+                  </Label>
+                  <Select 
+                    value={formPlatform} 
+                    onValueChange={(val: Platform) => {
+                      setFormPlatform(val);
+                      // Update default type when platform changes
+                      setFormType(val === "whatsapp" ? "group" : "account");
+                    }}
+                    disabled={!!editingGroup} // Optional: restrict platform change on edit
+                  >
+                    <SelectTrigger id="source-platform" className="h-14 rounded-2xl bg-muted/30 border-border/50 font-bold shadow-inner uppercase tracking-wider">
+                      <SelectValue placeholder="Select Platform" />
+                    </SelectTrigger>
+                    <SelectContent className="glass-card rounded-2xl border-white/10">
+                      <SelectItem value="whatsapp" className="font-bold py-3">WHATSAPP</SelectItem>
+                      <SelectItem value="instagram" className="font-bold py-3">INSTAGRAM</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-3">
+                  <Label htmlFor="source-type" className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                    Sub-Type <span className="text-primary">*</span>
+                  </Label>
+                  <Select value={formType} onValueChange={(val: SourceType) => setFormType(val)}>
+                    <SelectTrigger id="source-type" className="h-14 rounded-2xl bg-muted/30 border-border/50 font-bold shadow-inner">
+                      <SelectValue placeholder="Select Type" />
+                    </SelectTrigger>
+                    <SelectContent className="glass-card rounded-2xl border-white/10">
+                      {(formPlatform === "whatsapp" ? whatsappTypes : instagramTypes).map(t => (
+                        <SelectItem key={t} value={t} className="font-bold py-3">
+                          {typeLabel(t, formPlatform)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               {/* Name */}
               <div className="space-y-3">
                 <Label htmlFor="source-name" className="text-xs font-black uppercase tracking-widest text-muted-foreground">
@@ -492,7 +539,7 @@ export default function Controller() {
                 <Input
                   id="source-name"
                   placeholder={
-                    activeTab === "whatsapp"
+                    formPlatform === "whatsapp"
                       ? "e.g. Casting Master-list"
                       : "e.g. @casting_director_pro"
                   }
