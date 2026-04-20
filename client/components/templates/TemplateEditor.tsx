@@ -206,7 +206,7 @@ export function TemplateEditor({
                 >
                   <Badge
                     variant="default"
-                    className="font-black text-[11px] px-3 py-1.5 rounded-xl transition-all select-none tracking-tight"
+                    className="font-black text-[11px] px-3 py-1.5 rounded-xl transition-all select-none tracking-tight bg-primary hover:bg-primary/90 text-black shadow-lg"
                     style={{ opacity: isAttachment ? 0.3 : 1, cursor: isAttachment ? "not-allowed" : "grab" }}
                   >
                     {v.label}

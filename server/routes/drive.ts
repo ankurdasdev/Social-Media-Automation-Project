@@ -26,13 +26,10 @@ export const handleSearchDriveFiles: RequestHandler = async (req, res) => {
 
     const drive = await getDriveClient(userId);
 
-    // Build query — search within folder if one is set
+    // Build query — search globally
     let driveQuery = `trashed = false and mimeType != 'application/vnd.google-apps.folder'`;
     if (q.trim()) {
       driveQuery += ` and name contains '${q.replace(/'/g, "\\'")}'`;
-    }
-    if (tokenRow?.drive_folder_id) {
-      driveQuery += ` and '${tokenRow.drive_folder_id}' in parents`;
     }
 
     const response = await drive.files.list({

@@ -169,11 +169,52 @@ export default function Contacts() {
     },
   });
 
+  const bulkOutreachMutation = useMutation({
+    mutationFn: async (contactIds: string[]) => {
+      const promises = contactIds.flatMap((id) => {
+        const contact = contacts.find(c => c.id === id);
+        if (!contact) return [];
+        
+        const channels: ("whatsapp" | "email" | "instagram")[] = [];
+        if (contact.whatsapp) channels.push("whatsapp");
+        if (contact.email) channels.push("email");
+        if (contact.instaHandle) channels.push("instagram");
+
+        return channels.map(channel => 
+          fetch("/api/outreach/send", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ contactId: id, userId, channel })
+          }).then(async res => {
+            if (!res.ok) {
+              const error = await res.json();
+              throw new Error(error.error || `Failed to send ${channel} to ${contact.name}`);
+            }
+            return res.json();
+          })
+        );
+      });
+      await Promise.all(promises);
+    },
+    onSuccess: (_, ids) => {
+      toast({
+        title: "OUTREACH DISPATCHED",
+        description: `Successfully initiated outreach for ${ids.length} contacts.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+    },
+    onError: (err: any) => {
+      toast({
+        variant: "destructive",
+        title: "OUTREACH FAILED",
+        description: err.message,
+      });
+    }
+  });
+
   const handleBulkTrigger = (contactIds: string[]) => {
-    toast({
-      title: "OUTREACH SENT",
-      description: `Dispatched ${contactIds.length} messages via outreach system.`,
-    });
+    if (contactIds.length === 0) return;
+    bulkOutreachMutation.mutate(contactIds);
   };
 
   const handleManualRefresh = () => {

@@ -95,8 +95,8 @@ export interface Contact {
   age: string;
   instagramDone: string;
   editableMessageWP: string;
-  templateSelectionWP: string;
-  templateSelectionGmail: string;
+  templateSelectionWP: string | string[];
+  templateSelectionGmail: string | string[];
   editableMessageGmail: string;
   editableGmailSubject: string;
   specialAttachmentWA: string;
@@ -106,7 +106,7 @@ export interface Contact {
   automationComment: string;
   // Instagram specific outreach
   personalizedNameIG?: string;
-  templateSelectionIG?: string;
+  templateSelectionIG?: string | string[];
   editableMessageIG?: string;
   specialAttachmentIG?: string;
   
@@ -133,10 +133,20 @@ export interface Contact {
   drive_attachments_wa?: DriveFile[];
   drive_attachments_email?: DriveFile[];
   drive_attachments_ig?: DriveFile[];
+  unified_attachments?: DriveFile[]; // UI helper field that maps identical attachments across platforms
 
   // Outreach Tracking
   contacted_dates?: string[];
   contact_links?: Record<string, string>;
+}
+
+export interface UserAIKeyword {
+  word: string;
+  active: boolean;
+}
+
+export interface UserAIKeywordsResponse {
+  keywords: UserAIKeyword[];
 }
 
 export interface ContactsResponse {

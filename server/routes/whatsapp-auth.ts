@@ -222,25 +222,43 @@ export const handleWhatsAppSyncGroups: RequestHandler = async (req, res) => {
 
     // Evolution API returns: [ { id: "123@g.us", subject: "GroupName", ... }, ... ]
     let addedCount = 0;
+    let updatedCount = 0;
 
     for (const group of groupsData) {
       if (!group.id || !group.subject) continue;
 
-      // Upsert into source_groups
-      await pool.query(
-        `INSERT INTO source_groups (user_id, name, platform, type, url, enabled)
-         VALUES ($1, $2, 'whatsapp', 'group', $3, true)
-         ON CONFLICT (user_id, name, platform) DO UPDATE SET 
-           url = EXCLUDED.url,
-           updated_at = NOW()`,
-        [userId, group.subject, group.id]
+      // Check if this source name already exists for this user on whatsapp platform
+      const existing = await pool.query(
+        "SELECT id, url FROM source_groups WHERE user_id = $1 AND name = $2 AND platform = 'whatsapp'",
+        [userId, group.subject]
       );
-      addedCount++;
+
+      if (existing.rows.length > 0) {
+        // Update URL (JID) if it's missing or changed
+        if (existing.rows[0].url !== group.id) {
+          await pool.query(
+            "UPDATE source_groups SET url = $1, updated_at = NOW() WHERE id = $2",
+            [group.id, existing.rows[0].id]
+          );
+          updatedCount++;
+        }
+      } else {
+        // Upsert into source_groups
+        await pool.query(
+          `INSERT INTO source_groups (user_id, name, platform, type, url, enabled)
+           VALUES ($1, $2, 'whatsapp', 'group', $3, true)
+           ON CONFLICT (user_id, name, platform) DO UPDATE SET 
+             url = EXCLUDED.url,
+             updated_at = NOW()`,
+          [userId, group.subject, group.id]
+        );
+        addedCount++;
+      }
     }
 
     res.json({ 
-      message: `Successfully synced ${addedCount} WhatsApp groups`,
-      count: addedCount 
+      message: `Sync complete. Added ${addedCount} new groups, updated ${updatedCount} existing sources.`,
+      count: addedCount + updatedCount 
     });
   } catch (err: any) {
     console.error("WhatsApp Sync Groups Error:", err.message);

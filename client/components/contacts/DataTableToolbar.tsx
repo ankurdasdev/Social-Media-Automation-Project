@@ -43,6 +43,7 @@ interface DataTableToolbarProps<TData> {
   onDeleteSheet?: (sheetName: string) => void;
   activeTab?: string;
   onTabChange?: (tab: string) => void;
+  className?: string;
 }
 
 export function DataTableToolbar<TData>({
@@ -55,6 +56,7 @@ export function DataTableToolbar<TData>({
   onDeleteSheet,
   activeTab = "all",
   onTabChange,
+  className,
 }: DataTableToolbarProps<TData>) {
   const selectedRows = table.getFilteredSelectedRowModel().rows;
   const hasSelection = selectedRows.length > 0;
@@ -98,7 +100,7 @@ export function DataTableToolbar<TData>({
   };
 
   return (
-    <div className="flex flex-col gap-6 animate-in slide-in-from-top-2 duration-500">
+    <div className={cn("flex flex-col gap-6 animate-in slide-in-from-top-2 duration-500", className)}>
       {/* Sheets Navigation + Sync */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-3 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">

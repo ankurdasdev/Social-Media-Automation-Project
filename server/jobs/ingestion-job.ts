@@ -69,8 +69,12 @@ export async function runIngestionJob(): Promise<IngestionRunResult> {
         const waInstance = await queryOne("SELECT instance_name FROM whatsapp_instances WHERE user_id = $1 AND status = 'connected'", [userId]);
         const igSession = await queryOne("SELECT session_data FROM instagram_sessions WHERE user_id = $1 AND status = 'connected'", [userId]);
 
-        // 3. Fetch User's Enabled Groups
+        // 3. Fetch User's Enabled Groups & Keywords
         const groups = await query("SELECT * FROM source_groups WHERE user_id = $1 AND enabled = TRUE", [userId]);
+        const userRow = await queryOne<{ ai_keywords: any[] }>("SELECT ai_keywords FROM users WHERE id = $1", [userId]);
+        const activeKeywords = (userRow?.ai_keywords || [])
+          .filter((k: any) => k.active)
+          .map((k: any) => k.word.toLowerCase());
         
         const userWAMessages: Array<{ text: string; source: "whatsapp" }> = [];
         const userIGMessages: Array<{ text: string; source: "instagram" }> = [];
@@ -86,7 +90,11 @@ export async function runIngestionJob(): Promise<IngestionRunResult> {
               const rawMsgs = await getWAMessages(waInstance.instance_name, groupJid, since);
               for (const m of rawMsgs) {
                 const text = extractMessageText(m);
-                if (text.trim().length >= 20) userWAMessages.push({ text, source: "whatsapp" });
+                if (text.trim().length >= 20) {
+                  const lowerText = text.toLowerCase();
+                  const matches = activeKeywords.length === 0 || activeKeywords.every(kw => lowerText.includes(kw));
+                  if (matches) userWAMessages.push({ text, source: "whatsapp" });
+                }
               }
               sourcesProcessed++;
               messagesScanned += rawMsgs.length;
@@ -113,7 +121,10 @@ export async function runIngestionJob(): Promise<IngestionRunResult> {
 
               for (const p of posts) {
                 if (p.caption_text && p.caption_text.trim().length >= 20) {
-                  userIGMessages.push({ text: p.caption_text, source: "instagram" });
+                  const text = p.caption_text;
+                  const lowerText = text.toLowerCase();
+                  const matches = activeKeywords.length === 0 || activeKeywords.every(kw => lowerText.includes(kw));
+                  if (matches) userIGMessages.push({ text, source: "instagram" });
                 }
               }
               sourcesProcessed++;

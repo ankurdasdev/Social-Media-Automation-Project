@@ -2,6 +2,21 @@ import { query, queryOne } from "../db/index";
 import type { Contact } from "@shared/api";
 
 /**
+ * Helper to safely parse strings to string array if they are valid JSON arrays.
+ */
+function safelyParseStringArray(val: string | null): string[] | string {
+  if (!val) return [];
+  try {
+    const parsed = JSON.parse(val);
+    if (Array.isArray(parsed)) return parsed;
+    return val;
+  } catch {
+    // If it fails to parse, it means it's an old legacy string
+    return val;
+  }
+}
+
+/**
  * Maps a database row to a Contact object.
  */
 function mapRowToContact(row: any): Contact {
@@ -31,9 +46,9 @@ function mapRowToContact(row: any): Contact {
     personalizedNameWA: "",
     personalizedNameGmail: "",
     personalizedNameIG: "",
-    templateSelectionWP: row.template_selection_wp || "",
-    templateSelectionGmail: row.template_selection_gmail || "",
-    templateSelectionIG: row.template_selection_ig || "",
+    templateSelectionWP: safelyParseStringArray(row.template_selection_wp),
+    templateSelectionGmail: safelyParseStringArray(row.template_selection_gmail),
+    templateSelectionIG: safelyParseStringArray(row.template_selection_ig),
     hasCustomMessageWA: row.has_custom_message_wa || false,
     editableMessageWP: row.editable_message_wp || "",
     hasCustomMessageEmail: row.has_custom_message_email || false,
@@ -55,6 +70,10 @@ function mapRowToContact(row: any): Contact {
     automationComment: row.automation_comment || "",
     ingestedAt: row.created_at?.toISOString(),
     visit: "",
+    unified_attachments: row.unified_attachments || [],
+    drive_attachments_wa: row.drive_attachments_wa || [],
+    drive_attachments_email: row.drive_attachments_email || [],
+    drive_attachments_ig: row.drive_attachments_ig || [],
   } as Contact;
 }
 
@@ -72,14 +91,18 @@ export async function createContact(userId: string, data: Partial<Contact>): Pro
   const sql = `
     INSERT INTO contacts (
       user_id, name, casting_name, whatsapp, email, insta_handle, acting_context, project, age,
-      sheet_name, status, automation_trigger, row_color, source
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+      sheet_name, status, automation_trigger, row_color, source,
+      unified_attachments, drive_attachments_wa, drive_attachments_email, drive_attachments_ig
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
     RETURNING *
   `;
+  const ua = data.unified_attachments || [];
+  const uaStr = JSON.stringify(ua);
   const values = [
     userId, data.name, data.castingName, data.whatsapp, data.email, data.instaHandle,
     data.actingContext, data.project || "Casting Data", data.age, data.sheetName || "",
-    data.status || "pending", data.automationTrigger || false, data.rowColor, data.source || "manual"
+    data.status || "pending", data.automationTrigger || false, data.rowColor, data.source || "manual",
+    uaStr, uaStr, uaStr, uaStr
   ];
   const row = await queryOne(sql, values);
   return mapRowToContact(row);
@@ -128,7 +151,20 @@ export async function updateContact(userId: string, id: string, data: Partial<Co
     lastContactedDate: "last_contacted",
     contacted_dates: "contacted_dates",
     contact_links: "contact_links",
+    unified_attachments: "unified_attachments",
   };
+
+  // Handle unified_attachments by mirroring it to all three platforms
+  if (data.unified_attachments !== undefined) {
+    data.drive_attachments_wa = data.unified_attachments;
+    data.drive_attachments_email = data.unified_attachments;
+    data.drive_attachments_ig = data.unified_attachments;
+  }
+
+  // Handle templateSelection arrays by stringifying them so they can fit in TEXT columns
+  if (Array.isArray(data.templateSelectionWP)) data.templateSelectionWP = JSON.stringify(data.templateSelectionWP);
+  if (Array.isArray(data.templateSelectionGmail)) data.templateSelectionGmail = JSON.stringify(data.templateSelectionGmail);
+  if (Array.isArray(data.templateSelectionIG)) data.templateSelectionIG = JSON.stringify(data.templateSelectionIG);
 
   // Only include fields we have an explicit mapping for (ignore frontend-only fields)
   const fields = Object.keys(data).filter(k => k !== 'id' && k !== 'user_id' && fieldMap[k]);
@@ -137,7 +173,7 @@ export async function updateContact(userId: string, id: string, data: Partial<Co
   const setClause = fields.map((f, i) => {
     const col = fieldMap[f];
     // JSONB fields need explicit cast
-    const isJsonb = ["drive_attachments_wa", "drive_attachments_email", "drive_attachments_ig", "contacted_dates", "contact_links"].includes(col);
+    const isJsonb = ["drive_attachments_wa", "drive_attachments_email", "drive_attachments_ig", "unified_attachments", "contacted_dates", "contact_links"].includes(col);
     return `${col} = $${i + 3}${isJsonb ? "::jsonb" : ""}`;
   }).join(", ");
 
@@ -146,7 +182,7 @@ export async function updateContact(userId: string, id: string, data: Partial<Co
     const val = (data as any)[f];
     // Stringify JSON values for JSONB columns
     const col = fieldMap[f];
-    const isJsonb = ["drive_attachments_wa", "drive_attachments_email", "drive_attachments_ig", "contacted_dates", "contact_links"].includes(col);
+    const isJsonb = ["drive_attachments_wa", "drive_attachments_email", "drive_attachments_ig", "unified_attachments", "contacted_dates", "contact_links"].includes(col);
     return isJsonb && val !== null && val !== undefined ? JSON.stringify(val) : val;
   })];
 

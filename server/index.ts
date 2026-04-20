@@ -50,7 +50,16 @@ import {
   handleInstagramSendMessage,
 } from "./routes/instagram-auth";
 import { handleSendOutreach } from "./routes/outreach";
-import { handleSignup, handleLogin, handleMe, handleUpdateProfile, handleResetPassword, handleResetPasswordConfirm } from "./routes/auth";
+import { 
+  handleSignup, 
+  handleLogin, 
+  handleMe, 
+  handleUpdateProfile, 
+  handleResetPassword, 
+  handleResetPasswordConfirm,
+  handleGetAIKeywords,
+  handleUpdateAIKeywords
+} from "./routes/auth";
 import { runIngestionJob } from "./jobs/ingestion-job";
 import { initDb } from "./db/index";
 
@@ -89,6 +98,8 @@ export function createServer() {
   app.put("/api/auth/profile", handleUpdateProfile);
   app.post("/api/auth/reset-password", handleResetPassword);
   app.post("/api/auth/reset-password/confirm", handleResetPasswordConfirm);
+  app.get("/api/auth/keywords", handleGetAIKeywords);
+  app.put("/api/auth/keywords", handleUpdateAIKeywords);
 
   // ── Source Group Management ────────────────────────────────────────────────
   app.get("/api/groups", handleGetGroups);
