@@ -31,8 +31,6 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   onTriggerAction?: (contactIds: string[]) => void;
-  onRefresh?: () => void;
-  isRefreshing?: boolean;
   onBulkAction?: (action: string, contactIds: string[], payload?: any) => void;
   onAddSheet?: (sheetName: string) => void;
   onDeleteSheet?: (sheetName: string) => void;
@@ -46,8 +44,6 @@ export function DataTable<TData, TValue>({
   columns,
   data,
   onTriggerAction,
-  onRefresh,
-  isRefreshing,
   onBulkAction,
   onAddSheet,
   onDeleteSheet,
@@ -106,8 +102,6 @@ export function DataTable<TData, TValue>({
         <DataTableToolbar 
           table={table} 
           onTriggerAction={onTriggerAction} 
-          onRefresh={onRefresh}
-          isRefreshing={isRefreshing}
           onBulkAction={onBulkAction}
           onAddSheet={onAddSheet}
           onDeleteSheet={onDeleteSheet}

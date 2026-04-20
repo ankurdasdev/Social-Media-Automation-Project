@@ -217,10 +217,7 @@ export default function Contacts() {
     bulkOutreachMutation.mutate(contactIds);
   };
 
-  const handleManualRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ["contacts"] });
-    refetchStatus();
-  };
+
 
   const submitAddLead = () => {
     if (!newLead.name.trim()) return toast({title: "Error", description: "Name is required", variant: "destructive"});
@@ -313,8 +310,6 @@ export default function Contacts() {
               columns={columns} 
               data={contacts} 
               onTriggerAction={handleBulkTrigger}
-              onRefresh={handleManualRefresh}
-              isRefreshing={isRefreshingStatus || contactsLoading}
               onBulkAction={(action, ids, payload) => bulkMutation.mutate({ action, ids, payload })}
               onUpdateContact={(id, data) => {
                 fetch(`/api/contacts/${id}?userId=${userId}`, {

@@ -36,8 +36,6 @@ import {
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;
   onTriggerAction?: (contactIds: string[]) => void;
-  onRefresh?: () => void;
-  isRefreshing?: boolean;
   onBulkAction?: (action: string, contactIds: string[], payload?: any) => void;
   onAddSheet?: (sheetName: string) => void;
   onDeleteSheet?: (sheetName: string) => void;
@@ -49,8 +47,6 @@ interface DataTableToolbarProps<TData> {
 export function DataTableToolbar<TData>({
   table,
   onTriggerAction,
-  onRefresh,
-  isRefreshing,
   onBulkAction,
   onAddSheet,
   onDeleteSheet,
@@ -135,17 +131,6 @@ export function DataTableToolbar<TData>({
             <Plus className="h-6 w-6 text-primary" />
           </Button>
         </div>
-
-        <Button 
-          variant="outline" 
-          size="lg" 
-          className="h-14 px-8 gap-3 rounded-2xl border-white/10 bg-muted/20 hover:bg-muted/40 font-black text-[10px] tracking-[0.2em] transition-all active:scale-95 shrink-0"
-          onClick={onRefresh}
-          disabled={isRefreshing}
-        >
-          <RefreshCw className={cn("h-4 w-4 text-primary", isRefreshing ? "animate-spin" : "group-hover:rotate-180 transition-transform duration-700")} />
-          SYNC CONTACTS
-        </Button>
       </div>
 
       <Dialog open={isAddSheetOpen} onOpenChange={setIsAddSheetOpen}>
