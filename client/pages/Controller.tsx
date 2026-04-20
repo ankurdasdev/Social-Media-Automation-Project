@@ -57,6 +57,9 @@ import {
   CheckCircle2,
   RefreshCw,
   Brain,
+  ShieldCheck,
+  AlertCircle,
+  Clock,
 } from "lucide-react";
 import { cn, getOrCreateUserId } from "@/lib/utils";
 import type {
@@ -723,6 +726,36 @@ function PlatformInfo({ platform }: { platform: Platform }) {
   );
 }
 
+// ─── Status Badge ────────────────────────────────────────────────────────────
+function StatusBadge({ status, message }: { status: SourceGroup["status"]; message?: string }) {
+  switch (status) {
+    case "connected":
+      return (
+        <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20 gap-1.5 font-bold uppercase tracking-wider text-[10px]">
+          <ShieldCheck className="w-3 h-3" />
+          Connected
+        </Badge>
+      );
+    case "pending":
+      return (
+        <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20 gap-1.5 font-bold uppercase tracking-wider text-[10px] animate-pulse">
+          <Clock className="w-3 h-3" />
+          Verifying
+        </Badge>
+      );
+    case "failed":
+    case "error":
+      return (
+        <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 gap-1.5 font-bold uppercase tracking-wider text-[10px]">
+          <AlertCircle className="w-3 h-3" />
+          Failed
+        </Badge>
+      );
+    default:
+      return null;
+  }
+}
+
 // ─── Group List ──────────────────────────────────────────────────────────────
 
 interface GroupListProps {
@@ -802,25 +835,37 @@ function GroupList({
         >
           {/* Left: Info */}
           <div className="flex-1 min-w-0 mr-4">
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-3 flex-wrap">
               <p
                 className={`font-medium truncate ${group.enabled ? "text-foreground" : "text-muted-foreground"}`}
               >
                 {group.name}
               </p>
-              <Badge
-                variant="outline"
-                className="gap-1 text-xs shrink-0 font-normal"
-              >
-                <TypeIcon type={group.type} />
-                {typeLabel(group.type, group.platform)}
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge
+                  variant="outline"
+                  className="gap-1 text-xs shrink-0 font-normal"
+                >
+                  <TypeIcon type={group.type} />
+                  {typeLabel(group.type, group.platform)}
+                </Badge>
+                <StatusBadge status={group.status} message={group.statusMessage} />
+              </div>
             </div>
 
-            {group.description && (
-              <p className="text-sm text-muted-foreground mt-1 truncate">
-                {group.description}
-              </p>
+            {(group.description || (group.status === "failed" || group.status === "error")) && (
+              <div className="mt-1 space-y-1">
+                {group.description && (
+                  <p className="text-sm text-muted-foreground truncate">
+                    {group.description}
+                  </p>
+                )}
+                {(group.status === "failed" || group.status === "error") && group.statusMessage && (
+                  <p className="text-[11px] text-destructive bg-destructive/5 px-2 py-0.5 rounded border border-destructive/10 w-fit font-medium">
+                    {group.statusMessage}
+                  </p>
+                )}
+              </div>
             )}
 
             <div className="flex items-center gap-3 mt-1.5">

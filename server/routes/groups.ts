@@ -21,6 +21,8 @@ function mapRowToGroup(row: any): SourceGroup {
     url: row.url || "",
     description: row.description || "",
     enabled: row.enabled,
+    status: row.status || "pending",
+    statusMessage: row.status_message || "",
     createdAt: row.created_at?.toISOString(),
     updatedAt: row.updated_at?.toISOString(),
   };
@@ -35,6 +37,7 @@ const createGroupSchema = z.object({
   type: z.enum(["group", "account", "hashtag", "channel"]),
   url: z.string().max(500).optional().default(""),
   description: z.string().max(1000).optional().default(""),
+  status: z.enum(["connected", "failed", "pending", "error"]).optional().default("pending"),
 });
 
 const updateGroupSchema = z.object({
@@ -44,6 +47,8 @@ const updateGroupSchema = z.object({
   url: z.string().max(500).optional(),
   description: z.string().max(1000).optional(),
   enabled: z.boolean().optional(),
+  status: z.enum(["connected", "failed", "pending", "error"]).optional(),
+  statusMessage: z.string().max(1000).optional(),
 });
 
 // ─── Handlers ────────────────────────────────────────────────────────────────
@@ -95,7 +100,45 @@ export const handleCreateGroup: RequestHandler = async (req, res) => {
     return;
   }
 
-  const { userId, name, platform, type, url, description } = parsed.data;
+  const { userId, name, platform, type, url, description, status } = parsed.data;
+
+  try {
+    // 1. Create the source group immediately with requested status (default pending)
+    const row = await queryOne(
+      `INSERT INTO source_groups (user_id, name, platform, type, url, description, status) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      [userId, name, platform, type, url, description, status]
+    );
+
+    const group = mapRowToGroup(row);
+    
+    // 2. Return success immediately
+    res.status(201).json({ group });
+
+    // 3. Initiate verification in the background
+    // We don't await this to keep the response fast
+    verifySourceInternal(group.id, userId, name, platform, type, url).catch(err => {
+      console.error(`[Background Verification Error] Group ${group.id}:`, err);
+    });
+
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || "Failed to create source" });
+  }
+};
+
+/**
+ * Background verification logic
+ */
+async function verifySourceInternal(
+  groupId: string, 
+  userId: string, 
+  name: string, 
+  platform: string, 
+  type: string, 
+  url: string
+) {
+  let finalStatus: "connected" | "failed" = "connected";
+  let finalMessage = "";
   let finalUrl = url;
 
   try {
@@ -104,8 +147,9 @@ export const handleCreateGroup: RequestHandler = async (req, res) => {
         "SELECT instance_name FROM whatsapp_instances WHERE user_id = $1",
         [userId]
       );
+      
       if (!instance) {
-        return res.status(400).json({ error: "WhatsApp not connected. Please connect in Settings." });
+        throw new Error("WhatsApp not connected. Please connect in Settings.");
       }
       
       const evoUrl = process.env.EVOLUTION_API_URL || "https://evo.casthub.io";
@@ -116,40 +160,42 @@ export const handleCreateGroup: RequestHandler = async (req, res) => {
       });
 
       if (!Array.isArray(waGroups)) {
-        return res.status(500).json({ error: "Failed to fetch groups from WhatsApp API." });
+        throw new Error("Failed to fetch groups from WhatsApp API.");
       }
 
       const foundGroup = waGroups.find((g: any) => g.subject === name);
       if (!foundGroup) {
-        return res.status(400).json({ error: `WhatsApp group "${name}" not found on your connected account.` });
+        throw new Error(`WhatsApp group "${name}" not found on your connected account.`);
       }
-      finalUrl = finalUrl || foundGroup.id;
+      finalUrl = url || foundGroup.id;
     } else if (platform === "instagram") {
-      // Basic verification for instagram accounts exists, though explicit thread checking is limited by instagrapi limits.
-      // We will assume the user provides a direct handle or we'll allow it if they just wanted to add a thread named.
       const sessionRow = await queryOne("SELECT session_data FROM instagram_sessions WHERE user_id = $1", [userId]);
       if (!sessionRow) {
-         return res.status(400).json({ error: "Instagram not connected. Please connect in Settings." });
+         throw new Error("Instagram not connected. Please connect in Settings.");
       }
-      // If it's an account, we try to fetch posts to verify it exists
+      
       if (type === "account") {
         const posts = await getAccountPosts(name, 0, sessionRow.session_data).catch(() => []);
         if (posts.length === 0) {
-           return res.status(400).json({ error: `Instagram account "${name}" could not be verified or is private.` });
+           throw new Error(`Instagram account "${name}" could not be verified or is private.`);
         }
       }
     }
 
-    const row = await queryOne(
-      `INSERT INTO source_groups (user_id, name, platform, type, url, description) 
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [userId, name, platform, type, finalUrl, description]
+    // Success update
+    await query(
+      "UPDATE source_groups SET status = $1, status_message = $2, url = $3, updated_at = NOW() WHERE id = $4",
+      ["connected", "", finalUrl, groupId]
     );
-    res.status(201).json({ group: mapRowToGroup(row) });
+
   } catch (err: any) {
-    res.status(500).json({ error: err.message || "Failed to create source" });
+    // Failure update
+    await query(
+      "UPDATE source_groups SET status = $1, status_message = $2, updated_at = NOW() WHERE id = $3",
+      ["failed", err.message || "Verification failed", groupId]
+    );
   }
-};
+}
 
 /**
  * PUT /api/groups/:id
@@ -165,21 +211,50 @@ export const handleUpdateGroup: RequestHandler = async (req, res) => {
 
   const { userId, ...data } = parsed.data;
   const fields = Object.keys(data);
+  const needsReverification = fields.includes("name") || fields.includes("type");
+
+  if (needsReverification) {
+    (data as any).status = "pending";
+    (data as any).status_message = "";
+    fields.push("status", "status_message");
+  }
+
   if (fields.length === 0) {
     const row = await queryOne("SELECT * FROM source_groups WHERE user_id = $1 AND id = $2", [userId, id]);
     if (!row) return res.status(404).json({ error: "Group not found" });
     return res.json({ group: mapRowToGroup(row) });
   }
 
-  const setClause = fields.map((f, i) => `${f} = $${i + 3}`).join(", ");
+  const setClause = fields.map((f, i) => {
+    // Map statusMessage (camelCase) to status_message (snake_case)
+    const dbField = f === "statusMessage" ? "status_message" : f;
+    return `${dbField} = $${i + 3}`;
+  }).join(", ");
+
   const sql = `UPDATE source_groups SET ${setClause}, updated_at = NOW() WHERE user_id = $1 AND id = $2 RETURNING *`;
   const values = [userId, id, ...fields.map((f) => (data as any)[f])];
 
   try {
     const row = await queryOne(sql, values);
     if (!row) return res.status(404).json({ error: "Group not found" });
-    res.json({ group: mapRowToGroup(row) });
-  } catch (err) {
+    
+    const group = mapRowToGroup(row);
+    res.json({ group });
+
+    if (needsReverification) {
+      verifySourceInternal(
+        group.id, 
+        userId, 
+        group.name, 
+        group.platform, 
+        group.type, 
+        group.url || ""
+      ).catch(err => {
+        console.error(`[Background Re-Verification Error] Group ${group.id}:`, err);
+      });
+    }
+  } catch (err: any) {
+    console.error("Update group error:", err);
     res.status(500).json({ error: "Failed to update group" });
   }
 };

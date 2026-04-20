@@ -35,6 +35,8 @@ export interface SourceGroup {
   url?: string;
   description?: string;
   enabled: boolean;
+  status: "connected" | "failed" | "pending" | "error";
+  statusMessage?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -46,6 +48,7 @@ export interface CreateGroupRequest {
   type: SourceType;
   url?: string;
   description?: string;
+  status?: "connected" | "failed" | "pending" | "error";
 }
 
 export interface UpdateGroupRequest {
@@ -55,6 +58,8 @@ export interface UpdateGroupRequest {
   url?: string;
   description?: string;
   enabled?: boolean;
+  status?: "connected" | "failed" | "pending" | "error";
+  statusMessage?: string;
 }
 
 export interface GroupsResponse {
