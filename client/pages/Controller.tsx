@@ -90,8 +90,8 @@ async function createGroup(body: CreateGroupRequest): Promise<SourceGroup> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ...body, userId }),
   });
-  if (!res.ok) throw new Error("Failed to create group");
   const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Failed to create group");
   return data.group;
 }
 
@@ -182,10 +182,14 @@ export default function Controller() {
 
   const createMutation = useMutation({
     mutationFn: createGroup,
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["groups"] });
+      toast.success(`✅ Source "${data.name}" added successfully!`);
       closeDialog();
     },
+    onError: (err: any) => {
+      toast.error(`❌ Failed to add source: ${err.message}`);
+    }
   });
 
   const updateMutation = useMutation({
