@@ -231,9 +231,17 @@ export const handleResetPassword: RequestHandler = async (req, res) => {
     const token = jwt.sign({ userId: user.id }, RESET_SECRET, { expiresIn: "30m" });
 
     // Determine base URL from env or request origin
-    const protocol = req.headers["x-forwarded-proto"] || req.protocol || "http";
-    const host = req.get("x-forwarded-host") || req.get("host") || "localhost:8080";
-    let baseUrl = process.env.APP_URL || `${protocol}://${host}`;
+    let baseUrl = process.env.APP_URL;
+    
+    if (!baseUrl) {
+      const protocol = req.headers["x-forwarded-proto"] || req.protocol || "http";
+      const host = req.get("x-forwarded-host") || req.get("host");
+      baseUrl = `${protocol}://${host}`;
+      console.log(`[auth] WARNING: APP_URL not found. Derived baseUrl: ${baseUrl} from headers.`);
+    } else {
+      console.log(`[auth] Using configured APP_URL: ${baseUrl}`);
+    }
+
     if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
     
     const resetLink = `${baseUrl}/reset-password?token=${token}`;
@@ -337,3 +345,31 @@ export const handleResetPasswordConfirm: RequestHandler = async (req, res) => {
     return res.status(401).json({ error: "Invalid reset token" });
   }
 };
+
+// ── GET /api/auth/keywords ──────────────────────────────────────────────────
+export const handleGetAIKeywords: RequestHandler = async (req, res) => {
+  const userId = req.query.userId as string;
+  if (!userId) return res.status(400).json({ error: "userId required" });
+  try {
+    const row = await queryOne("SELECT ai_keywords FROM users WHERE id = $1", [userId]);
+    res.json({ keywords: row?.ai_keywords || [] });
+  } catch (err: any) {
+    console.error("[auth] Get keywords error:", err);
+    res.status(500).json({ error: "Failed to get keywords" });
+  }
+};
+
+// ── PUT /api/auth/keywords ──────────────────────────────────────────────────
+export const handleUpdateAIKeywords: RequestHandler = async (req, res) => {
+  const userId = req.body.userId;
+  const keywords = req.body.keywords;
+  if (!userId) return res.status(400).json({ error: "userId required" });
+  try {
+    await query("UPDATE users SET ai_keywords = $1::jsonb WHERE id = $2", [JSON.stringify(keywords || []), userId]);
+    res.json({ keywords: keywords || [] });
+  } catch (err: any) {
+    console.error("[auth] Update keywords error:", err);
+    res.status(500).json({ error: "Failed to update keywords" });
+  }
+};
+

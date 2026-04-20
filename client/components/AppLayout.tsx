@@ -19,6 +19,7 @@ import {
   LayoutDashboard,
   ShieldCheck,
   Zap,
+  Instagram,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getOrCreateUserId, clearAuthToken, getCurrentUser } from "@/lib/utils";
@@ -89,6 +90,15 @@ export default function AppLayout({ children }: AppLayoutProps) {
     queryFn: async () => {
       const res = await fetch(`/api/whatsapp/status?userId=${userId}`);
       return res.json() as Promise<WhatsAppStatusResponse>;
+    },
+    refetchInterval: 30000,
+  });
+
+  const { data: igStatus } = useQuery({
+    queryKey: ["instagram-status", userId],
+    queryFn: async () => {
+      const res = await fetch(`/api/instagram/status?userId=${userId}`);
+      return res.json() as Promise<{ connected: boolean; username?: string }>;
     },
     refetchInterval: 30000,
   });
@@ -179,6 +189,18 @@ export default function AppLayout({ children }: AppLayoutProps) {
                             <span className="text-[10px] font-black uppercase tracking-widest text-foreground">WHATSAPP</span>
                         </div>
                         {waStatus?.isConnected && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />}
+                    </div>
+
+                    {/* Instagram Status */}
+                    <div className={cn(
+                        "flex items-center justify-between p-3 rounded-2xl border transition-all",
+                        igStatus?.connected ? "bg-pink-500/5 border-pink-500/20" : "bg-muted/10 border-border/20"
+                    )}>
+                        <div className="flex items-center gap-3">
+                            <div className={cn("w-2 h-2 rounded-full animate-pulse", igStatus?.connected ? "bg-pink-500 shadow-[0_0_8px_rgba(236,72,153,0.5)]" : "bg-muted-foreground/30")} />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-foreground">INSTAGRAM</span>
+                        </div>
+                        {igStatus?.connected && <Instagram className="w-3.5 h-3.5 text-pink-500" />}
                     </div>
                 </div>
              </div>

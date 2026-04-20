@@ -56,6 +56,7 @@ import {
   LayoutTemplate,
   CheckCircle2,
   RefreshCw,
+  Brain,
 } from "lucide-react";
 import { cn, getOrCreateUserId } from "@/lib/utils";
 import type {
@@ -67,6 +68,7 @@ import type {
   UpdateGroupRequest,
 } from "@shared/api";
 import { TemplateManager } from "@/components/templates/TemplateManager";
+import { AIProfilingDialog } from "@/components/ai-profiling/AIProfilingDialog";
 
 // ─── API Helpers ─────────────────────────────────────────────────────────────
 
@@ -151,6 +153,7 @@ export default function Controller() {
   const [activeTab, setActiveTab] = useState<Platform>("whatsapp");
   const [searchQuery, setSearchQuery] = useState("");
   const [isTemplateManagerOpen, setIsTemplateManagerOpen] = useState(false);
+  const [isAIProfilingOpen, setIsAIProfilingOpen] = useState(false);
 
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -370,6 +373,14 @@ export default function Controller() {
               Manage Templates
             </Button>
             <Button 
+                variant="outline" 
+                onClick={() => setIsAIProfilingOpen(true)} 
+                className="h-12 px-6 rounded-xl font-bold bg-purple-500/5 border-purple-500/20 text-purple-600 gap-2 hover:bg-purple-500/10 transition-all shadow-sm"
+            >
+              <Brain className="w-4 h-4" />
+              AI Profiling
+            </Button>
+            <Button 
                 onClick={openAddDialog} 
                 className="h-12 px-6 rounded-xl font-black bg-foreground text-background hover:bg-foreground/90 gap-2 shadow-xl transition-all active:scale-95"
             >
@@ -578,6 +589,7 @@ export default function Controller() {
         </AlertDialog>
 
         <TemplateManager open={isTemplateManagerOpen} onOpenChange={setIsTemplateManagerOpen} />
+        <AIProfilingDialog open={isAIProfilingOpen} onOpenChange={setIsAIProfilingOpen} />
       </div>
     </AppLayout>
   );

@@ -111,7 +111,9 @@ async function runMigrations(): Promise<void> {
   // Add new columns safely to existing tables first
   await query(`
     ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT;
-  `).catch(() => {}); // Ignore if users table doesn't exist yet — it will be created below
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_keywords JSONB DEFAULT '[]'::jsonb;
+    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS unified_attachments JSONB DEFAULT '[]'::jsonb;
+  `).catch(() => {}); // Ignore if tables don't exist yet — they will be created below
 
   const sql = `
     -- Users table (for multi-user support)
@@ -120,6 +122,7 @@ async function runMigrations(): Promise<void> {
       email TEXT UNIQUE NOT NULL,
       name TEXT,
       password_hash TEXT,
+      ai_keywords JSONB DEFAULT '[]'::jsonb,
       created_at TIMESTAMPTZ DEFAULT NOW(),
       updated_at TIMESTAMPTZ DEFAULT NOW()
     );
@@ -194,6 +197,7 @@ async function runMigrations(): Promise<void> {
       drive_attachments_wa JSONB DEFAULT '[]',
       drive_attachments_email JSONB DEFAULT '[]',
       drive_attachments_ig JSONB DEFAULT '[]',
+      unified_attachments JSONB DEFAULT '[]',
       notes TEXT,
       source TEXT DEFAULT 'manual',
       follow_ups INTEGER DEFAULT 0,

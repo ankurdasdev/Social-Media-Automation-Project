@@ -19,11 +19,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search } from "lucide-react";
+import { Search, Maximize2, Minimize2, Filter } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Contact } from "@shared/api";
 import { DataTableToolbar } from "./DataTableToolbar";
 import { ContactDrawer } from "./ContactDrawer";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -58,6 +60,8 @@ export function DataTable<TData, TValue>({
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = React.useState("");
+  const [isFullscreen, setIsFullscreen] = React.useState(false);
+  const [showFilters, setShowFilters] = React.useState(true);
   
   // Drawer state
   const [selectedContact, setSelectedContact] = React.useState<Contact | null>(null);
@@ -94,40 +98,62 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-700">
-      <DataTableToolbar 
-        table={table} 
-        onTriggerAction={onTriggerAction} 
-        onRefresh={onRefresh}
-        isRefreshing={isRefreshing}
-        onBulkAction={onBulkAction}
-        onAddSheet={onAddSheet}
-        onDeleteSheet={onDeleteSheet}
-        activeTab={activeTab}
-        onTabChange={onTabChange}
-      />
+    <div className={cn(
+      "space-y-6 transition-all duration-500",
+      isFullscreen ? "fixed inset-0 z-[100] bg-background p-6 lg:p-10 space-y-8 overflow-hidden flex flex-col" : "animate-in fade-in slide-in-from-bottom-2 duration-700"
+    )}>
+      <div className="flex items-center justify-between gap-4">
+        <DataTableToolbar 
+          table={table} 
+          onTriggerAction={onTriggerAction} 
+          onRefresh={onRefresh}
+          isRefreshing={isRefreshing}
+          onBulkAction={onBulkAction}
+          onAddSheet={onAddSheet}
+          onDeleteSheet={onDeleteSheet}
+          activeTab={activeTab}
+          onTabChange={onTabChange}
+          className="flex-1"
+        />
+        <div className="flex items-center gap-2">
+           <Button 
+             variant="outline" 
+             size="icon" 
+             onClick={() => setShowFilters(!showFilters)}
+             className={cn("h-14 w-14 rounded-2xl border-white/10 shrink-0", showFilters && "bg-primary/10 border-primary/20 text-primary")}
+             title="Toggle Column Filters"
+           >
+             <Filter className="w-5 h-5" />
+           </Button>
+           <Button 
+             variant="outline" 
+             size="icon" 
+             onClick={() => setIsFullscreen(!isFullscreen)}
+             className="h-14 w-14 rounded-2xl border-white/10 shadow-xl shrink-0"
+             title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+           >
+             {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
+           </Button>
+        </div>
+      </div>
       
-      <div className="glass-card rounded-[2.5rem] border-white/10 overflow-hidden shadow-2xl relative">
-        <div className="overflow-x-auto">
+      <div className={cn(
+        "glass-card rounded-[2.5rem] border-white/10 shadow-2xl relative flex-1 flex flex-col min-h-0 overflow-hidden",
+        isFullscreen ? "rounded-none border-none bg-card/50" : ""
+      )}>
+        <div className="overflow-auto flex-1 scrollbar-thin">
           <Table style={{ width: table.getCenterTotalSize(), minWidth: "100%" }}>
-            <TableHeader className="bg-muted/30 border-b border-white/5 sticky top-0 z-10 backdrop-blur-3xl">
+            <TableHeader className="bg-muted/30 border-b border-white/5 sticky top-0 z-20 backdrop-blur-3xl">
               {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id} className="hover:bg-transparent border-b-0 h-16">
-                  {headerGroup.headers.map((header) => {
-                    return (
+                <React.Fragment key={headerGroup.id}>
+                  <TableRow className="hover:bg-transparent border-b-0 h-16">
+                    {headerGroup.headers.map((header) => (
                       <TableHead 
                         key={header.id} 
                         className="px-6 text-[10px] font-black uppercase text-muted-foreground tracking-[0.3em] relative group border-r border-white/5 last:border-r-0"
                         style={{ width: header.getSize() }}
                       >
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                        
-                        {/* Resizer Handle */}
+                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                         <div
                           onMouseDown={header.getResizeHandler()}
                           onTouchStart={header.getResizeHandler()}
@@ -136,9 +162,27 @@ export function DataTable<TData, TValue>({
                           }`}
                         />
                       </TableHead>
-                    );
-                  })}
-                </TableRow>
+                    ))}
+                  </TableRow>
+                  
+                  {showFilters && (
+                    <TableRow className="hover:bg-transparent border-b-0 h-12 bg-muted/20">
+                      {headerGroup.headers.map((header) => (
+                        <TableHead key={`filter-${header.id}`} className="px-2 border-r border-white/5 last:border-r-0">
+                           {header.column.getCanFilter() ? (
+                             <Input
+                               placeholder="Filter..."
+                               value={(header.column.getFilterValue() as string) ?? ""}
+                               onChange={(event) => header.column.setFilterValue(event.target.value)}
+                               className="h-8 rounded-lg bg-background/50 border-white/5 text-[10px] font-bold focus:ring-primary"
+                               onClick={(e) => e.stopPropagation()}
+                             />
+                           ) : null}
+                        </TableHead>
+                      ))}
+                    </TableRow>
+                  )}
+                </React.Fragment>
               ))}
             </TableHeader>
             <TableBody className="bg-muted/10">
