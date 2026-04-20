@@ -116,6 +116,8 @@ async function runMigrations(): Promise<void> {
     ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS url TEXT;
     ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS platform TEXT NOT NULL DEFAULT 'whatsapp';
     ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS description TEXT;
+    ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending';
+    ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS status_message TEXT;
     ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS member_count INTEGER;
     ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS last_scraped TIMESTAMPTZ;
   `).catch(() => {}); // Ignore if tables don't exist yet — they will be created below
