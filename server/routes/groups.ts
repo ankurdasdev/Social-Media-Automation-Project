@@ -95,6 +95,7 @@ export const handleCreateGroup: RequestHandler = async (req, res) => {
     return;
   }
 
+  const { userId, name, platform, type, url, description } = parsed.data;
   let finalUrl = url;
 
   try {
