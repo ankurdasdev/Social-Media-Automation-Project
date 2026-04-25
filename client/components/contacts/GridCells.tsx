@@ -15,6 +15,11 @@ import {
   DialogTitle,
   DialogFooter
 } from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { X, Plus, Search, FileText } from "lucide-react";
@@ -28,11 +33,13 @@ import { useQuery } from "@tanstack/react-query";
 export function EditableTextCell({ 
   value, 
   onUpdate,
-  placeholder = "—"
+  placeholder = "—",
+  readOnly = false
 }: { 
   value: string, 
-  onUpdate: (val: string) => void,
-  placeholder?: string
+  onUpdate?: (val: string) => void,
+  placeholder?: string,
+  readOnly?: boolean
 }) {
   const [localValue, setLocalValue] = React.useState(value || "");
 
@@ -40,16 +47,101 @@ export function EditableTextCell({
     setLocalValue(value || "");
   }, [value]);
 
+  if (readOnly) {
+    return (
+      <div className="h-8 w-full flex items-center px-2 text-sm font-medium text-muted-foreground/70 truncate">
+        {value || placeholder}
+      </div>
+    );
+  }
+
   return (
     <Input
       value={localValue}
       onChange={(e) => setLocalValue(e.target.value)}
       onBlur={() => {
-        if (localValue !== value) onUpdate(localValue);
+        if (localValue !== value && onUpdate) onUpdate(localValue);
       }}
       placeholder={placeholder}
       className="h-8 w-full bg-transparent border-transparent hover:border-border/50 focus:bg-background focus:ring-1 focus:ring-primary px-2 text-sm transition-all"
     />
+  );
+}
+
+// ─── Picklist Cell (N, C, NA) ────────────────────────────────────────────────
+export function PicklistCell({
+  value,
+  onUpdate
+}: {
+  value: string,
+  onUpdate: (val: string) => void
+}) {
+  const options = ["N", "C", "NA"];
+  return (
+    <Select value={value || "N"} onValueChange={onUpdate}>
+      <SelectTrigger className="h-8 border-none bg-transparent hover:bg-muted/50 transition-all font-black text-xs">
+        <SelectValue placeholder="N" />
+      </SelectTrigger>
+      <SelectContent>
+        {options.map(opt => (
+          <SelectItem key={opt} value={opt} className="text-xs font-black">{opt}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+// ─── Conditional Textarea Cell (Checkbox -> Textarea) ────────────────────────
+export function ConditionalTextareaCell({
+  checked,
+  onCheckedChange,
+  value,
+  onValueChange,
+  placeholder = "Enter custom message..."
+}: {
+  checked: boolean,
+  onCheckedChange: (val: boolean) => void,
+  value: string,
+  onValueChange: (val: string) => void,
+  placeholder?: string
+}) {
+  const [isEditing, setIsEditing] = React.useState(false);
+
+  return (
+    <div className="flex items-center gap-3 w-full group" onClick={(e) => e.stopPropagation()}>
+      <Checkbox 
+        checked={checked} 
+        onCheckedChange={(val) => onCheckedChange(!!val)}
+        className="shrink-0 border-primary/30"
+      />
+      
+      {checked ? (
+        <Popover open={isEditing} onOpenChange={setIsEditing}>
+           <PopoverTrigger asChild>
+              <button className="flex-1 h-8 px-2 rounded-md bg-primary/5 border border-primary/10 text-[10px] font-bold text-left truncate text-primary hover:bg-primary/10 transition-all">
+                {value || "EDIT MESSAGE"}
+              </button>
+           </PopoverTrigger>
+           <PopoverContent className="w-80 glass-card p-4 rounded-2xl border-white/10 shadow-2xl" align="start">
+              <div className="space-y-4">
+                 <h4 className="text-[10px] font-black uppercase tracking-widest text-primary">Edit Custom Message</h4>
+                 <textarea 
+                   className="w-full h-32 rounded-xl bg-muted/40 p-3 text-sm font-medium focus:ring-1 focus:ring-primary outline-none resize-none scrollbar-hide"
+                   value={value}
+                   onChange={(e) => onValueChange(e.target.value)}
+                   placeholder={placeholder}
+                   autoFocus
+                 />
+                 <div className="flex justify-end">
+                    <Button size="sm" onClick={() => setIsEditing(false)} className="h-8 rounded-lg font-black text-[10px]">DONE</Button>
+                 </div>
+              </div>
+           </PopoverContent>
+        </Popover>
+      ) : (
+        <span className="text-[10px] font-black text-muted-foreground/30 uppercase tracking-widest px-1">DISABLED</span>
+      )}
+    </div>
   );
 }
 

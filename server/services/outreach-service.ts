@@ -16,11 +16,23 @@ export interface OutreachRequest extends Partial<Contact> {
   channel: "whatsapp" | "email" | "instagram";
 }
 
-function injectVariables(content: string, contact: Contact): string {
+function injectVariables(content: string, contact: Contact, channel: "whatsapp" | "email" | "instagram"): string {
   if (!content) return "";
   let result = content;
+  
+  // Resolve Personalized Name based on N/C/NA picklist
+  let pName = "Talent";
+  const picklist = 
+    channel === "whatsapp" ? contact.personalizedNameWA :
+    channel === "email" ? contact.personalizedNameGmail :
+    contact.personalizedNameIG;
+
+  if (picklist === "N") pName = contact.name || "Talent";
+  else if (picklist === "C") pName = contact.castingName || "the casting";
+  else if (picklist === "NA") pName = "";
+
   const variables = [
-    { name: "name", value: contact.name || "Talent" },
+    { name: "name", value: pName },
     { name: "castingName", value: contact.castingName || "the casting" },
     { name: "age", value: contact.age || "the age bracket" },
     { name: "project", value: contact.project || "Project" },
@@ -28,9 +40,6 @@ function injectVariables(content: string, contact: Contact): string {
     { name: "whatsapp", value: contact.whatsapp || "" },
     { name: "email", value: contact.email || "" },
     { name: "instaHandle", value: contact.instaHandle || "" },
-    { name: "salutationWA", value: contact.salutationWA || "Hi" },
-    { name: "salutationEmail", value: contact.salutationEmail || "Hi" },
-    { name: "salutationIG", value: contact.salutationIG || "Hi" },
   ];
 
   variables.forEach((v) => {
@@ -74,9 +83,14 @@ export async function sendOutreach(req: OutreachRequest) {
         status = 'sent',
         last_contacted = $1,
         contacted_dates = $2,
+        whatsapp_completed = CASE WHEN $3 = 'whatsapp' THEN 'Yes' ELSE whatsapp_completed END,
+        email_completed = CASE WHEN $3 = 'email' THEN 'Yes' ELSE email_completed END,
+        instagram_completed = CASE WHEN $3 = 'instagram' THEN 'Yes' ELSE instagram_completed END,
+        instagram_done = CASE WHEN $3 = 'instagram' THEN 'Yes' ELSE instagram_done END,
         whatsapp_run = CASE WHEN $3 = 'whatsapp' THEN TRUE ELSE whatsapp_run END,
         email_run = CASE WHEN $3 = 'email' THEN TRUE ELSE email_run END,
         instagram_run = CASE WHEN $3 = 'instagram' THEN TRUE ELSE instagram_run END,
+        follow_ups = follow_ups + 1,
         updated_at = NOW()
        WHERE id = $4 AND user_id = $5`,
       [now, JSON.stringify([...contactedDates, now]), channel, contactId, userId]
@@ -86,8 +100,8 @@ export async function sendOutreach(req: OutreachRequest) {
   } catch (err: any) {
     console.error(`Outreach failed for contact ${contactId} via ${channel}:`, err);
     await query(
-      "UPDATE contacts SET status = 'failed', automation_comment = $1, updated_at = NOW() WHERE id = $2",
-      [err.message, contactId]
+      "UPDATE contacts SET status = 'failed', automation_comment = $2, updated_at = NOW() WHERE id = $1",
+      [contactId, err.message]
     );
     throw err;
   }
@@ -120,7 +134,7 @@ async function handleWhatsAppOutreach(userId: string, contact: Contact) {
     if (template.is_attachment && template.drive_file_id) {
        attachments.push({ id: template.drive_file_id, name: template.drive_file_name, mimeType: "", downloadUrl: "" });
     } else if (template.content) {
-       const message = injectVariables(template.content, contact);
+       const message = injectVariables(template.content, contact, "whatsapp");
        await sendWA(instance.instance_name, jid, message);
     }
   }
@@ -232,7 +246,7 @@ async function handleEmailOutreach(userId: string, contact: Contact) {
        driveAttachments.push({ id: template.drive_file_id, name: template.drive_file_name, mimeType: "", downloadUrl: "" });
     } else {
        if (template.email_subject && !contact.editableGmailSubject) finalSubject = template.email_subject;
-       if (template.content) combinedBody += (combinedBody ? "\n\n" : "") + injectVariables(template.content, contact);
+       if (template.content) combinedBody += (combinedBody ? "\n\n" : "") + injectVariables(template.content, contact, "email");
     }
   }
 
@@ -303,7 +317,7 @@ async function handleInstagramOutreach(userId: string, contact: Contact) {
     if (template.is_attachment && template.drive_file_id) {
        attachments.push({ id: template.drive_file_id, name: template.drive_file_name, mimeType: "", downloadUrl: `https://drive.google.com/uc?export=download&id=${template.drive_file_id}` });
     } else if (template.content) {
-       combinedMessage += (combinedMessage ? "\n\n" : "") + injectVariables(template.content, contact);
+       combinedMessage += (combinedMessage ? "\n\n" : "") + injectVariables(template.content, contact, "instagram");
     }
   }
 

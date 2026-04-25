@@ -37,6 +37,11 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import type { Template, TemplatesResponse } from "@shared/api";
 import { DriveFilePicker } from "@/components/drive/DriveFilePicker";
+import { 
+  EditableTextCell, 
+  MultiTemplateSelect, 
+  AttachmentCell 
+} from "./GridCells";
 
 interface ContactDrawerProps {
   contact: Contact | null;
@@ -92,7 +97,6 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [isSaving, setIsSaving] = React.useState(false);
-  const [isSending, setIsSending] = React.useState<string | null>(null);
   const [form, setForm] = React.useState<FormState>({});
 
   // Sync form state whenever the contact changes
@@ -116,41 +120,13 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
         body: JSON.stringify({ ...form, userId: contact.user_id }),
       });
       if (!res.ok) throw new Error("Failed to save");
-      toast({ title: "Saved", description: "Contact updated successfully." });
+      toast({ title: "Updated", description: "Database record synchronized." });
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       onOpenChange(false);
     } catch (err) {
-      toast({ title: "Error", description: "Could not save changes.", variant: "destructive" });
+      toast({ title: "Error", description: "Protocol update failed.", variant: "destructive" });
     } finally {
       setIsSaving(false);
-    }
-  };
-
-  const handleSend = async (channel: "whatsapp" | "email" | "instagram") => {
-    if (!contact?.id) return;
-    setIsSending(channel);
-    try {
-      const res = await fetch(`/api/outreach/send`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contactId: contact.id,
-          userId: contact.user_id,
-          channel,
-          // Send latest form state
-          ...form,
-        }),
-      });
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || "Failed to send");
-      }
-      toast({ title: "Sent", description: `Message sent via ${channel} successfully.` });
-      await queryClient.invalidateQueries({ queryKey: ["contacts"] });
-    } catch (err: any) {
-      toast({ title: "Send Error", description: err.message, variant: "destructive" });
-    } finally {
-      setIsSending(null);
     }
   };
 
@@ -158,393 +134,224 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-[480px] md:max-w-[540px] overflow-y-auto px-0 border-l border-white/5 glass-card shadow-2xl animate-in slide-in-from-right duration-500">
+      <SheetContent className="w-full sm:max-w-[600px] md:max-w-[700px] overflow-y-auto px-0 border-l border-white/5 glass-card shadow-2xl animate-in slide-in-from-right duration-500">
         <SheetHeader className="px-8 pb-8 pt-10 border-b border-white/5 bg-muted/20 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -z-10" />
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <SheetTitle className="text-3xl font-black tracking-tighter flex items-center gap-2">
-                {contact.name || "Unnamed Contact"}
-                {contact.automationTrigger && (
-                  <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 px-2 py-0 h-5 text-[9px] font-black uppercase tracking-widest animate-pulse">
-                    Live
-                  </Badge>
-                )}
+              <SheetTitle className="text-3xl font-black tracking-tighter flex items-center gap-3">
+                {form.name || "Unnamed Entity"}
+                <Badge variant="outline" className="text-[10px] border-primary/20 text-primary font-black uppercase tracking-widest">{form.status || "IDLE"}</Badge>
               </SheetTitle>
-              <SheetDescription className="text-sm font-medium text-muted-foreground uppercase tracking-widest">
-                {contact.actingContext || contact.castingName || "No Role Context"}
+              <SheetDescription className="text-sm font-medium text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                UID: <span className="text-foreground font-black">{contact.id.slice(0,8).toUpperCase()}</span> :: REF: <span className="text-foreground font-black">{form.sheetName ? form.sheetName.toUpperCase() : "EXTERNAL"}</span>
               </SheetDescription>
             </div>
           </div>
         </SheetHeader>
 
-        <div className="p-8 space-y-10">
-          {/* Profile Section */}
+        <div className="p-8 space-y-12">
+          {/* 1. Core Identity */}
           <section className="space-y-6">
             <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
-              <User className="h-3 w-3" /> Contact Profile
+              <User className="h-3 w-3" /> Core Identity
             </h4>
             <div className="grid grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Acting Context</Label>
-                <Input
-                  value={form.actingContext ?? ""}
-                  onChange={(e) => set("actingContext")(e.target.value)}
-                  placeholder="e.g. Lead Detective"
-                  className="h-11 rounded-xl bg-background/50 border-border/50 focus:ring-primary shadow-inner"
-                />
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Full Name</Label>
+                <Input value={form.name ?? ""} onChange={(e) => set("name")(e.target.value)} className="h-11 rounded-xl bg-background/50" />
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Project</Label>
-                <Input
-                  value={form.project ?? ""}
-                  onChange={(e) => set("project")(e.target.value)}
-                  placeholder="Project name"
-                  className="h-11 rounded-xl bg-background/50 border-border/50 focus:ring-primary shadow-inner"
-                />
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Casting Alias</Label>
+                <Input value={form.castingName ?? ""} onChange={(e) => set("castingName")(e.target.value)} className="h-11 rounded-xl bg-background/50" />
               </div>
-            </div>
-            <div className="space-y-2 w-1/2">
-              <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Age Range</Label>
-              <Input
-                value={form.age ?? ""}
-                onChange={(e) => set("age")(e.target.value)}
-                placeholder="e.g. 24-32"
-                className="h-11 rounded-xl bg-background/50 border-border/50 focus:ring-primary shadow-inner"
-              />
+              <div className="space-y-2">
+                 <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Acting Context</Label>
+                 <Input value={form.actingContext ?? ""} onChange={(e) => set("actingContext")(e.target.value)} className="h-11 rounded-xl bg-background/50" />
+              </div>
+              <div className="space-y-2">
+                 <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Target Project</Label>
+                 <Input value={form.project ?? ""} onChange={(e) => set("project")(e.target.value)} className="h-11 rounded-xl bg-background/50" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Age Group</Label>
+                <Input value={form.age ?? ""} onChange={(e) => set("age")(e.target.value)} className="h-11 rounded-xl bg-background/50" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Source Sheet</Label>
+                <Input value={form.sheetName ?? ""} disabled className="h-11 rounded-xl bg-muted/20 opacity-50 cursor-not-allowed font-mono text-xs" />
+              </div>
             </div>
           </section>
 
           <Separator className="bg-white/5" />
 
-          {/* Outreach Tabs */}
+          {/* 2. Communication Channels */}
           <section className="space-y-6">
             <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
-              <FileText className="h-3 w-3" /> Outreach Status
+              <MessageCircle className="h-3 w-3" /> Outreach Channels
+            </h4>
+            <div className="grid grid-cols-2 gap-6">
+               <div className="space-y-2">
+                 <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Whatsapp</Label>
+                 <Input value={form.whatsapp ?? ""} onChange={(e) => set("whatsapp")(e.target.value)} placeholder="+91..." className="h-11 rounded-xl bg-emerald-500/5 border-emerald-500/10" />
+               </div>
+               <div className="space-y-2">
+                 <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Gmail</Label>
+                 <Input value={form.email ?? ""} onChange={(e) => set("email")(e.target.value)} placeholder="mail@example.com" className="h-11 rounded-xl bg-blue-500/5 border-blue-500/10" />
+               </div>
+               <div className="space-y-2">
+                 <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Instagram</Label>
+                 <Input value={form.instaHandle ?? ""} onChange={(e) => set("instaHandle")(e.target.value)} placeholder="@handle" className="h-11 rounded-xl bg-pink-500/5 border-pink-500/10" />
+               </div>
+               <div className="space-y-2">
+                 <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Visit Log</Label>
+                 <Input value={form.visit ?? ""} onChange={(e) => set("visit")(e.target.value)} className="h-11 rounded-xl bg-background/50" />
+               </div>
+            </div>
+          </section>
+
+          <Separator className="bg-white/5" />
+
+          {/* 3. Personalized Outreach Control */}
+          <section className="space-y-8">
+            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
+              <FileText className="h-3 w-3" /> Outreach Personalization
             </h4>
 
-            <Tabs defaultValue="whatsapp" className="w-full">
-              <TabsList className="bg-muted/50 border border-border/50 p-1 h-12 rounded-2xl w-full">
-                <TabsTrigger value="whatsapp" className="flex-1 rounded-xl gap-2 font-bold data-[state=active]:bg-background transition-all">
-                  <MessageCircle className="h-3.5 w-3.5 text-emerald-500" /> WhatsApp
-                </TabsTrigger>
-                <TabsTrigger value="gmail" className="flex-1 rounded-xl gap-2 font-bold data-[state=active]:bg-background transition-all">
-                  <Mail className="h-3.5 w-3.5 text-blue-500" /> Email
-                </TabsTrigger>
-                <TabsTrigger value="instagram" className="flex-1 rounded-xl gap-2 font-bold data-[state=active]:bg-background transition-all">
-                  <Instagram className="h-3.5 w-3.5 text-pink-500" /> Insta
-                </TabsTrigger>
-              </TabsList>
-
-              <div className="pt-8">
-                {/* ── WhatsApp Tab ── */}
-                <TabsContent value="whatsapp" className="space-y-6 m-0 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="space-y-8">
+              {/* WhatsApp Config */}
+              <div className="space-y-4 p-6 rounded-2xl bg-emerald-500/5 border border-emerald-500/10">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-black uppercase tracking-widest text-emerald-500">WA PROTOCOL</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] font-bold text-muted-foreground">DRIVE ATTACHMENTS</span>
+                    <AttachmentCell attachments={form.drive_attachments_wa || []} onUpdate={(val) => set("drive_attachments_wa")(val)} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Verification Number</Label>
-                    <Input
-                      value={form.whatsapp ?? ""}
-                      onChange={(e) => set("whatsapp")(e.target.value)}
-                      placeholder="+91..."
-                      className="h-11 rounded-xl bg-background/50 border-border/50 focus:ring-emerald-500"
-                    />
+                    <Label className="text-[9px] font-black text-muted-foreground">PERS. NAME</Label>
+                    <Select value={form.personalizedNameWA} onValueChange={(v) => set("personalizedNameWA")(v)}>
+                      <SelectTrigger className="h-10 rounded-lg bg-background/50 border-white/5 font-black text-[10px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="N">NAME (N)</SelectItem>
+                        <SelectItem value="C">CASTING (C)</SelectItem>
+                        <SelectItem value="NA">NONE (NA)</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Casting Template</Label>
-                      <TemplateSelect
-                        value={form.templateSelectionWP ?? ""}
-                        onChange={set("templateSelectionWP") as (v: string) => void}
-                        category="whatsapp"
-                        ringColor="focus:ring-emerald-500"
-                        userId={contact.user_id}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Salutation</Label>
-                      <Select value={form.salutationWA ?? "Hi"} onValueChange={set("salutationWA")}>
-                        <SelectTrigger className="h-11 rounded-xl bg-background/50 border-border/50">
-                          <SelectValue placeholder="Select..." />
-                        </SelectTrigger>
-                        <SelectContent className="glass-card">
-                          <SelectItem value="Hi">Hi</SelectItem>
-                          <SelectItem value="Hey">Hey</SelectItem>
-                          <SelectItem value="Dear Sir/Mam">Dear Sir/Mam</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4 pt-4 border-t border-white/5">
-                    <div className="flex items-center space-x-3">
-                      <Checkbox
-                        id="custom-wa"
-                        checked={!!form.hasCustomMessageWA}
-                        onCheckedChange={(c) => set("hasCustomMessageWA")(!!c)}
-                        className="w-5 h-5 rounded-lg border-2 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
-                      />
-                      <label htmlFor="custom-wa" className="text-sm font-bold tracking-tight">
-                        Enable AI-Custom Message Override
-                      </label>
-                    </div>
-                    {form.hasCustomMessageWA && (
-                      <Textarea
-                        value={form.editableMessageWP ?? ""}
-                        onChange={(e) => set("editableMessageWP")(e.target.value)}
-                        className="min-h-[120px] rounded-2xl resize-none bg-emerald-500/5 border-emerald-500/20 focus-visible:ring-emerald-500 text-sm p-4 font-medium"
-                        placeholder="Type customized transmission..."
-                      />
-                    )}
-                  </div>
-
-                  <div className="space-y-3 pt-4 border-t border-white/5">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Digital Assets (Cloud)</Label>
-                    <DriveFilePicker
-                      userId={contact.user_id}
-                      selectedFiles={form.drive_attachments_wa || []}
-                      onChange={(files) => set("drive_attachments_wa")(files)}
-                      placeholder="Attach portfolio or headshots..."
-                    />
-                  </div>
-
-                  <div className="pt-4">
-                    <Button
-                      size="lg"
-                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white gap-3 rounded-2xl font-black shadow-xl shadow-emerald-500/20 h-14 transition-all hover:-translate-y-1 active:scale-95"
-                      onClick={() => handleSend("whatsapp")}
-                      disabled={!!isSending}
-                    >
-                      {isSending === "whatsapp" ? (
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                      ) : (
-                        <Send className="h-5 w-5" />
-                      )}
-                      TRANSMIT VIA WHATSAPP
-                    </Button>
-                  </div>
-                </TabsContent>
-
-                {/* ── Email Tab ── */}
-                <TabsContent value="gmail" className="space-y-6 m-0 animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Digital Mail Address</Label>
-                    <Input
-                      value={form.email ?? ""}
-                      onChange={(e) => set("email")(e.target.value)}
-                      placeholder="name@example.com"
-                      className="h-11 rounded-xl bg-background/50 border-border/50 focus:ring-blue-500"
+                    <Label className="text-[9px] font-black text-muted-foreground">TEMPLATES</Label>
+                    <TemplateSelect userId={contact.user_id} category="whatsapp" value={(form.templateSelectionWP as string[])?.[0] || ""} onChange={(v) => set("templateSelectionWP")([v])} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Checkbox checked={form.hasCustomMessageWA} onCheckedChange={(c) => set("hasCustomMessageWA")(!!c)} id="wa-custom" />
+                    <Label htmlFor="wa-custom" className="text-[9px] font-black uppercase tracking-widest cursor-pointer">Override with Custom Message</Label>
+                  </div>
+                  {form.hasCustomMessageWA && (
+                    <Textarea 
+                      value={form.editableMessageWP} 
+                      onChange={(e) => set("editableMessageWP")(e.target.value)}
+                      className="min-h-[100px] rounded-xl bg-background/40 text-xs font-medium border-emerald-500/20"
+                      placeholder="Write custom WhatsApp content..."
                     />
-                  </div>
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Email Strategy</Label>
-                      <TemplateSelect
-                        value={form.templateSelectionGmail ?? ""}
-                        onChange={set("templateSelectionGmail") as (v: string) => void}
-                        category="email"
-                        ringColor="focus:ring-blue-500"
-                        userId={contact.user_id}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Salutation</Label>
-                      <Select value={form.salutationEmail ?? "Hi"} onValueChange={set("salutationEmail")}>
-                        <SelectTrigger className="h-11 rounded-xl bg-background/50 border-border/50">
-                          <SelectValue placeholder="Select..." />
-                        </SelectTrigger>
-                        <SelectContent className="glass-card">
-                          <SelectItem value="Hi">Hi</SelectItem>
-                          <SelectItem value="Hey">Hey</SelectItem>
-                          <SelectItem value="Dear Sir/Mam">Dear Sir/Mam</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
+                  )}
+                </div>
+              </div>
 
-                  <div className="space-y-4 pt-4 border-t border-white/5">
-                    <div className="flex items-center space-x-3">
-                      <Checkbox
-                        id="custom-email"
-                        checked={!!form.hasCustomMessageEmail}
-                        onCheckedChange={(c) => set("hasCustomMessageEmail")(!!c)}
-                        className="w-5 h-5 rounded-lg border-2 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                      />
-                      <label htmlFor="custom-email" className="text-sm font-bold tracking-tight">
-                        Enable Custom Email Content
-                      </label>
+              {/* Gmail Config */}
+              <div className="space-y-4 p-6 rounded-2xl bg-blue-500/5 border border-blue-500/10">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-black uppercase tracking-widest text-blue-500">GMAIL PROTOCOL</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] font-bold text-muted-foreground">DRIVE ATTACHMENTS</span>
+                    <AttachmentCell attachments={form.drive_attachments_email || []} onUpdate={(val) => set("drive_attachments_email")(val)} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-[9px] font-black text-muted-foreground">PERS. NAME</Label>
+                    <Select value={form.personalizedNameGmail} onValueChange={(v) => set("personalizedNameGmail")(v)}>
+                      <SelectTrigger className="h-10 rounded-lg bg-background/50 border-white/5 font-black text-[10px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="N">NAME (N)</SelectItem>
+                        <SelectItem value="C">CASTING (C)</SelectItem>
+                        <SelectItem value="NA">NONE (NA)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[9px] font-black text-muted-foreground">TEMPLATES</Label>
+                    <TemplateSelect userId={contact.user_id} category="email" value={(form.templateSelectionGmail as string[])?.[0] || ""} onChange={(v) => set("templateSelectionGmail")([v])} />
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-[9px] font-black text-muted-foreground">EMAIL SUBJECT</Label>
+                    <Input value={form.editableGmailSubject || ""} onChange={(e) => set("editableGmailSubject")(e.target.value)} className="h-10 rounded-lg bg-background/50 border-white/5 font-bold text-xs" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Checkbox checked={form.hasCustomMessageEmail} onCheckedChange={(c) => set("hasCustomMessageEmail")(!!c)} id="email-custom" />
+                      <Label htmlFor="email-custom" className="text-[9px] font-black uppercase tracking-widest cursor-pointer">Override with Custom Body</Label>
                     </div>
                     {form.hasCustomMessageEmail && (
-                      <div className="space-y-3">
-                        <Input
-                          value={form.editableGmailSubject ?? ""}
-                          onChange={(e) => set("editableGmailSubject")(e.target.value)}
-                          placeholder="Subject line..."
-                          className="h-11 rounded-xl bg-blue-500/5 border-blue-500/20 focus-visible:ring-blue-500 font-bold"
-                        />
-                        <Textarea
-                          value={form.editableMessageGmail ?? ""}
-                          onChange={(e) => set("editableMessageGmail")(e.target.value)}
-                          className="min-h-[150px] rounded-2xl resize-none bg-blue-500/5 border-blue-500/20 focus-visible:ring-blue-500 text-sm p-4 font-medium"
-                          placeholder="Write email body..."
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="space-y-3 pt-4 border-t border-white/5">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Mail Attachments (Cloud)</Label>
-                    <DriveFilePicker
-                      userId={contact.user_id}
-                      selectedFiles={form.drive_attachments_email || []}
-                      onChange={(files) => set("drive_attachments_email")(files)}
-                      placeholder="Attach profile documents..."
-                    />
-                  </div>
-
-                  <div className="pt-4">
-                    <Button
-                      size="lg"
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white gap-3 rounded-2xl font-black shadow-xl shadow-blue-500/20 h-14 transition-all hover:-translate-y-1 active:scale-95"
-                      onClick={() => handleSend("email")}
-                      disabled={!!isSending}
-                    >
-                      {isSending === "email" ? (
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                      ) : (
-                        <Send className="h-5 w-5" />
-                      )}
-                      DISPATCH GMAIL SEQUENCE
-                    </Button>
-                  </div>
-                </TabsContent>
-
-                {/* ── Instagram Tab ── */}
-                <TabsContent value="instagram" className="space-y-6 m-0 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Social Handle</Label>
-                    <Input
-                      value={form.instaHandle ?? ""}
-                      onChange={(e) => set("instaHandle")(e.target.value)}
-                      placeholder="@username"
-                      className="h-11 rounded-xl bg-background/50 border-border/50 focus:ring-pink-500"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">DM Template</Label>
-                      <TemplateSelect
-                        value={form.templateSelectionIG ?? ""}
-                        onChange={set("templateSelectionIG") as (v: string) => void}
-                        category="instagram"
-                        ringColor="focus:ring-pink-500"
-                        userId={contact.user_id}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Salutation</Label>
-                      <Select value={form.salutationIG ?? "Hey"} onValueChange={set("salutationIG")}>
-                        <SelectTrigger className="h-11 rounded-xl bg-background/50 border-border/50">
-                          <SelectValue placeholder="Select..." />
-                        </SelectTrigger>
-                        <SelectContent className="glass-card">
-                          <SelectItem value="Hi">Hi</SelectItem>
-                          <SelectItem value="Hey">Hey</SelectItem>
-                          <SelectItem value="Dear Sir/Mam">Dear Sir/Mam</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4 pt-4 border-t border-white/5">
-                    <div className="flex items-center space-x-3">
-                      <Checkbox
-                        id="custom-ig"
-                        checked={!!form.hasCustomMessageIG}
-                        onCheckedChange={(c) => set("hasCustomMessageIG")(!!c)}
-                        className="w-5 h-5 rounded-lg border-2 data-[state=checked]:bg-pink-600 data-[state=checked]:border-pink-600"
-                      />
-                      <label htmlFor="custom-ig" className="text-sm font-bold tracking-tight">
-                        Enable Custom Direct Message
-                      </label>
-                    </div>
-                    {form.hasCustomMessageIG && (
-                      <Textarea
-                        value={form.editableMessageIG ?? ""}
-                        onChange={(e) => set("editableMessageIG")(e.target.value)}
-                        className="min-h-[120px] rounded-2xl resize-none bg-pink-500/5 border-pink-500/20 focus-visible:ring-pink-500 text-sm p-4 font-medium"
-                        placeholder="Type social text..."
+                      <Textarea 
+                        value={form.editableMessageGmail} 
+                        onChange={(e) => set("editableMessageGmail")(e.target.value)}
+                        className="min-h-[100px] rounded-xl bg-background/40 text-xs font-medium border-blue-500/20"
+                        placeholder="Write custom email body..."
                       />
                     )}
                   </div>
-
-                  <div className="space-y-3 pt-4 border-t border-white/5">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Social Assets (Cloud)</Label>
-                    <DriveFilePicker
-                      userId={contact.user_id}
-                      selectedFiles={form.drive_attachments_ig || []}
-                      onChange={(files) => set("drive_attachments_ig")(files)}
-                      placeholder="Attach headshots for DM..."
-                    />
-                  </div>
-
-                  <div className="pt-4">
-                    <Button
-                      size="lg"
-                      className="w-full bg-pink-600 hover:bg-pink-700 text-white gap-3 rounded-2xl font-black shadow-xl shadow-pink-500/20 h-14 transition-all hover:-translate-y-1 active:scale-95"
-                      onClick={() => handleSend("instagram")}
-                      disabled={!!isSending}
-                    >
-                      {isSending === "instagram" ? (
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                      ) : (
-                        <Send className="h-5 w-5" />
-                      )}
-                      DISPATCH INSTAGRAM DM
-                    </Button>
-                  </div>
-                </TabsContent>
+                </div>
               </div>
-            </Tabs>
+            </div>
           </section>
 
           <Separator className="bg-white/5" />
 
-          {/* Notes */}
+          {/* 4. Tracking Intel (Read-Only) */}
           <section className="space-y-6">
             <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
-              <FileText className="h-3 w-3" /> Activity Logs
+              <ShieldCheck className="h-3 w-3" /> Data Intel
             </h4>
-            <div className="space-y-2">
-              <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Internal Notes</Label>
-              <Textarea
-                value={form.notes ?? ""}
-                onChange={(e) => set("notes")(e.target.value)}
-                className="h-32 rounded-2xl resize-none bg-muted/30 border-white/5 focus-visible:ring-primary text-sm p-4"
-                placeholder="Synchronize internal knowledge about this talent..."
-              />
+            <div className="space-y-6">
+               <div className="grid grid-cols-3 gap-6">
+                  <div className="p-4 rounded-2xl bg-muted/30 border border-white/5">
+                     <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-1">Followups</p>
+                     <p className="text-xl font-black text-primary">{form.followups || "0"}</p>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-muted/30 border border-white/5">
+                     <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-1">Last Sync</p>
+                     <p className="text-[10px] font-mono font-bold text-foreground truncate">{form.lastContactedDate || "NONE"}</p>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-muted/30 border border-white/5">
+                     <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-1">Sessions</p>
+                     <p className="text-xl font-black text-foreground">{form.totalDatesContacts || "0"}</p>
+                  </div>
+               </div>
+               <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Bot Intel / Remarks</Label>
+                  <Input value={form.automationComment ?? ""} onChange={(e) => set("automationComment")(e.target.value)} placeholder="Bot diagnostics..." className="h-11 rounded-xl bg-primary/5 border-primary/20 italic text-xs" />
+               </div>
             </div>
           </section>
 
           <div className="pb-10 pt-4 flex gap-3">
-             <Button
-                variant="ghost"
-                size="lg"
-                className="flex-1 rounded-2xl font-bold h-14 text-muted-foreground hover:bg-muted/50"
-                onClick={() => onOpenChange(false)}
-             >
-                CANCEL
+             <Button variant="ghost" size="lg" className="flex-1 rounded-2xl font-bold h-14" onClick={() => onOpenChange(false)}>
+                DISCARD
              </Button>
-             <Button
-                size="lg"
-                className="flex-[2] rounded-2xl font-black h-14 bg-foreground text-background hover:bg-foreground/90 shadow-2xl transition-all active:scale-95"
-                onClick={handleSave}
-                disabled={isSaving}
-             >
-                {isSaving ? (
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                ) : (
-                  <ShieldCheck className="mr-2 h-5 w-5" />
-                )}
-                COMMIT CHANGES
+             <Button size="lg" className="flex-[2] rounded-2xl font-black h-14 bg-foreground text-background shadow-2xl transition-all" onClick={handleSave} disabled={isSaving}>
+                {isSaving ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <ShieldCheck className="mr-2 h-5 w-5" />}
+                SYNC TO DATABASE
              </Button>
           </div>
         </div>

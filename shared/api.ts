@@ -79,12 +79,13 @@ export interface ErrorResponse {
 export interface Contact {
   id: string;
   user_id: string;
-  automationTrigger: boolean;
-  whatsappNeeded: string;
-  emailNeeded: string;
-  status: "pending" | "sent" | "failed";
-  personalizedNameGmail: string;
-  personalizedNameWA: string;
+  automationTrigger?: boolean;
+  whatsappNeeded: string; // "Yes" / "No"
+  emailNeeded: string;    // "Yes" / "No"
+  status: "pending" | "sent" | "failed" | "in progress" | string;
+  personalizedNameWA: "N" | "C" | "NA" | string;
+  personalizedNameGmail: "N" | "C" | "NA" | string;
+  personalizedNameIG?: "N" | "C" | "NA" | string;
   notes: string;
   name: string;
   castingName: string;
@@ -92,55 +93,57 @@ export interface Contact {
   email: string;
   instaHandle: string;
   visit: string;
-  lastContactedDate: string;
-  followups: string;
-  totalDatesContacts: string;
+  lastContactedDate: string; // Read-only
+  followups: string;          // Read-only
+  totalDatesContacts: string; // Read-only
   actingContext: string;
   project: string;
   age: string;
-  instagramDone: string;
+  instagramDone: string;      // Read-only
+  
+  // Custom message triggers
+  hasCustomMessageWA?: boolean;
   editableMessageWP: string;
+  
   templateSelectionWP: string | string[];
   templateSelectionGmail: string | string[];
+  templateSelectionIG?: string | string[];
+  
+  hasCustomMessageEmail?: boolean;
   editableMessageGmail: string;
   editableGmailSubject: string;
+  
+  hasCustomMessageIG?: boolean;
+  editableMessageIG: string;
+  
   specialAttachmentWA: string;
   specialAttachmentGmail: string;
-  whatsappCompleted: string;
-  emailCompleted: string;
-  automationComment: string;
-  // Instagram specific outreach
-  personalizedNameIG?: string;
-  templateSelectionIG?: string | string[];
-  editableMessageIG?: string;
   specialAttachmentIG?: string;
   
-  // Phase 9: Customization Form Extensions
-  salutationWA?: string;
-  salutationIG?: string;
-  salutationEmail?: string;
-  hasCustomMessageWA?: boolean;
-  hasCustomMessageIG?: boolean;
-  hasCustomMessageEmail?: boolean;
-
-  // Phase 10: Inline Editable Automation Triggers
+  whatsappCompleted: string; // Read-only
+  emailCompleted: string;    // Read-only
+  instagramCompleted?: string; // Read-only
+  
+  automationComment: string;
+  
+  // Internal tracking flags
   whatsappRun?: boolean;
   instagramRun?: boolean;
   emailRun?: boolean;
 
-  // Auto-ingestion fields
+  // Auto-ingestion & Grouping
   rowColor?: "yellow" | "green" | "red" | "blue" | "transparent" | undefined;
   source?: "manual" | "auto-whatsapp" | "auto-instagram";
   ingestedAt?: string;
   sheetName?: string;
 
-  // Multi-User / Drive Attachments (JSONB in DB)
+  // Drive Attachments
   drive_attachments_wa?: DriveFile[];
   drive_attachments_email?: DriveFile[];
   drive_attachments_ig?: DriveFile[];
   unified_attachments?: DriveFile[]; // UI helper field that maps identical attachments across platforms
 
-  // Outreach Tracking
+  // Outreach Tracking (Raw data)
   contacted_dates?: string[];
   contact_links?: Record<string, string>;
 }
