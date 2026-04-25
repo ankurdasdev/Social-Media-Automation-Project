@@ -62,6 +62,11 @@ export function DataTable<TData, TValue>({
   // Drawer state
   const [selectedContact, setSelectedContact] = React.useState<Contact | null>(null);
 
+  // Column Order & Pinning
+  const [columnOrder, setColumnOrder] = React.useState<string[]>(
+    columns.map(c => c.id || (c as any).accessorKey)
+  );
+  
   const table = useReactTable({
     data,
     columns,
@@ -73,11 +78,13 @@ export function DataTable<TData, TValue>({
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
     onGlobalFilterChange: setGlobalFilter,
+    onColumnOrderChange: setColumnOrder,
     state: {
       rowSelection,
       columnFilters,
       sorting,
       globalFilter,
+      columnOrder,
     },
     // Enable column resizing
     columnResizeMode: "onChange",
@@ -93,10 +100,22 @@ export function DataTable<TData, TValue>({
     },
   });
 
+  // Reorder Handler (Basic drag simulation support)
+  const handleDragHeader = (columnId: string, targetId: string) => {
+    const newOrder = [...columnOrder];
+    const oldIdx = newOrder.indexOf(columnId);
+    const newIdx = newOrder.indexOf(targetId);
+    if (oldIdx !== -1 && newIdx !== -1) {
+      newOrder.splice(oldIdx, 1);
+      newOrder.splice(newIdx, 0, columnId);
+      setColumnOrder(newOrder);
+    }
+  };
+
   return (
     <div className={cn(
       "space-y-6 transition-all duration-500",
-      isFullscreen ? "fixed inset-0 z-[100] bg-background p-6 lg:p-10 space-y-8 overflow-hidden flex flex-col" : "animate-in fade-in slide-in-from-bottom-2 duration-700"
+      isFullscreen ? "fixed inset-0 z-[50] bg-background p-6 lg:p-10 space-y-8 overflow-hidden flex flex-col" : "animate-in fade-in slide-in-from-bottom-2 duration-700"
     )}>
       <div className="flex items-center justify-between gap-4">
         <DataTableToolbar 
@@ -113,17 +132,11 @@ export function DataTable<TData, TValue>({
            <Button 
              variant="outline" 
              size="icon" 
-             onClick={() => setShowFilters(!showFilters)}
-             className={cn("h-14 w-14 rounded-2xl border-white/10 shrink-0", showFilters && "bg-primary/10 border-primary/20 text-primary")}
-             title="Toggle Column Filters"
-           >
-             <Filter className="w-5 h-5" />
-           </Button>
-           <Button 
-             variant="outline" 
-             size="icon" 
              onClick={() => setIsFullscreen(!isFullscreen)}
-             className="h-14 w-14 rounded-2xl border-white/10 shadow-xl shrink-0"
+             className={cn(
+               "h-14 w-14 rounded-2xl border-white/10 shadow-xl shrink-0 transition-all active:scale-90",
+               isFullscreen ? "bg-primary text-primary-foreground border-primary" : "hover:bg-muted"
+             )}
              title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
            >
              {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
@@ -135,48 +148,35 @@ export function DataTable<TData, TValue>({
         "glass-card rounded-[2.5rem] border-white/10 shadow-2xl relative flex-1 flex flex-col min-h-0 overflow-hidden",
         isFullscreen ? "rounded-none border-none bg-card/50" : ""
       )}>
-        <div className="overflow-auto flex-1 scrollbar-thin">
+        <div className="overflow-auto flex-1 scrollbar-thin scrollbar-thumb-white/10 hover:scrollbar-thumb-primary/50 transition-all">
           <Table style={{ width: table.getCenterTotalSize(), minWidth: "100%" }}>
-            <TableHeader className="bg-muted/30 border-b border-white/5 sticky top-0 z-20 backdrop-blur-3xl">
+            <TableHeader className="bg-muted/30 border-b border-white/5 sticky top-0 z-30 backdrop-blur-3xl">
               {table.getHeaderGroups().map((headerGroup) => (
-                <React.Fragment key={headerGroup.id}>
-                  <TableRow className="hover:bg-transparent border-b-0 h-16">
-                    {headerGroup.headers.map((header) => (
-                      <TableHead 
-                        key={header.id} 
-                        className="px-6 text-[10px] font-black uppercase text-muted-foreground tracking-[0.3em] relative group border-r border-white/5 last:border-r-0"
-                        style={{ width: header.getSize() }}
-                      >
-                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                        <div
-                          onMouseDown={header.getResizeHandler()}
-                          onTouchStart={header.getResizeHandler()}
-                          className={`absolute right-0 top-0 h-full w-1 cursor-col-resize user-select-none touch-action-none bg-primary opacity-0 group-hover:opacity-100 hover:scale-x-150 transition-all z-10 ${
-                            header.column.getIsResizing() ? "bg-primary opacity-100 w-1" : ""
-                          }`}
-                        />
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                  
-                  {showFilters && (
-                    <TableRow className="hover:bg-transparent border-b-0 h-12 bg-muted/20">
-                      {headerGroup.headers.map((header) => (
-                        <TableHead key={`filter-${header.id}`} className="px-2 border-r border-white/5 last:border-r-0">
-                           {header.column.getCanFilter() ? (
-                             <Input
-                               placeholder="Filter..."
-                               value={(header.column.getFilterValue() as string) ?? ""}
-                               onChange={(event) => header.column.setFilterValue(event.target.value)}
-                               className="h-8 rounded-lg bg-background/50 border-white/5 text-[10px] font-bold focus:ring-primary"
-                               onClick={(e) => e.stopPropagation()}
-                             />
-                           ) : null}
-                        </TableHead>
-                      ))}
-                    </TableRow>
-                  )}
-                </React.Fragment>
+                <TableRow key={headerGroup.id} className="hover:bg-transparent border-b-0 h-16">
+                  {headerGroup.headers.map((header) => (
+                    <TableHead 
+                      key={header.id} 
+                      draggable
+                      onDragStart={(e) => e.dataTransfer.setData("colId", header.column.id)}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => {
+                        const colId = e.dataTransfer.getData("colId");
+                        if (colId !== header.column.id) handleDragHeader(colId, header.column.id);
+                      }}
+                      className="px-6 text-[10px] font-black uppercase text-muted-foreground tracking-[0.3em] relative group border-r border-white/5 last:border-r-0 cursor-move active:cursor-grabbing"
+                      style={{ width: header.getSize() }}
+                    >
+                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                      <div
+                        onMouseDown={header.getResizeHandler()}
+                        onTouchStart={header.getResizeHandler()}
+                        className={`absolute right-0 top-0 h-full w-1 cursor-col-resize user-select-none touch-action-none bg-primary opacity-0 group-hover:opacity-100 hover:scale-x-150 transition-all z-40 ${
+                          header.column.getIsResizing() ? "bg-primary opacity-100 w-1" : ""
+                        }`}
+                      />
+                    </TableHead>
+                  ))}
+                </TableRow>
               ))}
             </TableHeader>
             <TableBody className="bg-muted/10">
@@ -184,10 +184,10 @@ export function DataTable<TData, TValue>({
                 table.getRowModel().rows.map((row) => {
                   const rowOriginal = row.original as unknown as Contact;
                   const rColor = rowOriginal.rowColor;
-                  const colorClass = rColor === "yellow" ? "bg-yellow-500/10 border-l-4 border-l-yellow-400" :
-                                   rColor === "green" ? "bg-emerald-500/10 border-l-4 border-l-emerald-400" :
-                                   rColor === "red" ? "bg-rose-500/10 border-l-4 border-l-rose-400" :
-                                   rColor === "blue" ? "bg-blue-500/10 border-l-4 border-l-blue-400" : "border-l-4 border-l-transparent";
+                  const colorClass = rColor === "yellow" ? "bg-yellow-500/10 border-l-[6px] border-l-yellow-400" :
+                                   rColor === "green" ? "bg-emerald-500/10 border-l-[6px] border-l-emerald-400" :
+                                   rColor === "red" ? "bg-rose-500/10 border-l-[6px] border-l-rose-400" :
+                                   rColor === "blue" ? "bg-blue-500/10 border-l-[6px] border-l-blue-400" : "border-l-[6px] border-l-transparent";
 
                   return (
                     <TableRow
@@ -196,12 +196,12 @@ export function DataTable<TData, TValue>({
                       className={cn(
                         "cursor-pointer border-b border-white/[0.03] hover:bg-white/[0.03] transition-all h-20 group relative",
                         colorClass,
-                        row.getIsSelected() && "bg-primary/5 border-l-primary"
+                        row.getIsSelected() && "bg-primary/20 border-l-primary shadow-inner"
                       )}
                       onClick={() => setSelectedContact(rowOriginal)}
                     >
                       {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id} className="py-4 px-6 group-hover:translate-x-0.5 transition-transform">
+                        <TableCell key={cell.id} className="py-2 px-6 group-hover:translate-x-0.5 transition-transform">
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </TableCell>
                       ))}
@@ -225,7 +225,7 @@ export function DataTable<TData, TValue>({
         </div>
       </div>
       
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-6 px-4 py-8 bg-muted/20 border border-white/5 rounded-[2rem] shadow-xl">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-6 px-8 py-8 bg-muted/20 border border-white/5 rounded-[2rem] shadow-xl">
         <div className="flex items-center gap-4">
            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
               <div className="w-4 h-4 rounded-full bg-primary animate-pulse" />

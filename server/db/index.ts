@@ -110,8 +110,15 @@ async function seedTestData(): Promise<void> {
 async function runMigrations(): Promise<void> {
   // Add new columns safely to existing tables first
   await query(`
-    ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT;
+     ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_keywords JSONB DEFAULT '[]'::jsonb;
+    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS instagram_completed TEXT;
+    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS personalized_name_wa TEXT DEFAULT 'N';
+    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS personalized_name_gmail TEXT DEFAULT 'N';
+    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS personalized_name_ig TEXT DEFAULT 'N';
+    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS has_custom_message_wa BOOLEAN DEFAULT FALSE;
+    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS has_custom_message_email BOOLEAN DEFAULT FALSE;
+    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS has_custom_message_ig BOOLEAN DEFAULT FALSE;
     ALTER TABLE contacts ADD COLUMN IF NOT EXISTS unified_attachments JSONB DEFAULT '[]'::jsonb;
     ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS url TEXT;
     ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS platform TEXT NOT NULL DEFAULT 'whatsapp';
@@ -184,6 +191,10 @@ async function runMigrations(): Promise<void> {
       whatsapp_run BOOLEAN DEFAULT FALSE,
       email_run BOOLEAN DEFAULT FALSE,
       instagram_run BOOLEAN DEFAULT FALSE,
+      instagram_completed TEXT,
+      personalized_name_wa TEXT DEFAULT 'N',
+      personalized_name_gmail TEXT DEFAULT 'N',
+      personalized_name_ig TEXT DEFAULT 'N',
       template_selection_wp TEXT,
       template_selection_gmail TEXT,
       template_selection_ig TEXT,
