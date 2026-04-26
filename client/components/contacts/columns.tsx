@@ -182,7 +182,13 @@ export const columns: ColumnDef<Contact>[] = [
     header: ({ table }) => (
       <div className="flex items-center justify-center w-full">
         <Checkbox
-          checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
+          checked={
+            table.getIsAllPageRowsSelected()
+              ? true
+              : table.getIsSomePageRowsSelected()
+              ? "indeterminate"
+              : false
+          }
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
           aria-label="Select all"
           className="border-white/20 data-[state=checked]:bg-primary"
