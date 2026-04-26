@@ -1,7 +1,8 @@
 import { getGmailClient, getDriveClient } from "../routes/google-auth";
 import { sendMessage as sendWA, sendMedia as sendWAMedia } from "./whatsapp-client";
 import { sendDirectMessage as sendIG } from "./instagram-client";
-import { query, queryOne } from "../db/index";
+import { query } from "../db/index";
+import { getContactById } from "../store/contacts-store";
 import { DriveFile, Contact } from "@shared/api";
 import path from "path";
 
@@ -53,11 +54,8 @@ function injectVariables(content: string, contact: Contact, channel: "whatsapp" 
 export async function sendOutreach(req: OutreachRequest) {
   const { contactId, userId, channel } = req;
 
-  // 1. Fetch full contact
-  const contact = await queryOne<Contact>(
-    "SELECT * FROM contacts WHERE id = $1 AND user_id = $2",
-    [contactId, userId]
-  );
+  // 1. Fetch full contact properly mapped
+  const contact = await getContactById(userId, contactId);
   if (!contact) throw new Error("Contact not found");
 
   // Merge request overrides into contact data for this run
