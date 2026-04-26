@@ -55,7 +55,8 @@ export function DriveFilePicker({
     queryKey: ["drive-files", userId, debouncedSearch],
     queryFn: () => searchFiles(userId, debouncedSearch),
     enabled: open && !!userId,
-    staleTime: 30_000,
+    staleTime: 0,
+    retry: 1,
   });
 
   const isNotConnected = (error as any)?.message === "not_connected";

@@ -176,9 +176,17 @@ export default function Contacts() {
         if (!contact) return [];
         
         const channels: ("whatsapp" | "email" | "instagram")[] = [];
-        if (contact.whatsapp) channels.push("whatsapp");
-        if (contact.email) channels.push("email");
-        if (contact.instaHandle) channels.push("instagram");
+        // Respect the run flags — only send on channels the user has opted in
+        if (contact.whatsappRun && contact.whatsapp) channels.push("whatsapp");
+        if (contact.emailRun && contact.email) channels.push("email");
+        if (contact.instagramRun && contact.instaHandle) channels.push("instagram");
+
+        // Fallback: if no flags set, use presence of fields
+        if (channels.length === 0) {
+          if (contact.whatsapp) channels.push("whatsapp");
+          if (contact.email) channels.push("email");
+          if (contact.instaHandle) channels.push("instagram");
+        }
 
         return channels.map(channel => 
           fetch("/api/outreach/send", {
@@ -241,7 +249,7 @@ export default function Contacts() {
 
   return (
     <AppLayout>
-      <div className="flex h-full flex-col space-y-10 pb-10 relative animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex h-full flex-col space-y-6 lg:space-y-10 pb-10 relative animate-in fade-in slide-in-from-bottom-4 duration-700">
         {/* Decorative Background */}
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] -z-10 animate-pulse-slow" />
 
@@ -280,8 +288,8 @@ export default function Contacts() {
         </div>
 
         {ingestionStatus?.isRunning && (
-          <div className="px-6">
-            <div className="p-6 rounded-3xl bg-blue-500/5 border border-blue-500/10 flex flex-row items-center justify-between group overflow-hidden relative">
+          <div className="px-2 sm:px-6">
+            <div className="p-4 sm:p-6 rounded-3xl bg-blue-500/5 border border-blue-500/10 flex flex-row items-center justify-between group overflow-hidden relative">
               <div className="absolute inset-0 bg-blue-500 opacity-[0.02] -z-10 group-hover:scale-x-110 transition-transform duration-1000 origin-left" />
               <div className="flex items-center gap-6 relative z-10">
                  <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shadow-lg">
@@ -299,7 +307,7 @@ export default function Contacts() {
         )}
 
         {/* Data Grid Section */}
-        <div className="flex-1 px-6 pb-6 overflow-hidden flex flex-col min-h-[500px]">
+        <div className="flex-1 px-2 sm:px-6 pb-6 overflow-hidden flex flex-col min-h-[400px]">
           {contactsLoading ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-4 opacity-50">
               <Loader2 className="h-12 w-12 animate-spin text-primary" />

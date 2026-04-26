@@ -26,16 +26,19 @@ export const handleSearchDriveFiles: RequestHandler = async (req, res) => {
 
     const drive = await getDriveClient(userId);
 
-    // Build query — search globally
+    // Build query — search globally across all accessible files
     let driveQuery = `trashed = false and mimeType != 'application/vnd.google-apps.folder'`;
-    if (q.trim()) {
-      driveQuery += ` and name contains '${q.replace(/'/g, "\\'")}'`;
+    const trimmed = q.trim();
+    if (trimmed) {
+      // Escape single quotes in search term
+      const safe = trimmed.replace(/'/g, "\\'");
+      driveQuery += ` and name contains '${safe}'`;
     }
 
     const response = await drive.files.list({
       q: driveQuery,
       fields: "files(id, name, mimeType, size, webViewLink, iconLink, thumbnailLink)",
-      pageSize: 30,
+      pageSize: 50,
       orderBy: "modifiedTime desc",
     });
 
@@ -52,7 +55,7 @@ export const handleSearchDriveFiles: RequestHandler = async (req, res) => {
     res.json({ files, folderName: tokenRow?.drive_folder_name || null });
   } catch (err: any) {
     console.error("Drive search error:", err.message);
-    if (err.message?.includes("not connected") || err.message?.includes("User not connected")) {
+    if (err.message?.includes("not connected") || err.message?.includes("User not connected") || err.message?.includes("invalid_grant")) {
       return res.status(401).json({ error: "Not connected to Google Drive" });
     }
     res.status(500).json({ error: "Drive search failed", detail: err.message });

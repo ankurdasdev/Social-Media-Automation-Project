@@ -63,8 +63,8 @@ export function DataTable<TData, TValue>({
   const [selectedContact, setSelectedContact] = React.useState<Contact | null>(null);
 
   // Column Order & Pinning
-  const [columnOrder, setColumnOrder] = React.useState<string[]>(
-    columns.map(c => c.id || (c as any).accessorKey)
+  const [columnOrder, setColumnOrder] = React.useState<string[]>(() =>
+    columns.map(c => (c as any).id || (c as any).accessorKey).filter(Boolean)
   );
   
   const table = useReactTable({
