@@ -264,12 +264,12 @@ export function SheetDropdownCell({
 }) {
   return (
     <div onClick={(e) => { e.stopPropagation(); }} className="w-full">
-      <Select value={value || ""} onValueChange={onUpdate}>
+      <Select value={value || "EXTERNAL"} onValueChange={(val) => onUpdate(val === "EXTERNAL" ? "" : val)}>
         <SelectTrigger className="h-8 border-none bg-transparent hover:bg-muted/50 transition-all font-black text-xs truncate w-full flex justify-between focus:ring-0 focus:ring-offset-0 px-2" onClick={(e) => e.stopPropagation()}>
           <SelectValue placeholder="EXTERNAL" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="" className="text-xs font-bold text-muted-foreground hover:bg-muted focus:bg-muted">EXTERNAL</SelectItem>
+          <SelectItem value="EXTERNAL" className="text-xs font-bold text-muted-foreground hover:bg-muted focus:bg-muted">EXTERNAL</SelectItem>
           {sheets.length > 0 ? (
             sheets.map(sheet => (
               <SelectItem key={sheet} value={sheet} className="text-xs font-black">{sheet}</SelectItem>
