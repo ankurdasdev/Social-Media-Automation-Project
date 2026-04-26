@@ -80,9 +80,8 @@ export default function Dashboard() {
                 <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Casting Automation System :: Operational</span>
               </div>
               
-              <h1 className="text-5xl md:text-7xl font-black text-foreground tracking-tighter leading-[0.9] text-glow">
-                AUTOMATE YOUR <br />
-                <span className="italic text-primary">CASTING</span> <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-accent">OUTREACH</span>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black text-foreground tracking-tighter leading-[1.1] text-glow break-words sm:break-normal max-w-full">
+                AUTOMATE YOUR<br className="hidden sm:block" /> CASTING <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-accent">OUTREACH</span>
               </h1>
 
               <p className="text-lg text-muted-foreground/80 max-w-2xl leading-relaxed font-medium">
