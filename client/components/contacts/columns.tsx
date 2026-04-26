@@ -123,7 +123,11 @@ function DataTableColumnHeader({
                 value={labelValue}
                 onChange={e => setLabelValue(e.target.value)}
                 onBlur={handleLabelSave}
-                onKeyDown={e => { if (e.key === 'Enter') handleLabelSave(); if (e.key === 'Escape') setIsEditingLabel(false); }}
+                onKeyDown={e => { 
+                  e.stopPropagation(); 
+                  if (e.key === 'Enter') handleLabelSave(); 
+                  if (e.key === 'Escape') setIsEditingLabel(false); 
+                }}
                 onClick={e => e.stopPropagation()}
                 className="bg-primary/10 border border-primary/30 rounded px-1 text-[10px] font-black uppercase w-20 outline-none"
               />
