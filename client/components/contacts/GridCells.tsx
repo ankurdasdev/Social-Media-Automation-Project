@@ -262,25 +262,23 @@ export function SheetDropdownCell({
   onUpdate: (val: string) => void,
   sheets?: string[]
 }) {
-  if (sheets.length === 0) {
-    return (
-      <div className="h-8 w-full flex items-center px-2 text-[10px] font-black text-muted-foreground/50 uppercase tracking-widest truncate">
-        {value || "EXTERNAL"}
-      </div>
-    );
-  }
-
   return (
-    <Select value={value || ""} onValueChange={onUpdate}>
-      <SelectTrigger className="h-8 border-none bg-transparent hover:bg-muted/50 transition-all font-black text-xs truncate max-w-[130px]">
-        <SelectValue placeholder="EXTERNAL" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="" className="text-xs font-bold text-muted-foreground">EXTERNAL</SelectItem>
-        {sheets.map(sheet => (
-          <SelectItem key={sheet} value={sheet} className="text-xs font-black">{sheet}</SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <div onClick={(e) => { e.stopPropagation(); }} className="w-full">
+      <Select value={value || ""} onValueChange={onUpdate}>
+        <SelectTrigger className="h-8 border-none bg-transparent hover:bg-muted/50 transition-all font-black text-xs truncate w-full flex justify-between focus:ring-0 focus:ring-offset-0 px-2" onClick={(e) => e.stopPropagation()}>
+          <SelectValue placeholder="EXTERNAL" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="" className="text-xs font-bold text-muted-foreground hover:bg-muted focus:bg-muted">EXTERNAL</SelectItem>
+          {sheets.length > 0 ? (
+            sheets.map(sheet => (
+              <SelectItem key={sheet} value={sheet} className="text-xs font-black">{sheet}</SelectItem>
+            ))
+          ) : (
+            <div className="px-2 py-2 text-xs text-muted-foreground italic">No sheets found</div>
+          )}
+        </SelectContent>
+      </Select>
+    </div>
   );
 }
