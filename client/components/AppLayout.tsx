@@ -109,7 +109,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex overflow-hidden">
+    <div className="min-h-screen bg-background text-foreground flex">
       {/* Dynamic Background Effects */}
       <div className="fixed inset-0 pointer-events-none -z-10">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px] animate-pulse" />
@@ -317,7 +317,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
         {/* Dynamic Content Area */}
         <main className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide">
-            <div className="max-w-[1400px] mx-auto p-6 lg:p-10 space-y-12 pb-24">
+            <div className="w-full max-w-[1400px] mx-auto p-4 sm:p-6 lg:p-10 space-y-8 lg:space-y-12 pb-24">
                 {children}
             </div>
             

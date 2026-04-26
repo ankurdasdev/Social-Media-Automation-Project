@@ -81,17 +81,17 @@ function TemplateCard({
   onDelete: (t: Template) => void;
 }) {
   return (
-    <div className="flex items-center justify-between p-3 rounded-lg border bg-white hover:bg-slate-50 transition-colors group">
+    <div className="flex items-center justify-between p-3 rounded-xl border border-border bg-card hover:bg-muted/40 transition-colors group">
       <div className="flex items-center gap-3 min-w-0">
-        <div className="shrink-0 w-8 h-8 rounded-md bg-slate-100 flex items-center justify-center">
+        <div className="shrink-0 w-8 h-8 rounded-md bg-muted flex items-center justify-center">
           {template.isAttachment ? (
-            <Paperclip className="h-4 w-4 text-slate-500" />
+            <Paperclip className="h-4 w-4 text-muted-foreground" />
           ) : (
-            <FileText className="h-4 w-4 text-slate-500" />
+            <FileText className="h-4 w-4 text-muted-foreground" />
           )}
         </div>
         <div className="min-w-0">
-          <p className="text-sm font-medium truncate">{template.name}</p>
+          <p className="text-sm font-medium truncate text-foreground">{template.name}</p>
           {template.isAttachment ? (
             <p className="text-[11px] text-muted-foreground">Attachment template</p>
           ) : (

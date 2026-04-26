@@ -21,26 +21,87 @@ import {
   Search,
   CheckCircle2,
   AlertCircle,
-  Bot,
   Type,
+  Pencil,
 } from "lucide-react";
 import { 
   EditableTextCell, 
   MultiTemplateSelect, 
   AttachmentCell, 
   PicklistCell, 
-  ConditionalTextareaCell 
+  ConditionalTextareaCell,
+  SheetDropdownCell,
 } from "./GridCells";
 import { cn } from "@/lib/utils";
+import * as React from "react";
 
-// ─── Header Component with Popover Filter ────────────────────────────────────
+// ─── Editable Header Component with Popover Filter ───────────────────────────
 
-function DataTableColumnHeader({ column, title, icon: Icon }: { column: any; title: string; icon?: any }) {
+const LABEL_STORAGE_KEY = "casthub-column-labels";
+
+function getStoredLabels(): Record<string, string> {
+  try {
+    return JSON.parse(localStorage.getItem(LABEL_STORAGE_KEY) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+function setStoredLabel(columnId: string, label: string) {
+  const labels = getStoredLabels();
+  labels[columnId] = label;
+  localStorage.setItem(LABEL_STORAGE_KEY, JSON.stringify(labels));
+}
+
+function DataTableColumnHeader({ 
+  column, 
+  title, 
+  icon: Icon,
+  columnId,
+}: { 
+  column: any; 
+  title: string; 
+  icon?: any;
+  columnId?: string;
+}) {
+  const storedLabels = getStoredLabels();
+  const effectiveId = columnId || column.id;
+  const [isEditingLabel, setIsEditingLabel] = React.useState(false);
+  const [labelValue, setLabelValue] = React.useState(storedLabels[effectiveId] || title);
+
+  const handleLabelSave = () => {
+    if (labelValue.trim()) {
+      setStoredLabel(effectiveId, labelValue.trim());
+    }
+    setIsEditingLabel(false);
+  };
+
+  const displayTitle = storedLabels[effectiveId] || title;
+
   if (!column.getCanFilter()) {
     return (
-      <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] py-2 whitespace-nowrap">
+      <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.3em] py-2 whitespace-nowrap group">
         {Icon && <Icon className="w-3 h-3 opacity-50" />}
-        {title}
+        {isEditingLabel ? (
+          <input
+            autoFocus
+            value={labelValue}
+            onChange={e => setLabelValue(e.target.value)}
+            onBlur={handleLabelSave}
+            onKeyDown={e => { if (e.key === 'Enter') handleLabelSave(); if (e.key === 'Escape') setIsEditingLabel(false); }}
+            className="bg-primary/10 border border-primary/30 rounded px-1 text-[10px] font-black uppercase w-24 outline-none"
+          />
+        ) : (
+          <>
+            <span>{displayTitle}</span>
+            <button
+              onClick={(e) => { e.stopPropagation(); setIsEditingLabel(true); setLabelValue(storedLabels[effectiveId] || title); }}
+              className="opacity-0 group-hover:opacity-50 hover:!opacity-100 transition-opacity p-0.5 rounded hover:bg-primary/10"
+            >
+              <Pencil className="w-2.5 h-2.5" />
+            </button>
+          </>
+        )}
       </div>
     );
   }
@@ -48,22 +109,34 @@ function DataTableColumnHeader({ column, title, icon: Icon }: { column: any; tit
   const isFiltered = column.getFilterValue() !== undefined && column.getFilterValue() !== "";
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1.5 group">
       <Popover>
         <PopoverTrigger asChild>
           <button className={cn(
-            "flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] transition-all hover:text-primary py-2 px-2 rounded-lg -ml-1 whitespace-nowrap",
+            "flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.3em] transition-all hover:text-primary py-2 px-2 rounded-lg -ml-1 whitespace-nowrap",
             isFiltered ? "text-primary bg-primary/5" : "text-muted-foreground"
           )}>
             {Icon && <Icon className={cn("w-3 h-3", isFiltered ? "opacity-100" : "opacity-50")} />}
-            {title}
+            {isEditingLabel ? (
+              <input
+                autoFocus
+                value={labelValue}
+                onChange={e => setLabelValue(e.target.value)}
+                onBlur={handleLabelSave}
+                onKeyDown={e => { if (e.key === 'Enter') handleLabelSave(); if (e.key === 'Escape') setIsEditingLabel(false); }}
+                onClick={e => e.stopPropagation()}
+                className="bg-primary/10 border border-primary/30 rounded px-1 text-[10px] font-black uppercase w-20 outline-none"
+              />
+            ) : (
+              <span>{displayTitle}</span>
+            )}
             <Filter className={cn("w-2.5 h-2.5 ml-1 transition-all", isFiltered ? "opacity-100" : "opacity-0 group-hover:opacity-30")} />
           </button>
         </PopoverTrigger>
         <PopoverContent className="w-72 glass-card p-4 rounded-[1.5rem] border-white/10 shadow-2xl animate-in fade-in zoom-in-95 duration-200" align="start">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Filter {title}</h4>
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Filter {displayTitle}</h4>
               {isFiltered && (
                 <Button 
                    variant="ghost" 
@@ -78,7 +151,7 @@ function DataTableColumnHeader({ column, title, icon: Icon }: { column: any; tit
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground opacity-50" />
               <Input
-                placeholder={`Search ${title}...`}
+                placeholder={`Search ${displayTitle}...`}
                 value={(column.getFilterValue() as string) ?? ""}
                 onChange={(event) => column.setFilterValue(event.target.value)}
                 className="h-10 pl-10 rounded-xl bg-muted/40 border-white/5 font-bold focus:ring-primary text-sm"
@@ -88,6 +161,15 @@ function DataTableColumnHeader({ column, title, icon: Icon }: { column: any; tit
           </div>
         </PopoverContent>
       </Popover>
+      {!isEditingLabel && (
+        <button
+          onClick={(e) => { e.stopPropagation(); setIsEditingLabel(true); setLabelValue(storedLabels[effectiveId] || title); }}
+          className="opacity-0 group-hover:opacity-40 hover:!opacity-100 transition-opacity p-0.5 rounded hover:bg-primary/10 shrink-0"
+          title="Rename column"
+        >
+          <Pencil className="w-2.5 h-2.5" />
+        </button>
+      )}
     </div>
   );
 }
@@ -131,23 +213,10 @@ export const columns: ColumnDef<Contact>[] = [
       </div>
     ),
   },
-  {
-    accessorKey: "automationTrigger",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Automation" icon={Bot} />,
-    size: 130,
-    cell: ({ row, table }) => (
-      <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
-        <Checkbox 
-          checked={!!row.original.automationTrigger}
-          onCheckedChange={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { automationTrigger: !!val })}
-          className="w-5 h-5 rounded-lg border-primary/30"
-        />
-      </div>
-    ),
-  },
+  // ── Run Flags ───────────────────────────────────────────────────────────────
   {
     accessorKey: "whatsappRun",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="WP Run" icon={MessageCircle} />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="WP Run" icon={MessageCircle} columnId="whatsappRun" />,
     size: 110,
     cell: ({ row, table }) => (
       <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
@@ -161,7 +230,7 @@ export const columns: ColumnDef<Contact>[] = [
   },
   {
     accessorKey: "emailRun",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Gmail Run" icon={Mail} />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Gmail Run" icon={Mail} columnId="emailRun" />,
     size: 110,
     cell: ({ row, table }) => (
       <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
@@ -175,7 +244,7 @@ export const columns: ColumnDef<Contact>[] = [
   },
   {
     accessorKey: "instagramRun",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Insta Run" icon={Instagram} />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Insta Run" icon={Instagram} columnId="instagramRun" />,
     size: 110,
     cell: ({ row, table }) => (
       <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
@@ -187,9 +256,10 @@ export const columns: ColumnDef<Contact>[] = [
       </div>
     ),
   },
+  // ── Global Status ────────────────────────────────────────────────────────────
   {
     accessorKey: "status",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Global Status" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Global Status" columnId="status" />,
     size: 130,
     cell: ({ row }) => {
       const status = (row.getValue("status") as string || "pending").toLowerCase();
@@ -206,9 +276,10 @@ export const columns: ColumnDef<Contact>[] = [
       );
     },
   },
+  // ── Personalized Names ───────────────────────────────────────────────────────
   {
     accessorKey: "personalizedNameWA",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Pers. Name WA" icon={Type} />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Pers. Name WA" icon={Type} columnId="personalizedNameWA" />,
     size: 140,
     cell: ({ row, table }) => (
        <div onClick={(e) => e.stopPropagation()}>
@@ -221,8 +292,8 @@ export const columns: ColumnDef<Contact>[] = [
   },
   {
     accessorKey: "personalizedNameGmail",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Pers. Name Gmail" icon={Type} />,
-    size: 140,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Pers. Name Gmail" icon={Type} columnId="personalizedNameGmail" />,
+    size: 145,
     cell: ({ row, table }) => (
        <div onClick={(e) => e.stopPropagation()}>
           <PicklistCell 
@@ -233,8 +304,22 @@ export const columns: ColumnDef<Contact>[] = [
     ),
   },
   {
+    accessorKey: "personalizedNameIG",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Pers. Name IG" icon={Type} columnId="personalizedNameIG" />,
+    size: 140,
+    cell: ({ row, table }) => (
+       <div onClick={(e) => e.stopPropagation()}>
+          <PicklistCell 
+            value={row.original.personalizedNameIG || "N"}
+            onUpdate={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { personalizedNameIG: val })}
+          />
+       </div>
+    ),
+  },
+  // ── Notes ────────────────────────────────────────────────────────────────────
+  {
     accessorKey: "notes",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Notes" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Notes" columnId="notes" />,
     size: 250,
     cell: ({ row, table }) => (
       <div onClick={(e) => e.stopPropagation()}>
@@ -245,23 +330,23 @@ export const columns: ColumnDef<Contact>[] = [
       </div>
     ),
   },
+  // ── Contact Info ─────────────────────────────────────────────────────────────
   {
     accessorKey: "name",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Full Name" icon={UserIcon} />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Full Name" icon={UserIcon} columnId="name" />,
     size: 180,
     cell: ({ row, table }) => (
       <div onClick={(e) => e.stopPropagation()}>
         <EditableTextCell 
           value={row.original.name} 
           onUpdate={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { name: val })}
-          className="font-black"
         />
       </div>
     ),
   },
   {
     accessorKey: "castingName",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Casting Identity" icon={Briefcase} />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Casting Identity" icon={Briefcase} columnId="castingName" />,
     size: 180,
     cell: ({ row, table }) => (
       <div onClick={(e) => e.stopPropagation()}>
@@ -274,8 +359,8 @@ export const columns: ColumnDef<Contact>[] = [
   },
   {
     accessorKey: "whatsapp",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="WA Number" icon={MessageCircle} />,
-    size: 150,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="WA Number" icon={MessageCircle} columnId="whatsapp" />,
+    size: 160,
     cell: ({ row, table }) => (
       <div onClick={(e) => e.stopPropagation()}>
         <EditableTextCell 
@@ -288,7 +373,7 @@ export const columns: ColumnDef<Contact>[] = [
   },
   {
     accessorKey: "email",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Gmail Address" icon={Mail} />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Gmail Address" icon={Mail} columnId="email" />,
     size: 220,
     cell: ({ row, table }) => (
       <div onClick={(e) => e.stopPropagation()}>
@@ -302,7 +387,7 @@ export const columns: ColumnDef<Contact>[] = [
   },
   {
     accessorKey: "instaHandle",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Insta Profile" icon={Instagram} />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Insta Profile" icon={Instagram} columnId="instaHandle" />,
     size: 150,
     cell: ({ row, table }) => (
       <div onClick={(e) => e.stopPropagation()}>
@@ -314,9 +399,10 @@ export const columns: ColumnDef<Contact>[] = [
       </div>
     ),
   },
+  // ── Tracking (Read-Only) ─────────────────────────────────────────────────────
   {
     accessorKey: "visit",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Visit Log" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Visit Log" columnId="visit" />,
     size: 120,
     cell: ({ row, table }) => (
       <div onClick={(e) => e.stopPropagation()}>
@@ -329,7 +415,7 @@ export const columns: ColumnDef<Contact>[] = [
   },
   {
     accessorKey: "lastContactedDate",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Last Contacted" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Last Contacted" columnId="lastContactedDate" />,
     size: 160,
     cell: ({ row }) => (
       <div className="px-2 text-[10px] font-black text-muted-foreground/60 uppercase font-mono">
@@ -339,8 +425,8 @@ export const columns: ColumnDef<Contact>[] = [
   },
   {
     accessorKey: "followups",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Follows" />,
-    size: 80,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Follow-ups" columnId="followups" />,
+    size: 90,
     cell: ({ row }) => (
       <div className="px-2 text-[10px] font-black text-primary text-center">
         {row.original.followups || "0"}
@@ -349,17 +435,18 @@ export const columns: ColumnDef<Contact>[] = [
   },
   {
     accessorKey: "totalDatesContacts",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Dates History" />,
-    size: 160,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Dates History" columnId="totalDatesContacts" />,
+    size: 180,
     cell: ({ row }) => (
       <div className="px-2 text-[9px] font-bold text-muted-foreground/50 truncate uppercase tracking-tighter">
         {row.original.totalDatesContacts || "NO SESSIONS"}
       </div>
     ),
   },
+  // ── Context ──────────────────────────────────────────────────────────────────
   {
     accessorKey: "actingContext",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Acting Context" icon={Layers} />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Acting Context" icon={Layers} columnId="actingContext" />,
     size: 180,
     cell: ({ row, table }) => (
       <div onClick={(e) => e.stopPropagation()}>
@@ -372,7 +459,7 @@ export const columns: ColumnDef<Contact>[] = [
   },
   {
     accessorKey: "project",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Target Project" icon={Calendar} />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Target Project" icon={Calendar} columnId="project" />,
     size: 180,
     cell: ({ row, table }) => (
       <div onClick={(e) => e.stopPropagation()}>
@@ -385,7 +472,7 @@ export const columns: ColumnDef<Contact>[] = [
   },
   {
     accessorKey: "age",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Age Group" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Age Group" columnId="age" />,
     size: 100,
     cell: ({ row, table }) => (
       <div onClick={(e) => e.stopPropagation()}>
@@ -396,9 +483,10 @@ export const columns: ColumnDef<Contact>[] = [
       </div>
     ),
   },
+  // ── Outreach Controls ────────────────────────────────────────────────────────
   {
     accessorKey: "instagramDone",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Insta Done" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Insta Done" columnId="instagramDone" />,
     size: 110,
     cell: ({ row }) => (
       <div className="px-2">
@@ -413,7 +501,7 @@ export const columns: ColumnDef<Contact>[] = [
   },
   {
     accessorKey: "hasCustomMessageWA",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Editable Msg WA" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Editable Msg WA" columnId="hasCustomMessageWA" />,
     size: 220,
     cell: ({ row, table }) => (
       <div className="px-2" onClick={(e) => e.stopPropagation()}>
@@ -429,7 +517,7 @@ export const columns: ColumnDef<Contact>[] = [
   },
   {
     accessorKey: "templateSelectionWP",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Template WP" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Template WP" columnId="templateSelectionWP" />,
     size: 200,
     cell: ({ row, table }) => (
       <div onClick={(e) => e.stopPropagation()}>
@@ -442,7 +530,7 @@ export const columns: ColumnDef<Contact>[] = [
   },
   {
     accessorKey: "templateSelectionGmail",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Template Gmail" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Template Gmail" columnId="templateSelectionGmail" />,
     size: 200,
     cell: ({ row, table }) => (
       <div onClick={(e) => e.stopPropagation()}>
@@ -455,7 +543,7 @@ export const columns: ColumnDef<Contact>[] = [
   },
   {
     accessorKey: "hasCustomMessageEmail",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Editable Msg Gmail" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Editable Msg Gmail" columnId="hasCustomMessageEmail" />,
     size: 220,
     cell: ({ row, table }) => (
       <div className="px-2" onClick={(e) => e.stopPropagation()}>
@@ -471,7 +559,7 @@ export const columns: ColumnDef<Contact>[] = [
   },
   {
     accessorKey: "editableGmailSubject",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Gmail Subject" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Gmail Subject" columnId="editableGmailSubject" />,
     size: 200,
     cell: ({ row, table }) => (
       <div onClick={(e) => e.stopPropagation()}>
@@ -483,9 +571,40 @@ export const columns: ColumnDef<Contact>[] = [
       </div>
     ),
   },
+  // ── Instagram Editable Message ─────────────────────────────────────────────
+  {
+    accessorKey: "hasCustomMessageIG",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Editable Msg IG" columnId="hasCustomMessageIG" />,
+    size: 220,
+    cell: ({ row, table }) => (
+      <div className="px-2" onClick={(e) => e.stopPropagation()}>
+        <ConditionalTextareaCell 
+          checked={!!row.original.hasCustomMessageIG}
+          onCheckedChange={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { hasCustomMessageIG: val })}
+          value={row.original.editableMessageIG}
+          onValueChange={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { editableMessageIG: val })}
+          placeholder="Override IG Message..."
+        />
+      </div>
+    ),
+  },
+  {
+    accessorKey: "templateSelectionIG",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Template IG" columnId="templateSelectionIG" />,
+    size: 200,
+    cell: ({ row, table }) => (
+      <div onClick={(e) => e.stopPropagation()}>
+        <MultiTemplateSelect 
+          selectedIds={row.original.templateSelectionIG || []} 
+          onUpdate={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { templateSelectionIG: val })}
+        />
+      </div>
+    ),
+  },
+  // ── Attachments ──────────────────────────────────────────────────────────────
   {
     id: "specialAttachmentWA",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Attach WA" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Attach WA" columnId="specialAttachmentWA" />,
     size: 180,
     cell: ({ row, table }) => (
       <div onClick={(e) => e.stopPropagation()}>
@@ -498,7 +617,7 @@ export const columns: ColumnDef<Contact>[] = [
   },
   {
     id: "specialAttachmentGmail",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Attach Gmail" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Attach Gmail" columnId="specialAttachmentGmail" />,
     size: 180,
     cell: ({ row, table }) => (
       <div onClick={(e) => e.stopPropagation()}>
@@ -510,8 +629,22 @@ export const columns: ColumnDef<Contact>[] = [
     ),
   },
   {
+    id: "specialAttachmentIG",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Attach IG" columnId="specialAttachmentIG" />,
+    size: 180,
+    cell: ({ row, table }) => (
+      <div onClick={(e) => e.stopPropagation()}>
+        <AttachmentCell 
+          attachments={row.original.drive_attachments_ig || []} 
+          onUpdate={(files) => (table.options.meta as any)?.updateContact?.(row.original.id, { drive_attachments_ig: files })}
+        />
+      </div>
+    ),
+  },
+  // ── Completion Status ────────────────────────────────────────────────────────
+  {
     accessorKey: "whatsappCompleted",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="WP Done" icon={CheckCircle2} />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="WP Done" icon={CheckCircle2} columnId="whatsappCompleted" />,
     size: 110,
     cell: ({ row }) => (
       <div className="px-2">
@@ -526,7 +659,7 @@ export const columns: ColumnDef<Contact>[] = [
   },
   {
     accessorKey: "emailCompleted",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Gmail Done" icon={CheckCircle2} />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Gmail Done" icon={CheckCircle2} columnId="emailCompleted" />,
     size: 110,
     cell: ({ row }) => (
       <div className="px-2">
@@ -541,7 +674,7 @@ export const columns: ColumnDef<Contact>[] = [
   },
   {
     accessorKey: "automationComment",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Bot Intel" icon={AlertCircle} />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Bot Intel" icon={AlertCircle} columnId="automationComment" />,
     size: 200,
     cell: ({ row }) => (
       <div className="px-3 text-[10px] font-medium text-muted-foreground italic truncate">
@@ -549,15 +682,18 @@ export const columns: ColumnDef<Contact>[] = [
       </div>
     ),
   },
+  // ── Sheet Assignment ─────────────────────────────────────────────────────────
   {
     accessorKey: "sheetName",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Source Sheet" />,
-    size: 140,
-    cell: ({ row }) => (
-      <div className="px-3">
-         <Badge variant="secondary" className="font-mono text-[9px] uppercase tracking-widest bg-muted/40 text-muted-foreground">
-            {row.original.sheetName || "EXTERNAL"}
-         </Badge>
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Source Sheet" columnId="sheetName" />,
+    size: 160,
+    cell: ({ row, table }) => (
+      <div onClick={(e) => e.stopPropagation()}>
+        <SheetDropdownCell
+          value={row.original.sheetName || ""}
+          onUpdate={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { sheetName: val })}
+          sheets={(table.options.meta as any)?.uniqueSheets || []}
+        />
       </div>
     ),
   },

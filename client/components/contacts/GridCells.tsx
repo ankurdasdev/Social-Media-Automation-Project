@@ -252,4 +252,35 @@ export function AttachmentCell({
   );
 }
 
+// ─── Sheet Dropdown Cell ──────────────────────────────────────────────────────
+export function SheetDropdownCell({
+  value,
+  onUpdate,
+  sheets = []
+}: {
+  value: string,
+  onUpdate: (val: string) => void,
+  sheets?: string[]
+}) {
+  if (sheets.length === 0) {
+    return (
+      <div className="h-8 w-full flex items-center px-2 text-[10px] font-black text-muted-foreground/50 uppercase tracking-widest truncate">
+        {value || "EXTERNAL"}
+      </div>
+    );
+  }
 
+  return (
+    <Select value={value || ""} onValueChange={onUpdate}>
+      <SelectTrigger className="h-8 border-none bg-transparent hover:bg-muted/50 transition-all font-black text-xs truncate max-w-[130px]">
+        <SelectValue placeholder="EXTERNAL" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="" className="text-xs font-bold text-muted-foreground">EXTERNAL</SelectItem>
+        {sheets.map(sheet => (
+          <SelectItem key={sheet} value={sheet} className="text-xs font-black">{sheet}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
