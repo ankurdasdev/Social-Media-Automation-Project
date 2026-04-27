@@ -32,6 +32,8 @@ import {
   Instagram,
   Send,
   ShieldCheck,
+  X,
+  Plus,
 } from "lucide-react";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -58,40 +60,58 @@ async function fetchTemplates(userId: string, category: string): Promise<Templat
   return data.templates;
 }
 
-function TemplateSelect({
+function DrawerMultiTemplateSelect({
   value,
   onChange,
   category,
-  placeholder,
-  ringColor,
   userId,
 }: {
-  value: string;
-  onChange: (v: string) => void;
+  value: string | string[];
+  onChange: (v: string[]) => void;
   category: "whatsapp" | "email" | "instagram";
-  placeholder?: string;
-  ringColor?: string;
   userId: string;
 }) {
+  const currentIds = Array.isArray(value) ? value : (value ? [value] : []);
   const { data: templates = [] } = useQuery({
     queryKey: ["templates", category, userId],
     queryFn: () => fetchTemplates(userId, category),
   });
 
+  const handleToggle = (id: string) => {
+    if (currentIds.includes(id)) {
+      onChange(currentIds.filter((i) => i !== id));
+    } else {
+      onChange([...currentIds, id]);
+    }
+  };
+
   return (
-    <Select value={value || "__none__"} onValueChange={(v) => onChange(v === "__none__" ? "" : v)}>
-      <SelectTrigger className={`h-8 shadow-none text-xs ${ringColor ?? ""}`}>
-        <SelectValue placeholder={placeholder ?? "Select template..."} />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="__none__" className="text-xs text-muted-foreground">-- None --</SelectItem>
-        {templates.map((t) => (
-          <SelectItem key={t.id} value={t.name} className="text-xs">{t.name}</SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <div className="flex flex-wrap gap-2 p-1.5 min-h-[40px] items-center rounded-lg bg-background/50 border border-white/5 w-full">
+      {currentIds.map((id, idx) => {
+        const t = templates.find((tmp) => tmp.id === id);
+        return (
+          <Badge key={id} variant="secondary" className="h-6 px-2 gap-1.5 text-[10px] font-black bg-primary/10 text-primary border-none">
+            {idx + 1}. {t?.name || "..."}
+            <X className="w-3 h-3 cursor-pointer hover:text-destructive transition-colors" onClick={() => handleToggle(id)} />
+          </Badge>
+        );
+      })}
+      <Select onValueChange={handleToggle}>
+        <SelectTrigger className="h-6 w-6 p-0 border-none bg-transparent hover:bg-muted transition-all shadow-none flex justify-center items-center">
+          <Plus className="w-3 h-3" />
+        </SelectTrigger>
+        <SelectContent>
+            {templates.filter((t) => !currentIds.includes(t.id)).map((t) => (
+                <SelectItem key={t.id} value={t.id} className="text-xs font-black">{t.name}</SelectItem>
+            ))}
+            {templates.length === 0 && <div className="p-2 text-xs text-muted-foreground font-black">No templates</div>}
+        </SelectContent>
+      </Select>
+      {currentIds.length === 0 && <span className="text-[10px] text-muted-foreground/50 px-2 font-black uppercase tracking-widest">Select...</span>}
+    </div>
   );
 }
+
 
 export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProps) {
   const queryClient = useQueryClient();
@@ -245,7 +265,7 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black text-muted-foreground">TEMPLATES</Label>
-                    <TemplateSelect userId={contact.user_id} category="whatsapp" value={(form.templateSelectionWP as string[])?.[0] || ""} onChange={(v) => set("templateSelectionWP")([v])} />
+                    <DrawerMultiTemplateSelect userId={contact.user_id} category="whatsapp" value={form.templateSelectionWP || []} onChange={(v) => set("templateSelectionWP")(v)} />
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -289,7 +309,7 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black text-muted-foreground">TEMPLATES</Label>
-                    <TemplateSelect userId={contact.user_id} category="email" value={(form.templateSelectionGmail as string[])?.[0] || ""} onChange={(v) => set("templateSelectionGmail")([v])} />
+                    <DrawerMultiTemplateSelect userId={contact.user_id} category="email" value={form.templateSelectionGmail || []} onChange={(v) => set("templateSelectionGmail")(v)} />
                   </div>
                 </div>
                 <div className="space-y-4">
@@ -311,6 +331,50 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
                       />
                     )}
                   </div>
+                </div>
+              </div>
+
+              {/* Instagram Config */}
+              <div className="space-y-4 p-6 rounded-2xl bg-pink-500/5 border border-pink-500/10">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-black uppercase tracking-widest text-pink-500">INSTAGRAM PROTOCOL</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] font-bold text-muted-foreground">DRIVE ATTACHMENTS</span>
+                    <AttachmentCell attachments={form.drive_attachments_ig || []} onUpdate={(val) => set("drive_attachments_ig")(val)} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-[9px] font-black text-muted-foreground">PERS. NAME</Label>
+                    <Select value={form.personalizedNameIG} onValueChange={(v) => set("personalizedNameIG")(v)}>
+                      <SelectTrigger className="h-10 rounded-lg bg-background/50 border-white/5 font-black text-[10px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="N">NAME (N)</SelectItem>
+                        <SelectItem value="C">CASTING (C)</SelectItem>
+                        <SelectItem value="NA">NONE (NA)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[9px] font-black text-muted-foreground">TEMPLATES</Label>
+                    <DrawerMultiTemplateSelect userId={contact.user_id} category="instagram" value={form.templateSelectionIG || []} onChange={(v) => set("templateSelectionIG")(v)} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Checkbox checked={form.hasCustomMessageIG} onCheckedChange={(c) => set("hasCustomMessageIG")(!!c)} id="ig-custom" />
+                    <Label htmlFor="ig-custom" className="text-[9px] font-black uppercase tracking-widest cursor-pointer">Override with Custom Message</Label>
+                  </div>
+                  {form.hasCustomMessageIG && (
+                    <Textarea 
+                      value={form.editableMessageIG} 
+                      onChange={(e) => set("editableMessageIG")(e.target.value)}
+                      className="min-h-[100px] rounded-xl bg-background/40 text-xs font-medium border-pink-500/20"
+                      placeholder="Write custom Instagram content..."
+                    />
+                  )}
                 </div>
               </div>
             </div>

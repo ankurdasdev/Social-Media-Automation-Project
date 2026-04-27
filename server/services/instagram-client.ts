@@ -170,7 +170,7 @@ export async function sendDirectMessage(
 /** Simple connectivity check */
 export async function isReachable(): Promise<boolean> {
   try {
-    const res = await fetch(`${BASE_URL}/health`, { headers: headers() });
+    const res = await fetch(`${BASE_URL}/docs`, { headers: headers() });
     return res.ok;
   } catch {
     return false;
