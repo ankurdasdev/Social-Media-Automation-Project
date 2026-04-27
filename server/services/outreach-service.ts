@@ -1,7 +1,7 @@
 import { getGmailClient, getDriveClient } from "../routes/google-auth";
 import { sendMessage as sendWA, sendMedia as sendWAMedia } from "./whatsapp-client";
 import { sendDirectMessage as sendIG } from "./instagram-client";
-import { query } from "../db/index";
+import { query, queryOne } from "../db/index";
 import { getContactById } from "../store/contacts-store";
 import { DriveFile, Contact } from "@shared/api";
 import path from "path";

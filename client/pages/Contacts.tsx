@@ -29,6 +29,8 @@ import { getOrCreateUserId } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DrawerMultiTemplateSelect } from "@/components/contacts/ContactDrawer";
+import { AttachmentCell } from "@/components/contacts/GridCells";
 
 export default function Contacts() {
   const queryClient = useQueryClient();
@@ -39,7 +41,7 @@ export default function Contacts() {
   const userId = getOrCreateUserId();
   
   const [isAddLeadOpen, setIsAddLeadOpen] = useState(false);
-  const [newLead, setNewLead] = useState({
+  const [newLead, setNewLead] = useState<Partial<Contact>>({
     name: "",
     castingName: "",
     whatsapp: "",
@@ -59,7 +61,13 @@ export default function Contacts() {
     editableGmailSubject: "",
     hasCustomMessageIG: false,
     editableMessageIG: "",
-    notes: ""
+    notes: "",
+    templateSelectionWP: [],
+    templateSelectionGmail: [],
+    templateSelectionIG: [],
+    drive_attachments_wa: [],
+    drive_attachments_email: [],
+    drive_attachments_ig: []
   });
 
   const { data: contactsData, isLoading: contactsLoading } = useQuery({
@@ -130,16 +138,33 @@ export default function Contacts() {
       toast({ title: "CONTACT ADDED", description: `${newLead.name} added to sheet.` });
       setIsAddLeadOpen(false);
       setNewLead({
-      name: "",
-      castingName: "",
-      whatsapp: "",
-      email: "",
-      instaHandle: "",
-      actingContext: "",
-      project: "",
-      age: "",
-        sheetName: ""
-    });
+        name: "",
+        castingName: "",
+        whatsapp: "",
+        email: "",
+        instaHandle: "",
+        actingContext: "",
+        project: "",
+        age: "",
+        sheetName: "",
+        personalizedNameWA: "N",
+        personalizedNameGmail: "N",
+        personalizedNameIG: "N",
+        hasCustomMessageWA: false,
+        editableMessageWP: "",
+        hasCustomMessageEmail: false,
+        editableMessageGmail: "",
+        editableGmailSubject: "",
+        hasCustomMessageIG: false,
+        editableMessageIG: "",
+        notes: "",
+        templateSelectionWP: [],
+        templateSelectionGmail: [],
+        templateSelectionIG: [],
+        drive_attachments_wa: [],
+        drive_attachments_email: [],
+        drive_attachments_ig: []
+      });
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
     },
   });
@@ -185,9 +210,9 @@ export default function Contacts() {
 
   const bulkOutreachMutation = useMutation({
     mutationFn: async (contactIds: string[]) => {
-      const promises = contactIds.flatMap((id) => {
+      for (const id of contactIds) {
         const contact = contacts.find(c => c.id === id);
-        if (!contact) return [];
+        if (!contact) continue;
         
         const channels: ("whatsapp" | "email" | "instagram")[] = [];
         // Respect the run flags — only send on channels the user has opted in
@@ -202,21 +227,23 @@ export default function Contacts() {
           if (contact.instaHandle) channels.push("instagram");
         }
 
-        return channels.map(channel => 
-          fetch("/api/outreach/send", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ contactId: id, userId, channel })
-          }).then(async res => {
+        for (const channel of channels) {
+          try {
+            const res = await fetch("/api/outreach/send", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ contactId: id, userId, channel })
+            });
             if (!res.ok) {
               const error = await res.json();
-              throw new Error(error.error || `Failed to send ${channel} to ${contact.name}`);
+              console.error(`Failed to send ${channel} to ${contact.name}:`, error);
+              // We log the error but continue to process the next row (sequential processing)
             }
-            return res.json();
-          })
-        );
-      });
-      await Promise.all(promises);
+          } catch (err) {
+            console.error(`Network error sending ${channel} to ${contact.name}:`, err);
+          }
+        }
+      }
     },
     onSuccess: (_, ids) => {
       toast({
@@ -441,6 +468,16 @@ export default function Contacts() {
                        </SelectContent>
                     </Select>
                  </div>
+                 <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Templates</Label>
+                        <DrawerMultiTemplateSelect userId={userId} category="whatsapp" value={newLead.templateSelectionWP || []} onChange={v => setNewLead({...newLead, templateSelectionWP: v})} />
+                    </div>
+                    <div className="space-y-3">
+                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Drive Attachments</Label>
+                        <AttachmentCell attachments={newLead.drive_attachments_wa || []} onUpdate={v => setNewLead({...newLead, drive_attachments_wa: v})} />
+                    </div>
+                 </div>
                  <div className="flex items-center gap-2 p-3 bg-muted/20 rounded-xl border border-white/5">
                     <Switch checked={newLead.hasCustomMessageWA} onCheckedChange={v => setNewLead({...newLead, hasCustomMessageWA: v})} />
                     <Label className="text-xs font-bold uppercase">Use Custom Override Message</Label>
@@ -469,14 +506,26 @@ export default function Contacts() {
                        </SelectContent>
                     </Select>
                  </div>
+                 <div className="space-y-3">
+                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Email Subject</Label>
+                    <Input value={newLead.editableGmailSubject} onChange={e => setNewLead({...newLead, editableGmailSubject: e.target.value})} className="h-12 rounded-xl bg-muted/40 font-bold" placeholder="Subject..." />
+                 </div>
+                 <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Templates</Label>
+                        <DrawerMultiTemplateSelect userId={userId} category="email" value={newLead.templateSelectionGmail || []} onChange={v => setNewLead({...newLead, templateSelectionGmail: v})} />
+                    </div>
+                    <div className="space-y-3">
+                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Drive Attachments</Label>
+                        <AttachmentCell attachments={newLead.drive_attachments_email || []} onUpdate={v => setNewLead({...newLead, drive_attachments_email: v})} />
+                    </div>
+                 </div>
                  <div className="flex items-center gap-2 p-3 bg-muted/20 rounded-xl border border-white/5">
                     <Switch checked={newLead.hasCustomMessageEmail} onCheckedChange={v => setNewLead({...newLead, hasCustomMessageEmail: v})} />
                     <Label className="text-xs font-bold uppercase">Use Custom Override Message</Label>
                  </div>
                  {newLead.hasCustomMessageEmail && (
                     <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
-                       <Label className="text-[10px] font-black text-primary uppercase tracking-widest px-1">Custom Subject</Label>
-                       <Input value={newLead.editableGmailSubject} onChange={e => setNewLead({...newLead, editableGmailSubject: e.target.value})} className="h-12 rounded-xl bg-muted/40 font-bold" />
                        <Label className="text-[10px] font-black text-primary uppercase tracking-widest px-1">Custom Body</Label>
                        <Textarea value={newLead.editableMessageGmail} onChange={e => setNewLead({...newLead, editableMessageGmail: e.target.value})} className="min-h-[100px] rounded-xl bg-muted/40" />
                     </div>
@@ -498,6 +547,16 @@ export default function Contacts() {
                          <SelectItem value="NA">None</SelectItem>
                        </SelectContent>
                     </Select>
+                 </div>
+                 <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Templates</Label>
+                        <DrawerMultiTemplateSelect userId={userId} category="instagram" value={newLead.templateSelectionIG || []} onChange={v => setNewLead({...newLead, templateSelectionIG: v})} />
+                    </div>
+                    <div className="space-y-3">
+                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Drive Attachments</Label>
+                        <AttachmentCell attachments={newLead.drive_attachments_ig || []} onUpdate={v => setNewLead({...newLead, drive_attachments_ig: v})} />
+                    </div>
                  </div>
                  <div className="flex items-center gap-2 p-3 bg-muted/20 rounded-xl border border-white/5">
                     <Switch checked={newLead.hasCustomMessageIG} onCheckedChange={v => setNewLead({...newLead, hasCustomMessageIG: v})} />
