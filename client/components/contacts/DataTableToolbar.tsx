@@ -205,27 +205,28 @@ export function DataTableToolbar<TData>({
 
         <div className="flex items-center gap-4 w-full sm:w-auto">
           {hasSelection && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="default" className="h-14 px-8 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] bg-foreground text-background hover:bg-foreground/90 gap-4 shadow-2xl transition-all active:scale-95 flex-1 sm:flex-none">
-                  <Zap className="h-4 w-4 fill-background" />
+            <>
+              <Button 
+                variant="default" 
+                onClick={() => {
+                  const ids = selectedRows.map(r => (r.original as any).id);
+                  onTriggerAction?.(ids);
+                }}
+                className="h-14 px-8 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] bg-primary text-primary-foreground hover:bg-primary/90 gap-4 shadow-2xl transition-all active:scale-95 flex-1 sm:flex-none"
+              >
+                <Zap className="h-4 w-4 fill-background" />
+                SEND MESSAGES
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="default" className="h-14 px-8 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] bg-foreground text-background hover:bg-foreground/90 gap-4 shadow-2xl transition-all active:scale-95 flex-1 sm:flex-none">
+                    <Zap className="h-4 w-4 fill-background" />
                   BULK ACTIONS ({selectedRows.length})
                   <ChevronDown className="h-3 w-3 opacity-50" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64 glass-card border-white/10 p-3 rounded-3xl shadow-2xl animate-in zoom-in-95 duration-200">
-                <DropdownMenuLabel className="px-4 py-3 text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Actions</DropdownMenuLabel>
-                <DropdownMenuItem 
-                  onClick={() => {
-                    const ids = selectedRows.map(r => (r.original as any).id);
-                    onTriggerAction?.(ids);
-                  }}
-                  className="h-12 px-4 rounded-xl text-[10px] font-black uppercase tracking-[0.1em] text-primary focus:bg-primary/10 focus:text-primary cursor-pointer gap-3"
-                >
-                  <Zap className="h-4 w-4" /> SEND MESSAGES
-                </DropdownMenuItem>
 
-                <DropdownMenuSeparator className="my-3 bg-white/5" />
                 
                 <DropdownMenuLabel className="px-4 py-2 text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Set Row Color</DropdownMenuLabel>
                 <div className="flex items-center justify-around p-3">
@@ -267,6 +268,7 @@ export function DataTableToolbar<TData>({
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            </>
           )}
         </div>
       </div>

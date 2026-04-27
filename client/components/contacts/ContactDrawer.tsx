@@ -60,7 +60,7 @@ async function fetchTemplates(userId: string, category: string): Promise<Templat
   return data.templates;
 }
 
-function DrawerMultiTemplateSelect({
+export function DrawerMultiTemplateSelect({
   value,
   onChange,
   category,
