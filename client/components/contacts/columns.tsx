@@ -110,34 +110,33 @@ function DataTableColumnHeader({
 
   return (
     <div className="flex items-center gap-1.5 group">
-      <Popover>
-        <PopoverTrigger asChild>
-          <button className={cn(
-            "flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.3em] transition-all hover:text-primary py-2 px-2 rounded-lg -ml-1 whitespace-nowrap",
-            isFiltered ? "text-primary bg-primary/5" : "text-muted-foreground"
-          )}>
-            {Icon && <Icon className={cn("w-3 h-3", isFiltered ? "opacity-100" : "opacity-50")} />}
-            {isEditingLabel ? (
-              <input
-                autoFocus
-                value={labelValue}
-                onChange={e => setLabelValue(e.target.value)}
-                onBlur={handleLabelSave}
-                onKeyDown={e => { 
-                  e.stopPropagation(); 
-                  if (e.key === 'Enter') handleLabelSave(); 
-                  if (e.key === 'Escape') setIsEditingLabel(false); 
-                }}
-                onClick={e => e.stopPropagation()}
-                className="bg-primary/10 border border-primary/30 rounded px-1 text-[10px] font-black uppercase w-20 outline-none"
-              />
-            ) : (
+      {isEditingLabel ? (
+        <input
+          autoFocus
+          value={labelValue}
+          onChange={e => setLabelValue(e.target.value)}
+          onBlur={handleLabelSave}
+          onKeyDown={e => { 
+            e.stopPropagation(); 
+            if (e.key === 'Enter') handleLabelSave(); 
+            if (e.key === 'Escape') setIsEditingLabel(false); 
+          }}
+          onClick={e => e.stopPropagation()}
+          className="bg-primary/10 border border-primary/30 rounded px-1 text-[10px] font-black uppercase w-20 outline-none h-6"
+        />
+      ) : (
+        <Popover>
+          <PopoverTrigger asChild>
+            <button className={cn(
+              "flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.3em] transition-all hover:text-primary py-2 px-2 rounded-lg -ml-1 whitespace-nowrap",
+              isFiltered ? "text-primary bg-primary/5" : "text-muted-foreground"
+            )}>
+              {Icon && <Icon className={cn("w-3 h-3", isFiltered ? "opacity-100" : "opacity-50")} />}
               <span>{displayTitle}</span>
-            )}
-            <Filter className={cn("w-2.5 h-2.5 ml-1 transition-all", isFiltered ? "opacity-100" : "opacity-0 group-hover:opacity-30")} />
-          </button>
-        </PopoverTrigger>
-        <PopoverContent className="w-72 glass-card p-4 rounded-[1.5rem] border-white/10 shadow-2xl animate-in fade-in zoom-in-95 duration-200" align="start">
+              <Filter className={cn("w-2.5 h-2.5 ml-1 transition-all", isFiltered ? "opacity-100" : "opacity-0 group-hover:opacity-30")} />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-72 glass-card p-4 rounded-[1.5rem] border-white/10 shadow-2xl animate-in fade-in zoom-in-95 duration-200" align="start">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Filter {displayTitle}</h4>
@@ -164,7 +163,8 @@ function DataTableColumnHeader({
             </div>
           </div>
         </PopoverContent>
-      </Popover>
+        </Popover>
+      )}
       {!isEditingLabel && (
         <button
           onClick={(e) => { e.stopPropagation(); setIsEditingLabel(true); setLabelValue(storedLabels[effectiveId] || title); }}

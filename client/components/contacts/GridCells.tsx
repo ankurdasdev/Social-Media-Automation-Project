@@ -241,6 +241,7 @@ export function AttachmentCell({
                   onUpdate(files);
                 }}
                 placeholder="Search drive for resume, photos..."
+                inline={true}
               />
            </div>
            <DialogFooter>

@@ -88,7 +88,7 @@ export async function sendOutreach(req: OutreachRequest) {
         whatsapp_run = CASE WHEN $3 = 'whatsapp' THEN TRUE ELSE whatsapp_run END,
         email_run = CASE WHEN $3 = 'email' THEN TRUE ELSE email_run END,
         instagram_run = CASE WHEN $3 = 'instagram' THEN TRUE ELSE instagram_run END,
-        follow_ups = follow_ups + 1,
+        follow_ups = COALESCE(follow_ups, 0) + 1,
         updated_at = NOW()
        WHERE id = $4 AND user_id = $5`,
       [now, JSON.stringify([...contactedDates, now]), channel, contactId, userId]
@@ -118,7 +118,12 @@ async function handleWhatsAppOutreach(userId: string, contact: Contact) {
   if (!rawNumber) throw new Error("No valid WhatsApp number found on this contact");
   const jid = rawNumber.includes("@") ? rawNumber : `${rawNumber}@s.whatsapp.net`;
 
-  // 1. Resolve Templates in Order
+  // 1. Custom Message Override (Sent First if present)
+  if (contact.hasCustomMessageWA && contact.editableMessageWP) {
+      await sendWA(instance.instance_name, jid, contact.editableMessageWP);
+  }
+
+  // 2. Resolve Templates in Order
   const templateIds = Array.isArray(contact.templateSelectionWP) ? contact.templateSelectionWP : [];
   const attachments: DriveFile[] = contact.unified_attachments || [];
 
@@ -135,11 +140,6 @@ async function handleWhatsAppOutreach(userId: string, contact: Contact) {
        const message = injectVariables(template.content, contact, "whatsapp");
        await sendWA(instance.instance_name, jid, message);
     }
-  }
-
-  // 2. Custom Message if any
-  if (contact.hasCustomMessageWA && contact.editableMessageWP) {
-      await sendWA(instance.instance_name, jid, contact.editableMessageWP);
   }
 
   // 3. Send Attachments
@@ -233,6 +233,12 @@ async function handleEmailOutreach(userId: string, contact: Contact) {
   let finalSubject = contact.editableGmailSubject || `Casting Outreach: ${contact.project || contact.name || "New Project"}`;
   const driveAttachments: DriveFile[] = contact.unified_attachments || [];
 
+  // 1. Custom Message Override (Sent First if present)
+  if (contact.hasCustomMessageEmail && contact.editableMessageGmail) {
+     combinedBody = contact.editableMessageGmail;
+  }
+
+  // 2. Resolve Templates
   for (const tId of templateIds) {
     const template = await queryOne<any>(
       "SELECT content, email_subject, is_attachment, drive_file_id, drive_file_name FROM templates WHERE id = $1 AND user_id = $2",
@@ -246,10 +252,6 @@ async function handleEmailOutreach(userId: string, contact: Contact) {
        if (template.email_subject && !contact.editableGmailSubject) finalSubject = template.email_subject;
        if (template.content) combinedBody += (combinedBody ? "\n\n" : "") + injectVariables(template.content, contact, "email");
     }
-  }
-
-  if (contact.hasCustomMessageEmail && contact.editableMessageGmail) {
-    combinedBody += (combinedBody ? "\n\n" : "") + contact.editableMessageGmail;
   }
 
   if (!combinedBody && driveAttachments.length === 0) throw new Error("No email content or attachments selected.");
@@ -305,6 +307,12 @@ async function handleInstagramOutreach(userId: string, contact: Contact) {
   let combinedMessage = "";
   const attachments: DriveFile[] = contact.unified_attachments || [];
 
+  // 1. Custom Message Override
+  if (contact.hasCustomMessageIG && contact.editableMessageIG) {
+    combinedMessage = contact.editableMessageIG;
+  }
+
+  // 2. Resolve Templates
   for (const tId of templateIds) {
     const template = await queryOne<any>(
       "SELECT content, is_attachment, drive_file_id, drive_file_name FROM templates WHERE id = $1 AND user_id = $2",
@@ -317,10 +325,6 @@ async function handleInstagramOutreach(userId: string, contact: Contact) {
     } else if (template.content) {
        combinedMessage += (combinedMessage ? "\n\n" : "") + injectVariables(template.content, contact, "instagram");
     }
-  }
-
-  if (contact.hasCustomMessageIG && contact.editableMessageIG) {
-    combinedMessage += (combinedMessage ? "\n\n" : "") + contact.editableMessageIG;
   }
 
   if (!combinedMessage && attachments.length === 0) throw new Error("No Instagram message selected.");
