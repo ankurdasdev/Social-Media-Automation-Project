@@ -166,7 +166,7 @@ export const handleInstagramSyncThreads: RequestHandler = async (req, res) => {
     const BASE_URL = process.env.INSTAGRAPI_API_URL || "http://localhost:8000";
     const API_KEY = process.env.INSTAGRAPI_API_KEY || "";
 
-    const threadRes = await fetch(`${BASE_URL}/v1/direct/threads`, {
+    const threadRes = await fetch(`${BASE_URL}/direct/threads`, {
       method: "POST",
       headers: { "X-API-KEY": API_KEY, "Content-Type": "application/json" },
       body: JSON.stringify({
