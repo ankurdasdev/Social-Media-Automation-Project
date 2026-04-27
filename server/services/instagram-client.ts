@@ -44,18 +44,28 @@ function headers() {
   };
 }
 
-/**
- * Executes a request to instagrapi-rest with a stored session.
- */
 async function igRequest(endpoint: string, sessionData: string, body: any = {}) {
   const url = `${BASE_URL}${endpoint}`;
+  
+  const form = new URLSearchParams();
+  form.append("sessionid", sessionData);
+  for (const key in body) {
+    if (body[key] !== undefined && body[key] !== null) {
+      if (typeof body[key] === 'object') {
+        form.append(key, JSON.stringify(body[key]));
+      } else {
+        form.append(key, body[key].toString());
+      }
+    }
+  }
+
   const res = await fetch(url, {
     method: "POST",
-    headers: headers(),
-    body: JSON.stringify({
-      ...body,
-      settings: JSON.parse(sessionData),
-    }),
+    headers: {
+      "X-API-KEY": API_KEY,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: form,
   });
 
   if (!res.ok) {
@@ -72,23 +82,35 @@ async function igRequest(endpoint: string, sessionData: string, body: any = {}) 
  * Login and get session settings.
  */
 export async function login(username: string, password?: string, verificationCode?: string) {
-  const url = `${BASE_URL}/v1/auth/login`;
+  const url = `${BASE_URL}/auth/login`;
+  
+  const form = new URLSearchParams();
+  if (username) form.append("username", username);
+  if (password) form.append("password", password);
+  if (verificationCode) form.append("verification_code", verificationCode);
+
   const res = await fetch(url, {
     method: "POST",
-    headers: headers(),
-    body: JSON.stringify({
-      username,
-      password,
-      verification_code: verificationCode,
-    }),
+    headers: {
+      "X-API-KEY": API_KEY,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: form,
   });
 
-  const data = await res.json();
   if (!res.ok) {
-    return { success: false, ...data };
+    let errorData;
+    try {
+      errorData = await res.json();
+    } catch {
+      errorData = await res.text();
+    }
+    return { success: false, error: errorData };
   }
 
-  return { success: true, session: JSON.stringify(data) };
+  // instagrapi-rest returns the sessionid string directly as JSON string
+  const sessionid = await res.json();
+  return { success: true, session: sessionid };
 }
 
 /**
@@ -100,8 +122,12 @@ export async function getAccountPosts(
   sessionData: string
 ): Promise<IGPost[]> {
   try {
-    const posts: IGPost[] = await igRequest("/v1/user/medias", sessionData, {
-      username_or_id: username,
+    const userId = await igRequest("/user/id_from_username", sessionData, {
+      username,
+    });
+
+    const posts: IGPost[] = await igRequest("/media/user_medias", sessionData, {
+      user_id: userId,
       amount: 50,
     });
     return posts.filter((p) => p.taken_at >= sinceTimestamp);
@@ -121,7 +147,7 @@ export async function getHashtagPosts(
 ): Promise<IGPost[]> {
   const cleanTag = hashtag.replace(/^#/, "");
   try {
-    const posts: IGPost[] = await igRequest("/v1/hashtag/medias/recent", sessionData, {
+    const posts: IGPost[] = await igRequest("/hashtag/medias/recent", sessionData, {
       name: cleanTag,
       amount: 50,
     });
@@ -141,7 +167,7 @@ export async function getGroupMessages(
   sessionData: string
 ): Promise<IGMessage[]> {
   try {
-    const thread: IGThread = await igRequest("/v1/direct/thread", sessionData, {
+    const thread: IGThread = await igRequest("/direct/thread", sessionData, {
       thread_id: threadId,
       amount: 100,
     });
@@ -161,7 +187,7 @@ export async function sendDirectMessage(
   text: string,
   sessionData: string
 ): Promise<any> {
-  return igRequest("/v1/direct/message", sessionData, {
+  return igRequest("/direct/message", sessionData, {
     usernames,
     text,
   });
