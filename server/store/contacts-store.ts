@@ -93,17 +93,24 @@ export async function createContact(userId: string, data: Partial<Contact>): Pro
     INSERT INTO contacts (
       user_id, name, casting_name, whatsapp, email, insta_handle, acting_context, project, age,
       sheet_name, status, automation_trigger, row_color, source,
-      unified_attachments, drive_attachments_wa, drive_attachments_email, drive_attachments_ig
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+      unified_attachments, drive_attachments_wa, drive_attachments_email, drive_attachments_ig,
+      whatsapp_run, email_run, instagram_run
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
     RETURNING *
   `;
   const ua = data.unified_attachments || [];
   const uaStr = JSON.stringify(ua);
+  // Auto-flag based on presence of contact details
+  const whatsappRun = data.whatsapp ? true : false;
+  const emailRun = data.email ? true : false;
+  const instagramRun = data.instaHandle ? true : false;
+
   const values = [
     userId, data.name, data.castingName, data.whatsapp, data.email, data.instaHandle,
     data.actingContext, data.project || "Casting Data", data.age, data.sheetName || "",
     data.status || "pending", data.automationTrigger || false, data.rowColor, data.source || "manual",
-    uaStr, uaStr, uaStr, uaStr
+    uaStr, uaStr, uaStr, uaStr,
+    whatsappRun, emailRun, instagramRun
   ];
   const row = await queryOne(sql, values);
   return mapRowToContact(row);

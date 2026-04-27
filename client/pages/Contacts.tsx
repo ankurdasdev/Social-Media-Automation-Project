@@ -26,6 +26,9 @@ import { DataTable } from "@/components/contacts/DataTable";
 import { columns } from "@/components/contacts/columns";
 import { useToast } from "@/hooks/use-toast";
 import { getOrCreateUserId } from "@/lib/utils";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Contacts() {
   const queryClient = useQueryClient();
@@ -45,7 +48,18 @@ export default function Contacts() {
     actingContext: "",
     project: "",
     age: "",
-    sheetName: ""
+    sheetName: "",
+    personalizedNameWA: "N",
+    personalizedNameGmail: "N",
+    personalizedNameIG: "N",
+    hasCustomMessageWA: false,
+    editableMessageWP: "",
+    hasCustomMessageEmail: false,
+    editableMessageGmail: "",
+    editableGmailSubject: "",
+    hasCustomMessageIG: false,
+    editableMessageIG: "",
+    notes: ""
   });
 
   const { data: contactsData, isLoading: contactsLoading } = useQuery({
@@ -242,7 +256,18 @@ export default function Contacts() {
       actingContext: "",
       project: "",
       age: "",
-      sheetName: activeTab === "all" ? "" : activeTab
+      sheetName: activeTab === "all" ? "" : activeTab,
+      personalizedNameWA: "N",
+      personalizedNameGmail: "N",
+      personalizedNameIG: "N",
+      hasCustomMessageWA: false,
+      editableMessageWP: "",
+      hasCustomMessageEmail: false,
+      editableMessageGmail: "",
+      editableGmailSubject: "",
+      hasCustomMessageIG: false,
+      editableMessageIG: "",
+      notes: ""
     });
     setIsAddLeadOpen(true);
   };
@@ -346,21 +371,31 @@ export default function Contacts() {
           </DialogHeader>
           
           <div className="p-8 max-h-[70vh] overflow-y-auto space-y-8 scrollbar-hide">
-            <div className="space-y-6">
-                <div className="space-y-3">
-                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Contact Name</Label>
-                    <Input value={newLead.name} onChange={e => setNewLead({...newLead, name: e.target.value})} className="h-12 rounded-xl bg-muted/40 border-border/50 font-bold focus:ring-primary shadow-inner" placeholder="E.g. John Doe" />
-                </div>
-                
+            <Tabs defaultValue="basic" className="w-full">
+              <TabsList className="grid w-full grid-cols-4 mb-6">
+                <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                <TabsTrigger value="whatsapp">WhatsApp</TabsTrigger>
+                <TabsTrigger value="email">Email</TabsTrigger>
+                <TabsTrigger value="instagram">Instagram</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="basic" className="space-y-6">
                 <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-3">
-                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Casting Contact</Label>
-                        <Input value={newLead.castingName} onChange={e => setNewLead({...newLead, castingName: e.target.value})} className="h-12 rounded-xl bg-muted/40 border-border/50 font-bold" />
+                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Contact Name</Label>
+                        <Input value={newLead.name} onChange={e => setNewLead({...newLead, name: e.target.value})} className="h-12 rounded-xl bg-muted/40 font-bold" placeholder="E.g. John Doe" />
                     </div>
+                    <div className="space-y-3">
+                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Casting Contact</Label>
+                        <Input value={newLead.castingName} onChange={e => setNewLead({...newLead, castingName: e.target.value})} className="h-12 rounded-xl bg-muted/40 font-bold" />
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-3">
                         <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Sheet Name</Label>
                         <Select value={newLead.sheetName} onValueChange={(val) => setNewLead({ ...newLead, sheetName: val })}>
-                          <SelectTrigger className="h-12 rounded-xl bg-muted/40 border-border/50 font-bold">
+                          <SelectTrigger className="h-12 rounded-xl bg-muted/40 font-bold">
                             <SelectValue placeholder="Unassigned" />
                           </SelectTrigger>
                           <SelectContent>
@@ -368,29 +403,114 @@ export default function Contacts() {
                           </SelectContent>
                         </Select>
                     </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-3">
-                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">WhatsApp Number</Label>
-                        <Input value={newLead.whatsapp} onChange={e => setNewLead({...newLead, whatsapp: e.target.value})} className="h-12 rounded-xl bg-muted/40 border-border/50 font-bold" placeholder="+91..." />
-                    </div>
-                    <div className="space-y-3">
-                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Instagram Link</Label>
-                        <Input value={newLead.instaHandle} onChange={e => setNewLead({...newLead, instaHandle: e.target.value})} className="h-12 rounded-xl bg-muted/40 border-border/50 font-bold" placeholder="@username" />
+                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Notes</Label>
+                        <Input value={newLead.notes} onChange={e => setNewLead({...newLead, notes: e.target.value})} className="h-12 rounded-xl bg-muted/40 font-bold" />
                     </div>
                 </div>
 
-                <div className="space-y-3">
+                <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-3">
+                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Context / Role</Label>
+                        <Input value={newLead.actingContext} onChange={e => setNewLead({...newLead, actingContext: e.target.value})} className="h-12 rounded-xl bg-muted/40 font-bold" />
+                    </div>
+                    <div className="space-y-3">
+                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Project</Label>
+                        <Input value={newLead.project} onChange={e => setNewLead({...newLead, project: e.target.value})} className="h-12 rounded-xl bg-muted/40 font-bold" />
+                    </div>
+                    <div className="space-y-3">
+                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Age Bracket</Label>
+                        <Input value={newLead.age} onChange={e => setNewLead({...newLead, age: e.target.value})} className="h-12 rounded-xl bg-muted/40 font-bold" />
+                    </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="whatsapp" className="space-y-6">
+                 <div className="space-y-3">
+                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">WhatsApp Number</Label>
+                    <Input value={newLead.whatsapp} onChange={e => setNewLead({...newLead, whatsapp: e.target.value})} className="h-12 rounded-xl bg-muted/40 font-bold" placeholder="+91..." />
+                 </div>
+                 <div className="space-y-3">
+                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Personalized Name</Label>
+                    <Select value={newLead.personalizedNameWA} onValueChange={(val) => setNewLead({ ...newLead, personalizedNameWA: val })}>
+                       <SelectTrigger className="h-12 rounded-xl bg-muted/40 font-bold"><SelectValue /></SelectTrigger>
+                       <SelectContent>
+                         <SelectItem value="N">Lead Name</SelectItem>
+                         <SelectItem value="C">Casting Name</SelectItem>
+                         <SelectItem value="NA">None</SelectItem>
+                       </SelectContent>
+                    </Select>
+                 </div>
+                 <div className="flex items-center gap-2 p-3 bg-muted/20 rounded-xl border border-white/5">
+                    <Switch checked={newLead.hasCustomMessageWA} onCheckedChange={v => setNewLead({...newLead, hasCustomMessageWA: v})} />
+                    <Label className="text-xs font-bold uppercase">Use Custom Override Message</Label>
+                 </div>
+                 {newLead.hasCustomMessageWA && (
+                    <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
+                       <Label className="text-[10px] font-black text-primary uppercase tracking-widest px-1">Custom Message</Label>
+                       <Textarea value={newLead.editableMessageWP} onChange={e => setNewLead({...newLead, editableMessageWP: e.target.value})} className="min-h-[100px] rounded-xl bg-muted/40" />
+                    </div>
+                 )}
+              </TabsContent>
+
+              <TabsContent value="email" className="space-y-6">
+                 <div className="space-y-3">
                     <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Email Address</Label>
-                    <Input type="email" value={newLead.email} onChange={e => setNewLead({...newLead, email: e.target.value})} className="h-12 rounded-xl bg-muted/40 border-border/50 font-bold" placeholder="protocol@example.com" />
-                </div>
+                    <Input value={newLead.email} onChange={e => setNewLead({...newLead, email: e.target.value})} className="h-12 rounded-xl bg-muted/40 font-bold" placeholder="address@domain.com" />
+                 </div>
+                 <div className="space-y-3">
+                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Personalized Name</Label>
+                    <Select value={newLead.personalizedNameGmail} onValueChange={(val) => setNewLead({ ...newLead, personalizedNameGmail: val })}>
+                       <SelectTrigger className="h-12 rounded-xl bg-muted/40 font-bold"><SelectValue /></SelectTrigger>
+                       <SelectContent>
+                         <SelectItem value="N">Lead Name</SelectItem>
+                         <SelectItem value="C">Casting Name</SelectItem>
+                         <SelectItem value="NA">None</SelectItem>
+                       </SelectContent>
+                    </Select>
+                 </div>
+                 <div className="flex items-center gap-2 p-3 bg-muted/20 rounded-xl border border-white/5">
+                    <Switch checked={newLead.hasCustomMessageEmail} onCheckedChange={v => setNewLead({...newLead, hasCustomMessageEmail: v})} />
+                    <Label className="text-xs font-bold uppercase">Use Custom Override Message</Label>
+                 </div>
+                 {newLead.hasCustomMessageEmail && (
+                    <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
+                       <Label className="text-[10px] font-black text-primary uppercase tracking-widest px-1">Custom Subject</Label>
+                       <Input value={newLead.editableGmailSubject} onChange={e => setNewLead({...newLead, editableGmailSubject: e.target.value})} className="h-12 rounded-xl bg-muted/40 font-bold" />
+                       <Label className="text-[10px] font-black text-primary uppercase tracking-widest px-1">Custom Body</Label>
+                       <Textarea value={newLead.editableMessageGmail} onChange={e => setNewLead({...newLead, editableMessageGmail: e.target.value})} className="min-h-[100px] rounded-xl bg-muted/40" />
+                    </div>
+                 )}
+              </TabsContent>
 
-                <div className="space-y-3">
-                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Context / Role</Label>
-                    <Input value={newLead.actingContext} onChange={e => setNewLead({...newLead, actingContext: e.target.value})} className="h-12 rounded-xl bg-muted/40 border-border/50 font-bold" placeholder="E.g. Lead Antagonist" />
-                </div>
-            </div>
+              <TabsContent value="instagram" className="space-y-6">
+                 <div className="space-y-3">
+                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Instagram Handle</Label>
+                    <Input value={newLead.instaHandle} onChange={e => setNewLead({...newLead, instaHandle: e.target.value})} className="h-12 rounded-xl bg-muted/40 font-bold" placeholder="@username" />
+                 </div>
+                 <div className="space-y-3">
+                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Personalized Name</Label>
+                    <Select value={newLead.personalizedNameIG} onValueChange={(val) => setNewLead({ ...newLead, personalizedNameIG: val })}>
+                       <SelectTrigger className="h-12 rounded-xl bg-muted/40 font-bold"><SelectValue /></SelectTrigger>
+                       <SelectContent>
+                         <SelectItem value="N">Lead Name</SelectItem>
+                         <SelectItem value="C">Casting Name</SelectItem>
+                         <SelectItem value="NA">None</SelectItem>
+                       </SelectContent>
+                    </Select>
+                 </div>
+                 <div className="flex items-center gap-2 p-3 bg-muted/20 rounded-xl border border-white/5">
+                    <Switch checked={newLead.hasCustomMessageIG} onCheckedChange={v => setNewLead({...newLead, hasCustomMessageIG: v})} />
+                    <Label className="text-xs font-bold uppercase">Use Custom Override Message</Label>
+                 </div>
+                 {newLead.hasCustomMessageIG && (
+                    <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
+                       <Label className="text-[10px] font-black text-primary uppercase tracking-widest px-1">Custom Message</Label>
+                       <Textarea value={newLead.editableMessageIG} onChange={e => setNewLead({...newLead, editableMessageIG: e.target.value})} className="min-h-[100px] rounded-xl bg-muted/40" />
+                    </div>
+                 )}
+              </TabsContent>
+            </Tabs>
           </div>
 
           <DialogFooter className="p-8 bg-muted/30 border-t border-white/5 gap-4">

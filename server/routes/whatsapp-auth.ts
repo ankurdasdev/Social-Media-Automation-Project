@@ -246,10 +246,7 @@ export const handleWhatsAppSyncGroups: RequestHandler = async (req, res) => {
         // Upsert into source_groups
         await pool.query(
           `INSERT INTO source_groups (user_id, name, platform, type, url, enabled)
-           VALUES ($1, $2, 'whatsapp', 'group', $3, true)
-           ON CONFLICT (user_id, name, platform) DO UPDATE SET 
-             url = EXCLUDED.url,
-             updated_at = NOW()`,
+           VALUES ($1, $2, 'whatsapp', 'group', $3, true)`,
           [userId, group.subject, group.id]
         );
         addedCount++;
