@@ -56,7 +56,7 @@ export function DriveFilePicker({
   const { data, isLoading, error } = useQuery({
     queryKey: ["drive-files", userId, debouncedSearch],
     queryFn: () => searchFiles(userId, debouncedSearch),
-    enabled: open && !!userId,
+    enabled: (inline || open) && !!userId,
     staleTime: 0,
     retry: 1,
   });
