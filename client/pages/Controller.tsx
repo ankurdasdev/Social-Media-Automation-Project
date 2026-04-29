@@ -850,6 +850,11 @@ function GroupList({
                   {typeLabel(group.type, group.platform)}
                 </Badge>
                 <StatusBadge status={group.status} message={group.statusMessage} />
+                {group.isManual && (
+                  <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/20 font-bold uppercase tracking-wider text-[10px]">
+                    Manual
+                  </Badge>
+                )}
               </div>
             </div>
 

@@ -31,6 +31,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DrawerMultiTemplateSelect } from "@/components/contacts/ContactDrawer";
 import { AttachmentCell } from "@/components/contacts/GridCells";
+import { Progress } from "@/components/ui/progress";
 
 export default function Contacts() {
   const queryClient = useQueryClient();
@@ -38,6 +39,7 @@ export default function Contacts() {
 
   const [activeTab, setActiveTab] = useState("all");
   const [localSheets, setLocalSheets] = useState<string[]>([]);
+  const [sendingProgress, setSendingProgress] = useState<{ current: number; total: number; message: string } | null>(null);
   const userId = getOrCreateUserId();
   
   const [isAddLeadOpen, setIsAddLeadOpen] = useState(false);
@@ -210,10 +212,22 @@ export default function Contacts() {
 
   const bulkOutreachMutation = useMutation({
     mutationFn: async (contactIds: string[]) => {
+      setSendingProgress({ current: 0, total: contactIds.length, message: "Initializing bulk outreach..." });
+      let current = 0;
+      
       for (const id of contactIds) {
         const contact = contacts.find(c => c.id === id);
-        if (!contact) continue;
+        if (!contact) {
+          current++;
+          continue;
+        }
         
+        setSendingProgress({ 
+          current, 
+          total: contactIds.length, 
+          message: `Processing ${contact.name || 'Record'}...` 
+        });
+
         const channels: ("whatsapp" | "email" | "instagram")[] = [];
         // Respect the run flags — only send on channels the user has opted in
         if (contact.whatsappRun && contact.whatsapp) channels.push("whatsapp");
@@ -229,6 +243,8 @@ export default function Contacts() {
 
         for (const channel of channels) {
           try {
+            setSendingProgress(prev => prev ? { ...prev, message: `Sending ${channel} to ${contact.name || 'Record'}...` } : null);
+            
             const res = await fetch("/api/outreach/send", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -237,20 +253,30 @@ export default function Contacts() {
             if (!res.ok) {
               const error = await res.json();
               console.error(`Failed to send ${channel} to ${contact.name}:`, error);
-              // We log the error but continue to process the next row (sequential processing)
             }
           } catch (err) {
             console.error(`Network error sending ${channel} to ${contact.name}:`, err);
           }
         }
+        
+        current++;
+        setSendingProgress({ 
+          current, 
+          total: contactIds.length, 
+          message: `Finished ${contact.name || 'Record'}.` 
+        });
       }
     },
     onSuccess: (_, ids) => {
       toast({
         title: "OUTREACH DISPATCHED",
-        description: `Successfully initiated outreach for ${ids.length} contacts.`,
+        description: `Successfully processed outreach for ${ids.length} contacts.`,
       });
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
+    },
+    onSettled: () => {
+      // Keep the progress bar visible for a moment then fade out
+      setTimeout(() => setSendingProgress(null), 3000);
     },
     onError: (err: any) => {
       toast({
@@ -581,6 +607,40 @@ export default function Contacts() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {sendingProgress && (
+        <div className="fixed bottom-8 right-8 w-96 glass-card p-6 shadow-2xl border-white/10 dark:border-white/5 animate-in slide-in-from-bottom-10 duration-500 z-[100] rounded-3xl overflow-hidden group">
+          <div className="absolute inset-0 bg-primary/5 opacity-50 group-hover:opacity-100 transition-opacity" />
+          <div className="relative space-y-4">
+            <div className="flex items-center justify-between">
+               <div className="flex items-center gap-2">
+                 <Loader2 className="w-3 h-3 text-primary animate-spin" />
+                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Outreach In Progress</p>
+               </div>
+               <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest bg-muted/50 px-2 py-0.5 rounded-lg">
+                 {sendingProgress.current} / {sendingProgress.total}
+               </p>
+            </div>
+            
+            <div className="relative h-2.5 w-full bg-muted/50 rounded-full overflow-hidden border border-white/5 shadow-inner">
+               <Progress 
+                 value={(sendingProgress.current / sendingProgress.total) * 100} 
+                 className="h-full bg-primary transition-all duration-500 ease-out" 
+               />
+            </div>
+            
+            <div className="flex items-center gap-3">
+               <div className="flex-1 min-w-0">
+                  <p className="text-[11px] font-black text-foreground truncate uppercase tracking-tight">
+                    {sendingProgress.message}
+                  </p>
+                  <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5 opacity-60">
+                    Sequential Processing Enabled
+                  </p>
+               </div>
+            </div>
+          </div>
+        </div>
+      )}
     </AppLayout>
   );
 }

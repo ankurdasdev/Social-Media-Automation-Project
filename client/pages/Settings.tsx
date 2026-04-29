@@ -60,6 +60,17 @@ export default function Settings() {
     },
   });
 
+  // ── Check if token has gmail.send scope ──────────────────────────────────
+  const { data: scopeCheck } = useQuery({
+    queryKey: ["google-scopes", userId],
+    queryFn: async () => {
+      const res = await fetch(`/api/auth/google/check-scopes?userId=${userId}`);
+      return res.json() as Promise<{ hasSendScope: boolean; needsReauth: boolean }>;
+    },
+    enabled: !!googleStatus?.connected && !googleStatus?.needsReauth,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
   // ── Drive folders (when connected) ────────────────────────────────────────
   const { data: foldersData } = useQuery({
     queryKey: ["drive-folders", userId],
@@ -188,14 +199,40 @@ export default function Settings() {
                        </div>
 
                        {!googleStatus.needsReauth && (
-                           <div className="flex flex-wrap gap-4 pt-2">
-                             <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-blue-500/5 border border-blue-500/10 text-blue-500">
-                               <HardDrive className="h-5 w-5" />
-                               <span className="text-sm font-bold uppercase tracking-wider">Drive Connected</span>
-                             </div>
-                             <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-indigo-500/5 border border-indigo-500/10 text-indigo-500">
-                               <Mail className="h-5 w-5" />
-                               <span className="text-sm font-bold uppercase tracking-wider">Gmail Connected</span>
+                           <div className="space-y-4">
+                             {scopeCheck?.needsReauth && (
+                               <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-4 animate-in fade-in duration-300">
+                                 <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+                                 <div className="flex-1 space-y-2">
+                                   <p className="text-sm font-black text-amber-500 uppercase tracking-widest">Gmail Send Permission Missing</p>
+                                   <p className="text-xs text-muted-foreground leading-relaxed">
+                                     Your Google account was connected before Gmail sending was enabled. Re-authenticate to grant the permission — it only takes a second.
+                                   </p>
+                                   <Button
+                                     onClick={handleConnectGoogle}
+                                     className="h-10 px-5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-black text-[11px] uppercase tracking-widest gap-2 shadow-lg shadow-amber-500/20"
+                                   >
+                                     <RefreshCw className="h-3.5 w-3.5" />
+                                     RE-AUTHENTICATE GOOGLE
+                                   </Button>
+                                 </div>
+                               </div>
+                             )}
+                             <div className="flex flex-wrap gap-4 pt-2">
+                               <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-blue-500/5 border border-blue-500/10 text-blue-500">
+                                 <HardDrive className="h-5 w-5" />
+                                 <span className="text-sm font-bold uppercase tracking-wider">Drive Connected</span>
+                               </div>
+                               <div className={`flex items-center gap-3 px-5 py-3 rounded-2xl border ${
+                                 scopeCheck?.needsReauth
+                                   ? "bg-amber-500/5 border-amber-500/20 text-amber-500"
+                                   : "bg-indigo-500/5 border-indigo-500/10 text-indigo-500"
+                               }`}>
+                                 <Mail className="h-5 w-5" />
+                                 <span className="text-sm font-bold uppercase tracking-wider">
+                                   {scopeCheck?.needsReauth ? "Gmail — Needs Re-auth" : "Gmail Connected"}
+                                 </span>
+                               </div>
                              </div>
                            </div>
                        )}

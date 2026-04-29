@@ -3,13 +3,27 @@
  *
  * Multi-user architecture:
  * - Each user provides their own Instagram username/password
- * - We login via the instagrapi-rest API and receive session settings JSON
- * - Session (not password) is stored encrypted per-user in instagram_sessions table
- * - Every API call restores the session first, makes the call, saves the updated session
+ * - Login is performed DIRECTLY from the user's browser → instagrapi-rest
+ *   so that the network request uses the user's residential IP (not the server IP).
+ * - Session (not password) is stored per-user in instagram_sessions table.
  */
 import { RequestHandler } from "express";
 import { query, queryOne } from "../db";
 import * as igClient from "../services/instagram-client";
+
+// ─── Service Config ───────────────────────────────────────────────────────────
+
+/**
+ * GET /api/instagram/service-config
+ * Returns the instagrapi-rest base URL + API key so the frontend can call it
+ * directly from the user's browser (uses their residential IP, not server IP).
+ */
+export const handleInstagramServiceConfig: RequestHandler = (_req, res) => {
+  const baseUrl = process.env.INSTAGRAPI_API_URL || "http://localhost:8000";
+  const apiKey = process.env.INSTAGRAPI_API_KEY || "";
+  res.json({ baseUrl, apiKey });
+};
+
 
 // ─── Status ───────────────────────────────────────────────────────────────────
 
@@ -84,23 +98,20 @@ export const handleInstagramConnect: RequestHandler = async (req, res) => {
     }
 
     const result = await igClient.login(username, password, verificationCode);
-
+    
     if (!result.success) {
-      // Detect 2FA requirement
-      const isTwoFactor =
-        result.two_factor_required ||
-        result.twoFactorRequired ||
-        JSON.stringify(result).toLowerCase().includes("two_factor");
+      const errorStr = typeof result.error === 'object' ? JSON.stringify(result.error) : String(result.error || "");
+      const isTwoFactor = errorStr.toLowerCase().includes("two_factor") || errorStr.toLowerCase().includes("verification_code");
 
       return res.status(401).json({
         success: false,
         twoFactorRequired: isTwoFactor,
-        message: result.detail || result.message || "Login failed",
-        twoFactorInfo: result.two_factor_info,
+        message: errorStr || "Login failed",
       });
     }
 
     // Store session (not password) in DB
+    const sessionData = typeof result.session === 'string' ? result.session : JSON.stringify(result.session);
     await query(
       `INSERT INTO instagram_sessions (user_id, username, session_data, status, connected_at)
        VALUES ($1, $2, $3, 'connected', NOW())
@@ -110,7 +121,7 @@ export const handleInstagramConnect: RequestHandler = async (req, res) => {
          status      = 'connected',
          connected_at = NOW(),
          updated_at  = NOW()`,
-      [userId, username.toLowerCase().trim(), result.session]
+      [userId, username.toLowerCase().trim(), sessionData]
     );
 
     console.log(`[instagram] ✅ User ${userId} connected as @${username}`);
@@ -141,6 +152,85 @@ export const handleInstagramDisconnect: RequestHandler = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+// ─── Connect via Session Cookie ───────────────────────────────────────────────
+
+/**
+ * POST /api/instagram/connect-session
+ * Body: { userId, username, sessionId }
+ *
+ * Allows connecting via the raw sessionid cookie instead of password.
+ * This is the most reliable method when the server IP is blocked by Instagram.
+ */
+export const handleInstagramConnectSession: RequestHandler = async (req, res) => {
+  const { userId, username, sessionId } = req.body as {
+    userId: string;
+    username: string;
+    sessionId: string;
+  };
+
+  if (!userId || !username || !sessionId) {
+    return res.status(400).json({ error: "userId, username, and sessionId are required" });
+  }
+
+  // The sessionId IS the session data we need for instagrapi-rest
+  const sessionData = sessionId.trim();
+
+  try {
+    // Verify the session works by making a simple API call
+    const BASE_URL = process.env.INSTAGRAPI_API_URL || "http://localhost:8000";
+    const API_KEY = process.env.INSTAGRAPI_API_KEY || "";
+
+    const form = new URLSearchParams();
+    form.append("sessionid", sessionData);
+    
+    let verifiedUsername = username.toLowerCase().trim();
+    
+    // Try to verify the session by fetching account info
+    try {
+      const verifyRes = await fetch(`${BASE_URL}/account/info`, {
+        method: "POST",
+        headers: {
+          "X-API-KEY": API_KEY,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: form,
+      });
+
+      if (verifyRes.ok) {
+        const info = await verifyRes.json();
+        if (info?.username) verifiedUsername = info.username;
+        console.log(`[instagram] Session verified for @${verifiedUsername}`);
+      } else {
+        const errText = await verifyRes.text();
+        console.warn(`[instagram] Session verify returned ${verifyRes.status}: ${errText}`);
+        // We still proceed — the session might work for DMs even if account/info fails
+      }
+    } catch (verifyErr: any) {
+      console.warn("[instagram] Session verification request failed (non-fatal):", verifyErr.message);
+    }
+
+    // Store session in DB
+    await query(
+      `INSERT INTO instagram_sessions (user_id, username, session_data, status, connected_at)
+       VALUES ($1, $2, $3, 'connected', NOW())
+       ON CONFLICT (user_id) DO UPDATE SET
+         username    = EXCLUDED.username,
+         session_data = EXCLUDED.session_data,
+         status      = 'connected',
+         connected_at = NOW(),
+         updated_at  = NOW()`,
+      [userId, verifiedUsername, sessionData]
+    );
+
+    console.log(`[instagram] ✅ Session cookie connected for @${verifiedUsername}`);
+    res.json({ success: true, username: verifiedUsername });
+  } catch (err: any) {
+    console.error("[instagram] Connect session error:", err.message);
+    res.status(500).json({ error: "Internal server error", detail: err.message });
+  }
+};
+
 
 // ─── DM Threads (Source Groups) ────────────────────────────────────────────────
 

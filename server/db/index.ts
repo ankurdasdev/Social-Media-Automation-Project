@@ -31,8 +31,8 @@ console.log(`🛠️ [DEBUG] Pool connecting to ${dbConfig.host}:${dbConfig.port
 
 export const pool = new Pool({
   ...dbConfig,
-  max: 5,
-  idleTimeoutMillis: 2000,
+  max: 20,
+  idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 10000,
 });
 
@@ -166,6 +166,8 @@ async function runMigrations(): Promise<void> {
       url TEXT,
       description TEXT,
       enabled BOOLEAN DEFAULT TRUE,
+      is_manual BOOLEAN DEFAULT FALSE,
+      last_verified_at TIMESTAMPTZ,
       member_count INTEGER,
       last_scraped TIMESTAMPTZ,
       created_at TIMESTAMPTZ DEFAULT NOW(),

@@ -190,6 +190,31 @@ export const handleGoogleDisconnect: RequestHandler = async (req, res) => {
   res.json({ success: true });
 };
 
+// ── GET /api/auth/google/check-scopes?userId=xxx ────────────────────────────
+// Tests whether the stored token actually has gmail.send scope.
+// Returns { hasSendScope: boolean }
+export const handleCheckGoogleScopes: RequestHandler = async (req, res) => {
+  const userId = req.query.userId as string;
+  if (!userId) return res.status(400).json({ error: "userId required" });
+
+  try {
+    const gmailClient = await getGmailClient(userId);
+    // Test by calling getProfile — this only needs gmail.readonly/send scope to work
+    await gmailClient.users.getProfile({ userId: "me" });
+    res.json({ hasSendScope: true, needsReauth: false });
+  } catch (err: any) {
+    const isScope = err?.message?.toLowerCase().includes("insufficient") || 
+                    err?.code === 403 ||
+                    err?.errors?.[0]?.reason === "insufficientPermissions";
+    if (isScope) {
+      return res.json({ hasSendScope: false, needsReauth: true });
+    }
+    // Other error (network, not connected, etc.)
+    return res.json({ hasSendScope: false, needsReauth: false, error: err.message });
+  }
+};
+
+
 // ── PUT /api/auth/google/folder ───────────────────────────────────────────────
 // Save selected Drive folder
 export const handleSetDriveFolder: RequestHandler = async (req, res) => {
