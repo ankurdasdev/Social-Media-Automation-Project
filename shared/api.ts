@@ -35,6 +35,8 @@ export interface SourceGroup {
   url?: string;
   description?: string;
   enabled: boolean;
+  isManual?: boolean;
+  lastVerifiedAt?: string;
   status: "connected" | "failed" | "pending" | "error";
   statusMessage?: string;
   createdAt: string;

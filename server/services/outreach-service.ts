@@ -223,7 +223,13 @@ async function buildMimeMessage(opts: {
 }
 
 async function handleEmailOutreach(userId: string, contact: Contact) {
-  const gmail = await getGmailClient(userId);
+  let gmail: any;
+  try {
+    gmail = await getGmailClient(userId);
+  } catch (err: any) {
+    throw new Error("Gmail not connected — please connect your Google account in Settings.");
+  }
+
   const to = contact.email;
   if (!to) throw new Error("No email address found on this contact");
 
@@ -257,7 +263,21 @@ async function handleEmailOutreach(userId: string, contact: Contact) {
   if (!combinedBody && driveAttachments.length === 0) throw new Error("No email content or attachments selected.");
 
   // Get sender email from Google profile
-  const profileRes = await gmail.users.getProfile({ userId: "me" });
+  let profileRes: any;
+  try {
+    profileRes = await gmail.users.getProfile({ userId: "me" });
+  } catch (err: any) {
+    const isScope = err?.message?.toLowerCase().includes("insufficient") || 
+                    err?.code === 403 || 
+                    err?.errors?.[0]?.reason === "insufficientPermissions";
+    if (isScope) {
+      throw new Error(
+        "GMAIL_SCOPE_ERROR: Your Google account needs to be re-connected to enable email sending. Please go to Settings → Google Drive & Gmail → Disconnect, then reconnect your account."
+      );
+    }
+    throw new Error(`Gmail error: ${err.message}`);
+  }
+
   const from = profileRes.data.emailAddress || "me";
 
   const emailAttachments: { filename: string; content: Buffer; mimeType: string }[] = [];
@@ -286,8 +306,22 @@ async function handleEmailOutreach(userId: string, contact: Contact) {
     attachments: emailAttachments,
   });
 
-  const res = await gmail.users.messages.send({ userId: "me", requestBody: { raw } });
-  return { messageId: res.data.id, to };
+  let sendRes: any;
+  try {
+    sendRes = await gmail.users.messages.send({ userId: "me", requestBody: { raw } });
+  } catch (err: any) {
+    const isScope = err?.message?.toLowerCase().includes("insufficient") || 
+                    err?.code === 403 ||
+                    err?.errors?.[0]?.reason === "insufficientPermissions";
+    if (isScope) {
+      throw new Error(
+        "GMAIL_SCOPE_ERROR: Your Google account needs to be re-connected to enable email sending. Please go to Settings → Google Drive & Gmail → Disconnect, then reconnect your account."
+      );
+    }
+    throw new Error(`Gmail send failed: ${err.message}`);
+  }
+  
+  return { messageId: sendRes.data.id, to };
 }
 
 // ─── Instagram DM ─────────────────────────────────────────────────────────────

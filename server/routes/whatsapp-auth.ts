@@ -234,19 +234,17 @@ export const handleWhatsAppSyncGroups: RequestHandler = async (req, res) => {
       );
 
       if (existing.rows.length > 0) {
-        // Update URL (JID) if it's missing or changed
-        if (existing.rows[0].url !== group.id) {
-          await pool.query(
-            "UPDATE source_groups SET url = $1, updated_at = NOW() WHERE id = $2",
-            [group.id, existing.rows[0].id]
-          );
-          updatedCount++;
-        }
+        // Update URL (JID) if it's missing or changed, and update last_verified_at
+        await pool.query(
+          "UPDATE source_groups SET url = $1, status = 'connected', last_verified_at = NOW(), updated_at = NOW() WHERE id = $2",
+          [group.id, existing.rows[0].id]
+        );
+        updatedCount++;
       } else {
         // Upsert into source_groups
         await pool.query(
-          `INSERT INTO source_groups (user_id, name, platform, type, url, enabled)
-           VALUES ($1, $2, 'whatsapp', 'group', $3, true)`,
+          `INSERT INTO source_groups (user_id, name, platform, type, url, enabled, is_manual, status, last_verified_at)
+           VALUES ($1, $2, 'whatsapp', 'group', $3, true, false, 'connected', NOW())`,
           [userId, group.subject, group.id]
         );
         addedCount++;

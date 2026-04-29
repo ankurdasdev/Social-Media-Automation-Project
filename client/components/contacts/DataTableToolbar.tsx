@@ -229,19 +229,28 @@ export function DataTableToolbar<TData>({
 
                 
                 <DropdownMenuLabel className="px-4 py-2 text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Set Row Color</DropdownMenuLabel>
-                <div className="flex items-center justify-around p-3">
+                <div className="grid grid-cols-5 gap-3 p-3 px-4">
                   {[
+                    { color: "slate", bg: "bg-slate-400" },
+                    { color: "rose", bg: "bg-rose-400" },
+                    { color: "orange", bg: "bg-orange-400" },
+                    { color: "amber", bg: "bg-amber-400" },
                     { color: "yellow", bg: "bg-yellow-400" },
-                    { color: "green", bg: "bg-emerald-400" },
-                    { color: "red", bg: "bg-rose-400" },
-                    { color: "blue", bg: "bg-blue-400" }
+                    { color: "emerald", bg: "bg-emerald-400" },
+                    { color: "teal", bg: "bg-teal-400" },
+                    { color: "cyan", bg: "bg-cyan-400" },
+                    { color: "blue", bg: "bg-blue-400" },
+                    { color: "indigo", bg: "bg-indigo-400" },
+                    { color: "violet", bg: "bg-violet-400" },
+                    { color: "purple", bg: "bg-purple-400" },
+                    { color: "pink", bg: "bg-pink-400" },
                   ].map((c) => (
                       <DropdownMenuItem key={c.color} asChild onSelect={(e) => { e.preventDefault(); executeBulkAction("color", c.color); }}>
-                        <div className={cn("w-8 h-8 rounded-full cursor-pointer hover:ring-4 ring-white/20 transition-all shadow-lg", c.bg)} title={c.color} />
+                        <div className={cn("w-7 h-7 rounded-full cursor-pointer hover:ring-4 ring-primary/20 transition-all shadow-md border border-white/10", c.bg)} title={c.color} />
                       </DropdownMenuItem>
                   ))}
                   <DropdownMenuItem asChild onSelect={(e) => { e.preventDefault(); executeBulkAction("color", "transparent"); }}>
-                    <div className="w-8 h-8 rounded-full bg-muted border border-white/10 cursor-pointer hover:ring-4 ring-white/20 flex items-center justify-center text-[10px] font-black transition-all shadow-lg" title="Clear Color">X</div>
+                    <div className="w-7 h-7 rounded-full bg-muted border border-white/10 cursor-pointer hover:ring-4 ring-primary/20 flex items-center justify-center text-[10px] font-black transition-all shadow-md" title="Clear Color">X</div>
                   </DropdownMenuItem>
                 </div>
 

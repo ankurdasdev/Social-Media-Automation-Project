@@ -21,6 +21,8 @@ function mapRowToGroup(row: any): SourceGroup {
     url: row.url || "",
     description: row.description || "",
     enabled: row.enabled,
+    isManual: row.is_manual,
+    lastVerifiedAt: row.last_verified_at?.toISOString(),
     status: row.status || "pending",
     statusMessage: row.status_message || "",
     createdAt: row.created_at?.toISOString(),
@@ -105,8 +107,8 @@ export const handleCreateGroup: RequestHandler = async (req, res) => {
   try {
     // 1. Create the source group immediately with requested status (default pending)
     const row = await queryOne(
-      `INSERT INTO source_groups (user_id, name, platform, type, url, description, status) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      `INSERT INTO source_groups (user_id, name, platform, type, url, description, status, is_manual) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, true) RETURNING *`,
       [userId, name, platform, type, url, description, status]
     );
 
@@ -142,6 +144,28 @@ async function verifySourceInternal(
   let finalUrl = url;
 
   try {
+    // Check if verification is actually needed
+    const existing = await queryOne(
+      "SELECT is_manual, last_verified_at, status FROM source_groups WHERE id = $1",
+      [groupId]
+    );
+
+    if (existing) {
+      const isManual = existing.is_manual;
+      const lastVerified = existing.last_verified_at;
+      const isConnected = existing.status === "connected";
+
+      // If it's not manual and already connected, skip heavy verification
+      if (!isManual && isConnected) {
+        return;
+      }
+
+      // Throttling: If verified in the last 24 hours and currently connected, skip
+      if (isConnected && lastVerified && (Date.now() - new Date(lastVerified).getTime()) < 24 * 60 * 60 * 1000) {
+        return;
+      }
+    }
+
     if (platform === "whatsapp") {
       const instance = await queryOne<{ instance_name: string }>(
         "SELECT instance_name FROM whatsapp_instances WHERE user_id = $1",
@@ -184,14 +208,14 @@ async function verifySourceInternal(
 
     // Success update
     await query(
-      "UPDATE source_groups SET status = $1, status_message = $2, url = $3, updated_at = NOW() WHERE id = $4",
+      "UPDATE source_groups SET status = $1, status_message = $2, url = $3, last_verified_at = NOW(), updated_at = NOW() WHERE id = $4",
       ["connected", "", finalUrl, groupId]
     );
 
   } catch (err: any) {
     // Failure update
     await query(
-      "UPDATE source_groups SET status = $1, status_message = $2, updated_at = NOW() WHERE id = $3",
+      "UPDATE source_groups SET status = $1, status_message = $2, last_verified_at = NOW(), updated_at = NOW() WHERE id = $3",
       ["failed", err.message || "Verification failed", groupId]
     );
   }

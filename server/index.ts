@@ -28,6 +28,7 @@ import {
   handleGoogleCallback,
   handleGoogleStatus,
   handleGoogleDisconnect,
+  handleCheckGoogleScopes,
   handleSetDriveFolder,
 } from "./routes/google-auth";
 import {
@@ -45,6 +46,8 @@ import {
 import {
   handleInstagramStatus,
   handleInstagramConnect,
+  handleInstagramConnectSession,
+  handleInstagramServiceConfig,
   handleInstagramDisconnect,
   handleInstagramSyncThreads,
   handleInstagramSendMessage,
@@ -127,6 +130,7 @@ export function createServer() {
   app.get("/api/auth/google", handleGoogleAuth);
   app.get("/api/auth/google/callback", handleGoogleCallback);
   app.get("/api/auth/google/status", handleGoogleStatus);
+  app.get("/api/auth/google/check-scopes", handleCheckGoogleScopes);
   app.delete("/api/auth/google", handleGoogleDisconnect);
   app.put("/api/auth/google/folder", handleSetDriveFolder);
   app.get("/api/drive/files", handleSearchDriveFiles);
@@ -142,7 +146,9 @@ export function createServer() {
 
   // ── Instagram (instagrapi-rest, per-user sessions) ─────────────────────────────────
   app.get("/api/instagram/status", handleInstagramStatus);
+  app.get("/api/instagram/service-config", handleInstagramServiceConfig);
   app.post("/api/instagram/connect", handleInstagramConnect);
+  app.post("/api/instagram/connect-session", handleInstagramConnectSession);
   app.delete("/api/instagram/disconnect", handleInstagramDisconnect);
   app.get("/api/instagram/sync-threads", handleInstagramSyncThreads);
   app.post("/api/instagram/send-message", handleInstagramSendMessage);
