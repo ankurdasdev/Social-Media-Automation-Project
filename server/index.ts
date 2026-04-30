@@ -16,6 +16,8 @@ import {
   handleDeleteContact,
   handleTriggerIngestion,
   handleIngestionStatus,
+  handleAIContactSearch,
+  handleGetAnalyticsStats,
 } from "./routes/contacts";
 import {
   handleGetTemplates,
@@ -115,6 +117,8 @@ export function createServer() {
   app.post("/api/contacts", handleCreateContact);
   app.put("/api/contacts/:id", handleUpdateContact);
   app.delete("/api/contacts/:id", handleDeleteContact);
+  app.post("/api/contacts/ai-search", handleAIContactSearch);
+  app.get("/api/analytics/stats", handleGetAnalyticsStats);
 
   // ── Ingestion Job ──────────────────────────────────────────────────────────
   app.post("/api/ingestion/trigger", handleTriggerIngestion);

@@ -21,34 +21,34 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { cn, getOrCreateUserId } from "@/lib/utils";
+
+import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
-  const recentContacts = [
-    {
-      name: "Rahul Sharma",
-      project: "Web Series - Male Lead",
-      date: "2 hours ago",
-    },
-    {
-      name: "Priya Desai",
-      project: "Film - Supporting Role",
-      date: "5 hours ago",
-    },
-    {
-      name: "Amit Kumar",
-      project: "Ad Campaign - Brand Ambassador",
-      date: "1 day ago",
-    },
-  ];
+  const navigate = useNavigate();
+  const userId = getOrCreateUserId();
+
+  const { data: statsData } = useQuery({
+    queryKey: ["analytics-stats"],
+    queryFn: async () => {
+      const res = await fetch(`/api/analytics/stats?userId=${userId}`);
+      if (!res.ok) throw new Error("Failed to fetch stats");
+      return res.json();
+    }
+  });
+
+  const recentContacts = statsData?.recent || [];
 
   const stats = [
     {
       label: "TOTAL CONTACTS",
-      value: "2,481",
+      value: statsData?.total?.toLocaleString() || "0",
       icon: Users,
       color: "bg-blue-500/10 text-blue-500",
-      trend: "+12.5%",
+      trend: "LIVE",
+      onClick: () => navigate("/contacts")
     },
     {
       label: "SYSTEM STATUS",
@@ -59,10 +59,11 @@ export default function Dashboard() {
     },
     {
       label: "OUTREACH RATE",
-      value: "14.2%",
+      value: statsData?.total > 0 ? `${((statsData.success / statsData.total) * 100).toFixed(1)}%` : "0%",
       icon: TrendingUp,
       color: "bg-purple-500/10 text-purple-500",
-      trend: "+4.1%",
+      trend: "SUCCESS",
+      onClick: () => navigate("/analytics")
     },
   ];
 
@@ -125,7 +126,14 @@ export default function Dashboard() {
           {stats.map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <Card key={index} className="glass-card border-white/10 dark:border-white/5 hover:border-primary/40 transition-all duration-500 group overflow-hidden rounded-[2.5rem]">
+              <Card 
+                key={index} 
+                onClick={stat.onClick}
+                className={cn(
+                  "glass-card border-white/10 dark:border-white/5 hover:border-primary/40 transition-all duration-500 group overflow-hidden rounded-[2.5rem]",
+                  stat.onClick && "cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                )}
+              >
                 <CardContent className="p-10 relative">
                   <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-110 transition-transform duration-700">
                     <Icon className="w-20 h-20" />

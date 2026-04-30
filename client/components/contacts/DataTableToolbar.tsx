@@ -12,8 +12,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, ChevronDown, Zap, RefreshCw, Plus, Trash2, X } from "lucide-react";
+import { Search, ChevronDown, Zap, RefreshCw, Plus, Trash2, X, Sparkles, MessageCircle, Mail, Instagram } from "lucide-react";
 import { Contact } from "@shared/api";
+import { AISearchBar } from "./AISearchBar";
+import { AdvancedColorPicker } from "./AdvancedColorPicker";
 import {
   Dialog,
   DialogContent,
@@ -41,6 +43,9 @@ interface DataTableToolbarProps<TData> {
   onDeleteSheet?: (sheetName: string) => void;
   activeTab?: string;
   onTabChange?: (tab: string) => void;
+  onAISearch?: (prompt: string) => void;
+  isAISearching?: boolean;
+  onClearAISearch?: () => void;
   className?: string;
 }
 
@@ -52,6 +57,9 @@ export function DataTableToolbar<TData>({
   onDeleteSheet,
   activeTab = "all",
   onTabChange,
+  onAISearch,
+  isAISearching,
+  onClearAISearch,
   className,
 }: DataTableToolbarProps<TData>) {
   const selectedRows = table.getFilteredSelectedRowModel().rows;
@@ -60,6 +68,8 @@ export function DataTableToolbar<TData>({
   const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
   const [newSheetName, setNewSheetName] = useState("");
   const [deleteSheetConfirm, setDeleteSheetConfirm] = useState<string | null>(null);
+  const [searchMode, setSearchMode] = useState<"normal" | "ai">("normal");
+  const [showPlatformFilters, setShowPlatformFilters] = useState(false);
   
   // Extract unique sheets from data
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -187,20 +197,93 @@ export function DataTableToolbar<TData>({
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Advanced Filters */}
+      <div className="flex flex-wrap gap-3 items-center">
+         <Button 
+           variant="outline" 
+           onClick={() => setShowPlatformFilters(!showPlatformFilters)}
+           className={cn(
+             "h-10 rounded-xl border-white/10 px-4 font-black text-[9px] uppercase tracking-widest gap-2 transition-all",
+             showPlatformFilters ? "bg-primary/20 border-primary/30 text-primary" : "bg-muted/20"
+           )}
+         >
+           <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", showPlatformFilters && "rotate-180")} />
+           PLATFORM STATUS
+         </Button>
+
+         {showPlatformFilters && (
+           <div className="flex gap-2 animate-in fade-in slide-in-from-left-4 duration-300">
+             {[
+               { id: "whatsappCompleted", label: "WA", icon: MessageCircle },
+               { id: "emailCompleted", label: "Email", icon: Mail },
+               { id: "instagramCompleted", label: "IG", icon: Instagram },
+             ].map(f => (
+               <DropdownMenu key={f.id}>
+                 <DropdownMenuTrigger asChild>
+                   <Button variant="outline" className="h-10 rounded-xl border-white/10 bg-muted/20 px-4 font-black text-[9px] uppercase tracking-widest gap-2 min-w-[80px]">
+                     <f.icon className="w-3 h-3 opacity-50" />
+                     {table.getColumn(f.id)?.getFilterValue() as string || f.label}
+                   </Button>
+                 </DropdownMenuTrigger>
+                 <DropdownMenuContent className="glass-card border-white/10 p-2 rounded-2xl z-[100]">
+                    {["ALL", "SENT", "FAILED", "PENDING", "BUSY"].map(v => (
+                      <DropdownMenuItem 
+                        key={v} 
+                        onSelect={() => table.getColumn(f.id)?.setFilterValue(v === "ALL" ? undefined : v === "SENT" ? "Yes" : v === "FAILED" ? "Failed" : v === "PENDING" ? "No" : "In Progress")}
+                        className="h-9 px-4 rounded-lg text-[9px] font-black uppercase tracking-widest cursor-pointer"
+                      >
+                        {v}
+                      </DropdownMenuItem>
+                    ))}
+                 </DropdownMenuContent>
+               </DropdownMenu>
+             ))}
+           </div>
+         )}
+      </div>
+
       {/* Bottom Row: Query + Global Commands */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-        <div className="relative w-full max-w-xl group">
-          <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-          </div>
-          <Input
-            placeholder="Search Contacts..."
-            value={table.getState().globalFilter ?? ""}
-            onChange={(event) =>
-              table.setGlobalFilter(event.target.value)
-            }
-            className="h-14 pl-14 rounded-2xl bg-muted/20 border-white/5 focus:bg-background focus:ring-primary font-bold shadow-inner transition-all"
-          />
+        <div className="flex-1 flex items-center gap-4 w-full">
+           <Button
+             variant="ghost"
+             size="icon"
+             onClick={() => setSearchMode(searchMode === "normal" ? "ai" : "normal")}
+             className={cn(
+               "h-14 w-14 rounded-2xl border transition-all shrink-0",
+               searchMode === "ai" 
+                 ? "bg-primary/10 border-primary/30 text-primary shadow-lg shadow-primary/10" 
+                 : "bg-muted/20 border-white/5 text-muted-foreground hover:bg-muted/40"
+             )}
+             title={searchMode === "ai" ? "Switch to Normal Search" : "Switch to AI Search"}
+           >
+             {searchMode === "ai" ? <Sparkles className="h-6 w-6" /> : <Search className="h-6 w-6" />}
+           </Button>
+
+           {searchMode === "ai" ? (
+             <AISearchBar 
+                onSearch={onAISearch || (() => {})} 
+                isLoading={isAISearching}
+                onClear={() => {
+                  onClearAISearch?.();
+                  setSearchMode("normal");
+                }}
+             />
+           ) : (
+             <div className="relative flex-1 max-w-xl group">
+                <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none">
+                  <Search className="h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                </div>
+                <Input
+                  placeholder="Search Contacts..."
+                  value={table.getState().globalFilter ?? ""}
+                  onChange={(event) =>
+                    table.setGlobalFilter(event.target.value)
+                  }
+                  className="h-14 pl-14 rounded-2xl bg-muted/20 border-white/5 focus:bg-background focus:ring-primary font-bold shadow-inner transition-all"
+                />
+              </div>
+           )}
         </div>
 
         <div className="flex items-center gap-4 w-full sm:w-auto">
@@ -225,33 +308,15 @@ export function DataTableToolbar<TData>({
                   <ChevronDown className="h-3 w-3 opacity-50" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64 glass-card border-white/10 p-3 rounded-3xl shadow-2xl animate-in zoom-in-95 duration-200">
+              <DropdownMenuContent align="end" className="w-[280px] glass-card border-white/10 p-1 rounded-3xl shadow-2xl animate-in zoom-in-95 duration-200 z-[100]">
 
                 
                 <DropdownMenuLabel className="px-4 py-2 text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Set Row Color</DropdownMenuLabel>
-                <div className="grid grid-cols-5 gap-3 p-3 px-4">
-                  {[
-                    { color: "slate", bg: "bg-slate-400" },
-                    { color: "rose", bg: "bg-rose-400" },
-                    { color: "orange", bg: "bg-orange-400" },
-                    { color: "amber", bg: "bg-amber-400" },
-                    { color: "yellow", bg: "bg-yellow-400" },
-                    { color: "emerald", bg: "bg-emerald-400" },
-                    { color: "teal", bg: "bg-teal-400" },
-                    { color: "cyan", bg: "bg-cyan-400" },
-                    { color: "blue", bg: "bg-blue-400" },
-                    { color: "indigo", bg: "bg-indigo-400" },
-                    { color: "violet", bg: "bg-violet-400" },
-                    { color: "purple", bg: "bg-purple-400" },
-                    { color: "pink", bg: "bg-pink-400" },
-                  ].map((c) => (
-                      <DropdownMenuItem key={c.color} asChild onSelect={(e) => { e.preventDefault(); executeBulkAction("color", c.color); }}>
-                        <div className={cn("w-7 h-7 rounded-full cursor-pointer hover:ring-4 ring-primary/20 transition-all shadow-md border border-white/10", c.bg)} title={c.color} />
-                      </DropdownMenuItem>
-                  ))}
-                  <DropdownMenuItem asChild onSelect={(e) => { e.preventDefault(); executeBulkAction("color", "transparent"); }}>
-                    <div className="w-7 h-7 rounded-full bg-muted border border-white/10 cursor-pointer hover:ring-4 ring-primary/20 flex items-center justify-center text-[10px] font-black transition-all shadow-md" title="Clear Color">X</div>
-                  </DropdownMenuItem>
+                <div onSelect={(e) => e.preventDefault()} className="outline-none">
+                  <AdvancedColorPicker 
+                    color={selectedRows[0]?.original.rowColor || "transparent"} 
+                    onChange={(color) => executeBulkAction("color", color)} 
+                  />
                 </div>
 
                 <DropdownMenuSeparator className="my-3 bg-white/5" />

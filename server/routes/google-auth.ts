@@ -88,13 +88,14 @@ export const handleGoogleCallback: RequestHandler = async (req, res) => {
 
     // Store / update tokens
     await query(
-      `INSERT INTO google_tokens (user_id, access_token, refresh_token, id_token, token_expiry)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO google_tokens (user_id, access_token, refresh_token, id_token, token_expiry, scopes)
+       VALUES ($1, $2, $3, $4, $5, $6)
        ON CONFLICT (user_id) DO UPDATE SET
          access_token = EXCLUDED.access_token,
          refresh_token = COALESCE(EXCLUDED.refresh_token, google_tokens.refresh_token),
          id_token = EXCLUDED.id_token,
          token_expiry = EXCLUDED.token_expiry,
+         scopes = EXCLUDED.scopes,
          updated_at = NOW()`,
       [
         user!.id,
@@ -102,6 +103,7 @@ export const handleGoogleCallback: RequestHandler = async (req, res) => {
         tokens.refresh_token,
         tokens.id_token,
         tokens.expiry_date ? new Date(tokens.expiry_date) : null,
+        tokens.scope, // This is the space-separated string of scopes
       ]
     );
 
@@ -198,10 +200,20 @@ export const handleCheckGoogleScopes: RequestHandler = async (req, res) => {
   if (!userId) return res.status(400).json({ error: "userId required" });
 
   try {
-    const gmailClient = await getGmailClient(userId);
-    // Test by calling getProfile — this only needs gmail.readonly/send scope to work
-    await gmailClient.users.getProfile({ userId: "me" });
-    res.json({ hasSendScope: true, needsReauth: false });
+    const token = await queryOne<{ scopes: string }>(
+      "SELECT scopes FROM google_tokens WHERE user_id = $1",
+      [userId]
+    );
+
+    if (!token || !token.scopes) {
+       // Fallback for existing tokens that don't have scope column yet
+       const gmailClient = await getGmailClient(userId);
+       await gmailClient.users.getProfile({ userId: "me" });
+       return res.json({ hasSendScope: true, needsReauth: false });
+    }
+
+    const hasSend = token.scopes.includes("gmail.send");
+    res.json({ hasSendScope: hasSend, needsReauth: !hasSend });
   } catch (err: any) {
     const isScope = err?.message?.toLowerCase().includes("insufficient") || 
                     err?.code === 403 ||
@@ -209,7 +221,6 @@ export const handleCheckGoogleScopes: RequestHandler = async (req, res) => {
     if (isScope) {
       return res.json({ hasSendScope: false, needsReauth: true });
     }
-    // Other error (network, not connected, etc.)
     return res.json({ hasSendScope: false, needsReauth: false, error: err.message });
   }
 };

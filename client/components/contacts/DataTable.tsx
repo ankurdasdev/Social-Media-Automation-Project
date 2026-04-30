@@ -38,6 +38,11 @@ interface DataTableProps<TData, TValue> {
   uniqueSheets?: string[];
   activeTab?: string;
   onTabChange?: (tab: string) => void;
+  onAISearch?: (prompt: string) => void;
+  isAISearching?: boolean;
+  onClearAISearch?: () => void;
+  initialFilters?: ColumnFiltersState;
+  initialGlobalFilter?: string;
 }
 
 export function DataTable<TData, TValue>({
@@ -51,11 +56,16 @@ export function DataTable<TData, TValue>({
   uniqueSheets = [],
   activeTab,
   onTabChange,
+  onAISearch,
+  isAISearching,
+  onClearAISearch,
+  initialFilters = [],
+  initialGlobalFilter = "",
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({});
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(initialFilters);
   const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [globalFilter, setGlobalFilter] = React.useState("");
+  const [globalFilter, setGlobalFilter] = React.useState(initialGlobalFilter);
   const [isFullscreen, setIsFullscreen] = React.useState(false);
   const [showFilters, setShowFilters] = React.useState(true);
   
@@ -93,6 +103,11 @@ export function DataTable<TData, TValue>({
       pagination: {
         pageSize: 25,
       },
+      columnVisibility: {
+        whatsappCompleted: false,
+        emailCompleted: false,
+        instagramCompleted: false,
+      },
     },
     meta: {
       updateContact: onUpdateContact,
@@ -126,6 +141,9 @@ export function DataTable<TData, TValue>({
           onDeleteSheet={onDeleteSheet}
           activeTab={activeTab}
           onTabChange={onTabChange}
+          onAISearch={onAISearch}
+          isAISearching={isAISearching}
+          onClearAISearch={onClearAISearch}
           className="flex-1"
         />
         <div className="flex items-center gap-2">
@@ -183,21 +201,32 @@ export function DataTable<TData, TValue>({
               {table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => {
                   const rowOriginal = row.original as unknown as Contact;
-                  const rColor = rowOriginal.rowColor;
-                  const colorClass = rColor === "yellow" ? "bg-yellow-500/10 border-l-[6px] border-l-yellow-400" :
-                                   rColor === "green" ? "bg-emerald-500/10 border-l-[6px] border-l-emerald-400" :
-                                   rColor === "red" ? "bg-rose-500/10 border-l-[6px] border-l-rose-400" :
-                                   rColor === "blue" ? "bg-blue-500/10 border-l-[6px] border-l-blue-400" : "border-l-[6px] border-l-transparent";
+                  const rColor = rowOriginal.rowColor || "transparent";
+                  const isCustom = rColor.startsWith("#") || rColor.includes("gradient");
+                  
+                  // Helper to get border color from hex or gradient
+                  const getBorderColor = () => {
+                    if (rColor === "yellow") return "#f59e0b";
+                    if (rColor === "green") return "#10b981";
+                    if (rColor === "red") return "#ef4444";
+                    if (rColor === "blue") return "#3b82f6";
+                    if (isCustom) return rColor.includes("gradient") ? "#8b5cf6" : rColor;
+                    return "transparent";
+                  };
 
                   return (
                     <TableRow
                       key={row.id}
                       data-state={row.getIsSelected() && "selected"}
                       className={cn(
-                        "cursor-pointer border-b border-white/[0.03] hover:bg-white/[0.03] transition-all h-20 group relative",
-                        colorClass,
+                        "cursor-pointer border-b border-white/[0.03] hover:bg-white/[0.03] transition-all h-20 group relative border-l-[6px]",
                         row.getIsSelected() && "bg-primary/20 border-l-primary shadow-inner"
                       )}
+                      style={{ 
+                        backgroundColor: isCustom ? `${rColor}1a` : undefined, // Add transparency if hex
+                        background: rColor.includes("gradient") ? `${rColor}` : undefined,
+                        borderLeftColor: getBorderColor(),
+                      }}
                       onClick={() => setSelectedContact(rowOriginal)}
                     >
                       {row.getVisibleCells().map((cell) => (

@@ -266,23 +266,93 @@ export const columns: ColumnDef<Contact>[] = [
       </div>
     ),
   },
-  // ── Global Status ────────────────────────────────────────────────────────────
+
+  // ── Hidden columns for filtering ──────────────────────────────────────────
   {
-    accessorKey: "status",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Global Status" columnId="status" />,
-    size: 130,
+    accessorKey: "whatsappCompleted",
+    header: "WA Status Hidden",
+    enableHiding: true,
+  },
+  {
+    accessorKey: "emailCompleted",
+    header: "Email Status Hidden",
+    enableHiding: true,
+  },
+  {
+    accessorKey: "instagramCompleted",
+    header: "IG Status Hidden",
+    enableHiding: true,
+  },
+
+  // ── Combined Outreach Status ────────────────────────────────────────────────
+  {
+    id: "status",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Status" columnId="status" />,
+    accessorFn: (row) => {
+      const wa = (row.whatsappCompleted || "").toLowerCase();
+      const em = (row.emailCompleted || "").toLowerCase();
+      const ig = (row.instagramCompleted || "").toLowerCase();
+      const statuses = [wa, em, ig];
+      if (statuses.some(s => s === "yes" || s === "sent")) return "SENT";
+      if (statuses.some(s => s === "failed" || s === "error")) return "FAILED";
+      if (statuses.some(s => s === "in progress")) return "BUSY";
+      return "PENDING";
+    },
+    size: 200,
     cell: ({ row }) => {
-      const status = (row.getValue("status") as string || "pending").toLowerCase();
+      const contact = row.original;
+      
+      const getStatusColor = (val: string | undefined) => {
+        const s = (val || "").toLowerCase();
+        if (s === "yes" || s === "sent") return "bg-emerald-500/10 text-emerald-500 border-emerald-500/20";
+        if (s === "failed" || s === "error") return "bg-rose-500/10 text-rose-500 border-rose-500/20";
+        if (s === "in progress") return "bg-blue-500/10 text-blue-500 border-blue-500/20";
+        return "bg-slate-500/10 text-slate-400 border-slate-500/10";
+      };
+
+      const getStatusLabel = (val: string | undefined) => {
+        const s = (val || "").toLowerCase();
+        if (s === "yes" || s === "sent") return "SENT";
+        if (s === "failed" || s === "error") return "FAILED";
+        if (s === "in progress") return "BUSY";
+        return "PENDING";
+      };
+
       return (
-        <Badge variant="secondary" className={cn(
-          "px-2 py-0.5 rounded-md border-none font-black text-[9px] uppercase tracking-tighter",
-          status === "sent" && "bg-emerald-500/10 text-emerald-500",
-          status === "pending" && "bg-orange-500/10 text-orange-500",
-          status === "failed" && "bg-rose-500/10 text-rose-500",
-          status === "in progress" && "bg-blue-500/10 text-blue-500"
-        )}>
-          {status}
-        </Badge>
+        <div className="flex flex-col gap-1.5 py-1">
+          {/* WhatsApp Status */}
+          <div className="flex items-center gap-2 group/st">
+            <MessageCircle className="w-3 h-3 text-emerald-500/50 group-hover/st:text-emerald-500 transition-colors" />
+            <Badge variant="outline" className={cn(
+              "px-1.5 py-0 rounded-md font-black text-[8px] uppercase tracking-tighter border",
+              getStatusColor(contact.whatsappCompleted)
+            )}>
+              {getStatusLabel(contact.whatsappCompleted)}
+            </Badge>
+          </div>
+          
+          {/* Gmail Status */}
+          <div className="flex items-center gap-2 group/st">
+            <Mail className="w-3 h-3 text-blue-500/50 group-hover/st:text-blue-500 transition-colors" />
+            <Badge variant="outline" className={cn(
+              "px-1.5 py-0 rounded-md font-black text-[8px] uppercase tracking-tighter border",
+              getStatusColor(contact.emailCompleted)
+            )}>
+              {getStatusLabel(contact.emailCompleted)}
+            </Badge>
+          </div>
+
+          {/* Instagram Status */}
+          <div className="flex items-center gap-2 group/st">
+            <Instagram className="w-3 h-3 text-pink-500/50 group-hover/st:text-pink-500 transition-colors" />
+            <Badge variant="outline" className={cn(
+              "px-1.5 py-0 rounded-md font-black text-[8px] uppercase tracking-tighter border",
+              getStatusColor(contact.instagramCompleted)
+            )}>
+              {getStatusLabel(contact.instagramCompleted)}
+            </Badge>
+          </div>
+        </div>
       );
     },
   },

@@ -113,6 +113,7 @@ async function runMigrations(): Promise<void> {
      ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_keywords JSONB DEFAULT '[]'::jsonb;
     ALTER TABLE contacts ADD COLUMN IF NOT EXISTS instagram_completed TEXT;
+    ALTER TABLE google_tokens ADD COLUMN IF NOT EXISTS scopes TEXT;
     ALTER TABLE contacts ADD COLUMN IF NOT EXISTS personalized_name_wa TEXT DEFAULT 'N';
     ALTER TABLE contacts ADD COLUMN IF NOT EXISTS personalized_name_gmail TEXT DEFAULT 'N';
     ALTER TABLE contacts ADD COLUMN IF NOT EXISTS personalized_name_ig TEXT DEFAULT 'N';
@@ -120,6 +121,9 @@ async function runMigrations(): Promise<void> {
     ALTER TABLE contacts ADD COLUMN IF NOT EXISTS has_custom_message_email BOOLEAN DEFAULT FALSE;
     ALTER TABLE contacts ADD COLUMN IF NOT EXISTS has_custom_message_ig BOOLEAN DEFAULT FALSE;
     ALTER TABLE contacts ADD COLUMN IF NOT EXISTS unified_attachments JSONB DEFAULT '[]'::jsonb;
+    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS row_color TEXT;
+    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS whatsapp_completed TEXT DEFAULT 'No';
+    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS email_completed TEXT DEFAULT 'No';
     ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS url TEXT;
     ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS platform TEXT NOT NULL DEFAULT 'whatsapp';
     ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS description TEXT;
@@ -193,7 +197,9 @@ async function runMigrations(): Promise<void> {
       whatsapp_run BOOLEAN DEFAULT FALSE,
       email_run BOOLEAN DEFAULT FALSE,
       instagram_run BOOLEAN DEFAULT FALSE,
-      instagram_completed TEXT,
+      whatsapp_completed TEXT DEFAULT 'No',
+      email_completed TEXT DEFAULT 'No',
+      instagram_completed TEXT DEFAULT 'No',
       personalized_name_wa TEXT DEFAULT 'N',
       personalized_name_gmail TEXT DEFAULT 'N',
       personalized_name_ig TEXT DEFAULT 'N',
