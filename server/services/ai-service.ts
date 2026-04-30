@@ -1,10 +1,5 @@
 import OpenAI from "openai";
 
-const groq = new OpenAI({
-  apiKey: process.env.GROQ_API_KEY,
-  baseURL: "https://api.groq.com/openai/v1",
-});
-
 const SYSTEM_PROMPT = `
 You are a SQL expert for a PostgreSQL database. 
 Your task is to convert a natural language search query into a valid SQL SELECT statement for the 'contacts' table.
@@ -37,6 +32,16 @@ SQL: SELECT * FROM contacts WHERE user_id = 'USER_ID_PLACEHOLDER' AND sheet_name
 `;
 
 export async function generateSearchSQL(prompt: string, userId: string): Promise<string> {
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) {
+    throw new Error("GROQ_API_KEY is not set. Please add it to your environment variables.");
+  }
+
+  const groq = new OpenAI({
+    apiKey: apiKey,
+    baseURL: "https://api.groq.com/openai/v1",
+  });
+
   const completion = await groq.chat.completions.create({
     model: "llama-3.1-8b-instant",
     messages: [
