@@ -33,14 +33,37 @@ import { DrawerMultiTemplateSelect } from "@/components/contacts/ContactDrawer";
 import { AttachmentCell } from "@/components/contacts/GridCells";
 import { Progress } from "@/components/ui/progress";
 
+import { useSearchParams } from "react-router-dom";
+
 export default function Contacts() {
+  const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState("all");
   const [localSheets, setLocalSheets] = useState<string[]>([]);
   const [sendingProgress, setSendingProgress] = useState<{ current: number; total: number; message: string } | null>(null);
+  const [aiSearchResults, setAISearchResults] = useState<Contact[] | null>(null);
   const userId = getOrCreateUserId();
+
+  // Handle deep-linking filters
+  const initialStatus = searchParams.get("status")?.toUpperCase(); // e.g. "SENT", "FAILED"
+  const initialPlatform = searchParams.get("platform"); // e.g. "whatsapp", "email"
+
+  const initialFilters = useMemo(() => {
+    const filters = [];
+    if (initialStatus) {
+      filters.push({ id: "status", value: initialStatus });
+    }
+    if (initialPlatform) {
+      // Map platform names to their respective status column IDs if needed, 
+      // or just filter where the field is not empty.
+      // For now, let's just use global search for platform name if it's simpler
+    }
+    return filters;
+  }, [initialStatus]);
+
+  const initialGlobalFilter = initialPlatform || "";
   
   const [isAddLeadOpen, setIsAddLeadOpen] = useState(false);
   const [newLead, setNewLead] = useState<Partial<Contact>>({
@@ -82,7 +105,7 @@ export default function Contacts() {
     },
   });
 
-  const contacts = contactsData || [];
+  const contacts = aiSearchResults || contactsData || [];
   
   const dynamicSheets = useMemo(() => {
     const sheets = new Set([...contacts.map(c => c.sheetName).filter(Boolean), ...localSheets]);
@@ -185,7 +208,37 @@ export default function Contacts() {
     });
   };
 
-  const bulkMutation = useMutation({
+  const aiSearchMutation = useMutation({
+    mutationFn: async (prompt: string) => {
+      const res = await fetch("/api/contacts/ai-search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, prompt }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "AI Search failed");
+      }
+      const data: ContactsResponse = await res.json();
+      return data.contacts;
+    },
+    onSuccess: (data) => {
+      setAISearchResults(data);
+      toast({
+        title: "AI SEARCH COMPLETE",
+        description: `Found ${data.length} contacts matching your prompt.`,
+      });
+    },
+    onError: (err: any) => {
+      toast({
+        variant: "destructive",
+        title: "AI SEARCH FAILED",
+        description: err.message,
+      });
+    }
+  });
+
+  const bulkActionMutation = useMutation({
     mutationFn: async ({ action, ids, payload }: { action: string, ids: string[], payload?: any }) => {
       const promises = ids.map((id) => {
         if (action === "delete") {
@@ -409,6 +462,11 @@ export default function Contacts() {
               onTabChange={setActiveTab}
               onAddSheet={(sheet) => setLocalSheets(prev => [...prev, sheet])}
               onDeleteSheet={handleDeleteSheet}
+              onAISearch={(prompt) => aiSearchMutation.mutate(prompt)}
+              isAISearching={aiSearchMutation.isPending}
+              onClearAISearch={() => setAISearchResults(null)}
+              initialFilters={initialFilters}
+              initialGlobalFilter={initialGlobalFilter}
             />
           )}
         </div>

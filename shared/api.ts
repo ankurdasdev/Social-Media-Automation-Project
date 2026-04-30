@@ -134,7 +134,7 @@ export interface Contact {
   emailRun?: boolean;
 
   // Auto-ingestion & Grouping
-  rowColor?: "yellow" | "green" | "red" | "blue" | "transparent" | undefined;
+  rowColor?: string;
   source?: "manual" | "auto-whatsapp" | "auto-instagram";
   ingestedAt?: string;
   sheetName?: string;

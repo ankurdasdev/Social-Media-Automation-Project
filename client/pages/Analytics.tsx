@@ -24,6 +24,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Mail, MessageCircle, TrendingUp } from "lucide-react";
+import { cn, getOrCreateUserId } from "@/lib/utils";
 
 // Sample data for daily view
 const dailyData = [
@@ -55,43 +56,56 @@ const successData = [
   { name: "Failed", value: 28, fill: "#ef4444" },
 ];
 
+import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
+
 export default function Analytics() {
+  const navigate = useNavigate();
+  const userId = getOrCreateUserId();
+
+  const { data: statsData } = useQuery({
+    queryKey: ["analytics-stats"],
+    queryFn: async () => {
+      const res = await fetch(`/api/analytics/stats?userId=${userId}`);
+      if (!res.ok) throw new Error("Failed to fetch stats");
+      return res.json();
+    }
+  });
+
   const [timeView, setTimeView] = useState<"daily" | "weekly" | "monthly">(
     "daily"
   );
 
-  const getChartData = () => {
-    switch (timeView) {
-      case "weekly":
-        return weeklyData;
-      case "monthly":
-        return monthlyData;
-      default:
-        return dailyData;
-    }
-  };
+  // Use real data for the pie chart
+  const successPieData = [
+    { name: "Successful", value: statsData?.success || 0, fill: "#22c55e", filter: "sent" },
+    { name: "Failed", value: statsData?.failed || 0, fill: "#ef4444", filter: "failed" },
+  ];
 
   const stats = [
     {
       label: "Total Reach-outs",
-      value: "511",
+      value: (statsData?.success + statsData?.failed)?.toString() || "0",
       icon: MessageCircle,
-      trend: "+12%",
+      trend: "LIVE",
       color: "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400",
+      onClick: () => navigate("/contacts")
     },
     {
       label: "Success Rate",
-      value: "83.8%",
+      value: statsData?.total > 0 ? `${((statsData.success / (statsData.success + statsData.failed || 1)) * 100).toFixed(1)}%` : "0%",
       icon: TrendingUp,
-      trend: "+5.2%",
+      trend: "SUCCESS",
       color: "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400",
+      onClick: () => navigate("/contacts?status=sent")
     },
     {
       label: "Failed",
-      value: "28",
+      value: statsData?.failed?.toString() || "0",
       icon: Mail,
-      trend: "-2.1%",
+      trend: "ERROR",
       color: "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400",
+      onClick: () => navigate("/contacts?status=failed")
     },
   ];
 
@@ -132,7 +146,14 @@ export default function Analytics() {
           {stats.map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <Card key={index} className="glass-card border-white/10 dark:border-white/5 overflow-hidden group hover:shadow-2xl transition-all duration-500">
+              <Card 
+                key={index} 
+                onClick={stat.onClick}
+                className={cn(
+                  "glass-card border-white/10 dark:border-white/5 overflow-hidden group hover:shadow-2xl transition-all duration-500 cursor-pointer hover:scale-[1.02] active:scale-[0.98]",
+                  stat.onClick ? "cursor-pointer" : ""
+                )}
+              >
                 <CardContent className="p-8">
                   <div className="flex items-start justify-between">
                     <div className="space-y-4">
@@ -183,20 +204,29 @@ export default function Analytics() {
             <CardContent className="p-8 pt-0">
               <div className="h-[350px] w-full mt-6">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={getChartData()} margin={{ top: 20, right: 0, left: -20, bottom: 0 }}>
+                  <BarChart 
+                    data={[
+                      { name: "WhatsApp", count: statsData?.waSent || 0 },
+                      { name: "Email", count: statsData?.emailSent || 0 },
+                      { name: "Instagram", count: statsData?.igSent || 0 },
+                    ]} 
+                    margin={{ top: 20, right: 0, left: -20, bottom: 0 }}
+                    onClick={(data) => {
+                      if (data && data.activePayload) {
+                        const platform = data.activePayload[0].payload.name.toLowerCase();
+                        navigate(`/contacts?platform=${platform}`);
+                      }
+                    }}
+                  >
                     <defs>
                       <linearGradient id="barGradientPrimary" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1}/>
                         <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.6}/>
                       </linearGradient>
-                      <linearGradient id="barGradientSecondary" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="hsl(var(--secondary))" stopOpacity={1}/>
-                        <stop offset="100%" stopColor="hsl(var(--secondary))" stopOpacity={0.6}/>
-                      </linearGradient>
                     </defs>
                     <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} />
                     <XAxis 
-                      dataKey={timeView === 'daily' ? 'date' : timeView === 'weekly' ? 'week' : 'month'} 
+                      dataKey="name" 
                       axisLine={false}
                       tickLine={false}
                       tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10, fontWeight: 700 }}
@@ -221,18 +251,12 @@ export default function Analytics() {
                       labelStyle={{ fontWeight: 900, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'hsl(var(--primary))' }}
                     />
                     <Bar 
-                        dataKey="email" 
+                        dataKey="count" 
                         fill="url(#barGradientPrimary)" 
                         radius={[6, 6, 0, 0]} 
-                        barSize={16}
-                        name="EMAIL SYSTEM" 
-                    />
-                    <Bar 
-                        dataKey="whatsapp" 
-                        fill="url(#barGradientSecondary)" 
-                        radius={[6, 6, 0, 0]} 
-                        barSize={16}
-                        name="WHATSAPP STREAM" 
+                        barSize={32}
+                        name="TOTAL SENT" 
+                        className="cursor-pointer"
                     />
                   </BarChart>
                 </ResponsiveContainer>
@@ -253,7 +277,7 @@ export default function Analytics() {
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={successData}
+                      data={successPieData}
                       cx="50%"
                       cy="45%"
                       innerRadius={85}
@@ -261,8 +285,14 @@ export default function Analytics() {
                       paddingAngle={10}
                       dataKey="value"
                       stroke="none"
+                      onClick={(data) => {
+                        if (data && data.filter) {
+                          navigate(`/contacts?status=${data.filter}`);
+                        }
+                      }}
+                      className="cursor-pointer"
                     >
-                      {successData.map((entry, index) => (
+                      {successPieData.map((entry, index) => (
                         <Cell 
                             key={`cell-${index}`} 
                             fill={entry.fill} 
@@ -307,13 +337,20 @@ export default function Analytics() {
         <Card className="glass-card border-white/10 dark:border-white/5 shadow-2xl overflow-hidden">
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-border/50">
                 {[
-                    { label: "Email Sent", value: "206", trend: "+8.4%", color: "text-primary" },
-                    { label: "WhatsApp Sent", value: "305", trend: "+17.3%", color: "text-secondary" },
-                    { label: "Queue Latency", value: "42", trend: "Stable", color: "text-blue-500" },
-                    { label: "Conversion Rate", value: "18.2%", trend: "+2.4%", color: "text-emerald-500" }
+                    { label: "Email Sent", value: statsData?.emailSent || "0", trend: "LIVE", color: "text-primary", filter: "email" },
+                    { label: "WhatsApp Sent", value: statsData?.waSent || "0", trend: "LIVE", color: "text-secondary", filter: "whatsapp" },
+                    { label: "Instagram Sent", value: statsData?.igSent || "0", trend: "LIVE", color: "text-blue-500", filter: "instagram" },
+                    { label: "Conversion Rate", value: statsData?.total > 0 ? `${((statsData.success / (statsData.success + statsData.failed || 1)) * 100).toFixed(1)}%` : "0%", trend: "SUCCESS", color: "text-emerald-500", filter: "sent" }
                 ].map((item, i) => (
-                    <div key={i} className="p-10 space-y-4 hover:bg-muted/30 transition-colors">
-                        <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">{item.label}</p>
+                    <div 
+                        key={i} 
+                        onClick={() => {
+                          if (item.filter === "sent") navigate("/contacts?status=sent");
+                          else navigate(`/contacts?platform=${item.filter}`);
+                        }}
+                        className="p-10 space-y-4 hover:bg-muted/30 transition-colors cursor-pointer group"
+                    >
+                        <p className="text-xs font-black uppercase tracking-widest text-muted-foreground group-hover:text-primary transition-colors">{item.label}</p>
                         <div className="space-y-1">
                             <p className={`text-4xl font-black tracking-tighter ${item.color}`}>{item.value}</p>
                             <p className="text-[10px] font-bold text-muted-foreground">{item.trend} VS AVG</p>
