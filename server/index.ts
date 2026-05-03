@@ -55,6 +55,7 @@ import {
   handleInstagramSendMessage,
 } from "./routes/instagram-auth";
 import { handleSendOutreach } from "./routes/outreach";
+import { handleImproveMessage } from "./routes/ai-routes";
 import { 
   handleSignup, 
   handleLogin, 
@@ -118,6 +119,7 @@ export function createServer() {
   app.put("/api/contacts/:id", handleUpdateContact);
   app.delete("/api/contacts/:id", handleDeleteContact);
   app.post("/api/contacts/ai-search", handleAIContactSearch);
+  app.post("/api/ai/improve-message", handleImproveMessage);
   app.get("/api/analytics/stats", handleGetAnalyticsStats);
 
   // ── Ingestion Job ──────────────────────────────────────────────────────────

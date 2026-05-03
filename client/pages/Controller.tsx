@@ -680,49 +680,46 @@ export default function Controller() {
 function PlatformInfo({ platform }: { platform: Platform }) {
   if (platform === "whatsapp") {
     return (
-      <Card className="mb-6 border-green-200 dark:border-green-900/40 bg-green-50/50 dark:bg-green-950/20">
-        <CardContent className="pt-5 pb-4">
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/40 shrink-0">
-              <MessageCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
-            </div>
-            <div className="space-y-1">
-              <p className="font-semibold text-sm text-foreground">
-                WhatsApp Monitoring via Baileys Evolution API
-              </p>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Add your WhatsApp group names or invite links below. The
-                Evolution API (powered by Baileys) connects to these groups via
-                QR code authentication and pushes incoming messages via webhooks
-                for casting call syncing.
-              </p>
-            </div>
+      <div className="mb-10 relative overflow-hidden glass-card p-8 rounded-[2rem] border-emerald-500/10 group">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl -z-10 group-hover:bg-emerald-500/10 transition-colors" />
+        <div className="flex items-start gap-6">
+          <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/5 group-hover:scale-110 transition-transform duration-500">
+            <MessageCircle className="w-7 h-7 text-emerald-500" />
           </div>
-        </CardContent>
-      </Card>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <h3 className="text-xl font-black tracking-tight text-foreground uppercase">WhatsApp Monitoring</h3>
+              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-black text-[9px] px-2 py-0.5 rounded-lg uppercase tracking-widest">Protocol V2.0</Badge>
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl font-medium">
+              Initialize synchronization via the <span className="text-emerald-500 font-bold">Baileys Evolution API</span>. 
+              Connect your mobile instance to scan incoming groups and webhooks for real-time casting extraction.
+            </p>
+          </div>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card className="mb-6 border-pink-200 dark:border-pink-900/40 bg-pink-50/50 dark:bg-pink-950/20">
-      <CardContent className="pt-5 pb-4">
-        <div className="flex items-start gap-3">
-          <div className="p-2 rounded-lg bg-pink-100 dark:bg-pink-900/40 shrink-0">
-            <Instagram className="w-5 h-5 text-pink-600 dark:text-pink-400" />
-          </div>
-          <div className="space-y-1">
-            <p className="font-semibold text-sm text-foreground">
-              Instagram Monitoring via instagrapi
-            </p>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Add Instagram accounts, hashtags, or group chats to monitor. The
-              instagrapi library connects using session-based auth to scrape
-              posts, stories, and DMs for relevant casting call data.
-            </p>
-          </div>
+    <div className="mb-10 relative overflow-hidden glass-card p-8 rounded-[2rem] border-pink-500/10 group">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-pink-500/5 rounded-full blur-3xl -z-10 group-hover:bg-pink-500/10 transition-colors" />
+      <div className="flex items-start gap-6">
+        <div className="w-14 h-14 rounded-2xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center shrink-0 shadow-lg shadow-pink-500/5 group-hover:scale-110 transition-transform duration-500">
+          <Instagram className="w-7 h-7 text-pink-500" />
         </div>
-      </CardContent>
-    </Card>
+        <div className="space-y-3">
+          <div className="flex items-center gap-3">
+            <h3 className="text-xl font-black tracking-tight text-foreground uppercase">Instagram Monitoring</h3>
+            <Badge variant="outline" className="bg-pink-500/10 text-pink-500 border-pink-500/20 font-black text-[9px] px-2 py-0.5 rounded-lg uppercase tracking-widest">Active Scrape</Badge>
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl font-medium">
+            Monitor accounts, hashtags, or group chats via <span className="text-pink-500 font-bold">Instagrapi</span>. 
+            All connections use browser-direct authentication to ensure residential IP trust and session longevity.
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }
 

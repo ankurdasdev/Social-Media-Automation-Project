@@ -9,14 +9,17 @@ interface AdvancedColorPickerProps {
   onChange: (color: string) => void;
 }
 
-const PRESET_COLORS = [
+const MAIN_PRESETS = [
   { name: "Red", value: "#ef4444" },
-  { name: "Orange", value: "#f97316" },
   { name: "Yellow", value: "#f59e0b" },
-  { name: "Emerald", value: "#10b981" },
+  { name: "Green", value: "#10b981" },
+  { name: "Blue", value: "#3b82f6" },
+];
+
+const EXTENDED_SOLIDS = [
+  { name: "Orange", value: "#f97316" },
   { name: "Teal", value: "#14b8a6" },
   { name: "Cyan", value: "#06b6d4" },
-  { name: "Blue", value: "#3b82f6" },
   { name: "Indigo", value: "#6366f1" },
   { name: "Violet", value: "#8b5cf6" },
   { name: "Purple", value: "#a855f7" },
@@ -41,21 +44,19 @@ export function AdvancedColorPicker({ color, onChange }: AdvancedColorPickerProp
     if (color.startsWith("#")) setHex(color);
   }, [color]);
 
-  const mainPresets = PRESET_COLORS.slice(0, 4);
-
   return (
     <div className="p-4 space-y-4 w-full max-w-[280px] max-h-[450px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 animate-in fade-in zoom-in-95 duration-200">
-      {/* Quick Presets */}
+      {/* Standard Colors */}
       <div className="space-y-3">
-        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Quick Style</label>
-        <div className="flex items-center gap-2">
-          {mainPresets.map((c) => (
+        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">Standard Colors</label>
+        <div className="flex items-center gap-2.5">
+          {MAIN_PRESETS.map((c) => (
             <button
               key={c.value}
               onClick={() => onChange(c.value)}
               className={cn(
-                "w-9 h-9 rounded-full border-2 transition-all hover:scale-110 active:scale-95 flex items-center justify-center shadow-sm",
-                color === c.value ? "border-primary shadow-lg" : "border-white/10"
+                "w-9 h-9 rounded-xl border-2 transition-all hover:scale-110 active:scale-95 flex items-center justify-center shadow-lg",
+                color === c.value ? "border-primary shadow-primary/20" : "border-white/10"
               )}
               style={{ backgroundColor: c.value }}
               title={c.name}
@@ -66,33 +67,33 @@ export function AdvancedColorPicker({ color, onChange }: AdvancedColorPickerProp
           <button
             onClick={() => setIsExpanded(!isExpanded)}
             className={cn(
-              "w-9 h-9 rounded-full border-2 border-white/10 bg-muted/20 flex items-center justify-center transition-all hover:bg-muted/40 hover:scale-110 active:scale-95",
-              isExpanded && "bg-primary/20 border-primary/30 text-primary"
+              "w-9 h-9 rounded-xl border-2 border-white/10 bg-muted/20 flex items-center justify-center transition-all hover:bg-muted/40 hover:scale-110 active:scale-95 group",
+              isExpanded && "bg-foreground text-background border-foreground"
             )}
-            title="More Colors"
+            title="Custom & More"
           >
-            <Pipette className={cn("w-4 h-4", isExpanded ? "text-primary" : "text-muted-foreground")} />
+            <Pipette className={cn("w-4 h-4 transition-transform", isExpanded ? "scale-110" : "group-hover:rotate-12")} />
           </button>
         </div>
       </div>
 
       {isExpanded && (
         <div className="space-y-6 pt-2 animate-in slide-in-from-top-2 duration-300">
-          {/* Expanded Presets */}
+          {/* Extended Solids */}
           <div className="space-y-3">
-            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">More Solids</label>
-            <div className="grid grid-cols-6 gap-2">
-              {PRESET_COLORS.slice(4).map((c) => (
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">More Solids</label>
+            <div className="grid grid-cols-6 gap-2.5">
+              {EXTENDED_SOLIDS.map((c) => (
                 <button
                   key={c.value}
                   onClick={() => onChange(c.value)}
                   className={cn(
-                    "w-8 h-8 rounded-full border-2 transition-all hover:scale-110 active:scale-95 flex items-center justify-center",
+                    "w-8 h-8 rounded-lg border transition-all hover:scale-110 active:scale-95 flex items-center justify-center",
                     color === c.value ? "border-primary shadow-lg" : "border-white/10"
                   )}
                   style={{ backgroundColor: c.value }}
                 >
-                  {color === c.value && <Check className="w-4 h-4 text-white drop-shadow-md" />}
+                  {color === c.value && <Check className="w-3.5 h-3.5 text-white drop-shadow-md" />}
                 </button>
               ))}
             </div>

@@ -18,7 +18,7 @@ import {
 } from "../store/contacts-store";
 import { runIngestionJob, getIngestionState } from "../jobs/ingestion-job";
 import { generateSearchSQL } from "../services/ai-service";
-import { query } from "../db/index";
+import { query, queryOne } from "../db/index";
 import type { ContactsResponse, ContactResponse, ErrorResponse, IngestionStatusResponse } from "@shared/api";
 
 // ─── GET /api/contacts ────────────────────────────────────────────────────────
@@ -236,6 +236,19 @@ export const handleGetAnalyticsStats: RequestHandler = async (req, res) => {
       [userId]
     );
 
+    // Daily stats for the last 14 days
+    const dailyStats = await query<any>(`
+      SELECT 
+        TO_CHAR(updated_at, 'Mon DD') as date,
+        COUNT(*) FILTER (WHERE email_completed = 'Yes') as email,
+        COUNT(*) FILTER (WHERE whatsapp_completed = 'Yes') as whatsapp,
+        COUNT(*) FILTER (WHERE instagram_completed = 'Yes') as instagram
+      FROM contacts 
+      WHERE user_id = $1 AND updated_at >= NOW() - INTERVAL '14 days'
+      GROUP BY TO_CHAR(updated_at, 'Mon DD'), updated_at::date
+      ORDER BY updated_at::date ASC
+    `, [userId]);
+
     res.json({
       total: parseInt(totalRes?.count || "0"),
       success: parseInt(successRes?.count || "0"),
@@ -248,6 +261,12 @@ export const handleGetAnalyticsStats: RequestHandler = async (req, res) => {
         name: r.name || "Unknown",
         project: r.project || "General",
         date: r.date ? new Date(r.date).toLocaleString() : "Recently"
+      })),
+      daily: dailyStats.map(d => ({
+        date: d.date,
+        email: parseInt(d.email || "0"),
+        whatsapp: parseInt(d.whatsapp || "0"),
+        instagram: parseInt(d.instagram || "0")
       }))
     });
   } catch (err: any) {

@@ -26,35 +26,7 @@ import {
 import { Mail, MessageCircle, TrendingUp } from "lucide-react";
 import { cn, getOrCreateUserId } from "@/lib/utils";
 
-// Sample data for daily view
-const dailyData = [
-  { date: "Jan 13", email: 8, whatsapp: 12 },
-  { date: "Jan 14", email: 10, whatsapp: 15 },
-  { date: "Jan 15", email: 6, whatsapp: 11 },
-  { date: "Jan 16", email: 14, whatsapp: 18 },
-  { date: "Jan 17", email: 12, whatsapp: 14 },
-  { date: "Jan 18", email: 16, whatsapp: 20 },
-];
-
-// Sample data for weekly view
-const weeklyData = [
-  { week: "Week 1", email: 45, whatsapp: 65 },
-  { week: "Week 2", email: 52, whatsapp: 72 },
-  { week: "Week 3", email: 48, whatsapp: 68 },
-  { week: "Week 4", email: 61, whatsapp: 85 },
-];
-
-// Sample data for monthly view
-const monthlyData = [
-  { month: "December", email: 180, whatsapp: 260 },
-  { month: "January", email: 206, whatsapp: 305 },
-];
-
-// Success vs Failed data
-const successData = [
-  { name: "Successful", value: 145, fill: "#22c55e" },
-  { name: "Failed", value: 28, fill: "#ef4444" },
-];
+// Time-series views are now handled by statsData.daily
 
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
@@ -76,7 +48,10 @@ export default function Analytics() {
     "daily"
   );
 
-  // Use real data for the pie chart
+  // Use real data from backend
+  const chartData = statsData?.daily || [];
+
+  // Success vs Failed data
   const successPieData = [
     { name: "Successful", value: statsData?.success || 0, fill: "#22c55e", filter: "sent" },
     { name: "Failed", value: statsData?.failed || 0, fill: "#ef4444", filter: "failed" },
@@ -204,59 +179,65 @@ export default function Analytics() {
             <CardContent className="p-8 pt-0">
               <div className="h-[350px] w-full mt-6">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart 
-                    data={[
-                      { name: "WhatsApp", count: statsData?.waSent || 0 },
-                      { name: "Email", count: statsData?.emailSent || 0 },
-                      { name: "Instagram", count: statsData?.igSent || 0 },
-                    ]} 
-                    margin={{ top: 20, right: 0, left: -20, bottom: 0 }}
-                    onClick={(data) => {
-                      if (data && data.activePayload) {
-                        const platform = data.activePayload[0].payload.name.toLowerCase();
-                        navigate(`/contacts?platform=${platform}`);
-                      }
-                    }}
-                  >
-                    <defs>
-                      <linearGradient id="barGradientPrimary" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1}/>
-                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.6}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} />
-                    <XAxis 
-                      dataKey="name" 
+                  <BarChart data={chartData}>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="rgba(255,255,255,0.05)"
+                    />
+                    <XAxis
+                      dataKey="date"
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10, fontWeight: 700 }}
+                      tick={{
+                        fontSize: 10,
+                        fontWeight: "900",
+                        fill: "rgba(255,255,255,0.3)",
+                      }}
                       dy={10}
                     />
-                    <YAxis 
+                    <YAxis
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10, fontWeight: 700 }}
-                    />
-                    <Tooltip 
-                      cursor={{ fill: 'hsl(var(--muted))', opacity: 0.4 }}
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--background))', 
-                        borderColor: 'hsl(var(--border))',
-                        borderRadius: '16px',
-                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-                        borderWidth: '1px',
-                        padding: '12px'
+                      tick={{
+                        fontSize: 10,
+                        fontWeight: "900",
+                        fill: "rgba(255,255,255,0.3)",
                       }}
-                      itemStyle={{ fontWeight: 800, fontSize: '12px' }}
-                      labelStyle={{ fontWeight: 900, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'hsl(var(--primary))' }}
                     />
-                    <Bar 
-                        dataKey="count" 
-                        fill="url(#barGradientPrimary)" 
-                        radius={[6, 6, 0, 0]} 
-                        barSize={32}
-                        name="TOTAL SENT" 
-                        className="cursor-pointer"
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "rgba(15, 23, 42, 0.9)",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                        borderRadius: "16px",
+                        boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
+                      }}
+                      itemStyle={{
+                        fontSize: "10px",
+                        fontWeight: "bold",
+                        textTransform: "uppercase",
+                      }}
+                    />
+                    <Bar
+                      dataKey="whatsapp"
+                      fill="#22c55e"
+                      radius={[6, 6, 0, 0]}
+                      barSize={30}
+                      name="WhatsApp"
+                    />
+                    <Bar
+                      dataKey="email"
+                      fill="#3b82f6"
+                      radius={[6, 6, 0, 0]}
+                      barSize={30}
+                      name="Email"
+                    />
+                    <Bar
+                      dataKey="instagram"
+                      fill="#ec4899"
+                      radius={[6, 6, 0, 0]}
+                      barSize={30}
+                      name="Instagram"
                     />
                   </BarChart>
                 </ResponsiveContainer>
@@ -318,7 +299,7 @@ export default function Analytics() {
                 
                 {/* Custom Legend */}
                 <div className="flex flex-col gap-3 mt-4">
-                    {successData.map((item, i) => (
+                    {successPieData.map((item, i) => (
                         <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/50">
                             <div className="flex items-center gap-3">
                                 <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.fill }} />

@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { X, Plus, Search, FileText } from "lucide-react";
+import { X, Plus, Search, FileText, Sparkles, Wand2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DriveFilePicker } from "../drive/DriveFilePicker";
 import { getOrCreateUserId } from "@/lib/utils";
@@ -106,6 +106,34 @@ export function ConditionalTextareaCell({
   placeholder?: string
 }) {
   const [isEditing, setIsEditing] = React.useState(false);
+  const [isAIMode, setIsAIMode] = React.useState(false);
+  const [aiPrompt, setAiPrompt] = React.useState("");
+  const [isGenerating, setIsGenerating] = React.useState(false);
+
+  const handleGenerateAI = async () => {
+    if (!aiPrompt.trim() && !value.trim()) return;
+    setIsGenerating(true);
+    try {
+      const res = await fetch("/api/ai/improve-message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          prompt: aiPrompt, 
+          currentText: value 
+        }),
+      });
+      const data = await res.json();
+      if (data.result) {
+        onValueChange(data.result);
+        setIsAIMode(false);
+        setAiPrompt("");
+      }
+    } catch (err) {
+      console.error("AI Generation failed:", err);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   return (
     <div className="flex items-center gap-3 w-full group" onClick={(e) => e.stopPropagation()}>
@@ -116,7 +144,13 @@ export function ConditionalTextareaCell({
       />
       
       {checked ? (
-        <Popover open={isEditing} onOpenChange={setIsEditing}>
+        <Popover open={isEditing} onOpenChange={(open) => {
+          setIsEditing(open);
+          if (!open) {
+            setIsAIMode(false);
+            setAiPrompt("");
+          }
+        }}>
            <PopoverTrigger asChild>
               <button className="flex-1 h-8 px-2 rounded-md bg-primary/5 border border-primary/10 text-[10px] font-bold text-left truncate text-primary hover:bg-primary/10 transition-all">
                 {value || "EDIT MESSAGE"}
@@ -124,16 +158,58 @@ export function ConditionalTextareaCell({
            </PopoverTrigger>
            <PopoverContent className="w-80 glass-card p-4 rounded-2xl border-white/10 shadow-2xl" align="start">
               <div className="space-y-4">
-                 <h4 className="text-[10px] font-black uppercase tracking-widest text-primary">Edit Custom Message</h4>
-                 <textarea 
-                   className="w-full h-32 rounded-xl bg-muted/40 p-3 text-sm font-medium focus:ring-1 focus:ring-primary outline-none resize-none scrollbar-hide"
-                   value={value}
-                   onChange={(e) => onValueChange(e.target.value)}
-                   placeholder={placeholder}
-                   autoFocus
-                 />
-                 <div className="flex justify-end">
-                    <Button size="sm" onClick={() => setIsEditing(false)} className="h-8 rounded-lg font-black text-[10px]">DONE</Button>
+                 <div className="flex items-center justify-between">
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-primary">
+                      {isAIMode ? "AI Message Generator" : "Edit Custom Message"}
+                    </h4>
+                 </div>
+
+                 {isAIMode ? (
+                   <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <textarea 
+                        className="w-full h-24 rounded-xl bg-primary/5 border border-primary/10 p-3 text-sm font-medium focus:ring-1 focus:ring-primary outline-none resize-none"
+                        value={aiPrompt}
+                        onChange={(e) => setAiPrompt(e.target.value)}
+                        placeholder="Enter prompt (e.g. Write a friendly outreach message for a casting call)..."
+                        autoFocus
+                      />
+                      <Button 
+                        className="w-full h-10 rounded-xl font-black text-[10px] bg-primary hover:bg-primary/90 gap-2"
+                        onClick={handleGenerateAI}
+                        disabled={isGenerating || !aiPrompt.trim()}
+                      >
+                        {isGenerating ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Wand2 className="h-3.5 w-3.5" />
+                        )}
+                        {isGenerating ? "GENERATING..." : "GENERATE MESSAGE"}
+                      </Button>
+                   </div>
+                 ) : (
+                   <textarea 
+                     className="w-full h-32 rounded-xl bg-muted/40 p-3 text-sm font-medium focus:ring-1 focus:ring-primary outline-none resize-none scrollbar-hide"
+                     value={value}
+                     onChange={(e) => onValueChange(e.target.value)}
+                     placeholder={placeholder}
+                     autoFocus
+                   />
+                 )}
+
+                 <div className="flex items-center justify-between pt-3 border-t border-white/5">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setIsAIMode(!isAIMode)}
+                      className={cn(
+                        "h-10 w-10 rounded-xl transition-all",
+                        isAIMode ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-primary/10 text-primary hover:bg-primary/20"
+                      )}
+                      title={isAIMode ? "Switch to Manual Edit" : "Use AI to Generate/Improve"}
+                    >
+                      <Sparkles className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" onClick={() => setIsEditing(false)} className="h-10 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest bg-foreground text-background hover:bg-foreground/90 transition-all active:scale-95">DONE</Button>
                  </div>
               </div>
            </PopoverContent>

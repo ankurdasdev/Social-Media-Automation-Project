@@ -380,7 +380,7 @@ export default function Contacts() {
 
   return (
     <AppLayout>
-      <div className="flex h-full flex-col space-y-6 lg:space-y-10 pb-10 relative animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex flex-col space-y-6 lg:space-y-10 pb-24 relative animate-in fade-in slide-in-from-bottom-4 duration-700">
         {/* Decorative Background */}
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] -z-10 animate-pulse-slow" />
 
@@ -449,7 +449,7 @@ export default function Contacts() {
               columns={columns} 
               data={contacts} 
               onTriggerAction={handleBulkTrigger}
-              onBulkAction={(action, ids, payload) => bulkMutation.mutate({ action, ids, payload })}
+              onBulkAction={(action, ids, payload) => bulkActionMutation.mutate({ action, ids, payload })}
               onUpdateContact={(id, data) => {
                 fetch(`/api/contacts/${id}?userId=${userId}`, {
                   method: "PUT",

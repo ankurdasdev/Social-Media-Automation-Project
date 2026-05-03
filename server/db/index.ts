@@ -172,6 +172,8 @@ async function runMigrations(): Promise<void> {
       enabled BOOLEAN DEFAULT TRUE,
       is_manual BOOLEAN DEFAULT FALSE,
       last_verified_at TIMESTAMPTZ,
+      status TEXT DEFAULT 'pending',
+      status_message TEXT,
       member_count INTEGER,
       last_scraped TIMESTAMPTZ,
       created_at TIMESTAMPTZ DEFAULT NOW(),

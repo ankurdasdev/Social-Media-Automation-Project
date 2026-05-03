@@ -206,20 +206,34 @@ export const handleCheckGoogleScopes: RequestHandler = async (req, res) => {
     );
 
     if (!token || !token.scopes) {
-       // Fallback for existing tokens that don't have scope column yet
+       // Fallback: try a light Gmail call to see if we have access
        const gmailClient = await getGmailClient(userId);
-       await gmailClient.users.getProfile({ userId: "me" });
-       return res.json({ hasSendScope: true, needsReauth: false });
+       try {
+         await gmailClient.users.getProfile({ userId: "me" });
+         // Profile check passed, but we still don't know about SEND scope.
+         // Better to assume we need re-auth if scopes column is missing or empty.
+         return res.json({ hasSendScope: false, needsReauth: true, error: "Permissions need update" });
+       } catch (e) {
+         return res.json({ hasSendScope: false, needsReauth: true });
+       }
     }
 
     const hasSend = token.scopes.includes("gmail.send");
-    res.json({ hasSendScope: hasSend, needsReauth: !hasSend });
+    res.json({ 
+      hasSendScope: hasSend, 
+      needsReauth: !hasSend,
+      message: !hasSend ? "GMAIL_SCOPE_MISSING: Please ensure you check the 'Send email on your behalf' box during re-authentication." : undefined
+    });
   } catch (err: any) {
     const isScope = err?.message?.toLowerCase().includes("insufficient") || 
                     err?.code === 403 ||
                     err?.errors?.[0]?.reason === "insufficientPermissions";
     if (isScope) {
-      return res.json({ hasSendScope: false, needsReauth: true });
+      return res.json({ 
+        hasSendScope: false, 
+        needsReauth: true, 
+        message: "Your Google account permissions are insufficient. Please re-authenticate and check all permission boxes." 
+      });
     }
     return res.json({ hasSendScope: false, needsReauth: false, error: err.message });
   }
