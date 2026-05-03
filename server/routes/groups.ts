@@ -234,10 +234,17 @@ export const handleUpdateGroup: RequestHandler = async (req, res) => {
   }
 
   const { userId, ...data } = parsed.data;
+  const current = await queryOne("SELECT status, last_verified_at FROM source_groups WHERE id = $1 AND user_id = $2", [id, userId]);
+  if (!current) return res.status(404).json({ error: "Group not found" });
+
   const fields = Object.keys(data);
   const needsReverification = fields.includes("name") || fields.includes("type");
 
-  if (needsReverification) {
+  const isConnected = current.status === "connected";
+  const lastVerified = current.last_verified_at;
+  const isRecentlyVerified = lastVerified && (Date.now() - new Date(lastVerified).getTime()) < 24 * 60 * 60 * 1000;
+
+  if (needsReverification && !(isConnected && isRecentlyVerified)) {
     (data as any).status = "pending";
     (data as any).status_message = "";
     fields.push("status", "status_message");

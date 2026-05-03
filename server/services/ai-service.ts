@@ -53,8 +53,11 @@ export async function generateSearchSQL(prompt: string, userId: string): Promise
 
   let sql = completion.choices[0].message?.content || "";
   
+  // Strip markdown code blocks if present
+  sql = sql.replace(/```sql/gi, "").replace(/```/g, "").trim();
+  
   // Basic sanitization: only allow SELECT
-  if (!sql.trim().toUpperCase().startsWith("SELECT")) {
+  if (!sql.toUpperCase().startsWith("SELECT")) {
     throw new Error("AI generated an invalid query.");
   }
 

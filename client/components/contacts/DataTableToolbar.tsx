@@ -198,49 +198,78 @@ export function DataTableToolbar<TData>({
       </AlertDialog>
 
       {/* Advanced Filters */}
-      <div className="flex flex-wrap gap-3 items-center">
+         <Button 
+           variant="outline" 
+           onClick={() => {
+             table.resetGlobalFilter();
+             table.resetColumnFilters();
+             onClearAISearch?.();
+           }}
+           className="h-10 rounded-xl border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary font-black text-[9px] uppercase tracking-widest gap-2 shadow-sm transition-all active:scale-95 group"
+         >
+           <RefreshCw className="w-3.5 h-3.5 group-hover:rotate-180 transition-transform duration-500" />
+           REFRESH ALL
+         </Button>
+
+         <div className="w-px h-6 bg-white/5 mx-1 hidden sm:block" />
+
          <Button 
            variant="outline" 
            onClick={() => setShowPlatformFilters(!showPlatformFilters)}
            className={cn(
              "h-10 rounded-xl border-white/10 px-4 font-black text-[9px] uppercase tracking-widest gap-2 transition-all",
-             showPlatformFilters ? "bg-primary/20 border-primary/30 text-primary" : "bg-muted/20"
+             showPlatformFilters ? "bg-foreground text-background border-foreground" : "bg-muted/20"
            )}
          >
            <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", showPlatformFilters && "rotate-180")} />
-           PLATFORM STATUS
+           STATUS FILTERS
          </Button>
 
          {showPlatformFilters && (
-           <div className="flex gap-2 animate-in fade-in slide-in-from-left-4 duration-300">
+           <div className="flex flex-wrap gap-2 animate-in fade-in slide-in-from-left-4 duration-300">
              {[
-               { id: "whatsappCompleted", label: "WA", icon: MessageCircle },
-               { id: "emailCompleted", label: "Email", icon: Mail },
-               { id: "instagramCompleted", label: "IG", icon: Instagram },
-             ].map(f => (
-               <DropdownMenu key={f.id}>
-                 <DropdownMenuTrigger asChild>
-                   <Button variant="outline" className="h-10 rounded-xl border-white/10 bg-muted/20 px-4 font-black text-[9px] uppercase tracking-widest gap-2 min-w-[80px]">
-                     <f.icon className="w-3 h-3 opacity-50" />
-                     {table.getColumn(f.id)?.getFilterValue() as string || f.label}
-                   </Button>
-                 </DropdownMenuTrigger>
-                 <DropdownMenuContent className="glass-card border-white/10 p-2 rounded-2xl z-[100]">
-                    {["ALL", "SENT", "FAILED", "PENDING", "BUSY"].map(v => (
-                      <DropdownMenuItem 
-                        key={v} 
-                        onSelect={() => table.getColumn(f.id)?.setFilterValue(v === "ALL" ? undefined : v === "SENT" ? "Yes" : v === "FAILED" ? "Failed" : v === "PENDING" ? "No" : "In Progress")}
-                        className="h-9 px-4 rounded-lg text-[9px] font-black uppercase tracking-widest cursor-pointer"
-                      >
-                        {v}
-                      </DropdownMenuItem>
-                    ))}
-                 </DropdownMenuContent>
-               </DropdownMenu>
-             ))}
+               { id: "whatsappCompleted", label: "WA", icon: MessageCircle, color: "text-emerald-500" },
+               { id: "emailCompleted", label: "Gmail", icon: Mail, color: "text-blue-500" },
+               { id: "instagramCompleted", label: "Insta", icon: Instagram, color: "text-pink-500" },
+             ].map(f => {
+               const currentVal = table.getColumn(f.id)?.getFilterValue() as string;
+               const isActive = !!currentVal;
+               
+               return (
+                 <DropdownMenu key={f.id}>
+                   <DropdownMenuTrigger asChild>
+                     <Button variant="outline" className={cn(
+                       "h-10 rounded-xl border-white/10 px-4 font-black text-[9px] uppercase tracking-widest gap-2 min-w-[100px] transition-all",
+                       isActive ? "bg-muted/40 border-primary/30" : "bg-muted/20"
+                     )}>
+                       <f.icon className={cn("w-3 h-3", isActive ? f.color : "opacity-30")} />
+                       {currentVal ? (currentVal === "Yes" ? "SENT" : currentVal === "Failed" ? "FAILED" : currentVal === "In Progress" ? "BUSY" : "PENDING") : f.label}
+                     </Button>
+                   </DropdownMenuTrigger>
+                   <DropdownMenuContent className="glass-card border-white/10 p-2 rounded-2xl z-[100] min-w-[140px]">
+                      <DropdownMenuLabel className="px-3 py-1.5 text-[8px] font-black text-muted-foreground uppercase tracking-widest">Select {f.label} Status</DropdownMenuLabel>
+                      <DropdownMenuSeparator className="bg-white/5 mx-2" />
+                      {[
+                        { label: "ALL STATUS", val: undefined },
+                        { label: "SENT / COMPLETED", val: "Yes" },
+                        { label: "FAILED / ERROR", val: "Failed" },
+                        { label: "PENDING / NO", val: "No" },
+                        { label: "IN PROGRESS", val: "In Progress" }
+                      ].map(v => (
+                        <DropdownMenuItem 
+                          key={v.label} 
+                          onSelect={() => table.getColumn(f.id)?.setFilterValue(v.val)}
+                          className="h-9 px-3 rounded-lg text-[9px] font-black uppercase tracking-widest cursor-pointer hover:bg-primary/10 hover:text-primary transition-colors"
+                        >
+                          {v.label}
+                        </DropdownMenuItem>
+                      ))}
+                   </DropdownMenuContent>
+                 </DropdownMenu>
+               );
+             })}
            </div>
          )}
-      </div>
 
       {/* Bottom Row: Query + Global Commands */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
@@ -314,7 +343,7 @@ export function DataTableToolbar<TData>({
                 <DropdownMenuLabel className="px-4 py-2 text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Set Row Color</DropdownMenuLabel>
                 <div onSelect={(e) => e.preventDefault()} className="outline-none">
                   <AdvancedColorPicker 
-                    color={selectedRows[0]?.original.rowColor || "transparent"} 
+                    color={(selectedRows[0]?.original as any).rowColor || "transparent"} 
                     onChange={(color) => executeBulkAction("color", color)} 
                   />
                 </div>
