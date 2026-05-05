@@ -253,12 +253,15 @@ export const handleResetPassword: RequestHandler = async (req, res) => {
     if (process.env.SMTP_USER && process.env.SMTP_PASS) {
       transporter = nodemailer.createTransport({
         host: "smtp.gmail.com",
-        port: 465,
-        secure: true,
+        port: 587,
+        secure: false, // use STARTTLS for port 587
         auth: {
           user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
+          pass: process.env.SMTP_PASS.replace(/\s+/g, ""), // strip spaces from App Passwords
         },
+        connectionTimeout: 10000, // 10 seconds timeout to prevent indefinite hangs
+        greetingTimeout: 10000,
+        socketTimeout: 10000,
       });
     } else {
       // Fallback to Ethereal Email (Development ONLY - does NOT send real emails)

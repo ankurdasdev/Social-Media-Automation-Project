@@ -252,8 +252,8 @@ export function WhatsAppSettings() {
                                      </div>
                                   </div>
                                   <div>
-                                     <p className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em]">Protocol :: Online</p>
-                                     <h4 className="text-3xl font-black text-foreground tracking-tighter">AUTHENTICATED</h4>
+                                     <p className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em] whitespace-nowrap">Protocol :: Online</p>
+                                     <h4 className="text-2xl md:text-3xl font-black text-foreground tracking-tighter whitespace-nowrap uppercase leading-none">AUTHENTICATED</h4>
                                   </div>
                                </div>
                                
@@ -267,12 +267,12 @@ export function WhatsAppSettings() {
                             </div>
 
                             <div className="space-y-4 p-8 rounded-[2.5rem] bg-white/[0.02] border border-white/5">
-                               <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.4em] text-center">Active Mobile Instance</p>
-                               <div className="text-4xl md:text-5xl font-black tracking-[0.1em] text-center text-foreground break-all py-2">
+                               <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.2em] md:tracking-[0.4em] text-center whitespace-nowrap">Active Mobile Instance</p>
+                               <div className="text-3xl md:text-5xl font-black tracking-[0.1em] text-center text-foreground py-2 whitespace-nowrap">
                                   {instance?.instanceName.split('_')[1] || '916200469935'}
                                </div>
                                <div className="h-px w-12 bg-emerald-500/20 mx-auto" />
-                               <p className="text-[10px] font-black text-emerald-500/40 uppercase tracking-[0.2em] text-center">
+                               <p className="text-[10px] font-black text-emerald-500/40 uppercase tracking-[0.2em] text-center whitespace-nowrap">
                                   ID: {instance?.instanceName || 'W_916200469935'}
                                </p>
                             </div>
