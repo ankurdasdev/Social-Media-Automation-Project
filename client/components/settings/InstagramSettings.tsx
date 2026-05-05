@@ -213,7 +213,7 @@ export default function InstagramSettings() {
 
         <div className="flex flex-col lg:flex-row min-h-[600px]">
            {/* Left Section - Identity & Status */}
-           <div className="p-8 md:p-12 lg:w-[45%] flex flex-col border-b lg:border-b-0 lg:border-r border-white/5 relative">
+           <div className="p-8 md:p-12 lg:w-[45%] shrink-0 flex flex-col border-b lg:border-b-0 lg:border-r border-white/5 relative">
               <div className="mb-12">
                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-pink-500/10 to-orange-500/10 border border-pink-500/20 flex items-center justify-center shadow-lg shadow-pink-500/5 group hover:scale-110 transition-transform duration-500">
                     <Instagram className="h-8 w-8 text-pink-500" />
@@ -227,9 +227,9 @@ export default function InstagramSettings() {
                     <span className="text-[10px] font-black text-pink-500 uppercase tracking-[0.2em]">Live Connection</span>
                   </div>
                   
-                  <h2 className="text-5xl md:text-6xl font-black tracking-tighter text-foreground uppercase leading-none">
+                  <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground uppercase leading-none whitespace-nowrap">
                     INSTAGRAM<br/>
-                    <span className="text-pink-500 drop-shadow-[0_0_15px_rgba(236,72,153,0.3)]">LINK</span>
+                    <span className="text-pink-500 drop-shadow-[0_0_15px_rgba(236,72,153,0.3)]">INTEGRATION</span>
                   </h2>
 
                   {isConnected && (

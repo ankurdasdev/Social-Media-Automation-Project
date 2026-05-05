@@ -98,8 +98,15 @@ export async function sendOutreach(req: OutreachRequest) {
   } catch (err: any) {
     console.error(`Outreach failed for contact ${contactId} via ${channel}:`, err);
     await query(
-      "UPDATE contacts SET status = 'failed', automation_comment = $2, updated_at = NOW() WHERE id = $1",
-      [contactId, err.message]
+      `UPDATE contacts SET 
+         status = CASE WHEN status = 'sent' THEN 'sent' ELSE 'failed' END, 
+         automation_comment = $2, 
+         whatsapp_completed = CASE WHEN $3 = 'whatsapp' THEN 'Failed' ELSE whatsapp_completed END,
+         email_completed = CASE WHEN $3 = 'email' THEN 'Failed' ELSE email_completed END,
+         instagram_completed = CASE WHEN $3 = 'instagram' THEN 'Failed' ELSE instagram_completed END,
+         updated_at = NOW() 
+       WHERE id = $1 AND user_id = $4`,
+      [contactId, `[${channel.toUpperCase()}]: ${err.message}`, channel, userId]
     );
     throw err;
   }

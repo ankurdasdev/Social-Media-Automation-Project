@@ -156,7 +156,7 @@ export default function Settings() {
 
               <div className="flex flex-col lg:flex-row min-h-[600px]">
                  {/* Left Section - Identity & Status */}
-                 <div className="p-8 md:p-12 lg:w-[45%] flex flex-col border-b lg:border-b-0 lg:border-r border-white/5 relative">
+                 <div className="p-8 md:p-12 lg:w-[45%] shrink-0 flex flex-col border-b lg:border-b-0 lg:border-r border-white/5 relative">
                     <div className="mb-12">
                        <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center shadow-lg shadow-primary/5 group hover:scale-110 transition-transform duration-500">
                           <Mail className="h-8 w-8 text-primary" />
@@ -170,7 +170,7 @@ export default function Settings() {
                             <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Secure Gateway</span>
                           </div>
                           
-                          <h2 className="text-4xl md:text-6xl font-black tracking-tighter text-foreground uppercase leading-none">
+                          <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground uppercase leading-none whitespace-nowrap">
                             GOOGLE<br/>
                             <span className="text-primary drop-shadow-[0_0_15px_rgba(139,92,246,0.3)]">WORKSPACE</span>
                           </h2>
@@ -198,11 +198,21 @@ export default function Settings() {
                                 <Icon className="h-5 w-5 text-primary" />
                               </div>
                               <div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-foreground">{title}</p>
-                                <p className="text-[10px] text-muted-foreground font-bold mt-0.5">{sub}</p>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-foreground whitespace-nowrap">{title}</p>
+                                <p className="text-[10px] text-muted-foreground font-bold mt-0.5 whitespace-nowrap">{sub}</p>
                               </div>
                             </div>
                           ))}
+                            <div className="flex items-center gap-5 group p-3 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-primary/20 transition-all">
+                               <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                                  <AlertTriangle className="h-5 w-5 text-amber-500" />
+                               </div>
+                               <div className="flex flex-col">
+                                  <p className="text-[10px] font-black uppercase tracking-widest text-foreground whitespace-nowrap">Action Required</p>
+                                  <p className="text-xs text-muted-foreground font-bold mt-1 whitespace-nowrap">IMPORTANT: Check all permission boxes</p>
+                                  <p className="text-[10px] text-muted-foreground mt-0.5 whitespace-nowrap">Google hides these by default. You MUST check them to send emails.</p>
+                               </div>
+                            </div>
                        </div>
                     </div>
                  </div>
