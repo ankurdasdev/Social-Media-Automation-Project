@@ -244,7 +244,7 @@ export const handleInstagramSyncThreads: RequestHandler = async (req, res) => {
 
   try {
     const session = await queryOne<{ session_data: string }>(
-      "SELECT session_data FROM instagram_sessions WHERE user_id = $1 AND status = 'connected'",
+      "SELECT session_data FROM instagram_sessions WHERE user_id = $1 ",
       [userId]
     );
 
@@ -314,7 +314,7 @@ export const handleInstagramSendMessage: RequestHandler = async (req, res) => {
 
   try {
     const session = await queryOne<{ session_data: string }>(
-      "SELECT session_data FROM instagram_sessions WHERE user_id = $1 AND status = 'connected'",
+      "SELECT session_data FROM instagram_sessions WHERE user_id = $1 ",
       [userId]
     );
 

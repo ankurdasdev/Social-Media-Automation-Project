@@ -116,7 +116,7 @@ export async function sendOutreach(req: OutreachRequest) {
 
 async function handleWhatsAppOutreach(userId: string, contact: Contact) {
   const instance = await queryOne<{ instance_name: string }>(
-    "SELECT instance_name FROM whatsapp_instances WHERE user_id = $1 AND status = 'connected'",
+    "SELECT instance_name FROM whatsapp_instances WHERE user_id = $1 ",
     [userId]
   );
   if (!instance) throw new Error("WhatsApp not connected — please connect in Settings first");
@@ -335,7 +335,7 @@ async function handleEmailOutreach(userId: string, contact: Contact) {
 
 async function handleInstagramOutreach(userId: string, contact: Contact) {
   const session = await queryOne<{ session_data: string }>(
-    "SELECT session_data FROM instagram_sessions WHERE user_id = $1 AND status = 'connected'",
+    "SELECT session_data FROM instagram_sessions WHERE user_id = $1 ",
     [userId]
   );
   if (!session) throw new Error("Instagram not connected — please connect in Settings first");

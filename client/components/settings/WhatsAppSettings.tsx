@@ -244,7 +244,7 @@ export function WhatsAppSettings() {
                          <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[radial-gradient(circle_at_2px_2px,#fff_1px,transparent_0)] bg-[size:32px_32px]" />
                          
                          <div className="flex flex-col gap-10 relative z-10">
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                                <div className="flex items-center gap-4">
                                   <div className="w-16 h-16 rounded-2.5xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.1)]">
                                      <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center">

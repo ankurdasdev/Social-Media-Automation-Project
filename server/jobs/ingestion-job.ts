@@ -66,8 +66,8 @@ export async function runIngestionJob(): Promise<IngestionRunResult> {
         console.log(`[ingestion] Processing User ID: ${userId}`);
 
         // 2. Fetch User's Integrations
-        const waInstance = await queryOne("SELECT instance_name FROM whatsapp_instances WHERE user_id = $1 AND status = 'connected'", [userId]);
-        const igSession = await queryOne("SELECT session_data FROM instagram_sessions WHERE user_id = $1 AND status = 'connected'", [userId]);
+        const waInstance = await queryOne("SELECT instance_name FROM whatsapp_instances WHERE user_id = $1 ", [userId]);
+        const igSession = await queryOne("SELECT session_data FROM instagram_sessions WHERE user_id = $1 ", [userId]);
 
         // 3. Fetch User's Enabled Groups & Keywords
         const groups = await query("SELECT * FROM source_groups WHERE user_id = $1 AND enabled = TRUE", [userId]);
