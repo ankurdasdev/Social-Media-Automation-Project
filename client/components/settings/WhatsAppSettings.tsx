@@ -175,9 +175,9 @@ export function WhatsAppSettings() {
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-[120px] -z-10" />
         <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-primary/5 rounded-full blur-[100px] -z-10" />
 
-        <div className="flex flex-col lg:flex-row min-h-[600px]">
+        <div className="flex flex-col lg:flex-row min-h-[600px] overflow-hidden">
            {/* Left Section - Identity & Status */}
-           <div className="p-8 md:p-12 lg:w-[45%] flex flex-col border-b lg:border-b-0 lg:border-r border-white/5 relative">
+           <div className="p-8 md:p-12 lg:w-[45%] shrink-0 flex flex-col border-b lg:border-b-0 lg:border-r border-white/5 relative">
               <div className="mb-12">
                  <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-lg shadow-emerald-500/5 group hover:scale-110 transition-transform duration-500">
                     <MessageSquare className="h-8 w-8 text-emerald-500" />
@@ -191,7 +191,7 @@ export function WhatsAppSettings() {
                     <span className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em]">Live Connection</span>
                   </div>
                   
-                  <h2 className="text-5xl md:text-6xl font-black tracking-tighter text-foreground uppercase leading-none">
+                  <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground uppercase leading-none whitespace-nowrap">
                     WHATSAPP<br/>
                     <span className="text-emerald-500 drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]">CONNECTION</span>
                   </h2>
@@ -232,7 +232,7 @@ export function WhatsAppSettings() {
          </div>
 
          {/* Right Section - Interaction Area */}
-            <div className="p-8 md:p-12 lg:p-16 flex-1 flex flex-col justify-center relative bg-black/20 backdrop-blur-sm">
+            <div className="p-8 md:p-10 flex-1 flex flex-col justify-center relative bg-black/20 backdrop-blur-sm overflow-hidden">
                {isConnected ? (
                  <div className="space-y-8 animate-in zoom-in-95 duration-700 max-w-2xl mx-auto w-full">
                    <div className="relative group">
@@ -253,7 +253,7 @@ export function WhatsAppSettings() {
                                   </div>
                                   <div>
                                      <p className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em] whitespace-nowrap">Protocol :: Online</p>
-                                     <h4 className="text-2xl md:text-3xl font-black text-foreground tracking-tighter whitespace-nowrap uppercase leading-none">AUTHENTICATED</h4>
+                                     <h4 className="text-xl md:text-2xl font-black text-foreground tracking-tighter uppercase leading-none">AUTHENTICATED</h4>
                                   </div>
                                </div>
                                
@@ -267,12 +267,12 @@ export function WhatsAppSettings() {
                             </div>
 
                             <div className="space-y-4 p-8 rounded-[2.5rem] bg-white/[0.02] border border-white/5">
-                               <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.2em] md:tracking-[0.4em] text-center whitespace-nowrap">Active Mobile Instance</p>
-                               <div className="text-3xl md:text-5xl font-black tracking-[0.1em] text-center text-foreground py-2 whitespace-nowrap">
+                               <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest text-center">Active Mobile Instance</p>
+                               <div className="text-2xl md:text-4xl font-black tracking-tight text-center text-foreground py-2 break-all">
                                   {instance?.instanceName.split('_')[1] || '916200469935'}
                                </div>
                                <div className="h-px w-12 bg-emerald-500/20 mx-auto" />
-                               <p className="text-[10px] font-black text-emerald-500/40 uppercase tracking-[0.2em] text-center whitespace-nowrap">
+                               <p className="text-[10px] font-black text-emerald-500/40 uppercase tracking-widest text-center break-all">
                                   ID: {instance?.instanceName || 'W_916200469935'}
                                </p>
                             </div>

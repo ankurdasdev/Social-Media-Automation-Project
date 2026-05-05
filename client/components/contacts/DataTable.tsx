@@ -144,22 +144,10 @@ export function DataTable<TData, TValue>({
           onAISearch={onAISearch}
           isAISearching={isAISearching}
           onClearAISearch={onClearAISearch}
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}
           className="flex-1"
         />
-        <div className="flex items-center gap-2">
-           <Button 
-             variant="outline" 
-             size="icon" 
-             onClick={() => setIsFullscreen(!isFullscreen)}
-             className={cn(
-               "h-14 w-14 rounded-2xl border-white/10 shadow-xl shrink-0 transition-all active:scale-90",
-               isFullscreen ? "bg-primary text-primary-foreground border-primary" : "hover:bg-muted"
-             )}
-             title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-           >
-             {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
-           </Button>
-        </div>
       </div>
       
       <div className={cn(

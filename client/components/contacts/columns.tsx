@@ -58,11 +58,13 @@ function DataTableColumnHeader({
   title, 
   icon: Icon,
   columnId,
+  disableRename,
 }: { 
   column: any; 
   title: string; 
   icon?: any;
   columnId?: string;
+  disableRename?: boolean;
 }) {
   const storedLabels = getStoredLabels();
   const effectiveId = columnId || column.id;
@@ -94,12 +96,14 @@ function DataTableColumnHeader({
         ) : (
           <>
             <span>{displayTitle}</span>
-            <button
-              onClick={(e) => { e.stopPropagation(); setIsEditingLabel(true); setLabelValue(storedLabels[effectiveId] || title); }}
-              className="opacity-0 group-hover:opacity-50 hover:!opacity-100 transition-opacity p-0.5 rounded hover:bg-primary/10"
-            >
-              <Pencil className="w-2.5 h-2.5" />
-            </button>
+            {!disableRename && (
+              <button
+                onClick={(e) => { e.stopPropagation(); setIsEditingLabel(true); setLabelValue(storedLabels[effectiveId] || title); }}
+                className="opacity-0 group-hover:opacity-50 hover:!opacity-100 transition-opacity p-0.5 rounded hover:bg-primary/10"
+              >
+                <Pencil className="w-2.5 h-2.5" />
+              </button>
+            )}
           </>
         )}
       </div>
@@ -165,7 +169,7 @@ function DataTableColumnHeader({
         </PopoverContent>
         </Popover>
       )}
-      {!isEditingLabel && (
+      {!isEditingLabel && !disableRename && (
         <button
           onClick={(e) => { e.stopPropagation(); setIsEditingLabel(true); setLabelValue(storedLabels[effectiveId] || title); }}
           className="opacity-0 group-hover:opacity-40 hover:!opacity-100 transition-opacity p-0.5 rounded hover:bg-primary/10 shrink-0"
@@ -287,7 +291,7 @@ export const columns: ColumnDef<Contact>[] = [
   // ── Combined Outreach Status ────────────────────────────────────────────────
   {
     id: "status",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Status" columnId="status" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Status" columnId="status" disableRename={true} />,
     accessorFn: (row) => {
       const wa = (row.whatsappCompleted || "").toLowerCase();
       const em = (row.emailCompleted || "").toLowerCase();

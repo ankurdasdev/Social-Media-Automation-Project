@@ -47,7 +47,8 @@ export const handleGoogleAuth: RequestHandler = (req, res) => {
   const authUrl = oauth2Client.generateAuthUrl({
     access_type: "offline",
     scope: SCOPES,
-    prompt: "consent",
+    prompt: "consent select_account",
+    include_granted_scopes: true,
     state,
   });
 
