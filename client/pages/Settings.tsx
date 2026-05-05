@@ -244,7 +244,7 @@ export default function Settings() {
                               <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[radial-gradient(circle_at_2px_2px,#fff_1px,transparent_0)] bg-[size:32px_32px]" />
                               
                               <div className="flex flex-col gap-10 relative z-10">
-                                 <div className="flex items-center justify-between">
+                                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                                     <div className="flex items-center gap-4">
                                        <div className="w-16 h-16 rounded-2.5xl bg-primary/10 border border-primary/20 flex items-center justify-center shadow-[0_0_30px_rgba(139,92,246,0.1)]">
                                           <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
@@ -252,8 +252,8 @@ export default function Settings() {
                                           </div>
                                        </div>
                                        <div>
-                                          <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em] whitespace-nowrap">Protocol :: Secure</p>
-                                          <h4 className="text-2xl md:text-3xl font-black text-foreground tracking-tighter whitespace-nowrap uppercase leading-none">AUTHENTICATED</h4>
+                                          <p className="text-[10px] font-black text-primary uppercase tracking-widest">Protocol :: Secure</p>
+                                          <h4 className="text-xl md:text-2xl font-black text-foreground tracking-tighter uppercase leading-none">AUTHENTICATED</h4>
                                        </div>
                                     </div>
                                     
@@ -273,11 +273,11 @@ export default function Settings() {
                                     </div>
                                  </div>
 
-                                 <div className="space-y-4 p-8 rounded-[2.5rem] bg-white/[0.02] border border-white/5">
-                                    <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.2em] md:tracking-[0.4em] text-center whitespace-nowrap">Connected Workspace Account</p>
-                                    <div className="text-center whitespace-nowrap">
+                                 <div className="space-y-4 p-6 rounded-[2.5rem] bg-white/[0.02] border border-white/5 overflow-hidden">
+                                    <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest text-center">Connected Workspace Account</p>
+                                    <div className="text-center">
                                        <h3 className="text-2xl md:text-3xl font-black tracking-tighter text-foreground">{googleStatus.userName}</h3>
-                                       <p className="text-[12px] font-black text-primary/60 uppercase tracking-widest mt-1">{googleStatus.userEmail}</p>
+                                       <p className="text-[12px] font-black text-primary/60 uppercase tracking-widest mt-1 break-all">{googleStatus.userEmail}</p>
                                     </div>
                                     <div className="h-px w-12 bg-primary/20 mx-auto" />
                                     <p className="text-[10px] font-black text-primary/40 uppercase tracking-[0.2em] text-center whitespace-nowrap">

@@ -177,7 +177,7 @@ export function DataTableToolbar<TData>({
           )}
           title={searchMode === "ai" ? "Switch to Normal Search" : "Switch to AI Search"}
         >
-          {searchMode === "ai" ? <Sparkles className="h-4 w-4" /> : <Search className="h-4 w-4" />}
+          <Sparkles className="h-4 w-4" />
         </Button>
 
         {/* Search bar */}
@@ -225,7 +225,7 @@ export function DataTableToolbar<TData>({
         <Button
           variant="outline"
           size="sm"
-          onClick={() => { table.resetGlobalFilter(); table.resetColumnFilters(); onClearAISearch?.(); }}
+          onClick={() => { table.resetGlobalFilter(); table.resetColumnFilters(); onClearAISearch?.(); if (onTabChange) onTabChange("all"); }}
           className="h-11 px-4 rounded-xl border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary font-black text-[9px] uppercase tracking-widest gap-2 transition-all active:scale-95 group shrink-0"
         >
           <RefreshCw className="w-3.5 h-3.5 group-hover:rotate-180 transition-transform duration-500" />
