@@ -293,8 +293,8 @@ export default function InstagramSettings() {
                                      </div>
                                   </div>
                                   <div>
-                                     <p className="text-[10px] font-black text-pink-500 uppercase tracking-[0.3em]">Status :: Connected</p>
-                                     <h4 className="text-3xl font-black text-foreground tracking-tighter">AUTHENTICATED</h4>
+                                     <p className="text-[10px] font-black text-pink-500 uppercase tracking-[0.3em] whitespace-nowrap">Status :: Connected</p>
+                                     <h4 className="text-2xl md:text-3xl font-black text-foreground tracking-tighter whitespace-nowrap uppercase leading-none">AUTHENTICATED</h4>
                                   </div>
                                </div>
                                
@@ -310,12 +310,12 @@ export default function InstagramSettings() {
                             </div>
 
                             <div className="space-y-4 p-8 rounded-[2.5rem] bg-white/[0.02] border border-white/5">
-                               <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.4em] text-center">Connected Account</p>
-                               <div className="text-4xl md:text-5xl font-black tracking-tight text-center text-foreground break-all py-2">
+                               <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.2em] md:tracking-[0.4em] text-center whitespace-nowrap">Connected Account</p>
+                               <div className="text-3xl md:text-5xl font-black tracking-tight text-center text-foreground py-2 whitespace-nowrap">
                                   @{status?.username}
                                </div>
                                <div className="h-px w-12 bg-pink-500/20 mx-auto" />
-                               <p className="text-[10px] font-black text-pink-500/40 uppercase tracking-[0.2em] text-center">
+                               <p className="text-[10px] font-black text-pink-500/40 uppercase tracking-[0.2em] text-center whitespace-nowrap">
                                  {status?.connectedAt ? `ESTABLISHED :: ${new Date(status.connectedAt).toLocaleDateString()}` : "ANONYMOUS SESSION"}
                                </p>
                             </div>

@@ -170,7 +170,7 @@ export default function Settings() {
                             <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Secure Gateway</span>
                           </div>
                           
-                          <h2 className="text-5xl md:text-6xl font-black tracking-tighter text-foreground uppercase leading-none">
+                          <h2 className="text-4xl md:text-6xl font-black tracking-tighter text-foreground uppercase leading-none">
                             GOOGLE<br/>
                             <span className="text-primary drop-shadow-[0_0_15px_rgba(139,92,246,0.3)]">WORKSPACE</span>
                           </h2>
@@ -242,8 +242,8 @@ export default function Settings() {
                                           </div>
                                        </div>
                                        <div>
-                                          <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Protocol :: Secure</p>
-                                          <h4 className="text-3xl font-black text-foreground tracking-tighter">AUTHENTICATED</h4>
+                                          <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em] whitespace-nowrap">Protocol :: Secure</p>
+                                          <h4 className="text-2xl md:text-3xl font-black text-foreground tracking-tighter whitespace-nowrap uppercase leading-none">AUTHENTICATED</h4>
                                        </div>
                                     </div>
                                     
@@ -264,13 +264,13 @@ export default function Settings() {
                                  </div>
 
                                  <div className="space-y-4 p-8 rounded-[2.5rem] bg-white/[0.02] border border-white/5">
-                                    <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.4em] text-center">Connected Workspace Account</p>
-                                    <div className="text-center">
-                                       <h3 className="text-3xl font-black tracking-tighter text-foreground">{googleStatus.userName}</h3>
+                                    <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.2em] md:tracking-[0.4em] text-center whitespace-nowrap">Connected Workspace Account</p>
+                                    <div className="text-center whitespace-nowrap">
+                                       <h3 className="text-2xl md:text-3xl font-black tracking-tighter text-foreground">{googleStatus.userName}</h3>
                                        <p className="text-[12px] font-black text-primary/60 uppercase tracking-widest mt-1">{googleStatus.userEmail}</p>
                                     </div>
                                     <div className="h-px w-12 bg-primary/20 mx-auto" />
-                                    <p className="text-[10px] font-black text-primary/40 uppercase tracking-[0.2em] text-center">
+                                    <p className="text-[10px] font-black text-primary/40 uppercase tracking-[0.2em] text-center whitespace-nowrap">
                                        SESSION ACTIVE :: OAUTH 2.0 VERIFIED
                                     </p>
                                  </div>
