@@ -150,7 +150,7 @@ export async function sendMedia(
   const body = {
     number,
     media: mediaUrl,
-    mediaType,
+    mediatype: mediaType,
     caption,
     fileName,
   };
