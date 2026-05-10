@@ -104,9 +104,11 @@ export const handleGoogleCallback: RequestHandler = async (req, res) => {
         tokens.refresh_token,
         tokens.id_token,
         tokens.expiry_date ? new Date(tokens.expiry_date) : null,
-        tokens.scope, // This is the space-separated string of scopes
+        tokens.scope || "", // This is the space-separated string of scopes
       ]
     );
+
+    console.log(`[google-auth] User ${user!.id} authenticated. Scopes granted: ${tokens.scope || "NONE"}`);
 
     // Redirect back to app with userId
     res.redirect(`/settings?auth=success&userId=${user!.id}`);

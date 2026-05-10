@@ -269,23 +269,10 @@ async function handleEmailOutreach(userId: string, contact: Contact) {
 
   if (!combinedBody && driveAttachments.length === 0) throw new Error("No email content or attachments selected.");
 
-  // Get sender email from Google profile
-  let profileRes: any;
-  try {
-    profileRes = await gmail.users.getProfile({ userId: "me" });
-  } catch (err: any) {
-    const isScope = err?.message?.toLowerCase().includes("insufficient") || 
-                    err?.code === 403 || 
-                    err?.errors?.[0]?.reason === "insufficientPermissions";
-    if (isScope) {
-      throw new Error(
-        "GMAIL_SCOPE_ERROR: Your Google account needs to be re-connected to enable email sending. Please go to Settings → Google Drive & Gmail → Disconnect, then reconnect your account."
-      );
-    }
-    throw new Error(`Gmail error: ${err.message}`);
-  }
-
-  const from = profileRes.data.emailAddress || "me";
+  // Get sender email from the linked user account in our DB
+  const user = await queryOne<{ email: string }>("SELECT email FROM users WHERE id = $1", [userId]);
+  if (!user) throw new Error("User account not found");
+  const from = user.email;
 
   const emailAttachments: { filename: string; content: Buffer; mimeType: string }[] = [];
   if (driveAttachments.length > 0) {
@@ -322,7 +309,10 @@ async function handleEmailOutreach(userId: string, contact: Contact) {
                     err?.errors?.[0]?.reason === "insufficientPermissions";
     if (isScope) {
       throw new Error(
-        "GMAIL_SCOPE_ERROR: Your Google account needs to be re-connected to enable email sending. Please go to Settings → Google Drive & Gmail → Disconnect, then reconnect your account."
+        "GMAIL_SCOPE_ERROR: Your Google account permissions are insufficient. " +
+        "Please go to Settings → Google Drive & Gmail → Disconnect, then reconnect. " +
+        "IMPORTANT: During the Google login, if you see a 'This app isn't verified' screen, click 'Advanced' → 'Go to ... (unsafe)'. " +
+        "Then, you MUST check the box that says 'Send email on your behalf'."
       );
     }
     throw new Error(`Gmail send failed: ${err.message}`);
