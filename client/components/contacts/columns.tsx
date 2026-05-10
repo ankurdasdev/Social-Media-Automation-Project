@@ -758,7 +758,7 @@ export const columns: ColumnDef<Contact>[] = [
   },
   {
     accessorKey: "automationComment",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Bot Intel" icon={AlertCircle} columnId="automationComment" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Automation status" icon={AlertCircle} columnId="automationComment" />,
     size: 200,
     cell: ({ row }) => (
       <div className="px-3 text-[10px] font-medium text-muted-foreground italic truncate">

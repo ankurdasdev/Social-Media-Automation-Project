@@ -81,6 +81,7 @@ export async function sendOutreach(req: OutreachRequest) {
         status = 'sent',
         last_contacted = $1,
         contacted_dates = $2,
+        automation_comment = NULL,
         whatsapp_completed = CASE WHEN $3 = 'whatsapp' THEN 'Yes' ELSE whatsapp_completed END,
         email_completed = CASE WHEN $3 = 'email' THEN 'Yes' ELSE email_completed END,
         instagram_completed = CASE WHEN $3 = 'instagram' THEN 'Yes' ELSE instagram_completed END,
@@ -132,7 +133,10 @@ async function handleWhatsAppOutreach(userId: string, contact: Contact) {
 
   // 2. Resolve Templates in Order
   const templateIds = Array.isArray(contact.templateSelectionWP) ? contact.templateSelectionWP : [];
-  const attachments: DriveFile[] = contact.unified_attachments || [];
+  const attachments: DriveFile[] = [
+    ...(contact.drive_attachments_wa || []),
+    ...(contact.unified_attachments || [])
+  ];
 
   for (const tId of templateIds) {
     const template = await queryOne<any>(
@@ -244,7 +248,10 @@ async function handleEmailOutreach(userId: string, contact: Contact) {
   const templateIds = Array.isArray(contact.templateSelectionGmail) ? contact.templateSelectionGmail : [];
   let combinedBody = "";
   let finalSubject = contact.editableGmailSubject || `Casting Outreach: ${contact.project || contact.name || "New Project"}`;
-  const driveAttachments: DriveFile[] = contact.unified_attachments || [];
+  const driveAttachments: DriveFile[] = [
+    ...(contact.drive_attachments_email || []),
+    ...(contact.unified_attachments || [])
+  ];
 
   // 1. Custom Message Override (Sent First if present)
   if (contact.hasCustomMessageEmail && contact.editableMessageGmail) {
@@ -336,7 +343,10 @@ async function handleInstagramOutreach(userId: string, contact: Contact) {
   // 1. Resolve Templates
   const templateIds = Array.isArray(contact.templateSelectionIG) ? contact.templateSelectionIG : [];
   let combinedMessage = "";
-  const attachments: DriveFile[] = contact.unified_attachments || [];
+  const attachments: DriveFile[] = [
+    ...(contact.drive_attachments_ig || []),
+    ...(contact.unified_attachments || [])
+  ];
 
   // 1. Custom Message Override
   if (contact.hasCustomMessageIG && contact.editableMessageIG) {
