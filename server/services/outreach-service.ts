@@ -162,15 +162,15 @@ async function handleWhatsAppOutreach(userId: string, contact: Contact) {
         const base64 = Buffer.from(response.data as ArrayBuffer).toString("base64");
         const meta = await drive.files.get({ fileId: file.id, fields: "mimeType" });
         const mimeType = meta.data.mimeType || "application/octet-stream";
-        const dataUrl = `data:${mimeType};base64,${base64}`;
         
         // Determine mediaType for Evolution API
         let mediaType: "image" | "document" = "document";
         if (mimeType.startsWith("image/")) mediaType = "image";
 
-        await sendWAMedia(instance.instance_name, jid, dataUrl, mediaType, file.name, file.name);
+        // Evolution API expects raw base64 without the data: prefix
+        await sendWAMedia(instance.instance_name, jid, base64, mediaType, file.name, file.name);
       } catch (attachErr: any) {
-        console.warn(`[outreach] WA attachment failed for ${file.name}:`, attachErr.message);
+        throw new Error(`WhatsApp attachment failed for ${file.name}: ${attachErr.message}`);
       }
     }
   }
