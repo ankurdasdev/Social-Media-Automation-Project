@@ -142,6 +142,7 @@ export async function sendMedia(
   instanceName: string,
   number: string,
   mediaUrl: string,
+  mediaType: "image" | "video" | "audio" | "document" = "image",
   caption?: string,
   fileName?: string
 ): Promise<any> {
@@ -149,7 +150,7 @@ export async function sendMedia(
   const body = {
     number,
     media: mediaUrl,
-    mediaType: "image", // can be image, video, audio, document
+    mediaType,
     caption,
     fileName,
   };
