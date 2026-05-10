@@ -163,7 +163,12 @@ async function handleWhatsAppOutreach(userId: string, contact: Contact) {
         const meta = await drive.files.get({ fileId: file.id, fields: "mimeType" });
         const mimeType = meta.data.mimeType || "application/octet-stream";
         const dataUrl = `data:${mimeType};base64,${base64}`;
-        await sendWAMedia(instance.instance_name, jid, dataUrl, file.name, file.name);
+        
+        // Determine mediaType for Evolution API
+        let mediaType: "image" | "document" = "document";
+        if (mimeType.startsWith("image/")) mediaType = "image";
+
+        await sendWAMedia(instance.instance_name, jid, dataUrl, mediaType, file.name, file.name);
       } catch (attachErr: any) {
         console.warn(`[outreach] WA attachment failed for ${file.name}:`, attachErr.message);
       }
