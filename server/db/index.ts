@@ -7,9 +7,9 @@ const rawEnvUrl = process.env.DATABASE_URL;
 const isProduction = process.env.NODE_ENV === "production";
 
 let dbConfig: any = {};
-const DATABASE_URL = isProduction 
-  ? (rawEnvUrl || "postgresql://ankur:Password123!@casthub_db:5432/casthub_prod")
-  : "postgresql://ankur:Password123!@46.62.144.244:15432/casthub_prod";
+const DATABASE_URL = process.env.DATABASE_URL || (isProduction 
+  ? "postgresql://ankur:Password123!@casthub_db:5432/casthub_prod"
+  : "postgresql://ankur:Password123!@46.62.144.244:15432/casthub_prod");
 
 try {
   // Manual parsing of the connection string to force credentials and avoid PG environment variable fallback
@@ -31,7 +31,7 @@ console.log(`🛠️ [DEBUG] Pool connecting to ${dbConfig.host}:${dbConfig.port
 
 export const pool = new Pool({
   ...dbConfig,
-  max: 20,
+  max: 10,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 10000,
 });
