@@ -115,6 +115,8 @@ export async function sendOutreach(req: OutreachRequest) {
 
 // ─── WhatsApp ─────────────────────────────────────────────────────────────────
 
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 async function handleWhatsAppOutreach(userId: string, contact: Contact) {
   const instance = await queryOne<{ instance_name: string }>(
     "SELECT instance_name FROM whatsapp_instances WHERE user_id = $1 ",
@@ -129,6 +131,7 @@ async function handleWhatsAppOutreach(userId: string, contact: Contact) {
   // 1. Custom Message Override (Sent First if present)
   if (contact.hasCustomMessageWA && contact.editableMessageWP) {
       await sendWA(instance.instance_name, jid, contact.editableMessageWP);
+      await sleep(1500); // Small delay to avoid message drop
   }
 
   // 2. Resolve Templates in Order
@@ -150,6 +153,7 @@ async function handleWhatsAppOutreach(userId: string, contact: Contact) {
     } else if (template.content) {
        const message = injectVariables(template.content, contact, "whatsapp");
        await sendWA(instance.instance_name, jid, message);
+       await sleep(1500); // Small delay
     }
   }
 
@@ -169,6 +173,7 @@ async function handleWhatsAppOutreach(userId: string, contact: Contact) {
 
         // Evolution API expects raw base64 without the data: prefix
         await sendWAMedia(instance.instance_name, jid, base64, mediaType, file.name, file.name);
+        await sleep(1500); // Small delay
       } catch (attachErr: any) {
         throw new Error(`WhatsApp attachment failed for ${file.name}: ${attachErr.message}`);
       }
