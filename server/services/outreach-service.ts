@@ -130,19 +130,31 @@ async function handleWhatsAppOutreach(userId: string, contact: Contact) {
   if (!rawNumber) throw new Error("No valid WhatsApp number found on this contact");
   const jid = rawNumber.includes("@") ? rawNumber : `${rawNumber}@s.whatsapp.net`;
 
-  // 1. Custom Message Override (Sent First if present)
+  const drive = await getDriveClient(userId);
+
+  // Helper to send a Drive file as WhatsApp media
+  const sendDriveFile = async (fileId: string, fileName: string) => {
+    const response = await drive.files.get({ fileId, alt: "media" }, { responseType: "arraybuffer" });
+    const base64 = Buffer.from(response.data as ArrayBuffer).toString("base64");
+    const meta = await drive.files.get({ fileId, fields: "mimeType" });
+    const mimeType = meta.data.mimeType || "application/octet-stream";
+    
+    let mediaType: "image" | "document" = "document";
+    if (mimeType.startsWith("image/")) mediaType = "image";
+
+    const cleanName = stripExtension(fileName);
+    await sendWAMedia(instance.instance_name, jid, base64, mediaType, cleanName, fileName);
+    await sleep(1500);
+  };
+
+  // 1. Custom Message (Sent First)
   if (contact.hasCustomMessageWA && contact.editableMessageWP) {
       await sendWA(instance.instance_name, jid, contact.editableMessageWP);
-      await sleep(1500); // Small delay to avoid message drop
+      await sleep(1500);
   }
 
-  // 2. Resolve Templates in Order
+  // 2. Templates in Order
   const templateIds = Array.isArray(contact.templateSelectionWP) ? contact.templateSelectionWP : [];
-  const attachments: DriveFile[] = [
-    ...(contact.drive_attachments_wa || []),
-    ...(contact.unified_attachments || [])
-  ];
-
   for (const tId of templateIds) {
     const template = await queryOne<any>(
       "SELECT content, is_attachment, drive_file_id, drive_file_name FROM templates WHERE id = $1 AND user_id = $2",
@@ -151,37 +163,21 @@ async function handleWhatsAppOutreach(userId: string, contact: Contact) {
     if (!template) continue;
 
     if (template.is_attachment && template.drive_file_id) {
-       attachments.push({ id: template.drive_file_id, name: template.drive_file_name, mimeType: "", downloadUrl: "" });
+       await sendDriveFile(template.drive_file_id, template.drive_file_name);
     } else if (template.content) {
        const message = injectVariables(template.content, contact, "whatsapp");
        await sendWA(instance.instance_name, jid, message);
-       await sleep(1500); // Small delay
+       await sleep(1500);
     }
   }
 
-  // 3. Send Attachments
-  if (attachments.length > 0) {
-    const drive = await getDriveClient(userId);
-    for (const file of attachments) {
-      try {
-        const response = await drive.files.get({ fileId: file.id, alt: "media" }, { responseType: "arraybuffer" });
-        const base64 = Buffer.from(response.data as ArrayBuffer).toString("base64");
-        const meta = await drive.files.get({ fileId: file.id, fields: "mimeType" });
-        const mimeType = meta.data.mimeType || "application/octet-stream";
-        
-        // Determine mediaType for Evolution API
-        let mediaType: "image" | "document" = "document";
-        if (mimeType.startsWith("image/")) mediaType = "image";
-
-        const cleanName = stripExtension(file.name);
-        // Evolution API expects raw base64 without the data: prefix
-        // We use cleanName for caption, but original file.name for the actual fileName to ensure device compatibility
-        await sendWAMedia(instance.instance_name, jid, base64, mediaType, cleanName, file.name);
-        await sleep(1500); // Small delay
-      } catch (attachErr: any) {
-        throw new Error(`WhatsApp attachment failed for ${file.name}: ${attachErr.message}`);
-      }
-    }
+  // 3. Row Attachments
+  const rowAttachments: DriveFile[] = [
+    ...(contact.drive_attachments_wa || []),
+    ...(contact.unified_attachments || [])
+  ];
+  for (const file of rowAttachments) {
+    await sendDriveFile(file.id, file.name);
   }
 
   return { success: true };
@@ -258,88 +254,81 @@ async function handleEmailOutreach(userId: string, contact: Contact) {
   const to = contact.email;
   if (!to) throw new Error("No email address found on this contact");
 
-  // 1. Resolve Templates
-  const templateIds = Array.isArray(contact.templateSelectionGmail) ? contact.templateSelectionGmail : [];
-  let combinedBody = "";
-  let finalSubject = contact.editableGmailSubject || `Casting Outreach: ${contact.project || contact.name || "New Project"}`;
-  const driveAttachments: DriveFile[] = [
-    ...(contact.drive_attachments_email || []),
-    ...(contact.unified_attachments || [])
-  ];
-
-  // 1. Custom Message Override (Sent First if present)
-  if (contact.hasCustomMessageEmail && contact.editableMessageGmail) {
-     combinedBody = contact.editableMessageGmail;
-  }
-
-  // 2. Resolve Templates
-  for (const tId of templateIds) {
-    const template = await queryOne<any>(
-      "SELECT content, email_subject, is_attachment, drive_file_id, drive_file_name FROM templates WHERE id = $1 AND user_id = $2",
-      [tId, userId]
-    );
-    if (!template) continue;
-
-    if (template.is_attachment && template.drive_file_id) {
-       driveAttachments.push({ id: template.drive_file_id, name: template.drive_file_name, mimeType: "", downloadUrl: "" });
-    } else {
-       if (template.email_subject && !contact.editableGmailSubject) finalSubject = template.email_subject;
-       if (template.content) combinedBody += (combinedBody ? "\n\n" : "") + injectVariables(template.content, contact, "email");
-    }
-  }
-
-  if (!combinedBody && driveAttachments.length === 0) throw new Error("No email content or attachments selected.");
-
-  // Get sender email from the linked user account in our DB
+  // Get sender email
   const user = await queryOne<{ email: string }>("SELECT email FROM users WHERE id = $1", [userId]);
   if (!user) throw new Error("User account not found");
   const from = user.email;
 
+  const drive = await getDriveClient(userId);
+
+  // 1. Fetch Row Attachments (Used for every email)
+  const rowAttachments: DriveFile[] = [
+    ...(contact.drive_attachments_email || []),
+    ...(contact.unified_attachments || [])
+  ];
+
   const emailAttachments: { filename: string; content: Buffer; mimeType: string }[] = [];
-  if (driveAttachments.length > 0) {
-    const drive = await getDriveClient(userId);
-    for (const file of driveAttachments) {
-      try {
-        const response = await drive.files.get({ fileId: file.id, alt: "media" }, { responseType: "arraybuffer" });
-        const meta = await drive.files.get({ fileId: file.id, fields: "mimeType" });
-        emailAttachments.push({
-          filename: file.name, // Keep extension for email attachments to ensure they are recognizable by clients
-          content: Buffer.from(response.data as ArrayBuffer),
-          mimeType: meta.data.mimeType || "application/octet-stream",
-        });
-      } catch (attachErr: any) {
-        console.warn(`[outreach] Email attachment failed for ${file.name}:`, attachErr.message);
-      }
+  for (const file of rowAttachments) {
+    try {
+      const response = await drive.files.get({ fileId: file.id, alt: "media" }, { responseType: "arraybuffer" });
+      const meta = await drive.files.get({ fileId: file.id, fields: "mimeType" });
+      emailAttachments.push({
+        filename: file.name,
+        content: Buffer.from(response.data as ArrayBuffer),
+        mimeType: meta.data.mimeType || "application/octet-stream",
+      });
+    } catch (attachErr: any) {
+      console.warn(`[outreach] Email attachment failed for ${file.name}:`, attachErr.message);
     }
   }
 
-  const raw = await buildMimeMessage({
-    from: `"${contact.name || "CastHub"}" <${from}>`,
-    to,
-    subject: finalSubject,
-    body: combinedBody,
-    attachments: emailAttachments,
-  });
-
-  let sendRes: any;
-  try {
-    sendRes = await gmail.users.messages.send({ userId: "me", requestBody: { raw } });
-  } catch (err: any) {
-    const isScope = err?.message?.toLowerCase().includes("insufficient") || 
-                    err?.code === 403 ||
-                    err?.errors?.[0]?.reason === "insufficientPermissions";
-    if (isScope) {
-      throw new Error(
-        "GMAIL_SCOPE_ERROR: Your Google account permissions are insufficient. " +
-        "Please go to Settings → Google Drive & Gmail → Disconnect, then reconnect. " +
-        "IMPORTANT: During the Google login, if you see a 'This app isn't verified' screen, click 'Advanced' → 'Go to ... (unsafe)'. " +
-        "Then, you MUST check the box that says 'Send email on your behalf'."
-      );
+  const sendEmail = async (subject: string, body: string) => {
+    const raw = await buildMimeMessage({
+      from: `"${contact.name || "CastHub"}" <${from}>`,
+      to,
+      subject,
+      body,
+      attachments: emailAttachments,
+    });
+    try {
+      return await gmail.users.messages.send({ userId: "me", requestBody: { raw } });
+    } catch (err: any) {
+      const isScope = err?.message?.toLowerCase().includes("insufficient") || 
+                      err?.code === 403 ||
+                      err?.errors?.[0]?.reason === "insufficientPermissions";
+      if (isScope) {
+        throw new Error(
+          "GMAIL_SCOPE_ERROR: Your Google account permissions are insufficient. " +
+          "Please go to Settings → Google Drive & Gmail → Disconnect, then reconnect. " +
+          "IMPORTANT: During the Google login, if you see a 'This app isn't verified' screen, click 'Advanced' → 'Go to ... (unsafe)'. " +
+          "Then, you MUST check the box that says 'Send email on your behalf'."
+        );
+      }
+      throw new Error(`Gmail send failed: ${err.message}`);
     }
-    throw new Error(`Gmail send failed: ${err.message}`);
+  };
+
+  // 2. Custom Message (Sent First)
+  if (contact.hasCustomMessageEmail && contact.editableMessageGmail) {
+     const subject = contact.editableGmailSubject || `Casting Outreach: ${contact.project || contact.name || "New Project"}`;
+     await sendEmail(subject, contact.editableMessageGmail);
+  }
+
+  // 3. Templates (Separate Email for Each)
+  const templateIds = Array.isArray(contact.templateSelectionGmail) ? contact.templateSelectionGmail : [];
+  for (const tId of templateIds) {
+    const template = await queryOne<any>(
+      "SELECT content, email_subject FROM templates WHERE id = $1 AND user_id = $2",
+      [tId, userId]
+    );
+    if (!template || !template.content) continue;
+
+    const subject = template.email_subject || contact.editableGmailSubject || `Casting Outreach: ${contact.project || contact.name || "New Project"}`;
+    const body = injectVariables(template.content, contact, "email");
+    await sendEmail(subject, body);
   }
   
-  return { messageId: sendRes.data.id, to };
+  return { success: true };
 }
 
 // ─── Instagram DM ─────────────────────────────────────────────────────────────
@@ -354,20 +343,14 @@ async function handleInstagramOutreach(userId: string, contact: Contact) {
   const handle = (contact.instaHandle || "").replace(/^@/, "");
   if (!handle) throw new Error("No Instagram handle found on this contact");
 
-  // 1. Resolve Templates
-  const templateIds = Array.isArray(contact.templateSelectionIG) ? contact.templateSelectionIG : [];
-  let combinedMessage = "";
-  const attachments: DriveFile[] = [
-    ...(contact.drive_attachments_ig || []),
-    ...(contact.unified_attachments || [])
-  ];
-
-  // 1. Custom Message Override
+  // 1. Custom Message (Sent First)
   if (contact.hasCustomMessageIG && contact.editableMessageIG) {
-    combinedMessage = contact.editableMessageIG;
+     await sendIG([handle], contact.editableMessageIG, session.session_data);
+     await sleep(1500);
   }
 
-  // 2. Resolve Templates
+  // 2. Templates in Order
+  const templateIds = Array.isArray(contact.templateSelectionIG) ? contact.templateSelectionIG : [];
   for (const tId of templateIds) {
     const template = await queryOne<any>(
       "SELECT content, is_attachment, drive_file_id, drive_file_name FROM templates WHERE id = $1 AND user_id = $2",
@@ -376,20 +359,26 @@ async function handleInstagramOutreach(userId: string, contact: Contact) {
     if (!template) continue;
 
     if (template.is_attachment && template.drive_file_id) {
-       attachments.push({ id: template.drive_file_id, name: template.drive_file_name, mimeType: "", downloadUrl: `https://drive.google.com/uc?export=download&id=${template.drive_file_id}` });
+       const msg = `Attachment: ${stripExtension(template.drive_file_name)} - https://drive.google.com/uc?export=download&id=${template.drive_file_id}`;
+       await sendIG([handle], msg, session.session_data);
+       await sleep(1500);
     } else if (template.content) {
-       combinedMessage += (combinedMessage ? "\n\n" : "") + injectVariables(template.content, contact, "instagram");
+       const message = injectVariables(template.content, contact, "instagram");
+       await sendIG([handle], message, session.session_data);
+       await sleep(1500);
     }
   }
 
-  if (!combinedMessage && attachments.length === 0) throw new Error("No Instagram message selected.");
-
-  if (attachments.length > 0) {
-    combinedMessage += "\n\nAttachments:";
-    for (const file of attachments) {
-      combinedMessage += `\n- ${stripExtension(file.name)}: https://drive.google.com/uc?export=download&id=${file.id}`;
-    }
+  // 3. Row Attachments
+  const rowAttachments: DriveFile[] = [
+    ...(contact.drive_attachments_ig || []),
+    ...(contact.unified_attachments || [])
+  ];
+  for (const file of rowAttachments) {
+    const msg = `Attachment: ${stripExtension(file.name)} - https://drive.google.com/uc?export=download&id=${file.id}`;
+    await sendIG([handle], msg, session.session_data);
+    await sleep(1500);
   }
 
-  return await sendIG([handle], combinedMessage, session.session_data);
+  return { success: true };
 }
