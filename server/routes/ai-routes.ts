@@ -4,11 +4,22 @@ import OpenAI from "openai";
 // Lazy-load client to prevent crash if key is missing
 let _ai: OpenAI | null = null;
 function getAI() {
-  if (!_ai && process.env.GROQ_API_KEY) {
-    _ai = new OpenAI({ 
-      apiKey: process.env.GROQ_API_KEY,
-      baseURL: "https://api.groq.com/openai/v1"
-    });
+  if (!_ai) {
+    const key = process.env.OPENROUTER_API_KEY || process.env.GROQ_API_KEY;
+    const baseUrl = process.env.OPENROUTER_API_KEY 
+      ? "https://openrouter.ai/api/v1" 
+      : "https://api.groq.com/openai/v1";
+
+    if (key) {
+      _ai = new OpenAI({ 
+        apiKey: key,
+        baseURL: baseUrl,
+        defaultHeaders: {
+          "HTTP-Referer": "https://casthub.cloud", // Optional for OpenRouter
+          "X-Title": "CastHub",
+        }
+      });
+    }
   }
   return _ai;
 }
@@ -45,7 +56,7 @@ Preserve any variables like {{name}}, {{project}}, {{age}} if they are present.`
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
       ],
-      model: "llama-3.3-70b-versatile",
+      model: process.env.OPENROUTER_MODEL || "llama-3.3-70b-versatile",
       temperature: 0.7,
       max_tokens: 1024,
     });

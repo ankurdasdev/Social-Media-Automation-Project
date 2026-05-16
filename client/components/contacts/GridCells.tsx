@@ -203,13 +203,16 @@ export function ConditionalTextareaCell({
         }),
       });
       const data = await res.json();
-      if (data.result) {
+      if (res.ok && data.result) {
         onValueChange(data.result);
         setIsAIMode(false);
         setAiPrompt("");
+      } else {
+        alert(data.error || "Failed to generate message. Please check AI configuration.");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("AI Generation failed:", err);
+      alert("AI Generation failed: " + err.message);
     } finally {
       setIsGenerating(false);
     }
