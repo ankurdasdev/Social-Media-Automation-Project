@@ -55,6 +55,7 @@ import {
   handleInstagramSendMessage,
 } from "./routes/instagram-auth";
 import { handleSendOutreach } from "./routes/outreach";
+import { handleGetSalutations, handleAddSalutation } from "./routes/salutations";
 import { handleImproveMessage } from "./routes/ai-routes";
 import { 
   handleSignup, 
@@ -162,6 +163,10 @@ export function createServer() {
  
   // ── Outreach ───────────────────────────────────────────────────────────────
   app.post("/api/outreach/send", handleSendOutreach);
+
+  // ── Salutations ────────────────────────────────────────────────────────────
+  app.get("/api/salutations", handleGetSalutations);
+  app.post("/api/salutations", handleAddSalutation);
 
   // ── Daily Cron Scheduler ───────────────────────────────────────────────────
   // Runs every day at midnight IST (18:30 UTC)
