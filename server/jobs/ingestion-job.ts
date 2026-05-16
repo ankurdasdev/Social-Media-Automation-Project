@@ -1,12 +1,16 @@
 import { query, queryOne } from "../db/index";
 import { upsertContact } from "../store/contacts-store";
-import { getGroupMessages as getWAMessages, extractMessageText } from "../services/whatsapp-client";
+import {
+  getGroupMessages as getWAMessages,
+  getMessageBase64,
+  extractMessageText,
+} from "../services/whatsapp-client";
 import {
   getAccountPosts,
   getHashtagPosts,
   getGroupMessages as getIGGroupMessages,
 } from "../services/instagram-client";
-import { parseMessages } from "../services/ai-parser";
+import { parseMessages, RawMessage } from "../services/ai-parser";
 import type { IngestionRunResult } from "@shared/api";
 
 // ─── State ────────────────────────────────────────────────────────────────────
@@ -56,7 +60,7 @@ export async function runIngestionJob(): Promise<IngestionRunResult> {
 
   try {
     const since = get24hAgoTimestamp();
-    
+
     // 1. Get all users who have enabled source groups
     const activeUsers = await query("SELECT DISTINCT user_id FROM source_groups WHERE enabled = TRUE");
     console.log(`[ingestion] Processing ${activeUsers.length} users...`);
@@ -66,95 +70,161 @@ export async function runIngestionJob(): Promise<IngestionRunResult> {
         console.log(`[ingestion] Processing User ID: ${userId}`);
 
         // 2. Fetch User's Integrations
-        const waInstance = await queryOne("SELECT instance_name FROM whatsapp_instances WHERE user_id = $1 ", [userId]);
-        const igSession = await queryOne("SELECT session_data FROM instagram_sessions WHERE user_id = $1 ", [userId]);
+        const waInstance = await queryOne(
+          "SELECT instance_name FROM whatsapp_instances WHERE user_id = $1",
+          [userId]
+        );
+        const igSession = await queryOne(
+          "SELECT session_data FROM instagram_sessions WHERE user_id = $1",
+          [userId]
+        );
 
         // 3. Fetch User's Enabled Groups & Keywords
-        const groups = await query("SELECT * FROM source_groups WHERE user_id = $1 AND enabled = TRUE", [userId]);
-        const userRow = await queryOne<{ ai_keywords: any[] }>("SELECT ai_keywords FROM users WHERE id = $1", [userId]);
-        const activeKeywords = (userRow?.ai_keywords || [])
+        const groups = await query(
+          "SELECT * FROM source_groups WHERE user_id = $1 AND enabled = TRUE",
+          [userId]
+        );
+        const userRow = await queryOne<{ ai_keywords: any[] }>(
+          "SELECT ai_keywords FROM users WHERE id = $1",
+          [userId]
+        );
+        const activeKeywords: string[] = (userRow?.ai_keywords || [])
           .filter((k: any) => k.active)
           .map((k: any) => k.word.toLowerCase());
-        
-        const userWAMessages: Array<{ text: string; source: "whatsapp" }> = [];
-        const userIGMessages: Array<{ text: string; source: "instagram" }> = [];
+
+        console.log(
+          `[ingestion] User ${userId}: ${groups.length} groups, ${activeKeywords.length} keywords`
+        );
+
+        const userMessages: RawMessage[] = [];
 
         for (const grp of groups) {
           try {
+            // ── WhatsApp Groups ─────────────────────────────────────────────
             if (grp.platform === "whatsapp") {
-              if (!waInstance) continue;
+              if (!waInstance) { errors.push(`User ${userId}: No WA instance for group ${grp.name}`); continue; }
+
               const jidMatch = grp.url?.match(/jid:([^,\s]+)/);
               const groupJid = jidMatch ? jidMatch[1] : null;
-              if (!groupJid) continue;
+              if (!groupJid) { errors.push(`User ${userId}: No JID for group ${grp.name}`); continue; }
 
               const rawMsgs = await getWAMessages(waInstance.instance_name, groupJid, since);
+              messagesScanned += rawMsgs.length;
+              sourcesProcessed++;
+
+              console.log(`[ingestion] Group "${grp.name}": ${rawMsgs.length} messages`);
+
               for (const m of rawMsgs) {
-                const text = extractMessageText(m);
-                if (text.trim().length >= 20) {
-                  const lowerText = text.toLowerCase();
-                  const matches = activeKeywords.length === 0 || activeKeywords.every(kw => lowerText.includes(kw));
-                  if (matches) userWAMessages.push({ text, source: "whatsapp" });
+                const msgType = m.messageType;
+
+                // ── Text Messages ──
+                if (msgType === "conversation" || msgType === "extendedTextMessage") {
+                  const text = extractMessageText(m);
+                  if (text.trim().length >= 20) {
+                    userMessages.push({ text, source: "whatsapp" });
+                  }
+                }
+                // ── Image Messages (casting flyers) ──
+                else if (msgType === "imageMessage") {
+                  const caption = m.message?.imageMessage?.caption || "";
+
+                  // Quick keyword check on caption before expensive image download
+                  const captionLower = caption.toLowerCase();
+                  const captionMatchesKeyword =
+                    activeKeywords.length === 0 ||
+                    activeKeywords.some((kw) => captionLower.includes(kw));
+
+                  // If caption is long enough and doesn't match any keyword, skip image
+                  if (caption.length > 30 && !captionMatchesKeyword) continue;
+
+                  // Download image for vision analysis
+                  const mediaData = await getMessageBase64(waInstance.instance_name, m);
+                  if (mediaData) {
+                    userMessages.push({
+                      imageBase64: mediaData.base64,
+                      imageMimetype: mediaData.mimetype,
+                      imageCaption: caption,
+                      source: "whatsapp",
+                    });
+                  }
                 }
               }
-              sourcesProcessed++;
-              messagesScanned += rawMsgs.length;
-            } 
+            }
+
+            // ── Instagram Groups / Hashtags ─────────────────────────────────
             else if (grp.platform === "instagram") {
-              if (!igSession?.session_data) continue;
-              let posts: any[] = [];
-              const session: string = igSession.session_data;
+              if (!igSession?.session_data) { errors.push(`User ${userId}: No IG session for group ${grp.name}`); continue; }
+              const session = igSession.session_data;
+              sourcesProcessed++;
 
               if (grp.type === "hashtag") {
-                posts = await getHashtagPosts(grp.name.replace("#", ""), since, session);
+                const posts = await getHashtagPosts(grp.name.replace("#", ""), since, session);
+                messagesScanned += posts.length;
+                for (const p of posts) {
+                  if (p.caption_text?.trim().length >= 20) {
+                    userMessages.push({ text: p.caption_text, source: "instagram" });
+                  }
+                }
               } else if (grp.type === "group") {
                 const threadMatch = grp.url?.match(/thread:([^,\s]+)/);
                 if (threadMatch) {
                   const msgs = await getIGGroupMessages(threadMatch[1], since, session);
-                  for (const m of msgs) {
-                    if (m.text) userIGMessages.push({ text: m.text, source: "instagram" });
-                  }
                   messagesScanned += msgs.length;
+                  for (const m of msgs) {
+                    if (m.text?.trim().length >= 20) {
+                      userMessages.push({ text: m.text, source: "instagram" });
+                    }
+                  }
                 }
               } else {
-                posts = await getAccountPosts(grp.name.replace("@", ""), since, session);
-              }
-
-              for (const p of posts) {
-                if (p.caption_text && p.caption_text.trim().length >= 20) {
-                  const text = p.caption_text;
-                  const lowerText = text.toLowerCase();
-                  const matches = activeKeywords.length === 0 || activeKeywords.every(kw => lowerText.includes(kw));
-                  if (matches) userIGMessages.push({ text, source: "instagram" });
+                const posts = await getAccountPosts(grp.name.replace("@", ""), since, session);
+                messagesScanned += posts.length;
+                for (const p of posts) {
+                  if (p.caption_text?.trim().length >= 20) {
+                    userMessages.push({ text: p.caption_text, source: "instagram" });
+                  }
                 }
               }
-              sourcesProcessed++;
-              messagesScanned += posts.length;
             }
           } catch (e: any) {
-            errors.push(`User ${userId} - Group ${grp.name}: ${e.message}`);
+            errors.push(`User ${userId} - Group "${grp.name}": ${e.message}`);
           }
         }
 
-        // 4. Batch AI Parsing for User
-        const allUserMessages = [...userWAMessages, ...userIGMessages];
-        if (allUserMessages.length > 0) {
-          const parsed = await parseMessages(allUserMessages);
+        // 4. Batch AI Parsing (text + vision, with keywords)
+        console.log(`[ingestion] User ${userId}: Sending ${userMessages.length} messages to AI...`);
+        if (userMessages.length > 0) {
+          const parsed = await parseMessages(userMessages, activeKeywords);
           castingCallsFound += parsed.length;
+          console.log(`[ingestion] User ${userId}: ${parsed.length} casting calls identified`);
 
-          // 5. Upsert Contacts for User
+          // 5. Upsert Contacts
           for (const p of parsed) {
-            const source = userWAMessages.some(m => m.text === p.originalText) ? "auto-whatsapp" : "auto-instagram";
-            const result = await upsertContact(userId, {
-              name: p.name,
-              castingName: p.castingName,
-              project: p.project || "Casting Data",
-              age: p.age,
-              actingContext: p.actingContext,
-              whatsapp: p.whatsapp,
-              email: p.email,
-              instaHandle: p.instaHandle,
-              notes: p.notes,
-            }, source as any);
+            const source = p.originalText?.startsWith("[image]")
+              ? "auto-whatsapp"
+              : userMessages.find(
+                  (m) =>
+                    m.text === p.originalText ||
+                    m.imageCaption === p.originalText
+                )?.source === "instagram"
+              ? "auto-instagram"
+              : "auto-whatsapp";
+
+            const result = await upsertContact(
+              userId,
+              {
+                name: p.name,
+                castingName: p.castingName,
+                project: p.project || "Casting Data",
+                age: p.age,
+                actingContext: p.actingContext,
+                whatsapp: p.whatsapp,
+                email: p.email,
+                instaHandle: p.instaHandle,
+                notes: p.notes,
+              },
+              source as any
+            );
 
             if (result.action === "created") contactsCreated++;
             else if (result.action === "updated") contactsUpdated++;
@@ -184,5 +254,6 @@ export async function runIngestionJob(): Promise<IngestionRunResult> {
   };
 
   lastRunResult = result;
+  console.log("[ingestion] Job complete:", result);
   return result;
 }

@@ -1,23 +1,17 @@
 /**
- * AI Parser — OpenRouter
+ * AI Parser — OpenRouter (Text + Vision)
  *
- * Uses OpenRouter's free models (OpenAI-compatible API) to extract structured
- * casting contact data from raw WhatsApp/Instagram message text.
+ * Uses two models:
+ *  - Text model: OPENROUTER_MODEL (for text messages)
+ *  - Vision model: OPENROUTER_VISION_MODEL (for image flyers, defaults to google/gemini-flash-1.5)
  *
- * SETUP:
- *  1. Sign up at https://openrouter.ai
- *  2. Settings → API Keys → Create Key
- *  3. Set env vars: OPENROUTER_API_KEY, OPENROUTER_MODEL
- *
- * Free models you can use (set as OPENROUTER_MODEL):
- *  - meta-llama/llama-3.1-8b-instruct:free   ← recommended
- *  - mistralai/mistral-7b-instruct:free
- *  - google/gemma-3-12b-it:free
- *
- * The openai npm package works with OpenRouter — just change baseURL and apiKey.
+ * Both are accessed via the OpenAI-compatible OpenRouter API.
  */
 
 import OpenAI from "openai";
+
+const TEXT_MODEL = process.env.OPENROUTER_MODEL ?? "meta-llama/llama-3.1-8b-instruct:free";
+const VISION_MODEL = process.env.OPENROUTER_VISION_MODEL ?? "google/gemini-flash-1.5";
 
 const client = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
@@ -28,111 +22,191 @@ const client = new OpenAI({
   },
 });
 
-const MODEL = process.env.OPENROUTER_MODEL ?? "meta-llama/llama-3.1-8b-instruct:free";
-
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface ParsedContact {
-  isCastingCall: boolean;     // false → skip this message, not a casting call
-  name: string;               // casting director / poster name
-  castingName: string;        // role/casting title
-  project: string;            // Film / Web Series / Ad / Commercial / etc.
-  age: string;                // age range e.g. "22-30"
-  actingContext: string;      // e.g. "Film & Web", "OTT"
-  whatsapp: string;           // phone number if mentioned
-  email: string;              // email if mentioned
-  instaHandle: string;        // @handle if mentioned
-  notes: string;              // any other key info (brief)
-  originalText?: string;      // Back-reference to the message text
+  isCastingCall: boolean;
+  name: string;
+  castingName: string;
+  project: string;
+  age: string;
+  actingContext: string;
+  whatsapp: string;
+  email: string;
+  instaHandle: string;
+  notes: string;
+  originalText?: string;
 }
 
 // ─── System Prompt ────────────────────────────────────────────────────────────
 
 const SYSTEM_PROMPT = `You are an expert assistant that extracts casting call information from WhatsApp and Instagram messages for an Indian actor's outreach app.
 
-Your job is to read a message and return a JSON object with these fields:
-- isCastingCall: boolean — true ONLY if this is a genuine casting call or audition announcement
-- name: string — name of the casting director, production house, or person posting
-- castingName: string — the role or casting title being sought
-- project: string — type or name of project (e.g. "Web Series", "Film", "Ad", "OTT Show")
-- age: string — age range required (e.g. "24-32") or "" if not mentioned
-- actingContext: string — context like "Film & Web", "Commercials", "OTT", "Theatre" or ""
+Your job is to read a message (or analyze an image of a casting flyer) and return a JSON object with these exact fields:
+- isCastingCall: boolean — true ONLY if this is a genuine casting call, audition announcement, or talent requirement
+- name: string — name of the casting director, production house, or person/brand posting
+- castingName: string — the role or casting title being sought (e.g. "Female Model", "Actor - Lead Role")
+- project: string — type or name of project (e.g. "Web Series", "TVC", "Ad Campaign", "Film", "OTT Show")
+- age: string — age range required (e.g. "18-25") or "" if not mentioned
+- actingContext: string — context like "Film & Web", "Commercials", "OTT", "Modelling", "Theatre" or ""
 - whatsapp: string — phone number if mentioned (with country code if possible) or ""
 - email: string — email address if mentioned or ""
 - instaHandle: string — Instagram handle if mentioned (with @) or ""
-- notes: string — brief notes of any other important info (location, shoot dates, etc.)
+- notes: string — brief notes of location, shoot dates, payment, deadlines (max 150 chars)
 
 Rules:
-- If the message is NOT a casting call (e.g. general chatter, spam, news), return isCastingCall: false and leave all other fields as ""
-- Return ONLY valid JSON, no markdown, no explanation
-- Keep all text fields concise (max 100 chars each)
-- For Indian content: Bollywood, OTT, regional films are common contexts`;
+- If the message is NOT a casting call (general chatter, spam, event promotions, news, personal messages), return isCastingCall: false with all other fields as ""
+- Return ONLY valid JSON, no markdown code blocks, no explanation
+- Keep all text fields concise (max 100 chars each except notes)
+- For Indian content: Bollywood, OTT, regional films, TVC, brand shoots are common contexts
+- If analyzing an image: read all visible text carefully, treat it as a casting flyer`;
 
-// ─── Main Parser Function ─────────────────────────────────────────────────────
+// ─── Text Message Parser ──────────────────────────────────────────────────────
 
-/**
- * Parse a raw message/post text and extract casting contact data.
- * Returns null if the message is not a casting call.
- *
- * @param rawText - Plain text from a WhatsApp message or Instagram post caption
- * @param source  - "whatsapp" | "instagram" for context
- */
 export async function parseMessage(
   rawText: string,
-  source: "whatsapp" | "instagram"
+  source: "whatsapp" | "instagram",
+  keywords: string[] = []
 ): Promise<ParsedContact | null> {
-  if (!rawText || rawText.trim().length < 20) {
-    return null; // too short to be a casting call
+  if (!rawText || rawText.trim().length < 20) return null;
+
+  // Pre-filter with keywords if provided (must contain at least one)
+  if (keywords.length > 0) {
+    const lower = rawText.toLowerCase();
+    const hasKeyword = keywords.some((kw) => lower.includes(kw.toLowerCase()));
+    if (!hasKeyword) return null;
   }
 
-  const userPrompt = `Platform: ${source}\nMessage:\n${rawText.slice(0, 2000)}`;
+  const userPrompt = `Platform: ${source}\nMessage:\n${rawText.slice(0, 2500)}`;
 
   try {
     const response = await client.chat.completions.create({
-      model: MODEL,
+      model: TEXT_MODEL,
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: userPrompt },
       ],
-      temperature: 0.1, // low temp for consistent structured output
-      max_tokens: 400,
+      temperature: 0.1,
+      max_tokens: 500,
     });
 
     const content = response.choices[0]?.message?.content ?? "";
-
-    // Strip markdown code blocks if model wraps in ```json
     const cleaned = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-
     const parsed: ParsedContact = JSON.parse(cleaned);
-
-    if (!parsed.isCastingCall) {
-      return null;
-    }
-
+    if (!parsed.isCastingCall) return null;
     return parsed;
   } catch (err) {
-    console.error("[ai-parser] Failed to parse message:", err);
+    console.error("[ai-parser] Text parse failed:", err);
     return null;
   }
 }
 
+// ─── Vision / Image Parser ────────────────────────────────────────────────────
+
 /**
- * Batch parse multiple messages. Processes sequentially to avoid rate limiting.
- * Returns only the successfully parsed casting calls.
+ * Analyze a casting flyer image using a vision-capable model.
+ * @param base64 - Raw base64 image data (no data: prefix)
+ * @param mimetype - e.g. "image/jpeg"
+ * @param caption - Optional caption text alongside the image
+ * @param keywords - User's AI profiling keywords for pre-filtering
+ */
+export async function parseImage(
+  base64: string,
+  mimetype: string,
+  caption: string = "",
+  keywords: string[] = []
+): Promise<ParsedContact | null> {
+  // If we have a caption and keywords, do a quick text pre-check first
+  if (caption && keywords.length > 0) {
+    const lower = caption.toLowerCase();
+    const hasKeyword = keywords.some((kw) => lower.includes(kw.toLowerCase()));
+    // If caption clearly doesn't match AND is long enough to be conclusive, skip
+    if (!hasKeyword && caption.length > 50) return null;
+  }
+
+  const dataUrl = `data:${mimetype};base64,${base64.slice(0, 300000)}`; // OpenRouter limit ~300KB
+
+  try {
+    const response = await client.chat.completions.create({
+      model: VISION_MODEL,
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        {
+          role: "user",
+          content: [
+            {
+              type: "image_url",
+              image_url: { url: dataUrl },
+            },
+            ...(caption
+              ? [{ type: "text" as const, text: `Caption text: ${caption}` }]
+              : [{ type: "text" as const, text: "Analyze this image and extract casting call details if present." }]),
+          ],
+        },
+      ],
+      temperature: 0.1,
+      max_tokens: 500,
+    });
+
+    const content = response.choices[0]?.message?.content ?? "";
+    const cleaned = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+    const parsed: ParsedContact = JSON.parse(cleaned);
+    if (!parsed.isCastingCall) return null;
+    return parsed;
+  } catch (err) {
+    console.error("[ai-parser] Vision parse failed:", err);
+    return null;
+  }
+}
+
+// ─── Batch Parser ─────────────────────────────────────────────────────────────
+
+export interface RawMessage {
+  text?: string;
+  imageBase64?: string;
+  imageMimetype?: string;
+  imageCaption?: string;
+  source: "whatsapp" | "instagram";
+}
+
+/**
+ * Batch parse a list of messages (text or image).
+ * Returns only confirmed casting calls.
  */
 export async function parseMessages(
-  messages: Array<{ text: string; source: "whatsapp" | "instagram" }>
+  messages: Array<{ text: string; source: "whatsapp" | "instagram" }>,
+  keywords?: string[]
+): Promise<ParsedContact[]>;
+
+export async function parseMessages(
+  messages: RawMessage[],
+  keywords?: string[]
+): Promise<ParsedContact[]>;
+
+export async function parseMessages(
+  messages: any[],
+  keywords: string[] = []
 ): Promise<ParsedContact[]> {
   const results: ParsedContact[] = [];
 
   for (const msg of messages) {
-    const parsed = await parseMessage(msg.text, msg.source);
+    let parsed: ParsedContact | null = null;
+
+    if (msg.imageBase64) {
+      // Vision path
+      parsed = await parseImage(msg.imageBase64, msg.imageMimetype || "image/jpeg", msg.imageCaption || "", keywords);
+    } else if (msg.text) {
+      // Text path
+      parsed = await parseMessage(msg.text, msg.source, keywords);
+    }
+
     if (parsed) {
-      parsed.originalText = msg.text;
+      parsed.originalText = msg.text || msg.imageCaption || "[image]";
       results.push(parsed);
     }
-    // Small delay to avoid rate limits on free tier
-    await new Promise((resolve) => setTimeout(resolve, 200));
+
+    // Delay to respect rate limits (free tier)
+    await new Promise((resolve) => setTimeout(resolve, 300));
   }
 
   return results;

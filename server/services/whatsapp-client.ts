@@ -24,14 +24,49 @@ export interface WAMessage {
   key: {
     remoteJid: string; 
     id: string;
+    fromMe?: boolean;
+    participant?: string;
   };
   message: {
     conversation?: string;
     extendedTextMessage?: { text: string };
-    imageMessage?: { caption?: string };
+    imageMessage?: { caption?: string; mimetype?: string };
   };
+  messageType: string;
   messageTimestamp: number; 
   pushName?: string; 
+}
+
+/**
+ * Download a media message as base64 (for image analysis).
+ * Returns null if the message is not a media type or download fails.
+ */
+export async function getMessageBase64(
+  instanceName: string,
+  message: WAMessage
+): Promise<{ base64: string; mimetype: string } | null> {
+  const url = `${BASE_URL}/chat/getBase64FromMediaMessage/${instanceName}`;
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify({
+        message: {
+          key: message.key,
+          messageType: message.messageType,
+        },
+      }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data.base64) return null;
+    return {
+      base64: data.base64,
+      mimetype: data.mimetype || "image/jpeg",
+    };
+  } catch {
+    return null;
+  }
 }
 
 export interface WAGroup {

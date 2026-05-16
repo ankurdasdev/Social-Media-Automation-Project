@@ -215,14 +215,24 @@ export async function deleteContact(userId: string, id: string): Promise<boolean
 
 /**
  * Smart upsert for auto-ingested contacts.
+ *
+ * Deduplication: match by whatsapp, email, or (name + project).
+ *
+ * If EXISTING contact found:
+ *   - Always mark row_color = 'yellow' (AI flagged)
+ *   - Only update: project, age, acting_context (if not already set)
+ *   - NEVER touch: follow_ups, contacted_dates, last_contacted, outreach status cols
+ *
+ * If NEW contact:
+ *   - Create with row_color = 'yellow', source = auto-*
  */
 export async function upsertContact(
   userId: string,
   data: Partial<Contact>,
   source: "auto-whatsapp" | "auto-instagram"
 ): Promise<{ action: "created" | "updated" | "skipped"; contact: Contact }> {
-  
-  // Find existing by phone or email or (name+project) for THIS user
+
+  // Build deduplication query
   let existingSql = "SELECT * FROM contacts WHERE user_id = $1 AND (";
   const conditions: string[] = [];
   const vals: any[] = [userId];
@@ -235,13 +245,24 @@ export async function upsertContact(
     conditions.push("email = $" + (vals.length + 1));
     vals.push(data.email);
   }
+  if (data.instaHandle) {
+    conditions.push("LOWER(insta_handle) = LOWER($" + (vals.length + 1) + ")");
+    vals.push(data.instaHandle);
+  }
   if (data.name && data.project) {
-    conditions.push("(LOWER(name) = LOWER($" + (vals.length + 1) + ") AND LOWER(project) = LOWER($" + (vals.length + 2) + "))");
+    conditions.push(
+      "(LOWER(name) = LOWER($" + (vals.length + 1) + ") AND LOWER(project) = LOWER($" + (vals.length + 2) + "))"
+    );
     vals.push(data.name, data.project);
   }
 
+  // No identifiers at all → create new
   if (conditions.length === 0) {
-    const contact = await createContact(userId, { ...data, rowColor: "yellow", source, ingestedAt: new Date().toISOString() });
+    const contact = await createContact(userId, {
+      ...data,
+      rowColor: "yellow",
+      source,
+    });
     return { action: "created", contact };
   }
 
@@ -249,30 +270,52 @@ export async function upsertContact(
   const existing = await queryOne(existingSql, vals);
 
   if (existing) {
-    const updates: Partial<Contact> = {};
-    if (!existing.casting_name && data.castingName) updates.castingName = data.castingName;
-    if (!existing.project && data.project) updates.project = data.project;
-    if (!existing.age && data.age) updates.age = data.age;
-    if (!existing.acting_context && data.actingContext) updates.actingContext = data.actingContext;
-    if (!existing.insta_handle && data.instaHandle) updates.instaHandle = data.instaHandle;
-    if (!existing.email && data.email) updates.email = data.email;
-    if (!existing.whatsapp && data.whatsapp) updates.whatsapp = data.whatsapp;
-    if (data.notes) updates.notes = [existing.notes, data.notes].filter(Boolean).join(" | ");
+    // Build safe update — only fill in missing project/age/actingContext
+    const setClause: string[] = ["row_color = 'yellow'", "updated_at = NOW()"];
+    const updateVals: any[] = [];
 
-    if (Object.keys(updates).length === 0) {
-      return { action: "skipped", contact: mapRowToContact(existing) };
+    if (data.project && !existing.project) {
+      setClause.push("project = $" + (updateVals.length + 1));
+      updateVals.push(data.project);
+    }
+    if (data.age && !existing.age) {
+      setClause.push("age = $" + (updateVals.length + 1));
+      updateVals.push(data.age);
+    }
+    if (data.actingContext && !existing.acting_context) {
+      setClause.push("acting_context = $" + (updateVals.length + 1));
+      updateVals.push(data.actingContext);
+    }
+    if (data.notes && data.notes.trim()) {
+      // Append notes without overwriting
+      const combined = [existing.notes, data.notes].filter(Boolean).join(" | ");
+      setClause.push("notes = $" + (updateVals.length + 1));
+      updateVals.push(combined);
     }
 
-    const updated = await updateContact(userId, existing.id, updates);
-    return { action: "updated", contact: updated! };
+    updateVals.push(existing.id, userId);
+    const idIdx = updateVals.length;
+
+    const updateSql = `
+      UPDATE contacts
+      SET ${setClause.join(", ")}
+      WHERE id = $${idIdx - 1} AND user_id = $${idIdx}
+      RETURNING *
+    `;
+    const updatedRow = await queryOne(updateSql, updateVals);
+    const contact = updatedRow ? mapRowToContact(updatedRow) : mapRowToContact(existing);
+
+    // If we only set row_color + updated_at (no real field changes), mark as skipped
+    const hadRealUpdates = setClause.length > 2; // more than just row_color + updated_at
+    return { action: hadRealUpdates ? "updated" : "skipped", contact };
   }
 
+  // No match → brand new contact
   const newContact = await createContact(userId, {
     ...data,
     rowColor: "yellow",
     source,
-    ingestedAt: new Date().toISOString(),
   });
-
   return { action: "created", contact: newContact };
 }
+

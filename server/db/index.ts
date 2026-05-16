@@ -131,6 +131,8 @@ async function runMigrations(): Promise<void> {
     ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS status_message TEXT;
     ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS member_count INTEGER;
     ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS last_scraped TIMESTAMPTZ;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS ingestion_schedule_time TEXT DEFAULT '02:00';
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS ingestion_enabled BOOLEAN DEFAULT TRUE;
   `).catch(() => {}); // Ignore if tables don't exist yet — they will be created below
 
   const sql = `
