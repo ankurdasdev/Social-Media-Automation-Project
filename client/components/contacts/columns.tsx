@@ -394,7 +394,7 @@ export const columns: ColumnDef<Contact>[] = [
     cell: ({ row, table }) => (
        <div onClick={(e) => e.stopPropagation()}>
           <PicklistCell 
-            value={row.original.personalizedNameIG || "N"}
+            value={row.original.personalizedNameIG || "Hi"}
             onUpdate={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { personalizedNameIG: val })}
           />
        </div>
