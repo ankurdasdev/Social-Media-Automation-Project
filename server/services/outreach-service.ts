@@ -175,7 +175,8 @@ async function handleWhatsAppOutreach(userId: string, contact: Contact) {
 
         const cleanName = stripExtension(file.name);
         // Evolution API expects raw base64 without the data: prefix
-        await sendWAMedia(instance.instance_name, jid, base64, mediaType, cleanName, cleanName);
+        // We use cleanName for caption, but original file.name for the actual fileName to ensure device compatibility
+        await sendWAMedia(instance.instance_name, jid, base64, mediaType, cleanName, file.name);
         await sleep(1500); // Small delay
       } catch (attachErr: any) {
         throw new Error(`WhatsApp attachment failed for ${file.name}: ${attachErr.message}`);
@@ -302,7 +303,7 @@ async function handleEmailOutreach(userId: string, contact: Contact) {
         const response = await drive.files.get({ fileId: file.id, alt: "media" }, { responseType: "arraybuffer" });
         const meta = await drive.files.get({ fileId: file.id, fields: "mimeType" });
         emailAttachments.push({
-          filename: stripExtension(file.name),
+          filename: file.name, // Keep extension for email attachments to ensure they are recognizable by clients
           content: Buffer.from(response.data as ArrayBuffer),
           mimeType: meta.data.mimeType || "application/octet-stream",
         });
