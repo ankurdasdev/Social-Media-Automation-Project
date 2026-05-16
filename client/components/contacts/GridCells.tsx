@@ -68,7 +68,7 @@ export function EditableTextCell({
   );
 }
 
-// ─── Picklist Cell (N, C, NA) ────────────────────────────────────────────────
+// ─── Salutation / Picklist Cell (Hi, Hey, Dear Sir, Dear Mam) ────────────────
 export function PicklistCell({
   value,
   onUpdate
@@ -76,18 +76,66 @@ export function PicklistCell({
   value: string,
   onUpdate: (val: string) => void
 }) {
-  const options = ["N", "C", "NA"];
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [customValue, setCustomValue] = React.useState(value || "");
+
+  const defaults = ["Hi", "Hey", "Dear Sir", "Dear Mam"];
+  
   return (
-    <Select value={value || "N"} onValueChange={onUpdate}>
-      <SelectTrigger className="h-8 border-none bg-transparent hover:bg-muted/50 transition-all font-black text-xs">
-        <SelectValue placeholder="N" />
-      </SelectTrigger>
-      <SelectContent>
-        {options.map(opt => (
-          <SelectItem key={opt} value={opt} className="text-xs font-black">{opt}</SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <button className="h-8 w-full text-left px-2 rounded-md hover:bg-muted/50 transition-all font-black text-[10px] uppercase tracking-tighter truncate text-primary/80">
+          {value || "HI"}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-48 glass-card border-white/10 p-2 shadow-2xl rounded-xl" align="start">
+        <div className="space-y-1">
+          {defaults.map(opt => (
+            <button
+              key={opt}
+              onClick={() => {
+                onUpdate(opt);
+                setIsOpen(false);
+              }}
+              className={cn(
+                "w-full text-left px-3 py-1.5 rounded-lg text-xs font-bold transition-all hover:bg-primary/10",
+                value === opt ? "bg-primary/20 text-primary" : "text-muted-foreground"
+              )}
+            >
+              {opt}
+            </button>
+          ))}
+          <div className="h-px bg-white/5 my-1" />
+          <div className="px-2 pb-1">
+            <span className="text-[9px] font-black text-muted-foreground/50 uppercase tracking-widest">Custom</span>
+          </div>
+          <div className="flex gap-1 px-1">
+            <Input 
+              value={customValue}
+              onChange={(e) => setCustomValue(e.target.value)}
+              placeholder="Type..."
+              className="h-8 text-xs font-bold rounded-lg bg-white/5 border-white/10 focus:ring-1 focus:ring-primary"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  onUpdate(customValue);
+                  setIsOpen(false);
+                }
+              }}
+            />
+            <Button 
+              size="icon" 
+              className="h-8 w-8 shrink-0 rounded-lg bg-primary hover:bg-primary/90"
+              onClick={() => {
+                onUpdate(customValue);
+                setIsOpen(false);
+              }}
+            >
+              <Plus className="h-3 w-3" />
+            </Button>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
 

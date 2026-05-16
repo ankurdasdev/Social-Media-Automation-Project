@@ -4,7 +4,6 @@ import { sendDirectMessage as sendIG } from "./instagram-client";
 import { query, queryOne } from "../db/index";
 import { getContactById } from "../store/contacts-store";
 import { DriveFile, Contact } from "@shared/api";
-import path from "path";
 
 /**
  * Outreach Orchestrator
@@ -21,18 +20,16 @@ function injectVariables(content: string, contact: Contact, channel: "whatsapp" 
   if (!content) return "";
   let result = content;
   
-  // Resolve Personalized Name based on N/C/NA picklist
-  let pName = "Talent";
-  const picklist = 
+  // Resolve Salutation based on channel-specific column
+  const salutation = 
     channel === "whatsapp" ? contact.personalizedNameWA :
     channel === "email" ? contact.personalizedNameGmail :
     contact.personalizedNameIG;
-
-  if (picklist === "N") pName = contact.name || "Talent";
-  else if (picklist === "C") pName = contact.castingName || "the casting";
-  else if (picklist === "NA") pName = "";
+  
+  const pName = contact.name || "Talent";
 
   const variables = [
+    { name: "salutation", value: salutation || "Hi" },
     { name: "name", value: pName },
     { name: "castingName", value: contact.castingName || "the casting" },
     { name: "age", value: contact.age || "the age bracket" },
