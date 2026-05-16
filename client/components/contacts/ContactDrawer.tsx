@@ -15,6 +15,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -34,16 +39,242 @@ import {
   ShieldCheck,
   X,
   Plus,
+  Wand2,
+  Sparkles,
+  Check,
 } from "lucide-react";
-import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { useQueryClient, useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import type { Template, TemplatesResponse } from "@shared/api";
 import { DriveFilePicker } from "@/components/drive/DriveFilePicker";
+import { cn, getOrCreateUserId } from "@/lib/utils";
 import { 
   EditableTextCell, 
   MultiTemplateSelect, 
   AttachmentCell 
 } from "./GridCells";
+
+// ─── Salutation Picker (full-size, drawer version) ────────────────────────────
+function SalutationPicker({
+  value,
+  onChange,
+  accentClass = "text-primary",
+  borderClass = "border-white/10",
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  accentClass?: string;
+  borderClass?: string;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const [custom, setCustom] = React.useState("");
+  const userId = getOrCreateUserId();
+  const queryClient = useQueryClient();
+
+  const { data: serverSalutations = [] } = useQuery({
+    queryKey: ["salutations", userId],
+    queryFn: async () => {
+      const res = await fetch(`/api/salutations?userId=${userId}`);
+      if (!res.ok) return [];
+      return (await res.json()).salutations || [];
+    },
+  });
+
+  const addMutation = useMutation({
+    mutationFn: async (text: string) => {
+      await fetch("/api/salutations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, text }),
+      });
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["salutations", userId] }),
+  });
+
+  const defaults = ["Hi", "Hey", "Dear Sir", "Dear Mam"];
+  const options = Array.from(new Set([...defaults, ...serverSalutations]));
+
+  const handleAdd = () => {
+    const v = custom.trim();
+    if (!v) return;
+    addMutation.mutate(v);
+    onChange(v);
+    setCustom("");
+    setOpen(false);
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          className={cn(
+            "w-full h-11 px-4 rounded-xl border text-sm font-bold text-left flex items-center justify-between transition-all hover:opacity-80",
+            borderClass,
+            "bg-background/50"
+          )}
+        >
+          <span className={accentClass}>{value || "Select greeting..."}</span>
+          <span className="text-muted-foreground text-xs">▾</span>
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-64 p-3 rounded-2xl border-white/10 glass-card shadow-2xl space-y-1"
+        align="start"
+      >
+        {options.map((opt) => (
+          <button
+            key={opt}
+            onClick={() => { onChange(opt); setOpen(false); }}
+            className={cn(
+              "w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-bold transition-all hover:bg-white/5",
+              value === opt ? "bg-primary/15 text-primary" : "text-muted-foreground"
+            )}
+          >
+            {value === opt && <Check className="h-3 w-3 text-primary shrink-0" />}
+            <span>{opt}</span>
+          </button>
+        ))}
+        <div className="h-px bg-white/5 my-2" />
+        <p className="text-[9px] font-black text-muted-foreground/50 uppercase tracking-widest px-2 pb-1">Custom</p>
+        <div className="flex gap-2 px-1">
+          <Input
+            value={custom}
+            onChange={(e) => setCustom(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+            placeholder="Type greeting..."
+            className="h-9 text-xs font-bold rounded-xl bg-white/5 border-white/10"
+          />
+          <Button
+            size="icon"
+            onClick={handleAdd}
+            disabled={addMutation.isPending || !custom.trim()}
+            className="h-9 w-9 shrink-0 rounded-xl bg-primary hover:bg-primary/90"
+          >
+            {addMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+// ─── AI-Powered Message Editor (drawer version) ──────────────────────────────
+function MessageEditor({
+  checked,
+  onCheckedChange,
+  value,
+  onChange,
+  placeholder,
+  accentColor,
+  label,
+}: {
+  checked: boolean;
+  onCheckedChange: (v: boolean) => void;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  accentColor: string;
+  label: string;
+}) {
+  const [localText, setLocalText] = React.useState(value || "");
+  const [isAIMode, setIsAIMode] = React.useState(false);
+  const [aiPrompt, setAiPrompt] = React.useState("");
+  const [isGenerating, setIsGenerating] = React.useState(false);
+
+  React.useEffect(() => { setLocalText(value || ""); }, [value]);
+
+  const handleGenerate = async () => {
+    if (!aiPrompt.trim() && !localText.trim()) return;
+    setIsGenerating(true);
+    try {
+      const res = await fetch("/api/ai/improve-message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: aiPrompt, currentText: localText }),
+      });
+      const data = await res.json();
+      if (res.ok && data.result) {
+        setLocalText(data.result);
+        onChange(data.result);
+        setIsAIMode(false);
+        setAiPrompt("");
+      } else {
+        alert(data.error || "AI generation failed.");
+      }
+    } catch (e: any) {
+      alert("AI generation failed: " + e.message);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-3">
+        <Checkbox
+          checked={checked}
+          onCheckedChange={(c) => onCheckedChange(!!c)}
+          className="border-primary/30"
+        />
+        <span className={cn("text-[11px] font-black uppercase tracking-widest", accentColor)}>
+          {label}
+        </span>
+      </div>
+
+      {checked && (
+        <div className="rounded-2xl bg-white/3 border border-white/5 p-4 space-y-3 animate-in fade-in duration-300">
+          {/* Mode toggle header */}
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+              {isAIMode ? "✦ AI Generator" : "✏ Custom Message"}
+            </p>
+            <button
+              onClick={() => setIsAIMode(!isAIMode)}
+              className={cn(
+                "h-8 px-3 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-2 transition-all",
+                isAIMode
+                  ? "bg-primary text-white shadow-lg shadow-primary/25"
+                  : "bg-primary/10 text-primary hover:bg-primary/20"
+              )}
+            >
+              <Sparkles className="h-3 w-3" />
+              {isAIMode ? "Back to Edit" : "Use AI"}
+            </button>
+          </div>
+
+          {isAIMode ? (
+            <div className="space-y-3">
+              <Textarea
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                placeholder="Describe what you want (e.g. 'Write a warm outreach for a casting call')..."
+                className="min-h-[90px] rounded-xl text-sm font-medium bg-primary/5 border-primary/20 resize-none focus:ring-1 focus:ring-primary"
+                autoFocus
+              />
+              <Button
+                className="w-full h-11 rounded-xl font-black text-[11px] bg-primary hover:bg-primary/90 gap-2"
+                onClick={handleGenerate}
+                disabled={isGenerating || !aiPrompt.trim()}
+              >
+                {isGenerating
+                  ? <><Loader2 className="h-4 w-4 animate-spin" /> GENERATING...</>
+                  : <><Wand2 className="h-4 w-4" /> GENERATE MESSAGE</>}
+              </Button>
+            </div>
+          ) : (
+            <Textarea
+              value={localText}
+              onChange={(e) => setLocalText(e.target.value)}
+              onBlur={() => { if (localText !== value) onChange(localText); }}
+              placeholder={placeholder}
+              className="min-h-[140px] rounded-xl text-sm font-medium bg-background/50 border-white/10 resize-none focus:ring-1 focus:ring-primary leading-relaxed"
+            />
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 interface ContactDrawerProps {
   contact: Contact | null;
@@ -251,37 +482,28 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-[9px] font-black text-muted-foreground">PERS. NAME</Label>
-                    <Select value={form.personalizedNameWA} onValueChange={(v) => set("personalizedNameWA")(v)}>
-                      <SelectTrigger className="h-10 rounded-lg bg-background/50 border-white/5 font-black text-[10px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="N">NAME (N)</SelectItem>
-                        <SelectItem value="C">CASTING (C)</SelectItem>
-                        <SelectItem value="NA">NONE (NA)</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Label className="text-[9px] font-black text-muted-foreground">SALUTATION</Label>
+                    <SalutationPicker
+                      value={form.personalizedNameWA || "Hi"}
+                      onChange={(v) => set("personalizedNameWA")(v)}
+                      accentClass="text-emerald-400"
+                      borderClass="border-emerald-500/20"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black text-muted-foreground">TEMPLATES</Label>
                     <DrawerMultiTemplateSelect userId={contact.user_id} category="whatsapp" value={form.templateSelectionWP || []} onChange={(v) => set("templateSelectionWP")(v)} />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Checkbox checked={form.hasCustomMessageWA} onCheckedChange={(c) => set("hasCustomMessageWA")(!!c)} id="wa-custom" />
-                    <Label htmlFor="wa-custom" className="text-[9px] font-black uppercase tracking-widest cursor-pointer">Override with Custom Message</Label>
-                  </div>
-                  {form.hasCustomMessageWA && (
-                    <Textarea 
-                      value={form.editableMessageWP} 
-                      onChange={(e) => set("editableMessageWP")(e.target.value)}
-                      className="min-h-[100px] rounded-xl bg-background/40 text-xs font-medium border-emerald-500/20"
-                      placeholder="Write custom WhatsApp content..."
-                    />
-                  )}
-                </div>
+                <MessageEditor
+                  checked={!!form.hasCustomMessageWA}
+                  onCheckedChange={(c) => set("hasCustomMessageWA")(c)}
+                  value={form.editableMessageWP || ""}
+                  onChange={(v) => set("editableMessageWP")(v)}
+                  placeholder="Write custom WhatsApp message..."
+                  accentColor="text-emerald-400"
+                  label="Custom Message Override"
+                />
               </div>
 
               {/* Gmail Config */}
@@ -295,43 +517,37 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-[9px] font-black text-muted-foreground">PERS. NAME</Label>
-                    <Select value={form.personalizedNameGmail} onValueChange={(v) => set("personalizedNameGmail")(v)}>
-                      <SelectTrigger className="h-10 rounded-lg bg-background/50 border-white/5 font-black text-[10px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="N">NAME (N)</SelectItem>
-                        <SelectItem value="C">CASTING (C)</SelectItem>
-                        <SelectItem value="NA">NONE (NA)</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Label className="text-[9px] font-black text-muted-foreground">SALUTATION</Label>
+                    <SalutationPicker
+                      value={form.personalizedNameGmail || "Hi"}
+                      onChange={(v) => set("personalizedNameGmail")(v)}
+                      accentClass="text-blue-400"
+                      borderClass="border-blue-500/20"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black text-muted-foreground">TEMPLATES</Label>
                     <DrawerMultiTemplateSelect userId={contact.user_id} category="email" value={form.templateSelectionGmail || []} onChange={(v) => set("templateSelectionGmail")(v)} />
                   </div>
                 </div>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label className="text-[9px] font-black text-muted-foreground">EMAIL SUBJECT</Label>
-                    <Input value={form.editableGmailSubject || ""} onChange={(e) => set("editableGmailSubject")(e.target.value)} className="h-10 rounded-lg bg-background/50 border-white/5 font-bold text-xs" />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Checkbox checked={form.hasCustomMessageEmail} onCheckedChange={(c) => set("hasCustomMessageEmail")(!!c)} id="email-custom" />
-                      <Label htmlFor="email-custom" className="text-[9px] font-black uppercase tracking-widest cursor-pointer">Override with Custom Body</Label>
-                    </div>
-                    {form.hasCustomMessageEmail && (
-                      <Textarea 
-                        value={form.editableMessageGmail} 
-                        onChange={(e) => set("editableMessageGmail")(e.target.value)}
-                        className="min-h-[100px] rounded-xl bg-background/40 text-xs font-medium border-blue-500/20"
-                        placeholder="Write custom email body..."
-                      />
-                    )}
-                  </div>
+                <div className="space-y-2">
+                  <Label className="text-[9px] font-black text-muted-foreground">EMAIL SUBJECT</Label>
+                  <Input
+                    value={form.editableGmailSubject || ""}
+                    onChange={(e) => set("editableGmailSubject")(e.target.value)}
+                    placeholder="Override email subject line..."
+                    className="h-11 rounded-xl bg-background/50 border-blue-500/10 font-medium text-sm"
+                  />
                 </div>
+                <MessageEditor
+                  checked={!!form.hasCustomMessageEmail}
+                  onCheckedChange={(c) => set("hasCustomMessageEmail")(c)}
+                  value={form.editableMessageGmail || ""}
+                  onChange={(v) => set("editableMessageGmail")(v)}
+                  placeholder="Write custom email body..."
+                  accentColor="text-blue-400"
+                  label="Custom Body Override"
+                />
               </div>
 
               {/* Instagram Config */}
@@ -345,37 +561,28 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-[9px] font-black text-muted-foreground">PERS. NAME</Label>
-                    <Select value={form.personalizedNameIG} onValueChange={(v) => set("personalizedNameIG")(v)}>
-                      <SelectTrigger className="h-10 rounded-lg bg-background/50 border-white/5 font-black text-[10px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="N">NAME (N)</SelectItem>
-                        <SelectItem value="C">CASTING (C)</SelectItem>
-                        <SelectItem value="NA">NONE (NA)</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Label className="text-[9px] font-black text-muted-foreground">SALUTATION</Label>
+                    <SalutationPicker
+                      value={form.personalizedNameIG || "Hi"}
+                      onChange={(v) => set("personalizedNameIG")(v)}
+                      accentClass="text-pink-400"
+                      borderClass="border-pink-500/20"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black text-muted-foreground">TEMPLATES</Label>
                     <DrawerMultiTemplateSelect userId={contact.user_id} category="instagram" value={form.templateSelectionIG || []} onChange={(v) => set("templateSelectionIG")(v)} />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Checkbox checked={form.hasCustomMessageIG} onCheckedChange={(c) => set("hasCustomMessageIG")(!!c)} id="ig-custom" />
-                    <Label htmlFor="ig-custom" className="text-[9px] font-black uppercase tracking-widest cursor-pointer">Override with Custom Message</Label>
-                  </div>
-                  {form.hasCustomMessageIG && (
-                    <Textarea 
-                      value={form.editableMessageIG} 
-                      onChange={(e) => set("editableMessageIG")(e.target.value)}
-                      className="min-h-[100px] rounded-xl bg-background/40 text-xs font-medium border-pink-500/20"
-                      placeholder="Write custom Instagram content..."
-                    />
-                  )}
-                </div>
+                <MessageEditor
+                  checked={!!form.hasCustomMessageIG}
+                  onCheckedChange={(c) => set("hasCustomMessageIG")(c)}
+                  value={form.editableMessageIG || ""}
+                  onChange={(v) => set("editableMessageIG")(v)}
+                  placeholder="Write custom Instagram DM..."
+                  accentColor="text-pink-400"
+                  label="Custom Message Override"
+                />
               </div>
             </div>
           </section>
