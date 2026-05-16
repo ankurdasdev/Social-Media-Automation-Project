@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils";
 import { DriveFilePicker } from "../drive/DriveFilePicker";
 import { getOrCreateUserId } from "@/lib/utils";
 import type { Contact, DriveFile } from "@shared/api";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 // ─── Inline Text Cell ────────────────────────────────────────────────────────
 export function EditableTextCell({ 
@@ -77,10 +77,46 @@ export function PicklistCell({
   onUpdate: (val: string) => void
 }) {
   const [isOpen, setIsOpen] = React.useState(false);
-  const [customValue, setCustomValue] = React.useState(value || "");
+  const [customValue, setCustomValue] = React.useState("");
+  const queryClient = useQueryClient();
+  const userId = getOrCreateUserId();
+
+  const { data: serverSalutations = [] } = useQuery({
+    queryKey: ["salutations", userId],
+    queryFn: async () => {
+      const res = await fetch(`/api/salutations?userId=${userId}`);
+      if (!res.ok) return [];
+      const data = await res.json();
+      return data.salutations || [];
+    }
+  });
+
+  const addSalutationMutation = useMutation({
+    mutationFn: async (text: string) => {
+      await fetch("/api/salutations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, text }),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["salutations", userId] });
+    }
+  });
 
   const defaults = ["Hi", "Hey", "Dear Sir", "Dear Mam"];
+  // Combine defaults with server ones, ensuring uniqueness
+  const options = Array.from(new Set([...defaults, ...serverSalutations]));
   
+  const handleAddCustom = () => {
+    if (!customValue.trim()) return;
+    const val = customValue.trim();
+    addSalutationMutation.mutate(val);
+    onUpdate(val);
+    setCustomValue("");
+    setIsOpen(false);
+  };
+
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
@@ -88,9 +124,9 @@ export function PicklistCell({
           {value || "HI"}
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-48 glass-card border-white/10 p-2 shadow-2xl rounded-xl" align="start">
+      <PopoverContent className="w-56 glass-card border-white/10 p-2 shadow-2xl rounded-xl max-h-80 overflow-y-auto" align="start">
         <div className="space-y-1">
-          {defaults.map(opt => (
+          {options.map(opt => (
             <button
               key={opt}
               onClick={() => {
@@ -116,21 +152,16 @@ export function PicklistCell({
               placeholder="Type..."
               className="h-8 text-xs font-bold rounded-lg bg-white/5 border-white/10 focus:ring-1 focus:ring-primary"
               onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  onUpdate(customValue);
-                  setIsOpen(false);
-                }
+                if (e.key === 'Enter') handleAddCustom();
               }}
             />
             <Button 
               size="icon" 
               className="h-8 w-8 shrink-0 rounded-lg bg-primary hover:bg-primary/90"
-              onClick={() => {
-                onUpdate(customValue);
-                setIsOpen(false);
-              }}
+              onClick={handleAddCustom}
+              disabled={addSalutationMutation.isPending}
             >
-              <Plus className="h-3 w-3" />
+              {addSalutationMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
             </Button>
           </div>
         </div>
@@ -138,6 +169,7 @@ export function PicklistCell({
     </Popover>
   );
 }
+
 
 // ─── Conditional Textarea Cell (Checkbox -> Textarea) ────────────────────────
 export function ConditionalTextareaCell({
