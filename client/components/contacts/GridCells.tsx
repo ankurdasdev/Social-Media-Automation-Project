@@ -189,9 +189,14 @@ export function ConditionalTextareaCell({
   const [isAIMode, setIsAIMode] = React.useState(false);
   const [aiPrompt, setAiPrompt] = React.useState("");
   const [isGenerating, setIsGenerating] = React.useState(false);
+  const [localText, setLocalText] = React.useState(value || "");
+
+  React.useEffect(() => {
+    if (!isEditing) setLocalText(value || "");
+  }, [value, isEditing]);
 
   const handleGenerateAI = async () => {
-    if (!aiPrompt.trim() && !value.trim()) return;
+    if (!aiPrompt.trim() && !localText.trim()) return;
     setIsGenerating(true);
     try {
       const res = await fetch("/api/ai/improve-message", {
@@ -199,11 +204,12 @@ export function ConditionalTextareaCell({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           prompt: aiPrompt, 
-          currentText: value 
+          currentText: localText 
         }),
       });
       const data = await res.json();
       if (res.ok && data.result) {
+        setLocalText(data.result);
         onValueChange(data.result);
         setIsAIMode(false);
         setAiPrompt("");
@@ -218,6 +224,13 @@ export function ConditionalTextareaCell({
     }
   };
 
+  const handleFinishEditing = () => {
+    if (localText !== value) {
+      onValueChange(localText);
+    }
+    setIsEditing(false);
+  };
+
   return (
     <div className="flex items-center gap-3 w-full group" onClick={(e) => e.stopPropagation()}>
       <Checkbox 
@@ -228,7 +241,9 @@ export function ConditionalTextareaCell({
       
       {checked ? (
         <Popover open={isEditing} onOpenChange={(open) => {
-          setIsEditing(open);
+          if (!open) handleFinishEditing();
+          else setIsEditing(true);
+          
           if (!open) {
             setIsAIMode(false);
             setAiPrompt("");
@@ -246,7 +261,7 @@ export function ConditionalTextareaCell({
                       {isAIMode ? "AI Message Generator" : "Edit Custom Message"}
                     </h4>
                  </div>
-
+ 
                  {isAIMode ? (
                    <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
                       <textarea 
@@ -272,13 +287,13 @@ export function ConditionalTextareaCell({
                  ) : (
                    <textarea 
                      className="w-full h-32 rounded-xl bg-muted/40 p-3 text-sm font-medium focus:ring-1 focus:ring-primary outline-none resize-none scrollbar-hide"
-                     value={value}
-                     onChange={(e) => onValueChange(e.target.value)}
+                     value={localText}
+                     onChange={(e) => setLocalText(e.target.value)}
                      placeholder={placeholder}
                      autoFocus
                    />
                  )}
-
+ 
                  <div className="flex items-center justify-between pt-3 border-t border-white/5">
                     <Button
                       variant="ghost"
@@ -292,7 +307,7 @@ export function ConditionalTextareaCell({
                     >
                       <Sparkles className="h-4 w-4" />
                     </Button>
-                    <Button size="sm" onClick={() => setIsEditing(false)} className="h-10 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest bg-foreground text-background hover:bg-foreground/90 transition-all active:scale-95">DONE</Button>
+                    <Button size="sm" onClick={handleFinishEditing} className="h-10 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest bg-foreground text-background hover:bg-foreground/90 transition-all active:scale-95">DONE</Button>
                  </div>
               </div>
            </PopoverContent>
