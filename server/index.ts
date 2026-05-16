@@ -68,10 +68,13 @@ import {
   handleUpdateAIKeywords
 } from "./routes/auth";
 import { runIngestionJob } from "./jobs/ingestion-job";
+import { initIngestionSchedules, ingestionRouter } from "./routes/ingestion-schedule";
 import { initDb } from "./db/index";
 
-// Initialize database on startup
-initDb().catch(console.error);
+// Initialize database then restore per-user ingestion schedules
+initDb()
+  .then(() => initIngestionSchedules())
+  .catch(console.error);
 
 export function createServer() {
   const app = express();
@@ -123,9 +126,10 @@ export function createServer() {
   app.post("/api/ai/improve-message", handleImproveMessage);
   app.get("/api/analytics/stats", handleGetAnalyticsStats);
 
-  // ── Ingestion Job ──────────────────────────────────────────────────────────
+  // ── Ingestion Job (legacy trigger endpoint kept for backward compat) ────────
   app.post("/api/ingestion/trigger", handleTriggerIngestion);
-  app.get("/api/ingestion/status", handleIngestionStatus);
+  // ── Ingestion Schedule (configurable time per user) ─────────────────────────
+  app.use("/api/ingestion", ingestionRouter);
 
   // ── Templates ──────────────────────────────────────────────────────────────
   app.get("/api/templates", handleGetTemplates);
@@ -167,26 +171,6 @@ export function createServer() {
   // ── Salutations ────────────────────────────────────────────────────────────
   app.get("/api/salutations", handleGetSalutations);
   app.post("/api/salutations", handleAddSalutation);
-
-  // ── Daily Cron Scheduler ───────────────────────────────────────────────────
-  // Runs every day at midnight IST (18:30 UTC)
-  // Cron format: minute hour day month weekday
-  cron.schedule(
-    "30 18 * * *",
-    async () => {
-      console.log("[cron] Daily ingestion job triggered at midnight IST");
-      try {
-        await runIngestionJob();
-      } catch (err) {
-        console.error("[cron] Ingestion job failed:", err);
-      }
-    },
-    {
-      timezone: "UTC",
-    }
-  );
-
-  console.log("[server] Daily ingestion cron scheduled: runs at 00:00 IST (18:30 UTC)");
 
   return app;
 }
