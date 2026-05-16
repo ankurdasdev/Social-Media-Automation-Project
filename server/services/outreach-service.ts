@@ -16,6 +16,11 @@ export interface OutreachRequest extends Partial<Contact> {
   channel: "whatsapp" | "email" | "instagram";
 }
 
+function stripExtension(filename: string): string {
+  if (!filename) return "";
+  return filename.replace(/\.[^/.]+$/, "");
+}
+
 function injectVariables(content: string, contact: Contact, channel: "whatsapp" | "email" | "instagram"): string {
   if (!content) return "";
   let result = content;
@@ -168,8 +173,9 @@ async function handleWhatsAppOutreach(userId: string, contact: Contact) {
         let mediaType: "image" | "document" = "document";
         if (mimeType.startsWith("image/")) mediaType = "image";
 
+        const cleanName = stripExtension(file.name);
         // Evolution API expects raw base64 without the data: prefix
-        await sendWAMedia(instance.instance_name, jid, base64, mediaType, file.name, file.name);
+        await sendWAMedia(instance.instance_name, jid, base64, mediaType, cleanName, cleanName);
         await sleep(1500); // Small delay
       } catch (attachErr: any) {
         throw new Error(`WhatsApp attachment failed for ${file.name}: ${attachErr.message}`);
@@ -296,7 +302,7 @@ async function handleEmailOutreach(userId: string, contact: Contact) {
         const response = await drive.files.get({ fileId: file.id, alt: "media" }, { responseType: "arraybuffer" });
         const meta = await drive.files.get({ fileId: file.id, fields: "mimeType" });
         emailAttachments.push({
-          filename: file.name,
+          filename: stripExtension(file.name),
           content: Buffer.from(response.data as ArrayBuffer),
           mimeType: meta.data.mimeType || "application/octet-stream",
         });
@@ -380,7 +386,7 @@ async function handleInstagramOutreach(userId: string, contact: Contact) {
   if (attachments.length > 0) {
     combinedMessage += "\n\nAttachments:";
     for (const file of attachments) {
-      combinedMessage += `\n- ${file.name}: https://drive.google.com/uc?export=download&id=${file.id}`;
+      combinedMessage += `\n- ${stripExtension(file.name)}: https://drive.google.com/uc?export=download&id=${file.id}`;
     }
   }
 
