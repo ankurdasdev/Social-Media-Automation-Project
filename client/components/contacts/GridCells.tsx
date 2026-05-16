@@ -250,7 +250,7 @@ export function ConditionalTextareaCell({
           }
         }}>
            <PopoverTrigger asChild>
-              <button className="flex-1 h-8 px-2 rounded-md bg-primary/5 border border-primary/10 text-[10px] font-bold text-left truncate text-primary hover:bg-primary/10 transition-all">
+              <button className="flex-1 min-h-[32px] py-1.5 px-3 rounded-md bg-primary/5 border border-primary/10 text-[10px] font-bold text-left whitespace-normal line-clamp-3 leading-tight text-primary hover:bg-primary/10 transition-all">
                 {value || "EDIT MESSAGE"}
               </button>
            </PopoverTrigger>
