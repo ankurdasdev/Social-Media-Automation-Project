@@ -19,7 +19,12 @@ import * as igClient from "../services/instagram-client";
  * directly from the user's browser (uses their residential IP, not server IP).
  */
 export const handleInstagramServiceConfig: RequestHandler = (_req, res) => {
-  const baseUrl = process.env.INSTAGRAPI_API_URL || "http://localhost:8000";
+  // INSTAGRAPI_PUBLIC_URL is what the BROWSER calls (user's residential IP)
+  // INSTAGRAPI_API_URL is what the SERVER calls internally (127.0.0.1 in production)
+  const baseUrl =
+    process.env.INSTAGRAPI_PUBLIC_URL ||
+    process.env.INSTAGRAPI_API_URL ||
+    "http://localhost:8000";
   const apiKey = process.env.INSTAGRAPI_API_KEY || "";
   res.json({ baseUrl, apiKey });
 };
