@@ -110,33 +110,22 @@ export default function InstagramSettings() {
     setLoginStep("logging_in");
 
     try {
-      const { baseUrl, apiKey } = serviceConfig;
-      const form = new URLSearchParams();
-      form.append("username", username.trim().toLowerCase().replace(/^@/, ""));
-      form.append("password", password);
-      if (verificationCode.trim()) {
-        form.append("verification_code", verificationCode.trim());
-      }
-
-      const loginRes = await fetch(`${baseUrl}/auth/login`, {
+      const connectRes = await fetch("/api/instagram/connect", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          ...(apiKey ? { "X-API-KEY": apiKey } : {}),
-        },
-        body: form,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          username: username.trim().toLowerCase().replace(/^@/, ""),
+          password,
+          verificationCode: verificationCode.trim() || undefined,
+        }),
       });
 
-      if (!loginRes.ok) {
-        let errBody: any;
-        try {
-          errBody = await loginRes.json();
-        } catch {
-          errBody = await loginRes.text();
-        }
-
-        const errStr = typeof errBody === "object" ? JSON.stringify(errBody) : String(errBody || "");
-        const isTwoFactor =
+      if (!connectRes.ok) {
+        const errBody = await connectRes.json();
+        const errStr = JSON.stringify(errBody);
+        
+        const isTwoFactor = errBody.twoFactorRequired || 
           errStr.toLowerCase().includes("two_factor") ||
           errStr.toLowerCase().includes("verification_code");
 
@@ -147,7 +136,7 @@ export default function InstagramSettings() {
           return;
         }
 
-        let userMessage = "Login failed. Check your credentials and try again.";
+        let userMessage = errBody.message || "Login failed. Check your credentials and try again.";
         if (errStr.toLowerCase().includes("badpassword")) {
           userMessage = "Incorrect password. Please double-check and try again.";
         } else if (errStr.toLowerCase().includes("challenge")) {
@@ -157,24 +146,6 @@ export default function InstagramSettings() {
         setLoginError(userMessage);
         setLoginStep("idle");
         return;
-      }
-
-      const sessionId: string = await loginRes.json();
-      setLoginStep("saving");
-
-      const saveRes = await fetch("/api/instagram/connect-session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId,
-          username: username.trim().toLowerCase().replace(/^@/, ""),
-          sessionId,
-        }),
-      });
-
-      if (!saveRes.ok) {
-        const err = await saveRes.json();
-        throw new Error(err?.error || "Failed to save session");
       }
 
       setLoginStep("done");
