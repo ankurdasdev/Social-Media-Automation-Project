@@ -193,10 +193,14 @@ export async function sendDirectMessage(
   });
 }
 
-/** Simple connectivity check */
+/** Simple connectivity check — hits /docs to avoid root-level 307 redirect */
 export async function isReachable(): Promise<boolean> {
   try {
-    const res = await fetch(`${BASE_URL}/docs`, { headers: headers() });
+    const res = await fetch(`${BASE_URL}/docs`, {
+      headers: { "X-API-KEY": API_KEY },
+      redirect: "follow",
+      signal: AbortSignal.timeout(5000),
+    });
     return res.ok;
   } catch {
     return false;
