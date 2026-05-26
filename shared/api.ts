@@ -135,6 +135,7 @@ export interface Contact {
 
   // Auto-ingestion & Grouping
   rowColor?: string;
+  cellColors?: Record<string, string>;
   source?: "manual" | "auto-whatsapp" | "auto-instagram";
   ingestedAt?: string;
   sheetName?: string;

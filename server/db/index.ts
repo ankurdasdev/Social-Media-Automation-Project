@@ -112,6 +112,8 @@ async function runMigrations(): Promise<void> {
   await query(`
      ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_keywords JSONB DEFAULT '[]'::jsonb;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS gender TEXT;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS dob TEXT;
     ALTER TABLE contacts ADD COLUMN IF NOT EXISTS instagram_completed TEXT;
     ALTER TABLE google_tokens ADD COLUMN IF NOT EXISTS scopes TEXT;
     ALTER TABLE contacts ADD COLUMN IF NOT EXISTS personalized_name_wa TEXT DEFAULT 'N';
@@ -122,6 +124,7 @@ async function runMigrations(): Promise<void> {
     ALTER TABLE contacts ADD COLUMN IF NOT EXISTS has_custom_message_ig BOOLEAN DEFAULT FALSE;
     ALTER TABLE contacts ADD COLUMN IF NOT EXISTS unified_attachments JSONB DEFAULT '[]'::jsonb;
     ALTER TABLE contacts ADD COLUMN IF NOT EXISTS row_color TEXT;
+    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS cell_colors JSONB DEFAULT '{}'::jsonb;
     ALTER TABLE contacts ADD COLUMN IF NOT EXISTS whatsapp_completed TEXT DEFAULT 'No';
     ALTER TABLE contacts ADD COLUMN IF NOT EXISTS email_completed TEXT DEFAULT 'No';
     ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS url TEXT;
@@ -141,6 +144,8 @@ async function runMigrations(): Promise<void> {
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       email TEXT UNIQUE NOT NULL,
       name TEXT,
+      gender TEXT,
+      dob TEXT,
       password_hash TEXT,
       ai_keywords JSONB DEFAULT '[]'::jsonb,
       created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -198,6 +203,7 @@ async function runMigrations(): Promise<void> {
       status TEXT DEFAULT 'pending',
       automation_trigger BOOLEAN DEFAULT FALSE,
       row_color TEXT,
+      cell_colors JSONB DEFAULT '{}',
       whatsapp_run BOOLEAN DEFAULT FALSE,
       email_run BOOLEAN DEFAULT FALSE,
       instagram_run BOOLEAN DEFAULT FALSE,

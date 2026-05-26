@@ -13,7 +13,7 @@ function signToken(payload: { userId: string; email: string; name: string }) {
 
 // ── POST /api/auth/signup ──────────────────────────────────────────────────────
 export const handleSignup: RequestHandler = async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, gender, dob } = req.body;
 
   if (!name || !email || !password) {
     return res.status(400).json({ error: "name, email, and password are required" });
@@ -35,10 +35,10 @@ export const handleSignup: RequestHandler = async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 12);
 
     const [user] = await query<{ id: string; email: string; name: string }>(
-      `INSERT INTO users (email, name, password_hash) 
-       VALUES ($1, $2, $3) 
+      `INSERT INTO users (email, name, gender, dob, password_hash) 
+       VALUES ($1, $2, $3, $4, $5) 
        RETURNING id, email, name`,
-      [email.toLowerCase().trim(), name.trim(), passwordHash]
+      [email.toLowerCase().trim(), name.trim(), gender, dob, passwordHash]
     );
 
     const token = signToken({ userId: user.id, email: user.email, name: user.name });
@@ -110,8 +110,8 @@ export const handleMe: RequestHandler = async (req, res) => {
       name: string;
     };
 
-    const user = await queryOne<{ id: string; email: string; name: string }>(
-      "SELECT id, email, name FROM users WHERE id = $1",
+    const user = await queryOne<{ id: string; email: string; name: string; gender: string; dob: string }>(
+      "SELECT id, email, name, gender, dob FROM users WHERE id = $1",
       [payload.userId]
     );
 
@@ -150,7 +150,7 @@ export function requireAuth(
 
 // ── PUT /api/auth/profile ─────────────────────────────────────────────────────
 export const handleUpdateProfile: RequestHandler = async (req, res) => {
-  const { userId, name, email, password } = req.body;
+  const { userId, name, email, password, gender, dob } = req.body;
 
   if (!userId) {
     return res.status(400).json({ error: "userId is required" });
@@ -174,13 +174,21 @@ export const handleUpdateProfile: RequestHandler = async (req, res) => {
       updates.push(`password_hash = $${paramIndex++}`);
       values.push(hash);
     }
+    if (gender !== undefined) {
+      updates.push(`gender = $${paramIndex++}`);
+      values.push(gender);
+    }
+    if (dob !== undefined) {
+      updates.push(`dob = $${paramIndex++}`);
+      values.push(dob);
+    }
 
     if (updates.length === 0) {
       return res.status(400).json({ error: "No fields to update" });
     }
 
     const updatedUser = await queryOne(
-      `UPDATE users SET ${updates.join(", ")}, updated_at = NOW() WHERE id = $1 RETURNING id, email, name`,
+      `UPDATE users SET ${updates.join(", ")}, updated_at = NOW() WHERE id = $1 RETURNING id, email, name, gender, dob`,
       values
     );
 

@@ -72,6 +72,7 @@ import type {
 } from "@shared/api";
 import { TemplateManager } from "@/components/templates/TemplateManager";
 import { AIProfilingDialog } from "@/components/ai-profiling/AIProfilingDialog";
+import { AIScheduleDialog } from "@/components/settings/AIScheduleDialog";
 
 // ─── API Helpers ─────────────────────────────────────────────────────────────
 
@@ -158,6 +159,7 @@ export default function Controller() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isTemplateManagerOpen, setIsTemplateManagerOpen] = useState(false);
   const [isAIProfilingOpen, setIsAIProfilingOpen] = useState(false);
+  const [isAIScheduleOpen, setIsAIScheduleOpen] = useState(false);
 
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -368,7 +370,7 @@ export default function Controller() {
     <AppLayout>
       <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
         {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        <div className="flex flex-col gap-6">
           <div className="space-y-2">
             <h1 className="text-4xl font-black tracking-tighter text-foreground sm:text-5xl">
               Source <span className="text-primary italic">Manager</span>
@@ -377,7 +379,7 @@ export default function Controller() {
               Manage your message sources from WhatsApp and Instagram.
             </p>
           </div>
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex flex-wrap items-center gap-3">
             {activeTab === "whatsapp" && (
               <Button
                 variant="outline"
@@ -415,6 +417,14 @@ export default function Controller() {
             >
               <Brain className="w-4 h-4" />
               AI Profiling
+            </Button>
+            <Button 
+                variant="outline" 
+                onClick={() => setIsAIScheduleOpen(true)} 
+                className="h-12 px-6 rounded-xl font-bold bg-violet-500/5 border-violet-500/20 text-violet-600 gap-2 hover:bg-violet-500/10 transition-all shadow-sm"
+            >
+              <Clock className="w-4 h-4" />
+              AI Schedule
             </Button>
             <Button 
                 onClick={openAddDialog} 
@@ -670,6 +680,7 @@ export default function Controller() {
 
         <TemplateManager open={isTemplateManagerOpen} onOpenChange={setIsTemplateManagerOpen} />
         <AIProfilingDialog open={isAIProfilingOpen} onOpenChange={setIsAIProfilingOpen} />
+        <AIScheduleDialog open={isAIScheduleOpen} onOpenChange={setIsAIScheduleOpen} />
       </div>
     </AppLayout>
   );

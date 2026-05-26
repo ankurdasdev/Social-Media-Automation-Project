@@ -465,6 +465,7 @@ export default function Contacts() {
               onAISearch={(prompt) => aiSearchMutation.mutate(prompt)}
               isAISearching={aiSearchMutation.isPending}
               onClearAISearch={() => setAISearchResults(null)}
+              onAddContact={handleOpenAddLead}
               initialFilters={initialFilters}
               initialGlobalFilter={initialGlobalFilter}
             />

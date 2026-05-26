@@ -35,6 +35,7 @@ function mapRowToContact(row: any): Contact {
     status: row.status || "pending",
     automationTrigger: row.automation_trigger || false,
     rowColor: row.row_color,
+    cellColors: typeof row.cell_colors === 'string' ? safelyParseStringArray(row.cell_colors) : (row.cell_colors || {}),
     whatsappRun: row.whatsapp_run || false,
     emailRun: row.email_run || false,
     instagramRun: row.instagram_run || false,
@@ -75,6 +76,7 @@ function mapRowToContact(row: any): Contact {
     drive_attachments_wa: row.drive_attachments_wa || [],
     drive_attachments_email: row.drive_attachments_email || [],
     drive_attachments_ig: row.drive_attachments_ig || [],
+    contacted_dates: safelyParseStringArray(row.contacted_dates) as string[],
   } as Contact;
 }
 
@@ -132,6 +134,7 @@ export async function updateContact(userId: string, id: string, data: Partial<Co
     status: "status",
     automationTrigger: "automation_trigger",
     rowColor: "row_color",
+    cellColors: "cell_colors",
     whatsappRun: "whatsapp_run",
     emailRun: "email_run",
     instagramRun: "instagram_run",
@@ -191,7 +194,7 @@ export async function updateContact(userId: string, id: string, data: Partial<Co
   const setClause = fields.map((f, i) => {
     const col = fieldMap[f];
     // JSONB fields need explicit cast
-    const isJsonb = ["drive_attachments_wa", "drive_attachments_email", "drive_attachments_ig", "unified_attachments", "contacted_dates", "contact_links"].includes(col);
+    const isJsonb = ["drive_attachments_wa", "drive_attachments_email", "drive_attachments_ig", "unified_attachments", "contacted_dates", "contact_links", "cell_colors"].includes(col);
     return `${col} = $${i + 3}${isJsonb ? "::jsonb" : ""}`;
   }).join(", ");
 

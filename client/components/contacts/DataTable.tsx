@@ -26,6 +26,12 @@ import { DataTableToolbar } from "./DataTableToolbar";
 import { ContactDrawer } from "./ContactDrawer";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { AdvancedColorPicker } from "./AdvancedColorPicker";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -41,6 +47,7 @@ interface DataTableProps<TData, TValue> {
   onAISearch?: (prompt: string) => void;
   isAISearching?: boolean;
   onClearAISearch?: () => void;
+  onAddContact?: () => void;
   initialFilters?: ColumnFiltersState;
   initialGlobalFilter?: string;
 }
@@ -59,6 +66,7 @@ export function DataTable<TData, TValue>({
   onAISearch,
   isAISearching,
   onClearAISearch,
+  onAddContact,
   initialFilters = [],
   initialGlobalFilter = "",
 }: DataTableProps<TData, TValue>) {
@@ -144,6 +152,7 @@ export function DataTable<TData, TValue>({
           onAISearch={onAISearch}
           isAISearching={isAISearching}
           onClearAISearch={onClearAISearch}
+          onAddContact={onAddContact}
           isFullscreen={isFullscreen}
           onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}
           className="flex-1"
@@ -217,11 +226,39 @@ export function DataTable<TData, TValue>({
                       }}
                       onClick={() => setSelectedContact(rowOriginal)}
                     >
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id} className="py-2 px-6 group-hover:translate-x-0.5 transition-transform">
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                      ))}
+                      {row.getVisibleCells().map((cell) => {
+                        const cellId = cell.column.id;
+                        const cColor = rowOriginal.cellColors?.[cellId];
+                        return (
+                          <ContextMenu key={cell.id}>
+                            <ContextMenuTrigger asChild>
+                              <TableCell className="py-2 px-6 group-hover:translate-x-0.5 transition-transform"
+                                style={{
+                                  backgroundColor: cColor ? (cColor.includes("gradient") ? undefined : cColor) : undefined,
+                                  background: cColor?.includes("gradient") ? cColor : undefined,
+                                }}
+                              >
+                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                              </TableCell>
+                            </ContextMenuTrigger>
+                            <ContextMenuContent className="w-[280px] glass-card p-1 rounded-3xl border-white/10 shadow-2xl z-[100]" alignOffset={-50}>
+                              <div className="px-4 py-2 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-1">Set Cell Color</div>
+                              <div onSelect={(e) => e.preventDefault()} className="outline-none">
+                                <AdvancedColorPicker
+                                  color={cColor || "transparent"}
+                                  onChange={(color) => {
+                                    if (onUpdateContact) {
+                                      onUpdateContact(rowOriginal.id, {
+                                        cellColors: { ...rowOriginal.cellColors, [cellId]: color === "transparent" ? "" : color }
+                                      });
+                                    }
+                                  }}
+                                />
+                              </div>
+                            </ContextMenuContent>
+                          </ContextMenu>
+                        );
+                      })}
                     </TableRow>
                   );
                 })
