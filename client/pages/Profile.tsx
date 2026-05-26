@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import {
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { getCurrentUser, setAuthToken } from "@/lib/utils";
 import { 
   User, 
@@ -31,8 +31,31 @@ export default function Profile() {
   
   const [name, setName] = useState(user?.name || "");
   const [email, setEmail] = useState(user?.email || "");
+  const [gender, setGender] = useState("");
+  const [dob, setDob] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  const { data: userProfile, isLoading: isProfileLoading } = useQuery({
+    queryKey: ["userProfile"],
+    queryFn: async () => {
+      const res = await fetch("/api/auth/me", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("casthub_token")}` }
+      });
+      if (!res.ok) throw new Error("Failed to load user profile");
+      const data = await res.json();
+      return data.user;
+    }
+  });
+
+  useEffect(() => {
+    if (userProfile) {
+      if (userProfile.name) setName(userProfile.name);
+      if (userProfile.email) setEmail(userProfile.email);
+      if (userProfile.gender) setGender(userProfile.gender);
+      if (userProfile.dob) setDob(userProfile.dob);
+    }
+  }, [userProfile]);
 
   const profileMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -68,16 +91,42 @@ export default function Profile() {
     }
   });
 
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const passwordStrength =
+    password.length === 0
+      ? 0
+      : password.length < 8
+      ? 1
+      : password.length < 12
+      ? 2
+      : 3;
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password && password !== confirmPassword) {
-      toast.error("Passwords do not match");
+    const newErrors: Record<string, string> = {};
+
+    if (password) {
+      if (password.length < 8) {
+        newErrors.password = "Password must be at least 8 characters";
+      }
+      if (password !== confirmPassword) {
+        newErrors.confirmPassword = "Passwords do not match";
+      }
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setFieldErrors(newErrors);
       return;
     }
+
+    setFieldErrors({});
     
     profileMutation.mutate({
       name,
       email,
+      gender,
+      dob,
       ...(password ? { password } : {})
     });
   };
@@ -169,6 +218,32 @@ export default function Profile() {
                         className="h-14 rounded-2xl bg-muted/30 border-border/50 focus:ring-primary font-bold shadow-inner"
                       />
                     </div>
+                    <div className="space-y-3">
+                      <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                        <User className="w-3 h-3" /> Gender
+                      </Label>
+                      <select
+                        value={gender}
+                        onChange={(e) => setGender(e.target.value)}
+                        className="flex h-14 w-full rounded-2xl border border-border/50 bg-muted/30 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 font-bold shadow-inner"
+                      >
+                        <option value="" disabled>Select Gender</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                    <div className="space-y-3">
+                      <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                        <User className="w-3 h-3" /> Date of Birth
+                      </Label>
+                      <Input 
+                        type="date"
+                        value={dob}
+                        onChange={(e) => setDob(e.target.value)}
+                        className="h-14 rounded-2xl bg-muted/30 border-border/50 focus:ring-primary font-bold shadow-inner"
+                      />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -184,25 +259,70 @@ export default function Profile() {
                       <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                         <Lock className="w-3 h-3" /> New Password
                       </Label>
-                      <Input 
-                        type="password"
-                        placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="h-14 rounded-2xl bg-muted/30 border-border/50 focus:ring-primary font-bold shadow-inner"
-                      />
+                      <div className="relative">
+                        <Input 
+                          type="password"
+                          placeholder="••••••••"
+                          value={password}
+                          onChange={(e) => {
+                            setPassword(e.target.value);
+                            if (fieldErrors.password) {
+                              setFieldErrors(prev => ({ ...prev, password: "" }));
+                            }
+                          }}
+                          className={`h-14 rounded-2xl bg-muted/30 border-border/50 focus:ring-primary font-bold shadow-inner ${fieldErrors.password ? "border-destructive" : ""}`}
+                        />
+                      </div>
+                      {/* Password strength indicator */}
+                      {password.length > 0 && (
+                        <div className="flex gap-1 mt-2">
+                          {[1, 2, 3].map((level) => (
+                            <div
+                              key={level}
+                              className={`h-1 flex-1 rounded-full transition-colors ${
+                                passwordStrength >= level
+                                  ? level === 1
+                                    ? "bg-red-400"
+                                    : level === 2
+                                    ? "bg-yellow-400"
+                                    : "bg-green-500"
+                                  : "bg-muted"
+                              }`}
+                            />
+                          ))}
+                          <span className="text-[10px] font-black text-muted-foreground ml-1 uppercase tracking-widest whitespace-nowrap">
+                            {passwordStrength === 1 ? "Weak" : passwordStrength === 2 ? "Fair" : "Strong"}
+                          </span>
+                        </div>
+                      )}
+                      {fieldErrors.password && (
+                        <p className="text-sm text-destructive font-bold">{fieldErrors.password}</p>
+                      )}
                     </div>
                     <div className="space-y-3">
                       <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                         <CheckCircle2 className="w-3 h-3" /> Confirm Password
                       </Label>
-                      <Input 
-                        type="password"
-                        placeholder="••••••••"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="h-14 rounded-2xl bg-muted/30 border-border/50 focus:ring-primary font-bold shadow-inner"
-                      />
+                      <div className="relative">
+                        <Input 
+                          type="password"
+                          placeholder="••••••••"
+                          value={confirmPassword}
+                          onChange={(e) => {
+                            setConfirmPassword(e.target.value);
+                            if (fieldErrors.confirmPassword) {
+                              setFieldErrors(prev => ({ ...prev, confirmPassword: "" }));
+                            }
+                          }}
+                          className={`h-14 rounded-2xl bg-muted/30 border-border/50 focus:ring-primary font-bold shadow-inner pr-10 ${fieldErrors.confirmPassword ? "border-destructive" : ""}`}
+                        />
+                        {confirmPassword && password === confirmPassword && (
+                          <CheckCircle2 className="absolute right-4 top-4 h-5 w-5 text-green-500" />
+                        )}
+                      </div>
+                      {fieldErrors.confirmPassword && (
+                        <p className="text-sm text-destructive font-bold">{fieldErrors.confirmPassword}</p>
+                      )}
                     </div>
                   </div>
                 </CardContent>

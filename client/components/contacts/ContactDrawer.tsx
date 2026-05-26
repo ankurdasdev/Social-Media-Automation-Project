@@ -430,7 +430,7 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Source Sheet</Label>
-                <Input value={form.sheetName ?? ""} disabled className="h-11 rounded-xl bg-muted/20 opacity-50 cursor-not-allowed font-mono text-xs" />
+                <Input value={form.sheetName ?? ""} onChange={(e) => set("sheetName")(e.target.value)} className="h-11 rounded-xl bg-background/50 font-mono text-xs" />
               </div>
             </div>
           </section>

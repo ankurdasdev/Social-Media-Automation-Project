@@ -170,7 +170,7 @@ export function WhatsAppSettings() {
         </div>
       )}
 
-      <div className="relative overflow-hidden glass-card border-white/10 rounded-[2.5rem] shadow-2xl bg-black/60">
+      <div className="relative overflow-hidden glass-card border-white/10 rounded-[2.5rem] shadow-2xl bg-background/60">
         {/* Decorative ambient lighting */}
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-[120px] -z-10" />
         <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-primary/5 rounded-full blur-[100px] -z-10" />
@@ -232,14 +232,14 @@ export function WhatsAppSettings() {
          </div>
 
          {/* Right Section - Interaction Area */}
-            <div className="p-8 md:p-10 flex-1 flex flex-col justify-center relative bg-black/20 backdrop-blur-sm overflow-hidden">
+            <div className="p-8 md:p-10 flex-1 flex flex-col justify-center relative bg-muted/20 backdrop-blur-sm overflow-hidden">
                {isConnected ? (
                  <div className="space-y-8 animate-in zoom-in-95 duration-700 max-w-2xl mx-auto w-full">
                    <div className="relative group">
                       {/* Cyber Card Background */}
                       <div className="absolute -inset-0.5 bg-gradient-to-br from-emerald-500/20 to-transparent rounded-[3rem] blur-2xl opacity-30 group-hover:opacity-60 transition duration-1000" />
                       
-                      <div className="relative p-8 md:p-12 rounded-[3.5rem] bg-zinc-950/80 border border-white/10 overflow-hidden">
+                      <div className="relative p-8 md:p-12 rounded-[3.5rem] bg-muted/80 border border-border/50 overflow-hidden">
                          {/* Status Grid Overlay */}
                          <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[radial-gradient(circle_at_2px_2px,#fff_1px,transparent_0)] bg-[size:32px_32px]" />
                          
@@ -281,14 +281,14 @@ export function WhatsAppSettings() {
                    </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-xl mx-auto w-full">
-                     <div className="p-6 rounded-3xl bg-zinc-900/40 border border-white/5 flex items-center justify-between group cursor-default">
+                     <div className="p-6 rounded-3xl bg-muted/40 border border-border/50 flex items-center justify-between group cursor-default">
                         <div className="space-y-1">
                            <p className="text-[9px] font-black text-emerald-500/50 uppercase tracking-widest">MESSAGE PROTOCOL</p>
                            <p className="text-xs font-black text-foreground">Multi-Session V2.0</p>
                         </div>
                         <Zap className="h-4 w-4 text-emerald-500/20 group-hover:text-emerald-500 transition-colors" />
                      </div>
-                     <div className="p-6 rounded-3xl bg-zinc-900/40 border border-white/5 flex items-center justify-between group cursor-default">
+                     <div className="p-6 rounded-3xl bg-muted/40 border border-border/50 flex items-center justify-between group cursor-default">
                         <div className="space-y-1">
                            <p className="text-[9px] font-black text-blue-500/50 uppercase tracking-widest">CONNECTION STATUS</p>
                            <p className="text-xs font-black text-foreground">Health State :: Optimal</p>
@@ -361,7 +361,7 @@ export function WhatsAppSettings() {
                           placeholder="E.g. 919876543210"
                           value={mobileNumber}
                           onChange={(e) => setMobileNumber(e.target.value)}
-                          className="h-20 pl-14 rounded-[1.5rem] bg-zinc-900/60 border-white/5 focus:bg-zinc-950 focus:ring-primary text-center text-3xl font-black tracking-[0.1em] shadow-inner transition-all relative z-0"
+                          className="h-20 pl-14 rounded-[1.5rem] bg-muted/60 border-border/50 focus:bg-background focus:ring-primary text-center text-3xl font-black tracking-[0.1em] shadow-inner transition-all relative z-0"
                         />
                      </div>
                      <Button

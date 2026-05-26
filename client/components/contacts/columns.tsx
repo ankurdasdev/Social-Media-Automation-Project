@@ -59,12 +59,14 @@ function DataTableColumnHeader({
   icon: Icon,
   columnId,
   disableRename,
+  isFollowupFilter,
 }: { 
   column: any; 
   title: string; 
   icon?: any;
   columnId?: string;
   disableRename?: boolean;
+  isFollowupFilter?: boolean;
 }) {
   const storedLabels = getStoredLabels();
   const effectiveId = columnId || column.id;
@@ -155,16 +157,25 @@ function DataTableColumnHeader({
                 </Button>
               )}
             </div>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground opacity-50" />
-              <Input
-                placeholder={`Search ${displayTitle}...`}
-                value={(column.getFilterValue() as string) ?? ""}
-                onChange={(event) => column.setFilterValue(event.target.value)}
-                className="h-10 pl-10 rounded-xl bg-muted/40 border-white/5 font-bold focus:ring-primary text-sm"
-                autoFocus
-              />
-            </div>
+            {isFollowupFilter ? (
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <Button variant="outline" size="sm" onClick={() => column.setFilterValue("30")} className={cn("text-[10px] font-black uppercase", column.getFilterValue() === "30" && "bg-primary/20 text-primary border-primary/50")}>30 Days</Button>
+                <Button variant="outline" size="sm" onClick={() => column.setFilterValue("60")} className={cn("text-[10px] font-black uppercase", column.getFilterValue() === "60" && "bg-primary/20 text-primary border-primary/50")}>60 Days</Button>
+                <Button variant="outline" size="sm" onClick={() => column.setFilterValue("90")} className={cn("text-[10px] font-black uppercase", column.getFilterValue() === "90" && "bg-primary/20 text-primary border-primary/50")}>90 Days</Button>
+                <Button variant="outline" size="sm" onClick={() => column.setFilterValue(undefined)} className={cn("text-[10px] font-black uppercase", !column.getFilterValue() && "bg-primary/20 text-primary border-primary/50")}>All Time</Button>
+              </div>
+            ) : (
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground opacity-50" />
+                <Input
+                  placeholder={`Search ${displayTitle}...`}
+                  value={(column.getFilterValue() as string) ?? ""}
+                  onChange={(event) => column.setFilterValue(event.target.value)}
+                  className="h-10 pl-10 rounded-xl bg-muted/40 border-white/5 font-bold focus:ring-primary text-sm"
+                  autoFocus
+                />
+              </div>
+            )}
           </div>
         </PopoverContent>
         </Popover>
@@ -430,7 +441,7 @@ export const columns: ColumnDef<Contact>[] = [
   },
   {
     accessorKey: "castingName",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Casting Identity" icon={Briefcase} columnId="castingName" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Casting Agency" icon={Briefcase} columnId="castingName" />,
     size: 180,
     cell: ({ row, table }) => (
       <div onClick={(e) => e.stopPropagation()}>
@@ -509,13 +520,26 @@ export const columns: ColumnDef<Contact>[] = [
   },
   {
     accessorKey: "followups",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Follow-ups" columnId="followups" />,
-    size: 90,
-    cell: ({ row }) => (
-      <div className="px-2 text-[10px] font-black text-primary text-center">
-        {row.original.followups || "0"}
-      </div>
-    ),
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Follow-ups" columnId="followups" isFollowupFilter={true} />,
+    filterFn: () => true, // Allow all rows, filter is only used for UI state
+    size: 110,
+    cell: ({ row, column }) => {
+      const dates = row.original.contacted_dates || [];
+      const filterDays = parseInt((column.getFilterValue() as string) || "0", 10);
+      let count = dates.length;
+      if (filterDays > 0) {
+        const cutoff = new Date(Date.now() - filterDays * 24 * 60 * 60 * 1000);
+        count = dates.filter(d => new Date(d) >= cutoff).length;
+      } else if (!dates.length && row.original.followups) {
+        // Fallback to legacy count if dates array is missing but count exists
+        count = parseInt(row.original.followups, 10);
+      }
+      return (
+        <div className="px-2 text-[10px] font-black text-primary text-center">
+          {count}
+        </div>
+      );
+    },
   },
   {
     accessorKey: "totalDatesContacts",

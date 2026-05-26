@@ -48,6 +48,7 @@ interface DataTableToolbarProps<TData> {
   className?: string;
   isFullscreen?: boolean;
   onToggleFullscreen?: () => void;
+  onAddContact?: () => void;
 }
 
 export function DataTableToolbar<TData>({
@@ -64,6 +65,7 @@ export function DataTableToolbar<TData>({
   className,
   isFullscreen,
   onToggleFullscreen,
+  onAddContact,
 }: DataTableToolbarProps<TData>) {
   const selectedRows = table.getFilteredSelectedRowModel().rows;
   const hasSelection = selectedRows.length > 0;
@@ -144,21 +146,31 @@ export function DataTableToolbar<TData>({
           </Button>
         </div>
 
-        {/* Fullscreen toggle - ALWAYS VISIBLE */}
-        {onToggleFullscreen && (
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={onToggleFullscreen}
-            className={cn(
-              "h-12 w-12 rounded-2xl border-white/10 shadow-xl shrink-0 transition-all active:scale-90",
-              isFullscreen ? "bg-primary text-primary-foreground border-primary" : "hover:bg-muted"
-            )}
-            title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-          >
-            {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
-          </Button>
-        )}
+        {/* Fullscreen toggle & Add Contact - ALWAYS VISIBLE if defined */}
+        <div className="flex items-center gap-2">
+          {isFullscreen && onAddContact && (
+            <Button
+              onClick={onAddContact}
+              className="h-12 px-5 rounded-2xl bg-foreground text-background hover:bg-foreground/90 font-black shadow-xl transition-all active:scale-95 whitespace-nowrap"
+            >
+              <Plus className="mr-2 h-4 w-4" /> ADD CONTACT
+            </Button>
+          )}
+          {onToggleFullscreen && (
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={onToggleFullscreen}
+              className={cn(
+                "h-12 w-12 rounded-2xl border-white/10 shadow-xl shrink-0 transition-all active:scale-90",
+                isFullscreen ? "bg-primary text-primary-foreground border-primary" : "hover:bg-muted"
+              )}
+              title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+            >
+              {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* ROW 2: Search + Refresh + Filters + Bulk Actions */}

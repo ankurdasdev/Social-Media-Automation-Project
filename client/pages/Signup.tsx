@@ -15,6 +15,8 @@ export default function Signup() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    gender: "",
+    dob: "",
     password: "",
     confirmPassword: "",
     terms: false,
@@ -53,6 +55,8 @@ export default function Signup() {
 
     if (!formData.name.trim()) newErrors.name = "Full name is required";
     if (!formData.email.trim()) newErrors.email = "Email is required";
+    if (!formData.gender.trim()) newErrors.gender = "Gender is required";
+    if (!formData.dob.trim()) newErrors.dob = "Date of Birth is required";
     if (formData.password.length < 8) newErrors.password = "Password must be at least 8 characters";
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match";
@@ -74,6 +78,8 @@ export default function Signup() {
         body: JSON.stringify({
           name: formData.name.trim(),
           email: formData.email.trim(),
+          gender: formData.gender,
+          dob: formData.dob,
           password: formData.password,
         }),
       });
@@ -136,6 +142,41 @@ export default function Signup() {
           {fieldErrors.email && (
             <p className="text-sm text-destructive">{fieldErrors.email}</p>
           )}
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="gender">Gender</Label>
+            <select
+              id="gender"
+              name="gender"
+              value={formData.gender}
+              onChange={(e) => handleChange(e as any)}
+              className={`flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${fieldErrors.gender ? "border-destructive" : ""}`}
+            >
+              <option value="" disabled>Select Gender</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+            {fieldErrors.gender && (
+              <p className="text-sm text-destructive">{fieldErrors.gender}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="dob">Date of Birth</Label>
+            <Input
+              id="dob"
+              name="dob"
+              type="date"
+              value={formData.dob}
+              onChange={handleChange}
+              className={`h-11 ${fieldErrors.dob ? "border-destructive" : ""}`}
+            />
+            {fieldErrors.dob && (
+              <p className="text-sm text-destructive">{fieldErrors.dob}</p>
+            )}
+          </div>
         </div>
 
         <div className="space-y-2">

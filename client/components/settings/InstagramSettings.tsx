@@ -178,7 +178,7 @@ export default function InstagramSettings() {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="relative overflow-hidden glass-card border-white/10 rounded-[2.5rem] shadow-2xl bg-black/60">
+      <div className="relative overflow-hidden glass-card border-white/10 rounded-[2.5rem] shadow-2xl bg-background/60">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-pink-500/5 rounded-full blur-[120px] -z-10 animate-pulse-slow" />
         <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-purple-500/5 rounded-full blur-[100px] -z-10" />
 
@@ -236,7 +236,7 @@ export default function InstagramSettings() {
          </div>
 
          {/* Right Section - Interaction Area */}
-            <div className="p-8 md:p-12 lg:p-16 flex-1 flex flex-col justify-center relative bg-black/20 backdrop-blur-sm">
+            <div className="p-8 md:p-12 lg:p-16 flex-1 flex flex-col justify-center relative bg-muted/20 backdrop-blur-sm">
                {serviceDown && (
                  <div className="mb-8 flex items-center gap-4 p-5 rounded-2xl bg-red-500/10 border border-red-500/20 animate-in slide-in-from-top duration-500">
                    <WifiOff className="h-6 w-6 text-red-500 shrink-0" />
@@ -252,7 +252,7 @@ export default function InstagramSettings() {
                    <div className="relative group">
                       <div className="absolute -inset-0.5 bg-gradient-to-br from-pink-500/20 to-transparent rounded-[3rem] blur-2xl opacity-30 group-hover:opacity-60 transition duration-1000" />
                       
-                      <div className="relative p-8 md:p-12 rounded-[3.5rem] bg-zinc-950/80 border border-white/10 overflow-hidden">
+                      <div className="relative p-8 md:p-12 rounded-[3.5rem] bg-muted/80 border border-border/50 overflow-hidden">
                          <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[radial-gradient(circle_at_2px_2px,#fff_1px,transparent_0)] bg-[size:32px_32px]" />
                          
                          <div className="flex flex-col gap-10 relative z-10">
@@ -295,7 +295,7 @@ export default function InstagramSettings() {
                    </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-xl mx-auto w-full">
-                     <div className="p-6 rounded-3xl bg-zinc-900/40 border border-white/5 flex items-center justify-between group cursor-default">
+                     <div className="p-6 rounded-3xl bg-muted/40 border border-border/50 flex items-center justify-between group cursor-default">
                         <div className="space-y-1">
                            <p className="text-[9px] font-black text-emerald-500/50 uppercase tracking-widest">SESSION STATUS</p>
                            <p className="text-xs font-black text-foreground">Active & Verified</p>
@@ -303,7 +303,7 @@ export default function InstagramSettings() {
                         <CheckCircle2 className="h-4 w-4 text-emerald-500/20 group-hover:text-emerald-500 transition-colors" />
                      </div>
                      <div
-                        className="p-6 rounded-3xl bg-zinc-900/40 border border-white/5 flex items-center justify-between group cursor-pointer hover:border-blue-500/30 transition-all"
+                        className="p-6 rounded-3xl bg-muted/40 border border-border/50 flex items-center justify-between group cursor-pointer hover:border-blue-500/30 transition-all"
                         onClick={() => syncMutation.mutate()}
                       >
                         <div className="space-y-1">
@@ -369,7 +369,7 @@ export default function InstagramSettings() {
                            placeholder="your.username"
                            autoComplete="username"
                            disabled={isBusy}
-                           className="h-20 pl-14 rounded-[1.5rem] bg-zinc-900/60 border-white/5 focus:bg-zinc-950 focus:ring-pink-500 text-center text-2xl font-black tracking-tight shadow-inner transition-all relative z-0"
+                           className="h-20 pl-14 rounded-[1.5rem] bg-muted/60 border-border/50 focus:bg-background focus:ring-pink-500 text-center text-2xl font-black tracking-tight shadow-inner transition-all relative z-0"
                          />
                       </div>
                     </div>
@@ -387,7 +387,7 @@ export default function InstagramSettings() {
                            placeholder="••••••••••"
                            autoComplete="current-password"
                            disabled={isBusy}
-                           className="h-20 rounded-[1.5rem] bg-zinc-900/60 border-white/5 focus:bg-zinc-950 focus:ring-pink-500 text-center text-2xl font-black shadow-inner transition-all relative z-0 pr-14"
+                           className="h-20 rounded-[1.5rem] bg-muted/60 border-border/50 focus:bg-background focus:ring-pink-500 text-center text-2xl font-black shadow-inner transition-all relative z-0 pr-14"
                          />
                          <button
                            type="button"
@@ -414,7 +414,7 @@ export default function InstagramSettings() {
                              onKeyDown={(e) => e.key === "Enter" && handleConnect()}
                              placeholder="Enter 6-digit code"
                              disabled={isBusy}
-                             className="h-20 rounded-[1.5rem] bg-zinc-900/60 border-amber-500/20 focus:ring-amber-500 text-center text-3xl font-black tracking-[0.3em] shadow-inner relative z-0"
+                             className="h-20 rounded-[1.5rem] bg-muted/60 border-amber-500/20 focus:ring-amber-500 text-center text-3xl font-black tracking-[0.3em] shadow-inner relative z-0"
                              maxLength={6}
                            />
                         </div>
