@@ -40,14 +40,15 @@ export default function Signup() {
   };
 
   // Password strength
-  const passwordStrength =
-    formData.password.length === 0
-      ? 0
-      : formData.password.length < 8
-      ? 1
-      : formData.password.length < 12
-      ? 2
-      : 3;
+  const checkStrength = (p: string) => {
+    if (!p) return 0;
+    let s = 0;
+    if (p.length >= 8) s += 1;
+    if (/[A-Z]/.test(p) && /[0-9]/.test(p)) s += 1;
+    if (/[^A-Za-z0-9]/.test(p) && p.length >= 10) s += 1;
+    return s;
+  };
+  const passwordStrength = checkStrength(formData.password);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +58,16 @@ export default function Signup() {
     if (!formData.email.trim()) newErrors.email = "Email is required";
     if (!formData.gender.trim()) newErrors.gender = "Gender is required";
     if (!formData.dob.trim()) newErrors.dob = "Date of Birth is required";
-    if (formData.password.length < 8) newErrors.password = "Password must be at least 8 characters";
+    const pass = formData.password;
+    if (pass.length < 8) {
+      newErrors.password = "Password must be at least 8 characters";
+    } else if (!/[A-Z]/.test(pass)) {
+      newErrors.password = "Password must contain at least one uppercase letter";
+    } else if (!/[0-9]/.test(pass)) {
+      newErrors.password = "Password must contain at least one number";
+    } else if (!/[^A-Za-z0-9]/.test(pass)) {
+      newErrors.password = "Password must contain at least one special character";
+    }
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match";
     }
