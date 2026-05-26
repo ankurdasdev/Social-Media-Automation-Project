@@ -39,8 +39,21 @@ export default function ResetPassword() {
       return;
     }
     
-    if (formData.newPassword.length < 8) {
+    const pass = formData.newPassword;
+    if (pass.length < 8) {
       setError("Password must be at least 8 characters.");
+      return;
+    }
+    if (!/[A-Z]/.test(pass)) {
+      setError("Password must contain at least one uppercase letter.");
+      return;
+    }
+    if (!/[0-9]/.test(pass)) {
+      setError("Password must contain at least one number.");
+      return;
+    }
+    if (!/[^A-Za-z0-9]/.test(pass)) {
+      setError("Password must contain at least one special character.");
       return;
     }
 

@@ -93,14 +93,15 @@ export default function Profile() {
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  const passwordStrength =
-    password.length === 0
-      ? 0
-      : password.length < 8
-      ? 1
-      : password.length < 12
-      ? 2
-      : 3;
+  const checkStrength = (p: string) => {
+    if (!p) return 0;
+    let s = 0;
+    if (p.length >= 8) s += 1;
+    if (/[A-Z]/.test(p) && /[0-9]/.test(p)) s += 1;
+    if (/[^A-Za-z0-9]/.test(p) && p.length >= 10) s += 1;
+    return s;
+  };
+  const passwordStrength = checkStrength(password);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,6 +110,12 @@ export default function Profile() {
     if (password) {
       if (password.length < 8) {
         newErrors.password = "Password must be at least 8 characters";
+      } else if (!/[A-Z]/.test(password)) {
+        newErrors.password = "Password must contain at least one uppercase letter";
+      } else if (!/[0-9]/.test(password)) {
+        newErrors.password = "Password must contain at least one number";
+      } else if (!/[^A-Za-z0-9]/.test(password)) {
+        newErrors.password = "Password must contain at least one special character";
       }
       if (password !== confirmPassword) {
         newErrors.confirmPassword = "Passwords do not match";
