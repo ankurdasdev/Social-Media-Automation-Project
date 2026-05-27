@@ -102,7 +102,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
     queryKey: ["instagram-status", userId],
     queryFn: async () => {
       const res = await fetch(`/api/instagram/status?userId=${userId}`);
-      return res.json() as Promise<{ connected: boolean; username?: string }>;
+      return res.json() as Promise<{ isConnected: boolean; username?: string }>;
     },
     refetchInterval: 30000,
   });
@@ -121,138 +121,139 @@ export default function AppLayout({ children }: AppLayoutProps) {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)] opacity-20" />
       </div>
 
-      {/* Sidebar - Desktop */}
-      <aside className="hidden md:flex flex-col w-72 h-screen border-r border-border/40 bg-card/30 backdrop-blur-2xl px-6 py-10 relative z-30 overflow-hidden">
+      <aside className="hidden md:flex flex-col w-72 h-screen border-r border-border/40 bg-card/30 backdrop-blur-2xl px-6 py-10 relative z-30 overflow-y-auto overflow-x-hidden">
         {/* Sidebar Noise/Texture */}
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')] brightness-100 contrast-150" />
         
-        {/* Logo Section */}
-        <div className="mb-12 relative">
-          <Link to="/dashboard" className="flex items-center gap-4 group">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary via-primary/80 to-secondary flex items-center justify-center shadow-2xl shadow-primary/20 group-hover:scale-105 transition-all duration-500">
-              <Zap className="w-7 h-7 text-white fill-white" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-2xl font-black tracking-tighter leading-none">CAST<span className="text-primary italic">HUB</span></span>
-              <span className="text-[10px] font-black tracking-[0.3em] text-muted-foreground uppercase opacity-70">Automation Dashboard</span>
-            </div>
-          </Link>
-        </div>
+        {/* Scrollable Flex Wrapper to support sticky bottom sections without browser clipping on zoom */}
+        <div className="flex flex-col min-h-full w-full relative z-10">
+          {/* Logo Section */}
+          <div className="mb-12 relative">
+            <Link to="/dashboard" className="flex items-center gap-4 group">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary via-primary/80 to-secondary flex items-center justify-center shadow-2xl shadow-primary/20 group-hover:scale-105 transition-all duration-500">
+                <Zap className="w-7 h-7 text-white fill-white" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-2xl font-black tracking-tighter leading-none">CAST<span className="text-primary italic">HUB</span></span>
+                <span className="text-[10px] font-black tracking-[0.3em] text-muted-foreground uppercase opacity-70">Automation Dashboard</span>
+              </div>
+            </Link>
+          </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 space-y-2 relative">
-          <p className="px-4 mb-4 text-[10px] font-black text-muted-foreground/50 uppercase tracking-[0.2em]">Navigation</p>
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.href;
-            const targetId = item.label === "Contacts" ? "tutorial-contacts-nav" : 
-                             item.label === "Controller" ? "tutorial-controller-nav" : undefined;
-            return (
-              <Link
-                key={item.href}
-                to={item.href}
-                id={targetId}
-                className={cn(
-                  "flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 group relative",
-                  isActive 
-                    ? "bg-primary/10 text-primary shadow-inner" 
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
-                )}
-              >
-                <Icon className={cn("w-5 h-5 transition-transform group-hover:scale-110", isActive && "text-primary")} />
-                <span className="font-bold text-sm tracking-tight">{item.label}</span>
-                {isActive && (
-                  <div className="absolute right-4 w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_rgba(139,92,246,0.8)]" />
-                )}
-              </Link>
-            );
-          })}
-          
-          <button
-            id="tutorial-restart-btn"
-            onClick={startTutorial}
-            className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 group relative text-muted-foreground hover:text-foreground hover:bg-muted/30"
-          >
-            <div className="w-5 h-5 flex items-center justify-center">
-              <Sparkles className="w-4 h-4 transition-transform group-hover:scale-110 text-amber-500" />
-            </div>
-            <span className="font-bold text-sm tracking-tight text-amber-500/90 group-hover:text-amber-500">View Tutorial</span>
-          </button>
-        </nav>
+          {/* Navigation */}
+          <nav className="flex-1 space-y-2 relative">
+            <p className="px-4 mb-4 text-[10px] font-black text-muted-foreground/50 uppercase tracking-[0.2em]">Navigation</p>
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = location.pathname === item.href;
+              const targetId = item.label === "Contacts" ? "tutorial-contacts-nav" : 
+                               item.label === "Controller" ? "tutorial-controller-nav" : undefined;
+              return (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  id={targetId}
+                  className={cn(
+                    "flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 group relative",
+                    isActive 
+                      ? "bg-primary/10 text-primary shadow-inner" 
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                  )}
+                >
+                  <Icon className={cn("w-5 h-5 transition-transform group-hover:scale-110", isActive && "text-primary")} />
+                  <span className="font-bold text-sm tracking-tight">{item.label}</span>
+                  {isActive && (
+                    <div className="absolute right-4 w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_rgba(139,92,246,0.8)]" />
+                  )}
+                </Link>
+              );
+            })}
+            
+            <button
+              id="tutorial-restart-btn"
+              onClick={startTutorial}
+              className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 group relative text-muted-foreground hover:text-foreground hover:bg-muted/30"
+            >
+              <div className="w-5 h-5 flex items-center justify-center">
+                <Sparkles className="w-4 h-4 transition-transform group-hover:scale-110 text-amber-500" />
+              </div>
+              <span className="font-bold text-sm tracking-tight text-amber-500/90 group-hover:text-amber-500">View Tutorial</span>
+            </button>
+          </nav>
 
-        {/* Status Indicators */}
-        <div className="mt-auto pt-10 border-t border-border/30 space-y-6 relative">
-             <div className="space-y-4">
-                <p className="px-4 text-[10px] font-black text-muted-foreground/50 uppercase tracking-[0.2em]">Connection Status</p>
-                <div className="space-y-2 px-2">
-                    {/* Drive Status */}
-                    <div className={cn(
-                        "flex items-center justify-between p-3 rounded-2xl border transition-all",
-                        googleStatus?.connected ? "bg-blue-500/5 border-blue-500/20" : "bg-muted/10 border-border/20"
-                    )}>
-                        <div className="flex items-center gap-3">
-                            <div className={cn("w-2 h-2 rounded-full", googleStatus?.connected ? (googleStatus.needsReauth ? "bg-yellow-500 animate-pulse" : "bg-blue-500") : "bg-muted-foreground/30")} />
-                            <span className="text-[10px] font-black uppercase tracking-widest">GOOGLE DRIVE</span>
-                        </div>
-                        {googleStatus?.connected && <ShieldCheck className="w-3.5 h-3.5 text-blue-500" />}
-                    </div>
+          {/* Status Indicators */}
+          <div className="mt-auto pt-10 border-t border-border/30 space-y-6 relative">
+               <div className="space-y-4">
+                  <p className="px-4 text-[10px] font-black text-muted-foreground/50 uppercase tracking-[0.2em]">Connection Status</p>
+                  <div className="space-y-2 px-2">
+                      {/* Drive Status */}
+                      <div className={cn(
+                          "flex items-center justify-between p-3 rounded-2xl border transition-all",
+                          googleStatus?.connected ? "bg-blue-500/5 border-blue-500/20" : "bg-muted/10 border-border/20"
+                      )}>
+                          <div className="flex items-center gap-3">
+                              <div className={cn("w-2 h-2 rounded-full", googleStatus?.connected ? (googleStatus.needsReauth ? "bg-yellow-500 animate-pulse" : "bg-blue-500") : "bg-muted-foreground/30")} />
+                              <span className="text-[10px] font-black uppercase tracking-widest">GOOGLE DRIVE</span>
+                          </div>
+                          {googleStatus?.connected && <ShieldCheck className="w-3.5 h-3.5 text-blue-500" />}
+                      </div>
 
-                    {/* WhatsApp Status */}
-                    <div className={cn(
-                        "flex items-center justify-between p-3 rounded-2xl border transition-all",
-                        waStatus?.isConnected ? "bg-emerald-500/5 border-emerald-500/20" : "bg-muted/10 border-border/20"
-                    )}>
-                        <div className="flex items-center gap-3">
-                            <div className={cn("w-2 h-2 rounded-full animate-pulse", waStatus?.isConnected ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-muted-foreground/30")} />
-                            <span className="text-[10px] font-black uppercase tracking-widest text-foreground">WHATSAPP</span>
-                        </div>
-                        {waStatus?.isConnected && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />}
-                    </div>
+                      {/* WhatsApp Status */}
+                      <div className={cn(
+                          "flex items-center justify-between p-3 rounded-2xl border transition-all",
+                          waStatus?.isConnected ? "bg-emerald-500/5 border-emerald-500/20" : "bg-muted/10 border-border/20"
+                      )}>
+                          <div className="flex items-center gap-3">
+                              <div className={cn("w-2 h-2 rounded-full animate-pulse", waStatus?.isConnected ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-muted-foreground/30")} />
+                              <span className="text-[10px] font-black uppercase tracking-widest text-foreground">WHATSAPP</span>
+                          </div>
+                          {waStatus?.isConnected && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />}
+                      </div>
 
-                    {/* Instagram Status */}
-                    <div className={cn(
-                        "flex items-center justify-between p-3 rounded-2xl border transition-all",
-                        igStatus?.connected ? "bg-pink-500/5 border-pink-500/20" : "bg-muted/10 border-border/20"
-                    )}>
-                        <div className="flex items-center gap-3">
-                            <div className={cn("w-2 h-2 rounded-full animate-pulse", igStatus?.connected ? "bg-pink-500 shadow-[0_0_8px_rgba(236,72,153,0.5)]" : "bg-muted-foreground/30")} />
-                            <span className="text-[10px] font-black uppercase tracking-widest text-foreground">INSTAGRAM</span>
-                        </div>
-                        {igStatus?.connected && <Instagram className="w-3.5 h-3.5 text-pink-500" />}
-                    </div>
-                </div>
-             </div>
+                      {/* Instagram Status */}
+                      <div className={cn(
+                          "flex items-center justify-between p-3 rounded-2xl border transition-all",
+                          igStatus?.isConnected ? "bg-pink-500/5 border-pink-500/20" : "bg-muted/10 border-border/20"
+                      )}>
+                          <div className="flex items-center gap-3">
+                              <div className={cn("w-2 h-2 rounded-full animate-pulse", igStatus?.isConnected ? "bg-pink-500 shadow-[0_0_8px_rgba(236,72,153,0.5)]" : "bg-muted-foreground/30")} />
+                              <span className="text-[10px] font-black uppercase tracking-widest text-foreground">INSTAGRAM</span>
+                          </div>
+                          {igStatus?.isConnected && <Instagram className="w-3.5 h-3.5 text-pink-500" />}
+                      </div>
+                  </div>
+               </div>
 
-             {/* User Section */}
-             <div className="flex items-center justify-between gap-3 p-3 bg-muted/20 border border-border/30 rounded-2xl">
-                <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary/30 to-secondary/30 border border-white/10 flex items-center justify-center shrink-0">
-                        <User className="w-5 h-5" />
-                    </div>
-                    <div className="flex flex-col min-w-0">
-                        <span className="text-xs font-black truncate">{currentUser?.name || "Anonymous User"}</span>
-                        <span className="text-[10px] font-bold text-muted-foreground truncate uppercase tracking-[0.05em]">{currentUser?.email?.split('@')[0]}</span>
-                    </div>
-                </div>
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-muted/50">
-                            <SlidersHorizontal className="w-4 h-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" side="right" className="glass-card w-48 p-2 rounded-2xl">
-                         <DropdownMenuItem asChild className="rounded-xl gap-2 cursor-pointer font-bold mb-1 hover:bg-muted/50">
-                            <Link to="/profile" className="flex items-center gap-2 w-full">
-                                <User className="w-4 h-4" /> View Profile
-                            </Link>
-                         </DropdownMenuItem>
-                         <DropdownMenuSeparator className="bg-border/30 mx-2" />
-                         <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive hover:bg-destructive/10 rounded-xl gap-2 cursor-pointer font-bold">
-                            <LogOut className="w-4 h-4" /> Logout System
-                         </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-             </div>
+               {/* User Section */}
+               <div className="flex items-center justify-between gap-3 p-3 bg-muted/20 border border-border/30 rounded-2xl">
+                  <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary/30 to-secondary/30 border border-white/10 flex items-center justify-center shrink-0">
+                          <User className="w-5 h-5" />
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                          <span className="text-xs font-black truncate">{currentUser?.name || "Anonymous User"}</span>
+                          <span className="text-[10px] font-bold text-muted-foreground truncate uppercase tracking-[0.05em]">{currentUser?.email?.split('@')[0]}</span>
+                      </div>
+                  </div>
+                  <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-muted/50">
+                              <SlidersHorizontal className="w-4 h-4" />
+                          </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" side="right" className="glass-card w-48 p-2 rounded-2xl">
+                           <DropdownMenuItem asChild className="rounded-xl gap-2 cursor-pointer font-bold mb-1 hover:bg-muted/50">
+                              <Link to="/profile" className="flex items-center gap-2 w-full">
+                                  <User className="w-4 h-4" /> View Profile
+                              </Link>
+                           </DropdownMenuItem>
+                           <DropdownMenuSeparator className="bg-border/30 mx-2" />
+                           <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive hover:bg-destructive/10 rounded-xl gap-2 cursor-pointer font-bold">
+                              <LogOut className="w-4 h-4" /> Logout System
+                           </DropdownMenuItem>
+                      </DropdownMenuContent>
+                  </DropdownMenu>
+          </div>
         </div>
       </aside>
 
