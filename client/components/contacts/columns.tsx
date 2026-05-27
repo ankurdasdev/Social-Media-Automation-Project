@@ -462,6 +462,7 @@ export const columns: ColumnDef<Contact>[] = [
           value={row.original.whatsapp} 
           onUpdate={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { whatsapp: val })}
           placeholder="+91..."
+          type="whatsapp"
         />
       </div>
     ),
@@ -476,6 +477,7 @@ export const columns: ColumnDef<Contact>[] = [
           value={row.original.email} 
           onUpdate={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { email: val })}
           placeholder="id@host.com"
+          type="gmail"
         />
       </div>
     ),
@@ -490,6 +492,7 @@ export const columns: ColumnDef<Contact>[] = [
           value={row.original.instaHandle} 
           onUpdate={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { instaHandle: val })}
           placeholder="@handle"
+          type="instagram"
         />
       </div>
     ),

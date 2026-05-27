@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { X, Plus, Search, FileText, Sparkles, Wand2, Loader2 } from "lucide-react";
+import { X, Plus, Search, FileText, Sparkles, Wand2, Loader2, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RichTextarea } from "@/components/ui/rich-textarea";
 import { DriveFilePicker } from "../drive/DriveFilePicker";
@@ -35,12 +35,14 @@ export function EditableTextCell({
   value, 
   onUpdate,
   placeholder = "—",
-  readOnly = false
+  readOnly = false,
+  type
 }: { 
   value: string, 
   onUpdate?: (val: string) => void,
   placeholder?: string,
-  readOnly?: boolean
+  readOnly?: boolean,
+  type?: "whatsapp" | "gmail" | "instagram"
 }) {
   const [localValue, setLocalValue] = React.useState(value || "");
 
@@ -57,15 +59,44 @@ export function EditableTextCell({
   }
 
   return (
-    <Input
-      value={localValue}
-      onChange={(e) => setLocalValue(e.target.value)}
-      onBlur={() => {
-        if (localValue !== value && onUpdate) onUpdate(localValue);
-      }}
-      placeholder={placeholder}
-      className="h-8 w-full bg-transparent border-transparent hover:border-border/50 focus:bg-background focus:ring-1 focus:ring-primary px-2 text-sm transition-all"
-    />
+    <div className="relative flex items-center w-full group">
+      <Input
+        value={localValue}
+        onChange={(e) => setLocalValue(e.target.value)}
+        onBlur={() => {
+          if (localValue !== value && onUpdate) onUpdate(localValue);
+        }}
+        placeholder={placeholder}
+        className={cn(
+          "h-8 w-full bg-transparent border-transparent hover:border-border/50 focus:bg-background focus:ring-1 focus:ring-primary pl-2 text-sm transition-all",
+          localValue && type ? "pr-8" : "pr-2"
+        )}
+      />
+      {localValue && type && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            let url = "";
+            if (type === "whatsapp") {
+              const cleanNumber = localValue.replace(/[^0-9]/g, "");
+              url = `https://wa.me/${cleanNumber}`;
+            } else if (type === "gmail") {
+              url = `https://mail.google.com/mail/u/0/#search/${encodeURIComponent(localValue)}`;
+            } else if (type === "instagram") {
+              const cleanHandle = localValue.replace(/^@/, "").trim();
+              url = `https://ig.me/m/${cleanHandle}`;
+            }
+            if (url) {
+              window.open(url, "_blank", "noopener,noreferrer");
+            }
+          }}
+          className="absolute right-2 opacity-0 group-hover:opacity-100 text-muted-foreground/60 hover:text-primary transition-all p-1 rounded hover:bg-muted/60 z-10"
+          title={`Launch in ${type === "whatsapp" ? "WhatsApp" : type === "gmail" ? "Gmail" : "Instagram"}`}
+        >
+          <ExternalLink className="w-3.5 h-3.5" />
+        </button>
+      )}
+    </div>
   );
 }
 
