@@ -12,10 +12,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, ChevronDown, Zap, RefreshCw, Plus, Trash2, X, Sparkles, MessageCircle, Mail, Instagram, Maximize2, Minimize2, Filter } from "lucide-react";
+import { Search, ChevronDown, Zap, RefreshCw, Plus, Trash2, X, Sparkles, MessageCircle, Mail, Instagram, Maximize2, Minimize2, Filter, Upload } from "lucide-react";
 import { Contact } from "@shared/api";
 import { AISearchBar } from "./AISearchBar";
 import { AdvancedColorPicker } from "./AdvancedColorPicker";
+import { useQueryClient } from "@tanstack/react-query";
+import { ExcelImportDialog } from "./ExcelImportDialog";
 import {
   Dialog,
   DialogContent,
@@ -76,6 +78,19 @@ export function DataTableToolbar<TData>({
   const [searchMode, setSearchMode] = useState<"normal" | "ai">("normal");
   const [showPlatformFilters, setShowPlatformFilters] = useState(false);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  const [isExcelImportOpen, setIsExcelImportOpen] = useState(false);
+
+  const queryClient = useQueryClient();
+
+  const handleImportComplete = (importedSheets: string[]) => {
+    queryClient.invalidateQueries({ queryKey: ["contacts"] });
+    importedSheets.forEach((sheet) => {
+      onAddSheet?.(sheet);
+    });
+    if (importedSheets.length > 0 && onTabChange) {
+      onTabChange(importedSheets[0]);
+    }
+  };
 
   const rawData = table.options.data as any[];
   const dynamicSheets = useMemo(() => {
@@ -244,6 +259,17 @@ export function DataTableToolbar<TData>({
           <span className="hidden md:inline">REFRESH</span>
         </Button>
 
+        {/* Import Excel */}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setIsExcelImportOpen(true)}
+          className="h-11 px-4 rounded-xl border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/10 text-emerald-500 font-black text-[9px] uppercase tracking-widest gap-2 transition-all active:scale-95 group shrink-0"
+        >
+          <Upload className="w-3.5 h-3.5" />
+          <span>IMPORT EXCEL</span>
+        </Button>
+
         {/* Status Filters */}
         <Button
           variant="outline"
@@ -406,6 +432,12 @@ export function DataTableToolbar<TData>({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ExcelImportDialog
+        isOpen={isExcelImportOpen}
+        onClose={() => setIsExcelImportOpen(false)}
+        onImportComplete={handleImportComplete}
+      />
     </div>
   );
 }

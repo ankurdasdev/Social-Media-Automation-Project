@@ -66,7 +66,7 @@ export const handleUpdateTemplate: RequestHandler = async (req, res) => {
   }
 
   try {
-    const template = await updateTemplate(userId, id, body);
+    const template = await updateTemplate(userId as string, id as string, body);
     if (!template) {
       res.status(404).json({ error: "Template not found" });
       return;
@@ -89,7 +89,7 @@ export const handleDeleteTemplate: RequestHandler = async (req, res) => {
   }
 
   try {
-    const deleted = await deleteTemplate(userId, id);
+    const deleted = await deleteTemplate(userId as string, id as string);
     if (!deleted) {
       res.status(404).json({ error: "Template not found" });
       return;
