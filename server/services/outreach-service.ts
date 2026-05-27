@@ -157,13 +157,22 @@ async function handleWhatsAppOutreach(userId: string, contact: Contact) {
   const templateIds = Array.isArray(contact.templateSelectionWP) ? contact.templateSelectionWP : [];
   for (const tId of templateIds) {
     const template = await queryOne<any>(
-      "SELECT content, is_attachment, drive_file_id, drive_file_name FROM templates WHERE id = $1 AND user_id = $2",
+      "SELECT content, is_attachment, drive_file_id, drive_file_name, drive_attachments FROM templates WHERE id = $1 AND user_id = $2",
       [tId, userId]
     );
     if (!template) continue;
 
-    if (template.is_attachment && template.drive_file_id) {
-       await sendDriveFile(template.drive_file_id, template.drive_file_name);
+    if (template.is_attachment) {
+       const attachments = template.drive_attachments || (template.drive_file_id ? [{
+         id: template.drive_file_id,
+         name: template.drive_file_name || "",
+       }] : []);
+       
+       for (const file of attachments) {
+         if (file.id) {
+           await sendDriveFile(file.id, file.name);
+         }
+       }
     } else if (template.content) {
        const message = injectVariables(template.content, contact, "whatsapp");
        await sendWA(instance.instance_name, jid, message);
@@ -318,14 +327,61 @@ async function handleEmailOutreach(userId: string, contact: Contact) {
   const templateIds = Array.isArray(contact.templateSelectionGmail) ? contact.templateSelectionGmail : [];
   for (const tId of templateIds) {
     const template = await queryOne<any>(
-      "SELECT content, email_subject FROM templates WHERE id = $1 AND user_id = $2",
+      "SELECT content, email_subject, is_attachment, drive_file_id, drive_file_name, drive_attachments FROM templates WHERE id = $1 AND user_id = $2",
       [tId, userId]
     );
-    if (!template || !template.content) continue;
+    if (!template) continue;
+    if (!template.content && !template.is_attachment) continue;
 
     const subject = template.email_subject || contact.editableGmailSubject || `Casting Outreach: ${contact.project || contact.name || "New Project"}`;
-    const body = injectVariables(template.content, contact, "email");
-    await sendEmail(subject, body);
+    const body = injectVariables(template.content || "", contact, "email");
+    
+    // Prepare attachments for this specific template email
+    const thisTemplateAttachments = [...emailAttachments]; // Start with row attachments
+    
+    if (template.is_attachment) {
+       const attachments = template.drive_attachments || (template.drive_file_id ? [{
+         id: template.drive_file_id,
+         name: template.drive_file_name || "",
+       }] : []);
+       
+       for (const file of attachments) {
+         try {
+           const response = await drive.files.get({ fileId: file.id, alt: "media" }, { responseType: "arraybuffer" });
+           const meta = await drive.files.get({ fileId: file.id, fields: "mimeType" });
+           thisTemplateAttachments.push({
+             filename: file.name,
+             content: Buffer.from(response.data as ArrayBuffer),
+             mimeType: meta.data.mimeType || "application/octet-stream",
+           });
+         } catch (attachErr: any) {
+           console.warn(`[outreach] Template Email attachment failed for ${file.name}:`, attachErr.message);
+         }
+       }
+    }
+
+    const raw = await buildMimeMessage({
+      from: `"${contact.name || "CastHub"}" <${from}>`,
+      to,
+      subject,
+      body,
+      attachments: thisTemplateAttachments,
+    });
+    
+    try {
+      await gmail.users.messages.send({ userId: "me", requestBody: { raw } });
+    } catch (err: any) {
+      const isScope = err?.message?.toLowerCase().includes("insufficient") || 
+                      err?.code === 403 ||
+                      err?.errors?.[0]?.reason === "insufficientPermissions";
+      if (isScope) {
+        throw new Error(
+          "GMAIL_SCOPE_ERROR: Your Google account permissions are insufficient. " +
+          "Please go to Settings → Google Drive & Gmail → Disconnect, then reconnect."
+        );
+      }
+      throw new Error(`Gmail send failed: ${err.message}`);
+    }
   }
   
   return { success: true };
@@ -353,15 +409,24 @@ async function handleInstagramOutreach(userId: string, contact: Contact) {
   const templateIds = Array.isArray(contact.templateSelectionIG) ? contact.templateSelectionIG : [];
   for (const tId of templateIds) {
     const template = await queryOne<any>(
-      "SELECT content, is_attachment, drive_file_id, drive_file_name FROM templates WHERE id = $1 AND user_id = $2",
+      "SELECT content, is_attachment, drive_file_id, drive_file_name, drive_attachments FROM templates WHERE id = $1 AND user_id = $2",
       [tId, userId]
     );
     if (!template) continue;
 
-    if (template.is_attachment && template.drive_file_id) {
-       const msg = `Attachment: ${stripExtension(template.drive_file_name)} - https://drive.google.com/uc?export=download&id=${template.drive_file_id}`;
-       await sendIG([handle], msg, session.session_data);
-       await sleep(1500);
+    if (template.is_attachment) {
+       const attachments = template.drive_attachments || (template.drive_file_id ? [{
+         id: template.drive_file_id,
+         name: template.drive_file_name || "",
+       }] : []);
+       
+       for (const file of attachments) {
+         if (file.id) {
+           const msg = `Attachment: ${stripExtension(file.name)} - https://drive.google.com/uc?export=download&id=${file.id}`;
+           await sendIG([handle], msg, session.session_data);
+           await sleep(1500);
+         }
+       }
     } else if (template.content) {
        const message = injectVariables(template.content, contact, "instagram");
        await sendIG([handle], message, session.session_data);

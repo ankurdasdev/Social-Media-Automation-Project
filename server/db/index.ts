@@ -136,6 +136,7 @@ async function runMigrations(): Promise<void> {
     ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS last_scraped TIMESTAMPTZ;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS ingestion_schedule_time TEXT DEFAULT '02:00';
     ALTER TABLE users ADD COLUMN IF NOT EXISTS ingestion_enabled BOOLEAN DEFAULT TRUE;
+    ALTER TABLE templates ADD COLUMN IF NOT EXISTS drive_attachments JSONB DEFAULT '[]'::jsonb;
   `).catch(() => {}); // Ignore if tables don't exist yet — they will be created below
 
   const sql = `
@@ -258,6 +259,7 @@ async function runMigrations(): Promise<void> {
       attachment_detail_text TEXT,
       drive_file_id TEXT,
       drive_file_name TEXT,
+      drive_attachments JSONB DEFAULT '[]',
       created_at TIMESTAMPTZ DEFAULT NOW(),
       updated_at TIMESTAMPTZ DEFAULT NOW()
     );
