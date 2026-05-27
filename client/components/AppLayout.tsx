@@ -20,6 +20,7 @@ import {
   ShieldCheck,
   Zap,
   Instagram,
+  Sparkles,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getOrCreateUserId, clearAuthToken, getCurrentUser } from "@/lib/utils";
@@ -33,6 +34,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { useTutorial } from "./TutorialProvider";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -74,6 +76,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
     document.documentElement.classList.toggle('dark', next);
     localStorage.setItem('casthub-theme', next ? 'dark' : 'light');
   };
+
+  const { startTutorial } = useTutorial();
 
   // ── Global Status Polling ──────────────────────────────────────────────────
   const { data: googleStatus } = useQuery({
@@ -141,10 +145,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.href;
+            const targetId = item.label === "Contacts" ? "tutorial-contacts-nav" : 
+                             item.label === "Controller" ? "tutorial-controller-nav" : undefined;
             return (
               <Link
                 key={item.href}
                 to={item.href}
+                id={targetId}
                 className={cn(
                   "flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 group relative",
                   isActive 
@@ -160,6 +167,17 @@ export default function AppLayout({ children }: AppLayoutProps) {
               </Link>
             );
           })}
+          
+          <button
+            id="tutorial-restart-btn"
+            onClick={startTutorial}
+            className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 group relative text-muted-foreground hover:text-foreground hover:bg-muted/30"
+          >
+            <div className="w-5 h-5 flex items-center justify-center">
+              <Sparkles className="w-4 h-4 transition-transform group-hover:scale-110 text-amber-500" />
+            </div>
+            <span className="font-bold text-sm tracking-tight text-amber-500/90 group-hover:text-amber-500">View Tutorial</span>
+          </button>
         </nav>
 
         {/* Status Indicators */}

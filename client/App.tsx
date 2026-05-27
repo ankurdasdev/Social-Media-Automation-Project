@@ -6,6 +6,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { TutorialProvider } from "./components/TutorialProvider";
 
 // Auth Pages
 import Login from "./pages/Login";
@@ -45,7 +46,8 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <TutorialProvider>
+        <BrowserRouter>
         <Routes>
           {/* Auth Routes */}
           <Route path="/login" element={<Login />} />
@@ -67,6 +69,7 @@ const App = () => (
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
+      </TutorialProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

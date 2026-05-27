@@ -419,12 +419,13 @@ export default function Controller() {
               AI Profiling
             </Button>
             <Button 
+                id="tutorial-automation-run"
                 variant="outline" 
                 onClick={() => setIsAIScheduleOpen(true)} 
                 className="h-12 px-6 rounded-xl font-bold bg-violet-500/5 border-violet-500/20 text-violet-600 gap-2 hover:bg-violet-500/10 transition-all shadow-sm"
             >
               <Clock className="w-4 h-4" />
-              AI Schedule
+              Auto-Scheduler
             </Button>
             <Button 
                 onClick={openAddDialog} 
@@ -597,7 +598,7 @@ export default function Controller() {
               {/* URL */}
               <div className="space-y-3">
                 <Label htmlFor="source-url" className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-                  Endpoint URL (Optional)
+                  Link / URL (Optional)
                 </Label>
                 <Input
                   id="source-url"

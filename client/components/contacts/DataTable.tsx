@@ -163,7 +163,7 @@ export function DataTable<TData, TValue>({
         />
       </div>
       
-      <div className={cn(
+      <div id="tutorial-grid" className={cn(
         "glass-card rounded-[2.5rem] border-white/10 shadow-2xl relative flex-1 flex flex-col min-h-0 overflow-hidden",
         isFullscreen ? "rounded-none border-none bg-card/50" : ""
       )}>

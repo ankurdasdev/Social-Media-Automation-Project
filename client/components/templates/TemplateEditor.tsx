@@ -170,7 +170,7 @@ export function TemplateEditor({
             {template ? "Edit Template" : `New ${categoryLabel} Template`}
           </DialogTitle>
           <DialogDescription className="text-muted-foreground font-medium uppercase tracking-widest text-[10px]">
-             Configure protocol parameters for automated outreach sequences.
+             Create and edit your message templates for automated outreach.
           </DialogDescription>
         </DialogHeader>
 
@@ -189,7 +189,7 @@ export function TemplateEditor({
           {/* Variable Chips */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-                <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Dynamic Injection Tokens</Label>
+                <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Personalization Tags</Label>
                 <span className="text-[10px] font-bold text-primary animate-pulse">DRAG & DROP READY</span>
             </div>
             <div className="flex flex-wrap gap-2.5">
@@ -230,14 +230,14 @@ export function TemplateEditor({
 
           {/* Message Content */}
           <div className="space-y-3">
-            <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Protocol Body</Label>
+            <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Message Content</Label>
             <div className="relative group">
                 <RichTextarea
                   value={content}
                   onChange={(val) => setContent(val)}
                   placeholder={
                     isAttachment
-                      ? "PROTOCOL RESTRICTED: Sending attachment stream."
+                      ? "Message content is hidden while sending an attachment."
                       : "Compose your outreach message here. Use labels for dynamic personalization..."
                   }
                   className={cn(
@@ -258,10 +258,10 @@ export function TemplateEditor({
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <label htmlFor="is-attachment" className="text-sm font-black tracking-tight leading-none cursor-pointer">
-                  ATTACHMENT STREAM
+                  INCLUDE ATTACHMENT
                 </label>
                 <p className="text-[11px] font-medium text-muted-foreground">
-                  Transmit binary data instead of text-based protocol.
+                  Send a file (like a PDF or image) with this message.
                 </p>
               </div>
               <Checkbox
