@@ -57,7 +57,7 @@ const navItems = [
     icon: BarChart3,
   },
   {
-    label: "Settings",
+    label: "Integration Center",
     href: "/settings",
     icon: SlidersHorizontal,
   },
