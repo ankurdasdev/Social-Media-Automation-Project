@@ -40,7 +40,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { RichTextarea } from "@/components/ui/rich-textarea";
 import {
   MessageCircle,
   Instagram,
@@ -613,12 +613,10 @@ export default function Controller() {
                 <Label htmlFor="source-desc" className="text-xs font-black uppercase tracking-widest text-muted-foreground">
                   Description
                 </Label>
-                <Textarea
-                  id="source-desc"
+                <RichTextarea
                   placeholder="Add some notes about this source..."
-                  rows={3}
                   value={formDescription}
-                  onChange={(e) => setFormDescription(e.target.value)}
+                  onChange={(val) => setFormDescription(val)}
                   className="rounded-2xl bg-muted/30 border-border/50 focus:ring-primary font-medium shadow-inner p-5 resize-none"
                 />
               </div>

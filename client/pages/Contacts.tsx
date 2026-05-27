@@ -27,7 +27,7 @@ import { columns } from "@/components/contacts/columns";
 import { useToast } from "@/hooks/use-toast";
 import { getOrCreateUserId } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
+import { RichTextarea } from "@/components/ui/rich-textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DrawerMultiTemplateSelect } from "@/components/contacts/ContactDrawer";
 import { AttachmentCell } from "@/components/contacts/GridCells";
@@ -570,7 +570,7 @@ export default function Contacts() {
                  {newLead.hasCustomMessageWA && (
                     <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
                        <Label className="text-[10px] font-black text-primary uppercase tracking-widest px-1">Custom Message</Label>
-                       <Textarea value={newLead.editableMessageWP} onChange={e => setNewLead({...newLead, editableMessageWP: e.target.value})} className="min-h-[100px] rounded-xl bg-muted/40" />
+                      <RichTextarea value={newLead.editableMessageWP} onChange={val => setNewLead({...newLead, editableMessageWP: val})} className="min-h-[100px] rounded-xl bg-muted/40" />
                     </div>
                  )}
               </TabsContent>
@@ -612,7 +612,7 @@ export default function Contacts() {
                  {newLead.hasCustomMessageEmail && (
                     <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
                        <Label className="text-[10px] font-black text-primary uppercase tracking-widest px-1">Custom Body</Label>
-                       <Textarea value={newLead.editableMessageGmail} onChange={e => setNewLead({...newLead, editableMessageGmail: e.target.value})} className="min-h-[100px] rounded-xl bg-muted/40" />
+                      <RichTextarea value={newLead.editableMessageGmail} onChange={val => setNewLead({...newLead, editableMessageGmail: val})} className="min-h-[100px] rounded-xl bg-muted/40" />
                     </div>
                  )}
               </TabsContent>
@@ -650,7 +650,7 @@ export default function Contacts() {
                  {newLead.hasCustomMessageIG && (
                     <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
                        <Label className="text-[10px] font-black text-primary uppercase tracking-widest px-1">Custom Message</Label>
-                       <Textarea value={newLead.editableMessageIG} onChange={e => setNewLead({...newLead, editableMessageIG: e.target.value})} className="min-h-[100px] rounded-xl bg-muted/40" />
+                      <RichTextarea value={newLead.editableMessageIG} onChange={val => setNewLead({...newLead, editableMessageIG: val})} className="min-h-[100px] rounded-xl bg-muted/40" />
                     </div>
                  )}
               </TabsContent>

@@ -10,14 +10,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { RichTextarea } from "@/components/ui/rich-textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Paperclip } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Template, CreateTemplateRequest, UpdateTemplateRequest } from "@shared/api";
 import { useQueryClient } from "@tanstack/react-query";
-import { getOrCreateUserId } from "@/lib/utils";
+import { getOrCreateUserId, cn } from "@/lib/utils";
 import { DriveFilePicker } from "@/components/drive/DriveFilePicker";
 import type { DriveFile } from "@shared/api";
 
@@ -232,19 +232,18 @@ export function TemplateEditor({
           <div className="space-y-3">
             <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Protocol Body</Label>
             <div className="relative group">
-                <Textarea
-                  ref={textareaRef}
+                <RichTextarea
                   value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; }}
-                  onDrop={handleDrop}
-                  disabled={isAttachment}
+                  onChange={(val) => setContent(val)}
                   placeholder={
                     isAttachment
                       ? "PROTOCOL RESTRICTED: Sending attachment stream."
                       : "Compose your outreach message here. Use labels for dynamic personalization..."
                   }
-                  className="min-h-[200px] rounded-3xl bg-muted/30 border-border/50 focus:ring-primary font-medium p-8 shadow-inner resize-none leading-relaxed transition-all"
+                  className={cn(
+                    "min-h-[200px] rounded-3xl bg-muted/30 border-border/50 focus:ring-primary font-medium shadow-inner transition-all",
+                    isAttachment ? "opacity-50 pointer-events-none" : ""
+                  )}
                 />
                 {!isAttachment && (
                   <div className="absolute bottom-4 right-6 text-[10px] font-black text-muted-foreground/50 tracking-widest uppercase pointer-events-none">

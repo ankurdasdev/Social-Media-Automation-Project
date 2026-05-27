@@ -10,6 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { RichTextarea } from "@/components/ui/rich-textarea";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
@@ -262,10 +263,12 @@ function MessageEditor({
               </Button>
             </div>
           ) : (
-            <Textarea
+            <RichTextarea
               value={localText}
-              onChange={(e) => setLocalText(e.target.value)}
-              onBlur={() => { if (localText !== value) onChange(localText); }}
+              onChange={(val) => {
+                setLocalText(val);
+                onChange(val);
+              }}
               placeholder={placeholder}
               className="min-h-[140px] rounded-xl text-sm font-medium bg-background/50 border-white/10 resize-none focus:ring-1 focus:ring-primary leading-relaxed"
             />

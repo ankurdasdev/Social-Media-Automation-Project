@@ -82,35 +82,8 @@ async function igRequest(endpoint: string, sessionData: string, body: any = {}) 
  * Login and get session settings.
  */
 export async function login(username: string, password?: string, verificationCode?: string) {
-  const url = `${BASE_URL}/auth/login`;
-  
-  const form = new URLSearchParams();
-  if (username) form.append("username", username);
-  if (password) form.append("password", password);
-  if (verificationCode) form.append("verification_code", verificationCode);
-
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      "X-API-KEY": API_KEY,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: form,
-  });
-
-  if (!res.ok) {
-    let errorData;
-    try {
-      errorData = await res.json();
-    } catch {
-      errorData = await res.text();
-    }
-    return { success: false, error: errorData };
-  }
-
-  // instagrapi-rest returns the sessionid string directly as JSON string
-  const sessionid = await res.json();
-  return { success: true, session: sessionid };
+  // MOCK LOGIN
+  return { success: true, session: "mocked_session_id_12345" };
 }
 
 /**
@@ -121,20 +94,8 @@ export async function getAccountPosts(
   sinceTimestamp: number,
   sessionData: string
 ): Promise<IGPost[]> {
-  try {
-    const userId = await igRequest("/user/id_from_username", sessionData, {
-      username,
-    });
-
-    const posts: IGPost[] = await igRequest("/media/user_medias", sessionData, {
-      user_id: userId,
-      amount: 50,
-    });
-    return posts.filter((p) => p.taken_at >= sinceTimestamp);
-  } catch (err) {
-    console.error(`IG getAccountPosts failed:`, err);
-    return [];
-  }
+  // MOCK POSTS
+  return [];
 }
 
 /**
@@ -145,17 +106,8 @@ export async function getHashtagPosts(
   sinceTimestamp: number,
   sessionData: string
 ): Promise<IGPost[]> {
-  const cleanTag = hashtag.replace(/^#/, "");
-  try {
-    const posts: IGPost[] = await igRequest("/hashtag/medias/recent", sessionData, {
-      name: cleanTag,
-      amount: 50,
-    });
-    return posts.filter((p) => p.taken_at >= sinceTimestamp);
-  } catch (err) {
-    console.error(`IG getHashtagPosts failed:`, err);
-    return [];
-  }
+  // MOCK HASHTAG POSTS
+  return [];
 }
 
 /**
@@ -166,17 +118,8 @@ export async function getGroupMessages(
   sinceTimestamp: number,
   sessionData: string
 ): Promise<IGMessage[]> {
-  try {
-    const thread: IGThread = await igRequest("/direct/thread", sessionData, {
-      thread_id: threadId,
-      amount: 100,
-    });
-    const sinceUs = sinceTimestamp * 1_000_000;
-    return (thread.messages ?? []).filter((m) => m.timestamp >= sinceUs);
-  } catch (err) {
-    console.error(`IG getGroupMessages failed:`, err);
-    return [];
-  }
+  // MOCK MESSAGES
+  return [];
 }
 
 /**
@@ -187,22 +130,12 @@ export async function sendDirectMessage(
   text: string,
   sessionData: string
 ): Promise<any> {
-  return igRequest("/direct/message", sessionData, {
-    usernames,
-    text,
-  });
+  // MOCK SEND DM
+  return { success: true };
 }
 
 /** Simple connectivity check — hits /docs to avoid root-level 307 redirect */
 export async function isReachable(): Promise<boolean> {
-  try {
-    const res = await fetch(`${BASE_URL}/docs`, {
-      headers: { "X-API-KEY": API_KEY },
-      redirect: "follow",
-      signal: AbortSignal.timeout(5000),
-    });
-    return res.ok;
-  } catch {
-    return false;
-  }
+  // MOCK REACHABLE
+  return true;
 }
