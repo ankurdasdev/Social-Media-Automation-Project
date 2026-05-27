@@ -46,30 +46,30 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <TutorialProvider>
-        <BrowserRouter>
-        <Routes>
-          {/* Auth Routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
+      <BrowserRouter>
+        <TutorialProvider>
+          <Routes>
+            {/* Auth Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
-          {/* Protected App Routes */}
-          <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} />} />
-          <Route path="/controller" element={<ProtectedRoute element={<Controller />} />} />
-          <Route path="/contacts" element={<ProtectedRoute element={<Contacts />} />} />
-          <Route path="/analytics" element={<ProtectedRoute element={<Analytics />} />} />
-          <Route path="/settings" element={<ProtectedRoute element={<Settings />} />} />
-          <Route path="/profile" element={<ProtectedRoute element={<Profile />} />} />
+            {/* Protected App Routes */}
+            <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} />} />
+            <Route path="/controller" element={<ProtectedRoute element={<Controller />} />} />
+            <Route path="/contacts" element={<ProtectedRoute element={<Contacts />} />} />
+            <Route path="/analytics" element={<ProtectedRoute element={<Analytics />} />} />
+            <Route path="/settings" element={<ProtectedRoute element={<Settings />} />} />
+            <Route path="/profile" element={<ProtectedRoute element={<Profile />} />} />
 
-          {/* Default redirect to dashboard (ProtectedRoute handles auth check) */}
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            {/* Default redirect to dashboard (ProtectedRoute handles auth check) */}
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-          {/* Catch-all */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+            {/* Catch-all */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </TutorialProvider>
       </BrowserRouter>
-      </TutorialProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

@@ -2,12 +2,15 @@ import React, { createContext, useContext, useState, useEffect, useRef } from "r
 import { Button } from "./ui/button";
 import { ChevronRight, ChevronLeft, X, Sparkles } from "lucide-react";
 import { createPortal } from "react-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { isTokenValid } from "@/lib/utils";
 
 interface TutorialStep {
   targetId: string;
   title: string;
   content: string;
   placement: "top" | "bottom" | "left" | "right";
+  path?: string;
 }
 
 const STEPS: TutorialStep[] = [
@@ -15,37 +18,43 @@ const STEPS: TutorialStep[] = [
     targetId: "tutorial-contacts-nav",
     title: "Welcome to CastHub!",
     content: "Let's take a quick tour. This is your Contacts page, where you import and manage all your talent data.",
-    placement: "right"
+    placement: "right",
+    path: "/contacts"
   },
   {
     targetId: "tutorial-add-contact",
     title: "Add Contacts",
     content: "Click here to manually add a new contact or create custom text for different platforms.",
-    placement: "left"
+    placement: "left",
+    path: "/contacts"
   },
   {
     targetId: "tutorial-grid",
     title: "Excel-like Grid",
     content: "Right-click ANY cell to color-code it! Hover over a cell and drag the bottom right corner to auto-fill down.",
-    placement: "top"
+    placement: "top",
+    path: "/contacts"
   },
   {
     targetId: "tutorial-controller-nav",
     title: "The Controller",
     content: "This is where the magic happens. You can link your Google Drive, Instagram, and WhatsApp here.",
-    placement: "right"
+    placement: "right",
+    path: "/controller"
   },
   {
     targetId: "tutorial-automation-run",
     title: "Run Automation",
     content: "Once your accounts are linked, click this button to fire off your automated outreach sequences.",
-    placement: "left"
+    placement: "left",
+    path: "/controller"
   },
   {
     targetId: "tutorial-restart-btn",
     title: "Need a refresher?",
     content: "You can click this button anytime to restart this tutorial. Happy automating!",
-    placement: "right"
+    placement: "right",
+    path: "/controller"
   }
 ];
 
@@ -66,6 +75,8 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
   const [isActive, setIsActive] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const startTutorial = () => {
     setIsActive(true);
@@ -76,20 +87,30 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Show tutorial automatically on first visit after a slight delay
+    // ONLY if the user is logged in and not on auth pages
     const hasSeen = localStorage.getItem("hasSeenTutorial");
-    if (!hasSeen) {
+    const isAuthPage = ["/login", "/signup", "/reset-password"].includes(location.pathname);
+    
+    if (!hasSeen && isTokenValid() && !isAuthPage) {
       const timer = setTimeout(() => {
         startTutorial();
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [location.pathname]);
 
   useEffect(() => {
     if (!isActive) return;
 
+    const step = STEPS[currentStep];
+    
+    // Check if we need to navigate to the correct page for this step
+    if (step.path && location.pathname !== step.path) {
+      navigate(step.path);
+      return;
+    }
+
     const updateRect = () => {
-      const step = STEPS[currentStep];
       const el = document.getElementById(step.targetId);
       if (el) {
         // Scroll into view gently if not visible
@@ -107,10 +128,17 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    updateRect();
+    // Calculate rect after a tiny delay to ensure the page has loaded/rendered if navigating
+    const timer = setTimeout(() => {
+      updateRect();
+    }, 150);
+
     window.addEventListener("resize", updateRect);
-    return () => window.removeEventListener("resize", updateRect);
-  }, [isActive, currentStep]);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("resize", updateRect);
+    };
+  }, [isActive, currentStep, location.pathname, navigate]);
 
   const handleNext = () => {
     if (currentStep < STEPS.length - 1) setCurrentStep(c => c + 1);
