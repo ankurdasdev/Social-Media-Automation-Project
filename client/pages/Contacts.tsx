@@ -134,8 +134,8 @@ export default function Contacts() {
     },
     onSuccess: () => {
       toast({
-        title: "SYNC STARTED",
-        description: "Scanning for new casting opportunities.",
+        title: "IMPORT STARTED",
+        description: "Scanning for new contacts from your connected sources.",
       });
       queryClient.invalidateQueries({ queryKey: ["ingestion-status"] });
     },
@@ -393,8 +393,7 @@ export default function Contacts() {
             </div>
             <h1 className="text-5xl font-black tracking-tighter text-foreground text-glow whitespace-nowrap">LEAD <span className="text-primary italic">CONTACTS</span></h1>
             <p className="text-muted-foreground/80 text-sm font-medium max-w-xl leading-relaxed">
-              Real-time synchronization of casting opportunities across your sheets. 
-              Assign templates and initiate automated outreach messages.
+              Manage your talent database here. Import from Google Sheets, add new contacts manually, and prepare them for outreach.
             </p>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-4">
@@ -410,9 +409,9 @@ export default function Contacts() {
               ) : (
                 <RefreshCw className="mr-3 h-5 w-5 text-primary group-hover:rotate-180 transition-transform duration-700" />
               )}
-              SYNC CONTACTS
+              IMPORT CONTACTS
             </Button>
-            <Button size="lg" onClick={handleOpenAddLead} className="h-16 bg-foreground text-background hover:bg-foreground/90 shadow-2xl shadow-primary/20 rounded-2xl font-black px-10 transition-all hover:-translate-y-1 active:scale-[0.98]">
+            <Button id="tutorial-add-contact" size="lg" onClick={handleOpenAddLead} className="h-16 bg-foreground text-background hover:bg-foreground/90 shadow-2xl shadow-primary/20 rounded-2xl font-black px-10 transition-all hover:-translate-y-1 active:scale-[0.98]">
               <Plus className="mr-3 h-6 w-6" /> ADD CONTACT
             </Button>
           </div>
@@ -427,7 +426,7 @@ export default function Contacts() {
                     <Loader2 className="h-7 w-7 text-blue-500 animate-spin" />
                  </div>
                  <div className="space-y-1">
-                    <h3 className="text-base font-black text-blue-500 uppercase tracking-tighter">Sync In Progress</h3>
+                    <h3 className="text-base font-black text-blue-500 uppercase tracking-tighter">Import in Progress</h3>
                     <p className="text-xs font-bold text-blue-400 opacity-70 tracking-widest uppercase">
                       Loading contacts from your sources...
                     </p>
