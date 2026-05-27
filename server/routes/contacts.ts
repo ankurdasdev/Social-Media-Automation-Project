@@ -87,10 +87,39 @@ export const handleCreateContact: RequestHandler = async (req, res) => {
   res.status(201).json(response);
 };
 
+// ─── POST /api/contacts/bulk ──────────────────────────────────────────────────
+
+export const handleBulkCreateContacts: RequestHandler = async (req, res) => {
+  const userId = req.body.userId || process.env.DEFAULT_USER_ID;
+  const { contacts } = req.body;
+
+  if (!userId) {
+    res.status(400).json({ error: "userId is required." });
+    return;
+  }
+  if (!Array.isArray(contacts)) {
+    res.status(400).json({ error: "contacts must be an array of objects." });
+    return;
+  }
+
+  try {
+    const created: any[] = [];
+    for (const c of contacts) {
+      if (!c.name) continue;
+      const contact = await createContact(userId, c);
+      created.push(contact);
+    }
+    res.status(201).json({ contacts: created, total: created.length });
+  } catch (err: any) {
+    console.error("[handleBulkCreateContacts] Error:", err);
+    res.status(500).json({ error: "Bulk creation failed: " + err.message });
+  }
+};
+
 // ─── PUT /api/contacts/:id ────────────────────────────────────────────────────
 
 export const handleUpdateContact: RequestHandler = async (req, res) => {
-  const userId = req.body.userId || req.query.userId || process.env.DEFAULT_USER_ID;
+  const userId = (req.body.userId || req.query.userId || process.env.DEFAULT_USER_ID) as string;
   const { id } = req.params;
 
   if (!userId) {
@@ -98,7 +127,7 @@ export const handleUpdateContact: RequestHandler = async (req, res) => {
     return;
   }
 
-  const updated = await updateContact(userId, id, req.body);
+  const updated = await updateContact(userId, id as string, req.body);
   if (!updated) {
     res.status(404).json({ error: "Contact not found" });
     return;
@@ -110,7 +139,7 @@ export const handleUpdateContact: RequestHandler = async (req, res) => {
 // ─── DELETE /api/contacts/:id ─────────────────────────────────────────────────
 
 export const handleDeleteContact: RequestHandler = async (req, res) => {
-  const userId = (req.query.userId as string) || (req.body.userId as string) || process.env.DEFAULT_USER_ID;
+  const userId = ((req.query.userId as string) || (req.body.userId as string) || process.env.DEFAULT_USER_ID) as string;
   const { id } = req.params;
 
   if (!userId) {
@@ -118,7 +147,7 @@ export const handleDeleteContact: RequestHandler = async (req, res) => {
     return;
   }
 
-  const deleted = await deleteContact(userId, id);
+  const deleted = await deleteContact(userId, id as string);
   if (!deleted) {
     res.status(404).json({ error: "Contact not found" });
     return;

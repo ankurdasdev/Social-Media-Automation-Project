@@ -12,6 +12,7 @@ import {
 import {
   handleGetContacts,
   handleCreateContact,
+  handleBulkCreateContacts,
   handleUpdateContact,
   handleDeleteContact,
   handleTriggerIngestion,
@@ -120,6 +121,7 @@ export function createServer() {
   // ── Contacts ───────────────────────────────────────────────────────────────
   app.get("/api/contacts", handleGetContacts);
   app.post("/api/contacts", handleCreateContact);
+  app.post("/api/contacts/bulk", handleBulkCreateContacts);
   app.put("/api/contacts/:id", handleUpdateContact);
   app.delete("/api/contacts/:id", handleDeleteContact);
   app.post("/api/contacts/ai-search", handleAIContactSearch);

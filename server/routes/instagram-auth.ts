@@ -102,7 +102,7 @@ export const handleInstagramConnect: RequestHandler = async (req, res) => {
       });
     }
 
-    const result = await igClient.login(username, password, verificationCode);
+    const result = await igClient.login(username, password, verificationCode) as any;
     
     if (!result.success) {
       const errorStr = typeof result.error === 'object' ? JSON.stringify(result.error) : String(result.error || "");

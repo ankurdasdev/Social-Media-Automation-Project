@@ -181,100 +181,99 @@ export default function InstagramSettings() {
       <div className="relative overflow-hidden glass-card border-white/10 rounded-[2.5rem] shadow-2xl bg-background/60">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-pink-500/5 rounded-full blur-[120px] -z-10 animate-pulse-slow" />
         <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-purple-500/5 rounded-full blur-[100px] -z-10" />
-
-        <div className="flex flex-col lg:flex-row min-h-fit lg:min-h-[500px]">
-           {/* Left Section - Identity & Status */}
-           <div className="p-8 md:p-12 lg:w-[45%] shrink-0 flex flex-col border-b lg:border-b-0 lg:border-r border-white/5 relative">
-              <div className="mb-12">
-                 <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-pink-500/10 to-orange-500/10 border border-pink-500/20 flex items-center justify-center shadow-lg shadow-pink-500/5 group hover:scale-110 transition-transform duration-500">
-                    <Instagram className="h-8 w-8 text-pink-500" />
-                 </div>
-              </div>
-
-              <div className="flex-1 space-y-10 relative">
-               <div className="flex flex-col gap-2">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-pink-500/10 border border-pink-500/20 w-fit">
-                    <div className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse" />
-                    <span className="text-[10px] font-black text-pink-500 uppercase tracking-[0.2em]">Live Connection</span>
+         <div className="flex flex-col lg:flex-row min-h-fit lg:min-h-[500px]">
+            {/* Left Section - Identity & Status */}
+            <div className="p-6 md:p-8 lg:w-[45%] shrink-0 flex flex-col border-b lg:border-b-0 lg:border-r border-white/5 relative">
+               <div className="mb-8">
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-pink-500/10 to-orange-500/10 border border-pink-500/20 flex items-center justify-center shadow-lg shadow-pink-500/5 group hover:scale-110 transition-transform duration-500">
+                     <Instagram className="h-8 w-8 text-pink-500" />
                   </div>
-                  
-                  <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground uppercase leading-none break-words">
-                    INSTAGRAM<br/>
-                    <span className="text-pink-500 drop-shadow-[0_0_15px_rgba(236,72,153,0.3)]">INTEGRATION</span>
-                  </h2>
-
-                  {isConnected && (
-                    <div className="mt-4 px-4 py-2 rounded-xl bg-pink-500/10 border border-pink-500/20 w-fit flex items-center gap-2">
-                       <CheckCircle2 className="h-4 w-4 text-pink-500" />
-                       <span className="text-[11px] font-black text-pink-500 uppercase tracking-[0.1em]">SESSION ACTIVE</span>
-                    </div>
-                  )}
                </div>
 
-               <p className="text-muted-foreground/60 text-base font-medium leading-relaxed max-w-sm pt-4">
-                  Connect your Instagram account. Your credentials are sent directly from your browser — not through our server — so they always reach Instagram from a trusted IP.
-               </p>
-
-               <div className="space-y-4 pt-8">
-                  {[
-                    { icon: User, title: "Per-User Sessions", sub: "Your account, your session", color: "text-pink-500" },
-                    { icon: Lock, title: "Secure Handshake", sub: "Only session tokens are saved", color: "text-purple-500" },
-                    { icon: ShieldCheck, title: "Browser-Direct Auth", sub: "Direct residential IP login", color: "text-orange-500" },
-                  ].map(({ icon: Icon, title, sub, color }) => (
-                    <div key={title} className="flex items-center gap-5 group p-3 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-pink-500/20 transition-all">
-                      <div className={cn("w-10 h-10 rounded-xl bg-muted/40 flex items-center justify-center transition-all group-hover:scale-110", color.replace("text-", "bg-") + "/10")}>
-                        <Icon className={cn("h-5 w-5", color)} />
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-foreground">{title}</p>
-                        <p className="text-[10px] text-muted-foreground font-bold mt-0.5">{sub}</p>
-                      </div>
-                    </div>
-                  ))}
-               </div>
-            </div>
-         </div>
-
-         {/* Right Section - Interaction Area */}
-            <div className="p-8 md:p-12 lg:p-16 flex-1 flex flex-col justify-center relative bg-muted/20 backdrop-blur-sm overflow-hidden">
-               {serviceDown && (
-                 <div className="mb-8 flex items-center gap-4 p-5 rounded-2xl bg-red-500/10 border border-red-500/20 animate-in slide-in-from-top duration-500">
-                   <WifiOff className="h-6 w-6 text-red-500 shrink-0" />
-                   <div>
-                     <p className="text-sm font-black text-red-500 uppercase tracking-widest">Service Offline</p>
-                     <p className="text-xs text-muted-foreground mt-0.5">The Instagram service is temporarily unreachable. Try again soon.</p>
+               <div className="flex-1 space-y-8 relative">
+                <div className="flex flex-col gap-2">
+                   <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-pink-500/10 border border-pink-500/20 w-fit">
+                     <div className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse" />
+                     <span className="text-[10px] font-black text-pink-500 uppercase tracking-[0.2em]">Live Connection</span>
                    </div>
-                 </div>
-               )}
+                   
+                   <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground uppercase leading-none break-words">
+                     INSTAGRAM<br/>
+                     <span className="text-pink-500 drop-shadow-[0_0_15px_rgba(236,72,153,0.3)]">INTEGRATION</span>
+                   </h2>
 
-               {isConnected ? (
-                 <div className="space-y-8 animate-in zoom-in-95 duration-700 max-w-2xl mx-auto w-full">
-                   <div className="relative group">
-                      <div className="absolute -inset-0.5 bg-gradient-to-br from-pink-500/20 to-transparent rounded-[3rem] blur-2xl opacity-30 group-hover:opacity-60 transition duration-1000" />
-                      
-                      <div className="relative p-8 md:p-12 rounded-[3.5rem] bg-muted/80 border border-border/50 overflow-hidden">
-                         <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[radial-gradient(circle_at_2px_2px,#fff_1px,transparent_0)] bg-[size:32px_32px]" />
-                         
-                         <div className="flex flex-col gap-10 relative z-10">
-                            <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row items-center justify-between gap-6 w-full">
-                               <div className="flex items-center gap-4 min-w-0 w-full sm:w-auto lg:w-full xl:w-auto">
-                                  <div className="w-16 h-16 rounded-2.5xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center shadow-[0_0_30px_rgba(236,72,153,0.1)] shrink-0">
-                                     <div className="w-8 h-8 rounded-full bg-pink-500 flex items-center justify-center">
-                                        <Instagram className="h-4 w-4 text-white" />
-                                     </div>
-                                  </div>
-                                  <div className="min-w-0 flex-1">
-                                     <p className="text-[10px] font-black text-pink-500 uppercase tracking-[0.3em] whitespace-nowrap">Status :: Connected</p>
-                                     <h4 className="text-xl md:text-2xl font-black text-foreground tracking-tighter uppercase leading-none break-all">AUTHENTICATED</h4>
-                                  </div>
-                               </div>
-                               
-                               <Button
-                                  variant="ghost"
-                                  onClick={() => disconnectMutation.mutate()}
-                                  disabled={disconnectMutation.isPending}
-                                  className="h-12 px-6 rounded-xl bg-rose-500/5 border border-rose-500/10 hover:bg-rose-500/10 hover:border-rose-500/20 hover:text-rose-500 text-rose-500/60 font-black text-[10px] uppercase tracking-widest transition-all group shrink-0"
-                               >
+                   {isConnected && (
+                     <div className="mt-4 px-4 py-2 rounded-xl bg-pink-500/10 border border-pink-500/20 w-fit flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-pink-500" />
+                        <span className="text-[11px] font-black text-pink-500 uppercase tracking-[0.1em]">SESSION ACTIVE</span>
+                     </div>
+                   )}
+                </div>
+
+                <p className="text-muted-foreground/60 text-base font-medium leading-relaxed max-w-sm pt-2">
+                   Connect your Instagram account. Your credentials are sent directly from your browser — not through our server — so they always reach Instagram from a trusted IP.
+                </p>
+
+                <div className="space-y-4 pt-6">
+                   {[
+                     { icon: User, title: "Per-User Sessions", sub: "Your account, your session", color: "text-pink-500" },
+                     { icon: Lock, title: "Secure Handshake", sub: "Only session tokens are saved", color: "text-purple-500" },
+                     { icon: ShieldCheck, title: "Browser-Direct Auth", sub: "Direct residential IP login", color: "text-orange-500" },
+                   ].map(({ icon: Icon, title, sub, color }) => (
+                     <div key={title} className="flex items-center gap-5 group p-3 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-pink-500/20 transition-all">
+                       <div className={cn("w-10 h-10 rounded-xl bg-muted/40 flex items-center justify-center transition-all group-hover:scale-110", color.replace("text-", "bg-") + "/10")}>
+                         <Icon className={cn("h-5 w-5", color)} />
+                       </div>
+                       <div>
+                         <p className="text-[10px] font-black uppercase tracking-widest text-foreground">{title}</p>
+                         <p className="text-[10px] text-muted-foreground font-bold mt-0.5">{sub}</p>
+                       </div>
+                     </div>
+                   ))}
+                </div>
+             </div>
+          </div>
+
+          {/* Right Section - Interaction Area */}
+             <div className="p-6 md:p-8 lg:p-10 flex-1 flex flex-col justify-center relative bg-muted/20 backdrop-blur-sm overflow-hidden">
+                {serviceDown && (
+                  <div className="mb-8 flex items-center gap-4 p-5 rounded-2xl bg-red-500/10 border border-red-500/20 animate-in slide-in-from-top duration-500">
+                    <WifiOff className="h-6 w-6 text-red-500 shrink-0" />
+                    <div>
+                      <p className="text-sm font-black text-red-500 uppercase tracking-widest">Service Offline</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">The Instagram service is temporarily unreachable. Try again soon.</p>
+                    </div>
+                  </div>
+                )}
+
+                {isConnected ? (
+                  <div className="space-y-6 animate-in zoom-in-95 duration-700 max-w-2xl mx-auto w-full">
+                    <div className="relative group">
+                       <div className="absolute -inset-0.5 bg-gradient-to-br from-pink-500/20 to-transparent rounded-[3rem] blur-2xl opacity-30 group-hover:opacity-60 transition duration-1000" />
+                       
+                       <div className="relative p-6 md:p-8 rounded-[2.5rem] bg-muted/80 border border-border/50 overflow-hidden">
+                          <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[radial-gradient(circle_at_2px_2px,#fff_1px,transparent_0)] bg-[size:32px_32px]" />
+                          
+                          <div className="flex flex-col gap-8 relative z-10">
+                             <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row items-start sm:items-center lg:items-start xl:items-center justify-between gap-6 w-full">
+                                <div className="flex items-center gap-4 min-w-0 w-full sm:w-auto lg:w-full xl:w-auto">
+                                   <div className="w-16 h-16 rounded-2.5xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center shadow-[0_0_30px_rgba(236,72,153,0.1)] shrink-0">
+                                      <div className="w-8 h-8 rounded-full bg-pink-500 flex items-center justify-center">
+                                         <Instagram className="h-4 w-4 text-white" />
+                                      </div>
+                                   </div>
+                                   <div className="min-w-0 flex-1">
+                                      <p className="text-[10px] font-black text-pink-500 uppercase tracking-[0.3em] whitespace-nowrap">Status :: Connected</p>
+                                      <h4 className="text-xl md:text-2xl font-black text-foreground tracking-tighter uppercase leading-none whitespace-nowrap">AUTHENTICATED</h4>
+                                   </div>
+                                </div>
+                                
+                                <Button
+                                   variant="ghost"
+                                   onClick={() => disconnectMutation.mutate()}
+                                   disabled={disconnectMutation.isPending}
+                                   className="h-12 px-6 rounded-xl bg-rose-500/5 border border-rose-500/10 hover:bg-rose-500/10 hover:border-rose-500/20 hover:text-rose-500 text-rose-500/60 font-black text-[10px] uppercase tracking-widest transition-all group shrink-0"
+                                >
                                   {disconnectMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <LogOut className="h-4 w-4 mr-2" />}
                                   DISCONNECT
                                 </Button>
