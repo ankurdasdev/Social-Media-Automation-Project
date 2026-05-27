@@ -182,7 +182,7 @@ export default function InstagramSettings() {
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-pink-500/5 rounded-full blur-[120px] -z-10 animate-pulse-slow" />
         <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-purple-500/5 rounded-full blur-[100px] -z-10" />
 
-        <div className="flex flex-col lg:flex-row min-h-[600px]">
+        <div className="flex flex-col lg:flex-row min-h-fit lg:min-h-[500px]">
            {/* Left Section - Identity & Status */}
            <div className="p-8 md:p-12 lg:w-[45%] shrink-0 flex flex-col border-b lg:border-b-0 lg:border-r border-white/5 relative">
               <div className="mb-12">
@@ -198,7 +198,7 @@ export default function InstagramSettings() {
                     <span className="text-[10px] font-black text-pink-500 uppercase tracking-[0.2em]">Live Connection</span>
                   </div>
                   
-                  <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground uppercase leading-none whitespace-nowrap">
+                  <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground uppercase leading-none break-words">
                     INSTAGRAM<br/>
                     <span className="text-pink-500 drop-shadow-[0_0_15px_rgba(236,72,153,0.3)]">INTEGRATION</span>
                   </h2>
@@ -236,7 +236,7 @@ export default function InstagramSettings() {
          </div>
 
          {/* Right Section - Interaction Area */}
-            <div className="p-8 md:p-12 lg:p-16 flex-1 flex flex-col justify-center relative bg-muted/20 backdrop-blur-sm">
+            <div className="p-8 md:p-12 lg:p-16 flex-1 flex flex-col justify-center relative bg-muted/20 backdrop-blur-sm overflow-hidden">
                {serviceDown && (
                  <div className="mb-8 flex items-center gap-4 p-5 rounded-2xl bg-red-500/10 border border-red-500/20 animate-in slide-in-from-top duration-500">
                    <WifiOff className="h-6 w-6 text-red-500 shrink-0" />
@@ -256,7 +256,7 @@ export default function InstagramSettings() {
                          <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[radial-gradient(circle_at_2px_2px,#fff_1px,transparent_0)] bg-[size:32px_32px]" />
                          
                          <div className="flex flex-col gap-10 relative z-10">
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
                                <div className="flex items-center gap-4">
                                   <div className="w-16 h-16 rounded-2.5xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center shadow-[0_0_30px_rgba(236,72,153,0.1)]">
                                      <div className="w-8 h-8 rounded-full bg-pink-500 flex items-center justify-center">
@@ -264,8 +264,8 @@ export default function InstagramSettings() {
                                      </div>
                                   </div>
                                   <div>
-                                     <p className="text-[10px] font-black text-pink-500 uppercase tracking-[0.3em] whitespace-nowrap">Status :: Connected</p>
-                                     <h4 className="text-2xl md:text-3xl font-black text-foreground tracking-tighter whitespace-nowrap uppercase leading-none">AUTHENTICATED</h4>
+                                     <p className="text-[10px] font-black text-pink-500 uppercase tracking-[0.3em]">Status :: Connected</p>
+                                     <h4 className="text-xl md:text-2xl font-black text-foreground tracking-tighter uppercase leading-none break-words">AUTHENTICATED</h4>
                                   </div>
                                </div>
                                
@@ -273,20 +273,20 @@ export default function InstagramSettings() {
                                   variant="ghost"
                                   onClick={() => disconnectMutation.mutate()}
                                   disabled={disconnectMutation.isPending}
-                                  className="h-12 px-6 rounded-xl bg-rose-500/5 border border-rose-500/10 hover:bg-rose-500/10 hover:border-rose-500/20 hover:text-rose-500 text-rose-500/60 font-black text-[10px] uppercase tracking-widest transition-all group"
+                                  className="h-12 px-6 rounded-xl bg-rose-500/5 border border-rose-500/10 hover:bg-rose-500/10 hover:border-rose-500/20 hover:text-rose-500 text-rose-500/60 font-black text-[10px] uppercase tracking-widest transition-all group shrink-0"
                                >
                                   {disconnectMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <LogOut className="h-4 w-4 mr-2" />}
                                   DISCONNECT
-                               </Button>
+                                </Button>
                             </div>
 
-                            <div className="space-y-4 p-8 rounded-[2.5rem] bg-white/[0.02] border border-white/5">
-                               <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.2em] md:tracking-[0.4em] text-center whitespace-nowrap">Connected Account</p>
-                               <div className="text-3xl md:text-5xl font-black tracking-tight text-center text-foreground py-2 whitespace-nowrap">
+                            <div className="space-y-4 p-8 rounded-[2.5rem] bg-white/[0.02] border border-white/5 overflow-hidden">
+                               <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.2em] md:tracking-[0.4em] text-center">Connected Account</p>
+                               <div className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-center text-foreground py-2 break-all">
                                   @{status?.username}
                                </div>
                                <div className="h-px w-12 bg-pink-500/20 mx-auto" />
-                               <p className="text-[10px] font-black text-pink-500/40 uppercase tracking-[0.2em] text-center whitespace-nowrap">
+                               <p className="text-[10px] font-black text-pink-500/40 uppercase tracking-[0.2em] text-center">
                                  {status?.connectedAt ? `ESTABLISHED :: ${new Date(status.connectedAt).toLocaleDateString()}` : "ANONYMOUS SESSION"}
                                </p>
                             </div>

@@ -206,6 +206,7 @@ export interface Template {
   attachmentDetailText?: string;
   driveFileId?: string;
   driveFileName?: string;
+  driveAttachments?: DriveFile[];
   createdAt: string;
   updatedAt: string;
 }
@@ -221,6 +222,7 @@ export interface CreateTemplateRequest {
   attachmentDetailText?: string;
   driveFileId?: string;
   driveFileName?: string;
+  driveAttachments?: DriveFile[];
 }
 
 export interface UpdateTemplateRequest {
@@ -233,6 +235,7 @@ export interface UpdateTemplateRequest {
   attachmentDetailText?: string;
   driveFileId?: string;
   driveFileName?: string;
+  driveAttachments?: DriveFile[];
 }
 
 export interface TemplatesResponse {

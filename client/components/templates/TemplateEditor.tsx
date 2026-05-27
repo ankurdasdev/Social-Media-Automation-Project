@@ -51,8 +51,7 @@ export function TemplateEditor({
   const [content, setContent] = React.useState("");
   const [emailSubject, setEmailSubject] = React.useState("");
   const [isAttachment, setIsAttachment] = React.useState(false);
-  const [driveFile, setDriveFile] = React.useState<DriveFile | null>(null);
-  const [driveFileName, setDriveFileName] = React.useState("");
+  const [driveFiles, setDriveFiles] = React.useState<DriveFile[]>([]);
   const [isSaving, setIsSaving] = React.useState(false);
 
   // Sync state when dialog opens / template changes
@@ -62,17 +61,17 @@ export function TemplateEditor({
       setContent(template?.content ?? "");
       setEmailSubject(template?.emailSubject ?? "");
       setIsAttachment(template?.isAttachment ?? false);
-      if (template?.driveFileId) {
-        setDriveFile({
+      if (template?.driveAttachments && template.driveAttachments.length > 0) {
+        setDriveFiles(template.driveAttachments);
+      } else if (template?.driveFileId) {
+        setDriveFiles([{
           id: template.driveFileId,
           name: template.driveFileName || "",
           mimeType: "",
           downloadUrl: ""
-        });
-        setDriveFileName(template.driveFileName ?? "");
+        }]);
       } else {
-        setDriveFile(null);
-        setDriveFileName("");
+        setDriveFiles([]);
       }
     }
   }, [open, template]);
@@ -117,13 +116,15 @@ export function TemplateEditor({
     setIsSaving(true);
     try {
       const userId = getOrCreateUserId();
+      const firstFile = driveFiles[0] || null;
       const basePayload = {
         name,
         content,
         isAttachment,
         emailSubject: defaultCategory === "email" ? emailSubject : undefined,
-        driveFileId: isAttachment ? driveFile?.id : undefined,
-        driveFileName: isAttachment ? driveFileName : undefined,
+        driveFileId: (isAttachment && firstFile) ? firstFile.id : undefined,
+        driveFileName: (isAttachment && firstFile) ? firstFile.name : undefined,
+        driveAttachments: isAttachment ? driveFiles : [],
       };
 
       if (template) {
@@ -275,27 +276,32 @@ export function TemplateEditor({
             {isAttachment && (
               <div className="space-y-6 pt-6 border-t border-border/50 animate-in fade-in duration-300">
                 <div className="space-y-3">
-                  <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground text-primary">SELECT DRIVE FILE</Label>
+                  <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground text-primary">SELECT DRIVE FILES</Label>
                   <DriveFilePicker
                     userId={getOrCreateUserId()}
-                    selectedFiles={driveFile ? [driveFile] : []}
+                    selectedFiles={driveFiles}
                     onChange={(files) => {
-                      const file = files[0] || null;
-                      setDriveFile(file);
-                      if (file) setDriveFileName(file.name);
+                      setDriveFiles(files);
                     }}
                     placeholder="Search Google Drive..."
                   />
                 </div>
-                {driveFile && (
-                  <div className="space-y-3">
-                    <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground text-primary">ATTACHMENT NAME</Label>
-                    <Input
-                      value={driveFileName}
-                      onChange={(e) => setDriveFileName(e.target.value)}
-                      placeholder="Display name for this file"
-                      className="h-14 rounded-2xl bg-muted/30 border-border/50 focus:ring-primary font-bold shadow-inner"
-                    />
+                {driveFiles.length > 0 && (
+                  <div className="space-y-3 pt-4">
+                    <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground text-primary">Attachment Order Sequence</Label>
+                    <div className="space-y-2.5">
+                      {driveFiles.map((file, idx) => (
+                        <div key={file.id} className="flex items-center gap-3 p-3.5 rounded-2xl bg-muted/30 border border-white/5 hover:border-white/10 transition-all">
+                          <span className="w-6 h-6 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-black text-xs shrink-0">
+                            {idx + 1}
+                          </span>
+                          <span className="text-sm font-bold text-foreground truncate flex-1">{file.name}</span>
+                          <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 border-white/10 text-muted-foreground bg-white/[0.02]">
+                            {idx === 0 ? "First" : idx === driveFiles.length - 1 ? "Last" : `File #${idx + 1}`}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>

@@ -518,8 +518,8 @@ export default function Controller() {
 
         {/* Add/Edit Dialog */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="sm:max-w-[540px] glass-card border-white/10 dark:border-white/5 p-0 overflow-hidden shadow-2xl rounded-[2rem]">
-            <DialogHeader className="p-10 pb-4">
+          <DialogContent className="sm:max-w-[540px] glass-card border-white/10 dark:border-white/5 p-0 overflow-hidden shadow-2xl rounded-[2rem] max-h-[90vh] flex flex-col">
+            <DialogHeader className="p-10 pb-4 shrink-0">
               <DialogTitle className="text-3xl font-black tracking-tight">
                 {editingGroup ? "Edit Source" : "Add New Source"}
               </DialogTitle>
@@ -530,7 +530,7 @@ export default function Controller() {
               </DialogDescription>
             </DialogHeader>
 
-            <div className="px-10 py-6 space-y-8">
+            <div className="px-10 py-6 space-y-8 overflow-y-auto flex-1">
               {/* Platform & Type */}
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-3">
@@ -623,7 +623,7 @@ export default function Controller() {
               </div>
             </div>
 
-            <DialogFooter className="p-10 pt-4 bg-muted/20">
+            <DialogFooter className="p-10 pt-4 bg-muted/20 shrink-0">
               <Button variant="ghost" onClick={closeDialog} className="h-14 flex-1 rounded-2xl font-bold bg-muted/50">
                 DISCARD
               </Button>

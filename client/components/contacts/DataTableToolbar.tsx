@@ -120,7 +120,7 @@ export function DataTableToolbar<TData>({
                 All Contacts
               </TabsTrigger>
               {(table.options.meta as any)?.uniqueSheets?.map((sheet: string) => (
-                <TabsTrigger key={sheet} value={sheet} className="h-9 px-5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] group relative transition-all whitespace-nowrap">
+                <TabsTrigger key={sheet} value={sheet} className="h-9 px-5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] group relative transition-all whitespace-nowrap data-[state=active]:bg-foreground data-[state=active]:text-background">
                   {sheet}
                   {activeTab === sheet && (
                     <button
