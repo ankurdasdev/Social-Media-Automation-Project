@@ -50,7 +50,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import type { Template, TemplateCategory, TemplatesResponse } from "@shared/api";
 import { TemplateEditor } from "./TemplateEditor";
-import { getOrCreateUserId } from "@/lib/utils";
+import { getOrCreateUserId, cn } from "@/lib/utils";
 
 interface TemplateManagerProps {
   open: boolean;
@@ -100,8 +100,21 @@ function TemplateCard({
         </div>
       </div>
       <div className="flex items-center gap-2 shrink-0">
+        {template.category === "email" && (
+          <Badge 
+            variant="outline" 
+            className={cn(
+              "text-[9px] font-black uppercase tracking-widest px-2 py-0.5 shrink-0",
+              template.emailTemplateType === "footer"
+                ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                : "bg-blue-500/10 text-blue-500 border-blue-500/20"
+            )}
+          >
+            {template.emailTemplateType === "footer" ? "Footer" : "Body"}
+          </Badge>
+        )}
         {template.isAttachment && (
-          <Badge variant="secondary" className="text-[10px] h-4 px-1">Attachment</Badge>
+          <Badge variant="secondary" className="text-[10px] h-4 px-1 shrink-0">Attachment</Badge>
         )}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -178,6 +191,8 @@ export function TemplateManager({ open, onOpenChange }: TemplateManagerProps) {
   const [activeTab, setActiveTab] = React.useState<TemplateCategory>("whatsapp");
   const [editorOpen, setEditorOpen] = React.useState(false);
   const [editingTemplate, setEditingTemplate] = React.useState<Template | null>(null);
+  const [emailTypeSelectOpen, setEmailTypeSelectOpen] = React.useState(false);
+  const [selectedEmailType, setSelectedEmailType] = React.useState<"body" | "footer" | undefined>(undefined);
 
   // Rename dialog state
   const [renameOpen, setRenameOpen] = React.useState(false);
@@ -195,7 +210,19 @@ export function TemplateManager({ open, onOpenChange }: TemplateManagerProps) {
   });
 
   const handleCreateNew = () => {
+    if (activeTab === "email") {
+      setEmailTypeSelectOpen(true);
+    } else {
+      setEditingTemplate(null);
+      setSelectedEmailType(undefined);
+      setEditorOpen(true);
+    }
+  };
+
+  const handleSelectEmailType = (type: "body" | "footer") => {
+    setEmailTypeSelectOpen(false);
     setEditingTemplate(null);
+    setSelectedEmailType(type);
     setEditorOpen(true);
   };
 
@@ -315,7 +342,40 @@ export function TemplateManager({ open, onOpenChange }: TemplateManagerProps) {
         onOpenChange={setEditorOpen}
         template={editingTemplate}
         defaultCategory={activeTab}
+        selectedEmailType={selectedEmailType}
       />
+
+      {/* Email Template Type Selector Dialog */}
+      <Dialog open={emailTypeSelectOpen} onOpenChange={setEmailTypeSelectOpen}>
+        <DialogContent className="sm:max-w-[450px] glass-card border-white/10 dark:border-white/5 rounded-[2rem] p-10 shadow-2xl">
+          <DialogHeader className="space-y-3">
+            <DialogTitle className="text-2xl font-black tracking-tight text-center">EMAIL TEMPLATE TYPE</DialogTitle>
+            <DialogDescription className="text-center font-medium uppercase tracking-widest text-[9px]">
+              Choose the template structure to initialize
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid grid-cols-1 gap-4 pt-6">
+            <Button 
+              onClick={() => handleSelectEmailType("body")} 
+              className="h-24 rounded-2xl flex flex-col items-center justify-center p-4 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 gap-1.5 transition-all text-sm font-black uppercase"
+            >
+              <Mail className="h-6 w-6" />
+              <span>Email Body Template</span>
+              <span className="text-[9px] text-muted-foreground/60 font-bold uppercase tracking-widest mt-0.5">Contains Subject & Main Content</span>
+            </Button>
+            
+            <Button 
+              onClick={() => handleSelectEmailType("footer")} 
+              className="h-24 rounded-2xl flex flex-col items-center justify-center p-4 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 gap-1.5 transition-all text-sm font-black uppercase"
+            >
+              <FileText className="h-6 w-6" />
+              <span>Email Footer Template</span>
+              <span className="text-[9px] text-muted-foreground/60 font-bold uppercase tracking-widest mt-0.5">Appended to the bottom of drafts</span>
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Rename Dialog */}
       <RenameDialog open={renameOpen} onOpenChange={setRenameOpen}>

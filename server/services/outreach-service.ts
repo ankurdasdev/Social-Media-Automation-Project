@@ -323,51 +323,85 @@ async function handleEmailOutreach(userId: string, contact: Contact) {
      await sendEmail(subject, contact.editableMessageGmail);
   }
 
-  // 3. Templates (Separate Email for Each)
+  // 3. Compose Templates (Gmail composed draft / body + footer sequence)
   const templateIds = Array.isArray(contact.templateSelectionGmail) ? contact.templateSelectionGmail : [];
-  for (const tId of templateIds) {
-    const template = await queryOne<any>(
-      "SELECT content, email_subject, is_attachment, drive_file_id, drive_file_name, drive_attachments FROM templates WHERE id = $1 AND user_id = $2",
-      [tId, userId]
-    );
-    if (!template) continue;
-    if (!template.content && !template.is_attachment) continue;
-
-    const subject = template.email_subject || contact.editableGmailSubject || `Casting Outreach: ${contact.project || contact.name || "New Project"}`;
-    const body = injectVariables(template.content || "", contact, "email");
-    
-    // Prepare attachments for this specific template email
-    const thisTemplateAttachments = [...emailAttachments]; // Start with row attachments
-    
-    if (template.is_attachment) {
-       const attachments = template.drive_attachments || (template.drive_file_id ? [{
-         id: template.drive_file_id,
-         name: template.drive_file_name || "",
-       }] : []);
-       
-       for (const file of attachments) {
-         try {
-           const response = await drive.files.get({ fileId: file.id, alt: "media" }, { responseType: "arraybuffer" });
-           const meta = await drive.files.get({ fileId: file.id, fields: "mimeType" });
-           thisTemplateAttachments.push({
-             filename: file.name,
-             content: Buffer.from(response.data as ArrayBuffer),
-             mimeType: meta.data.mimeType || "application/octet-stream",
-           });
-         } catch (attachErr: any) {
-           console.warn(`[outreach] Template Email attachment failed for ${file.name}:`, attachErr.message);
-         }
-       }
+  
+  if (templateIds.length > 0) {
+    // Fetch all selected templates
+    const selectedTemplates: any[] = [];
+    for (const tId of templateIds) {
+      const template = await queryOne<any>(
+        "SELECT content, email_subject, is_attachment, drive_file_id, drive_file_name, drive_attachments, email_template_type FROM templates WHERE id = $1 AND user_id = $2",
+        [tId, userId]
+      );
+      if (template) {
+        selectedTemplates.push(template);
+      }
     }
 
+    // Find first Body template and first Footer template
+    const bodyTemplate = selectedTemplates.find(t => t.email_template_type === "body");
+    const footerTemplate = selectedTemplates.find(t => t.email_template_type === "footer");
+
+    // Compose elements
+    let composedSubject = contact.editableGmailSubject || "";
+    let composedBody = "";
+
+    if (bodyTemplate) {
+      composedSubject = bodyTemplate.email_subject || composedSubject || `Casting Outreach: ${contact.project || contact.name || "New Project"}`;
+      composedBody = injectVariables(bodyTemplate.content || "", contact, "email");
+    } else {
+      // If no body template exists, keep subject as default or custom, and main body blank
+      composedSubject = composedSubject || `Casting Outreach: ${contact.project || contact.name || "New Project"}`;
+    }
+
+    if (footerTemplate) {
+      const footerContent = injectVariables(footerTemplate.content || "", contact, "email");
+      if (composedBody) {
+        composedBody += "\n\n" + footerContent;
+      } else {
+        composedBody = footerContent;
+      }
+    }
+
+    // Combine attachments from selected templates + row attachments
+    const thisTemplateAttachments = [...emailAttachments]; // Start with row attachments
+
+    const processAttachments = async (template: any) => {
+      if (template.is_attachment) {
+        const attachments = template.drive_attachments || (template.drive_file_id ? [{
+          id: template.drive_file_id,
+          name: template.drive_file_name || "",
+        }] : []);
+        
+        for (const file of attachments) {
+          try {
+            const response = await drive.files.get({ fileId: file.id, alt: "media" }, { responseType: "arraybuffer" });
+            const meta = await drive.files.get({ fileId: file.id, fields: "mimeType" });
+            thisTemplateAttachments.push({
+              filename: file.name,
+              content: Buffer.from(response.data as ArrayBuffer),
+              mimeType: meta.data.mimeType || "application/octet-stream",
+            });
+          } catch (attachErr: any) {
+            console.warn(`[outreach] Combined Email attachment failed for ${file.name}:`, attachErr.message);
+          }
+        }
+      }
+    };
+
+    if (bodyTemplate) await processAttachments(bodyTemplate);
+    if (footerTemplate) await processAttachments(footerTemplate);
+
+    // Send the composed email!
     const raw = await buildMimeMessage({
       from: `"${contact.name || "CastHub"}" <${from}>`,
       to,
-      subject,
-      body,
+      subject: composedSubject,
+      body: composedBody,
       attachments: thisTemplateAttachments,
     });
-    
+
     try {
       await gmail.users.messages.send({ userId: "me", requestBody: { raw } });
     } catch (err: any) {

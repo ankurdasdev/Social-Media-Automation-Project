@@ -35,6 +35,7 @@ interface TemplateEditorProps {
   onOpenChange: (open: boolean) => void;
   template?: Template | null; // if provided → edit mode
   defaultCategory: "whatsapp" | "email" | "instagram";
+  selectedEmailType?: "body" | "footer";
 }
 
 export function TemplateEditor({
@@ -42,6 +43,7 @@ export function TemplateEditor({
   onOpenChange,
   template,
   defaultCategory,
+  selectedEmailType,
 }: TemplateEditorProps) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -53,6 +55,7 @@ export function TemplateEditor({
   const [isAttachment, setIsAttachment] = React.useState(false);
   const [driveFiles, setDriveFiles] = React.useState<DriveFile[]>([]);
   const [isSaving, setIsSaving] = React.useState(false);
+  const [emailTemplateType, setEmailTemplateType] = React.useState<"body" | "footer" | undefined>("body");
 
   // Sync state when dialog opens / template changes
   React.useEffect(() => {
@@ -61,6 +64,15 @@ export function TemplateEditor({
       setContent(template?.content ?? "");
       setEmailSubject(template?.emailSubject ?? "");
       setIsAttachment(template?.isAttachment ?? false);
+      
+      if (template) {
+        setEmailTemplateType(template.emailTemplateType ?? "body");
+      } else if (defaultCategory === "email" && selectedEmailType) {
+        setEmailTemplateType(selectedEmailType);
+      } else {
+        setEmailTemplateType("body");
+      }
+
       if (template?.driveAttachments && template.driveAttachments.length > 0) {
         setDriveFiles(template.driveAttachments);
       } else if (template?.driveFileId) {
@@ -74,7 +86,7 @@ export function TemplateEditor({
         setDriveFiles([]);
       }
     }
-  }, [open, template]);
+  }, [open, template, selectedEmailType, defaultCategory]);
 
   // Insert variable at cursor position in textarea
   const insertVariable = (variable: string, atIndex?: number) => {
@@ -121,7 +133,8 @@ export function TemplateEditor({
         name,
         content,
         isAttachment,
-        emailSubject: defaultCategory === "email" ? emailSubject : undefined,
+        emailSubject: (defaultCategory === "email" && emailTemplateType === "body") ? emailSubject : undefined,
+        emailTemplateType: defaultCategory === "email" ? emailTemplateType : undefined,
         driveFileId: (isAttachment && firstFile) ? firstFile.id : undefined,
         driveFileName: (isAttachment && firstFile) ? firstFile.name : undefined,
         driveAttachments: isAttachment ? driveFiles : [],
@@ -218,7 +231,24 @@ export function TemplateEditor({
           </div>
 
           {defaultCategory === "email" && (
-            <div className="space-y-3">
+            <div className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-muted/30 border border-white/5 w-fit">
+              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Template Mode ::</span>
+              <Badge 
+                variant="outline" 
+                className={cn(
+                  "text-[10px] font-black uppercase tracking-widest px-3 py-1",
+                  emailTemplateType === "footer"
+                    ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                    : "bg-blue-500/10 text-blue-500 border-blue-500/20"
+                )}
+              >
+                {emailTemplateType === "footer" ? "Footer Template" : "Body Template"}
+              </Badge>
+            </div>
+          )}
+
+          {defaultCategory === "email" && emailTemplateType === "body" && (
+            <div className="space-y-3 animate-in fade-in duration-300">
               <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Email Subject</Label>
               <Input
                 value={emailSubject}

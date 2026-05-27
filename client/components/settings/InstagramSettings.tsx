@@ -256,16 +256,16 @@ export default function InstagramSettings() {
                          <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[radial-gradient(circle_at_2px_2px,#fff_1px,transparent_0)] bg-[size:32px_32px]" />
                          
                          <div className="flex flex-col gap-10 relative z-10">
-                            <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-                               <div className="flex items-center gap-4">
-                                  <div className="w-16 h-16 rounded-2.5xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center shadow-[0_0_30px_rgba(236,72,153,0.1)]">
+                            <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row items-center justify-between gap-6 w-full">
+                               <div className="flex items-center gap-4 min-w-0 w-full sm:w-auto lg:w-full xl:w-auto">
+                                  <div className="w-16 h-16 rounded-2.5xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center shadow-[0_0_30px_rgba(236,72,153,0.1)] shrink-0">
                                      <div className="w-8 h-8 rounded-full bg-pink-500 flex items-center justify-center">
                                         <Instagram className="h-4 w-4 text-white" />
                                      </div>
                                   </div>
-                                  <div>
-                                     <p className="text-[10px] font-black text-pink-500 uppercase tracking-[0.3em]">Status :: Connected</p>
-                                     <h4 className="text-xl md:text-2xl font-black text-foreground tracking-tighter uppercase leading-none break-words">AUTHENTICATED</h4>
+                                  <div className="min-w-0 flex-1">
+                                     <p className="text-[10px] font-black text-pink-500 uppercase tracking-[0.3em] whitespace-nowrap">Status :: Connected</p>
+                                     <h4 className="text-xl md:text-2xl font-black text-foreground tracking-tighter uppercase leading-none break-all">AUTHENTICATED</h4>
                                   </div>
                                </div>
                                
