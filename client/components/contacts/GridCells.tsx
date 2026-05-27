@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { X, Plus, Search, FileText, Sparkles, Wand2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { RichTextarea } from "@/components/ui/rich-textarea";
 import { DriveFilePicker } from "../drive/DriveFilePicker";
 import { getOrCreateUserId } from "@/lib/utils";
 import type { Contact, DriveFile } from "@shared/api";
@@ -285,12 +286,11 @@ export function ConditionalTextareaCell({
                       </Button>
                    </div>
                  ) : (
-                   <textarea 
+                   <RichTextarea 
                      className="w-full h-32 rounded-xl bg-muted/40 p-3 text-sm font-medium focus:ring-1 focus:ring-primary outline-none resize-none scrollbar-hide"
                      value={localText}
-                     onChange={(e) => setLocalText(e.target.value)}
+                     onChange={(val) => setLocalText(val)}
                      placeholder={placeholder}
-                     autoFocus
                    />
                  )}
  

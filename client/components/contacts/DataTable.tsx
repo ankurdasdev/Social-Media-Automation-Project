@@ -80,6 +80,10 @@ export function DataTable<TData, TValue>({
   // Drawer state
   const [selectedContact, setSelectedContact] = React.useState<Contact | null>(null);
 
+  // Drag-to-fill state
+  const [dragFillStart, setDragFillStart] = React.useState<{ rowIdx: number, colId: string, value: any } | null>(null);
+  const [dragFillHoverRowIdx, setDragFillHoverRowIdx] = React.useState<number | null>(null);
+
   // Column Order & Pinning
   const [columnOrder, setColumnOrder] = React.useState<string[]>(() =>
     columns.map(c => (c as any).id || (c as any).accessorKey).filter(Boolean)
@@ -225,6 +229,12 @@ export function DataTable<TData, TValue>({
                         borderLeftColor: getBorderColor(),
                       }}
                       onClick={() => setSelectedContact(rowOriginal)}
+                      onDragOver={(e) => {
+                        if (dragFillStart) {
+                          e.preventDefault();
+                          setDragFillHoverRowIdx(row.index);
+                        }
+                      }}
                     >
                       {row.getVisibleCells().map((cell) => {
                         const cellId = cell.column.id;
@@ -232,13 +242,49 @@ export function DataTable<TData, TValue>({
                         return (
                           <ContextMenu key={cell.id}>
                             <ContextMenuTrigger asChild>
-                              <TableCell className="py-2 px-6 group-hover:translate-x-0.5 transition-transform"
+                              <TableCell className="relative py-2 px-6 group-hover:translate-x-0.5 transition-transform"
                                 style={{
                                   backgroundColor: cColor ? (cColor.includes("gradient") ? undefined : cColor) : undefined,
                                   background: cColor?.includes("gradient") ? cColor : undefined,
                                 }}
                               >
                                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                
+                                {/* Excel Drag Fill Handle */}
+                                {!['select', 'actions'].includes(cellId) && (
+                                  <div 
+                                    draggable
+                                    onDragStart={(e) => {
+                                      e.stopPropagation();
+                                      const val = (rowOriginal as any)[cellId];
+                                      setDragFillStart({ rowIdx: row.index, colId: cellId, value: val });
+                                    }}
+                                    onDragEnd={() => {
+                                      if (dragFillStart && dragFillHoverRowIdx !== null && onUpdateContact) {
+                                        const startIdx = Math.min(dragFillStart.rowIdx, dragFillHoverRowIdx);
+                                        const endIdx = Math.max(dragFillStart.rowIdx, dragFillHoverRowIdx);
+                                        const rowsToUpdate = table.getRowModel().rows.slice(startIdx, endIdx + 1);
+                                        rowsToUpdate.forEach(r => {
+                                          if (r.index !== dragFillStart.rowIdx) {
+                                            const rOrig = r.original as any;
+                                            onUpdateContact(rOrig.id, { [dragFillStart.colId]: dragFillStart.value });
+                                          }
+                                        });
+                                      }
+                                      setDragFillStart(null);
+                                      setDragFillHoverRowIdx(null);
+                                    }}
+                                    className="absolute bottom-0 right-0 w-2 h-2 bg-primary cursor-crosshair opacity-0 group-hover:opacity-100 hover:scale-150 transition-transform z-10"
+                                  />
+                                )}
+
+                                {/* Drag Fill Highlight Overlay */}
+                                {dragFillStart?.colId === cellId && 
+                                 dragFillHoverRowIdx !== null && 
+                                 row.index >= Math.min(dragFillStart.rowIdx, dragFillHoverRowIdx) && 
+                                 row.index <= Math.max(dragFillStart.rowIdx, dragFillHoverRowIdx) && (
+                                    <div className="absolute inset-0 bg-primary/20 border-2 border-primary border-dashed pointer-events-none z-20 animate-pulse" />
+                                 )}
                               </TableCell>
                             </ContextMenuTrigger>
                             <ContextMenuContent className="w-[280px] glass-card p-1 rounded-3xl border-white/10 shadow-2xl z-[100]" alignOffset={-50}>
