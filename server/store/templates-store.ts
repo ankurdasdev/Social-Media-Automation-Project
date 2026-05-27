@@ -20,6 +20,7 @@ function mapRowToTemplate(row: any): Template {
       mimeType: "",
       downloadUrl: ""
     }] : []),
+    emailTemplateType: row.email_template_type || "body",
     createdAt: row.created_at?.toISOString(),
     updatedAt: row.updated_at?.toISOString(),
   };
@@ -48,9 +49,9 @@ export async function createTemplate(userId: string, data: CreateTemplateRequest
   const sql = `
     INSERT INTO templates (
       user_id, name, category, content, email_subject, is_attachment, 
-      attachment_url, attachment_detail_text, drive_file_id, drive_file_name, drive_attachments
+      attachment_url, attachment_detail_text, drive_file_id, drive_file_name, drive_attachments, email_template_type
     )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
     RETURNING *
   `;
   const values = [
@@ -64,7 +65,8 @@ export async function createTemplate(userId: string, data: CreateTemplateRequest
     data.attachmentDetailText,
     data.driveFileId,
     data.driveFileName,
-    JSON.stringify(data.driveAttachments || [])
+    JSON.stringify(data.driveAttachments || []),
+    data.emailTemplateType || "body"
   ];
   const row = await queryOne(sql, values);
   return mapRowToTemplate(row);

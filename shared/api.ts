@@ -207,6 +207,7 @@ export interface Template {
   driveFileId?: string;
   driveFileName?: string;
   driveAttachments?: DriveFile[];
+  emailTemplateType?: "body" | "footer";
   createdAt: string;
   updatedAt: string;
 }
@@ -223,6 +224,7 @@ export interface CreateTemplateRequest {
   driveFileId?: string;
   driveFileName?: string;
   driveAttachments?: DriveFile[];
+  emailTemplateType?: "body" | "footer";
 }
 
 export interface UpdateTemplateRequest {
@@ -236,6 +238,7 @@ export interface UpdateTemplateRequest {
   driveFileId?: string;
   driveFileName?: string;
   driveAttachments?: DriveFile[];
+  emailTemplateType?: "body" | "footer";
 }
 
 export interface TemplatesResponse {
