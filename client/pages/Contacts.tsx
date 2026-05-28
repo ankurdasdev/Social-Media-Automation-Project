@@ -1,8 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Loader2, RefreshCw, Upload } from "lucide-react";
+import { Plus, Loader2, RefreshCw } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
-import { ExcelImportDialog } from "@/components/contacts/ExcelImportDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -45,21 +44,7 @@ export default function Contacts() {
   const [localSheets, setLocalSheets] = useState<string[]>([]);
   const [sendingProgress, setSendingProgress] = useState<{ current: number; total: number; message: string } | null>(null);
   const [aiSearchResults, setAISearchResults] = useState<Contact[] | null>(null);
-  const [isExcelImportOpen, setIsExcelImportOpen] = useState(false);
   const userId = getOrCreateUserId();
-
-  const handleImportComplete = (importedSheets: string[]) => {
-    queryClient.invalidateQueries({ queryKey: ["contacts"] });
-    importedSheets.forEach((sheet) => {
-      setLocalSheets((prev) => {
-        if (prev.includes(sheet)) return prev;
-        return [...prev, sheet];
-      });
-    });
-    if (importedSheets.length > 0) {
-      setActiveTab(importedSheets[0]);
-    }
-  };
 
   // Handle deep-linking filters
   const initialStatus = searchParams.get("status")?.toUpperCase(); // e.g. "SENT", "FAILED"
@@ -412,15 +397,6 @@ export default function Contacts() {
             </p>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-4">
-            <Button
-              variant="outline"
-              size="lg"
-              className="h-16 border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/10 text-emerald-500 rounded-2xl font-black px-8 shadow-xl transition-all active:scale-[0.98] group"
-              onClick={() => setIsExcelImportOpen(true)}
-            >
-              <Upload className="mr-3 h-5 w-5 text-emerald-500 group-hover:scale-110 transition-transform" />
-              UPLOAD SPREADSHEET
-            </Button>
             <Button
               variant="outline"
               size="lg"
