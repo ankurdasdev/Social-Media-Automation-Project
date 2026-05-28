@@ -370,7 +370,7 @@ export default function Controller() {
     <AppLayout>
       <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
         {/* Header */}
-        <div className="flex flex-col gap-6">
+        <div id="tutorial-controller-welcome" className="flex flex-col gap-6">
           <div className="space-y-2">
             <h1 className="text-4xl font-black tracking-tighter text-foreground sm:text-5xl">
               Source <span className="text-primary italic">Manager</span>
@@ -382,6 +382,7 @@ export default function Controller() {
           <div className="flex flex-wrap items-center gap-3">
             {activeTab === "whatsapp" && (
               <Button
+                id="tutorial-controller-sync"
                 variant="outline"
                 onClick={() => syncGroupsMutation.mutate()}
                 disabled={syncGroupsMutation.isPending}
@@ -393,6 +394,7 @@ export default function Controller() {
             )}
             {activeTab === "instagram" && (
               <Button
+                id="tutorial-controller-sync"
                 variant="outline"
                 onClick={() => syncInstagramMutation.mutate()}
                 disabled={syncInstagramMutation.isPending}
@@ -403,6 +405,7 @@ export default function Controller() {
               </Button>
             )}
             <Button 
+                id="tutorial-controller-templates"
                 variant="outline" 
                 onClick={() => setIsTemplateManagerOpen(true)} 
                 className="h-12 px-6 rounded-xl font-bold bg-background/50 border-border/50 gap-2 hover:bg-muted transition-all"
@@ -411,6 +414,7 @@ export default function Controller() {
               Manage Templates
             </Button>
             <Button 
+                id="tutorial-controller-profiling"
                 variant="outline" 
                 onClick={() => setIsAIProfilingOpen(true)} 
                 className="h-12 px-6 rounded-xl font-bold bg-purple-500/5 border-purple-500/20 text-purple-600 gap-2 hover:bg-purple-500/10 transition-all shadow-sm"
@@ -419,7 +423,7 @@ export default function Controller() {
               AI Profiling
             </Button>
             <Button 
-                id="tutorial-automation-run"
+                id="tutorial-controller-scheduler"
                 variant="outline" 
                 onClick={() => setIsAIScheduleOpen(true)} 
                 className="h-12 px-6 rounded-xl font-bold bg-violet-500/5 border-violet-500/20 text-violet-600 gap-2 hover:bg-violet-500/10 transition-all shadow-sm"
@@ -428,6 +432,7 @@ export default function Controller() {
               Auto-Scheduler
             </Button>
             <Button 
+                id="tutorial-controller-add"
                 onClick={openAddDialog} 
                 className="h-12 px-6 rounded-xl font-black bg-foreground text-background hover:bg-foreground/90 gap-2 shadow-xl transition-all active:scale-95"
             >

@@ -129,7 +129,7 @@ export function DataTableToolbar<TData>({
       {/* ROW 1: Sheet Tabs + Fullscreen Button */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-hide flex-1 min-w-0">
-          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-auto shrink-0">
+          <Tabs id="tutorial-contacts-sheets" value={activeTab} onValueChange={handleTabChange} className="w-auto shrink-0">
             <TabsList className="flex h-12 p-1 bg-muted/20 border border-white/5 rounded-2xl backdrop-blur-xl">
               <TabsTrigger value="all" className="h-9 px-5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] data-[state=active]:bg-foreground data-[state=active]:text-background transition-all whitespace-nowrap">
                 All Contacts
@@ -193,6 +193,7 @@ export function DataTableToolbar<TData>({
 
         {/* AI Mode Toggle */}
         <Button
+          id="tutorial-contacts-ai"
           variant="ghost"
           size="icon"
           onClick={() => setSearchMode(searchMode === "normal" ? "ai" : "normal")}
@@ -261,6 +262,7 @@ export function DataTableToolbar<TData>({
 
         {/* Import Excel */}
         <Button
+          id="tutorial-contacts-import"
           variant="outline"
           size="sm"
           onClick={() => setIsExcelImportOpen(true)}

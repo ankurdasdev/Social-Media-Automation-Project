@@ -385,7 +385,7 @@ export default function Contacts() {
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] -z-10 animate-pulse-slow" />
 
         {/* Header Section */}
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-8 px-6 pt-4">
+        <div id="tutorial-contacts-welcome" className="flex flex-col lg:flex-row items-center justify-between gap-8 px-6 pt-4">
           <div className="space-y-4 text-center lg:text-left">
             <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[10px] font-black tracking-[0.2em] uppercase">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -411,7 +411,7 @@ export default function Contacts() {
               )}
               IMPORT CONTACTS
             </Button>
-            <Button id="tutorial-add-contact" size="lg" onClick={handleOpenAddLead} className="h-16 bg-foreground text-background hover:bg-foreground/90 shadow-2xl shadow-primary/20 rounded-2xl font-black px-10 transition-all hover:-translate-y-1 active:scale-[0.98]">
+            <Button id="tutorial-contacts-add" size="lg" onClick={handleOpenAddLead} className="h-16 bg-foreground text-background hover:bg-foreground/90 shadow-2xl shadow-primary/20 rounded-2xl font-black px-10 transition-all hover:-translate-y-1 active:scale-[0.98]">
               <Plus className="mr-3 h-6 w-6" /> ADD CONTACT
             </Button>
           </div>

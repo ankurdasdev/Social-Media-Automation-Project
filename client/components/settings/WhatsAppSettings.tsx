@@ -139,7 +139,7 @@ export function WhatsAppSettings() {
   const instance = status?.instance;
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div id="tutorial-settings-whatsapp" className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Top Banner - Sync Progress */}
       {isConnected && (syncing || syncDone) && (
         <div className={cn(
