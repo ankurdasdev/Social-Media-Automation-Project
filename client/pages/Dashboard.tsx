@@ -71,7 +71,7 @@ export default function Dashboard() {
     <AppLayout>
       <div className="space-y-16 pb-24 animate-in fade-in duration-1000">
         {/* Welcome Section / Hero Cluster */}
-        <section className="relative group p-10 md:p-16 rounded-[3rem] overflow-hidden border border-white/10 shadow-2xl bg-card/20 backdrop-blur-3xl">
+        <section id="tutorial-dashboard-welcome" className="relative group p-10 md:p-16 rounded-[3rem] overflow-hidden border border-white/10 shadow-2xl bg-card/20 backdrop-blur-3xl">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/5 to-transparent dark:from-primary/10" />
           
           <div className="relative flex flex-col lg:flex-row items-center gap-16 z-10">
@@ -122,7 +122,7 @@ export default function Dashboard() {
         </section>
 
         {/* Global Statistics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div id="tutorial-dashboard-stats" className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {stats.map((stat, index) => {
             const Icon = stat.icon;
             return (
@@ -165,7 +165,7 @@ export default function Dashboard() {
         {/* Contacts & Quick Actions */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
            {/* Navigation */}
-           <div className="lg:col-span-4 space-y-6">
+           <div id="tutorial-dashboard-nav" className="lg:col-span-4 space-y-6">
               <div className="flex items-center gap-3 px-2">
                 <LayoutDashboard className="w-4 h-4 text-primary" />
                 <h2 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Quick Navigation</h2>
@@ -177,7 +177,7 @@ export default function Dashboard() {
                     { label: "Analytics", desc: "View your performance stats", icon: BarChart3, link: "/analytics", color: "text-orange-500", bg: "bg-orange-500/5" },
                   ].map((nav, i) => (
                     <Link key={i} to={nav.link} className="block group">
-                      <div className="p-6 glass-card rounded-3xl border-white/5 hover:border-white/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-5 shadow-lg">
+                       <div className="p-6 glass-card rounded-3xl border-white/5 hover:border-white/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-5 shadow-lg">
                         <div className={cn("p-4 rounded-2xl border border-white/10 group-hover:scale-110 transition-transform duration-500", nav.bg, nav.color)}>
                           <nav.icon className="w-6 h-6" />
                         </div>
@@ -192,7 +192,7 @@ export default function Dashboard() {
            </div>
 
            {/* Live Extraction Stream */}
-           <div className="lg:col-span-8 space-y-6">
+           <div id="tutorial-dashboard-contacts" className="lg:col-span-8 space-y-6">
               <div className="flex items-center justify-between px-2">
                 <div className="flex items-center gap-3">
                     <RefreshCw className="w-4 h-4 text-emerald-500 animate-spin-slow" />

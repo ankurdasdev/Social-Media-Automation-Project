@@ -177,7 +177,7 @@ export default function InstagramSettings() {
   const isBusy = loginStep === "logging_in" || loginStep === "saving";
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div id="tutorial-settings-instagram" className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="relative overflow-hidden glass-card border-white/10 rounded-[2.5rem] shadow-2xl bg-background/60">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-pink-500/5 rounded-full blur-[120px] -z-10 animate-pulse-slow" />
         <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-purple-500/5 rounded-full blur-[100px] -z-10" />

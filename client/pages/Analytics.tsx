@@ -88,7 +88,7 @@ export default function Analytics() {
     <AppLayout>
       <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <div id="tutorial-analytics-welcome" className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div className="space-y-2">
             <h1 className="text-4xl font-black tracking-tighter text-foreground sm:text-5xl">
               Performance <span className="text-primary italic">Analytics</span>
@@ -97,7 +97,7 @@ export default function Analytics() {
               Deconstruct outreach efficiency across all channels.
             </p>
           </div>
-          <div className="flex gap-2 p-1 bg-muted/50 rounded-2xl border border-border/50 shrink-0">
+          <div id="tutorial-analytics-timeframe" className="flex gap-2 p-1 bg-muted/50 rounded-2xl border border-border/50 shrink-0">
             {(["daily", "weekly", "monthly"] as const).map((view) => (
               <Button
                 key={view}
@@ -117,7 +117,7 @@ export default function Analytics() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div id="tutorial-analytics-metrics" className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {stats.map((stat, index) => {
             const Icon = stat.icon;
             return (
@@ -163,7 +163,7 @@ export default function Analytics() {
           })}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div id="tutorial-analytics-charts" className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Chart */}
           <Card className="lg:col-span-2 glass-card border-white/10 dark:border-white/5 shadow-xl">
             <CardHeader className="p-8 pb-4">

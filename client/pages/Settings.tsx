@@ -126,7 +126,7 @@ export default function Settings() {
   return (
     <AppLayout>
       <div className="max-w-5xl mx-auto p-2 md:p-6 lg:p-10 space-y-12 pb-24 relative">
-        <div className="flex flex-col gap-4 text-center md:text-left">
+        <div id="tutorial-settings-welcome" className="flex flex-col gap-4 text-center md:text-left">
           <div className="inline-flex items-center self-center md:self-start gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 text-[10px] font-black tracking-widest uppercase">
             <ShieldCheck className="w-3 h-3" />
             Security Verified
@@ -314,7 +314,7 @@ export default function Settings() {
                         </div>
                       </div>
                     ) : (
-                      <div className="flex flex-col items-center justify-center space-y-12 text-center animate-in fade-in duration-700">
+                      <div id="tutorial-settings-google" className="flex flex-col items-center justify-center space-y-12 text-center animate-in fade-in duration-700">
                         <div className="relative">
                           <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full animate-pulse-slow" />
                           <div className="relative h-24 w-24 bg-muted/40 backdrop-blur-xl rounded-[2.5rem] flex items-center justify-center border border-white/10 shadow-2xl group transition-all hover:rotate-12 cursor-pointer">
