@@ -151,6 +151,7 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
 
   const handleClose = () => {
     setIsActive(false);
+    localStorage.setItem("hasSeenTutorial", "true");
   };
 
   return (
