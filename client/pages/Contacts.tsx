@@ -699,12 +699,6 @@ export default function Contacts() {
           </div>
         </div>
       )}
-
-      <ExcelImportDialog
-        isOpen={isExcelImportOpen}
-        onClose={() => setIsExcelImportOpen(false)}
-        onImportComplete={handleImportComplete}
-      />
     </AppLayout>
   );
 }
