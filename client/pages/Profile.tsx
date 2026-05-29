@@ -20,10 +20,21 @@ import {
   CheckCircle2, 
   Loader2,
   ShieldCheck,
-  Fingerprint
+  Fingerprint,
+  AlertTriangle,
+  Trash2
 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { 
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function Profile() {
   const queryClient = useQueryClient();
@@ -35,6 +46,38 @@ export default function Profile() {
   const [dob, setDob] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
+
+  const deleteAccountMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/auth/delete-account", {
+        method: "DELETE",
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("casthub_token")}`
+        },
+        body: JSON.stringify({ userId: user?.userId }),
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to delete account");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      localStorage.removeItem("casthub_token");
+      localStorage.removeItem("casthub_user_id");
+      toast.success("Account permanently deleted");
+      setTimeout(() => {
+        window.location.href = "/signup";
+      }, 1000);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    }
+  });
 
   const { data: userProfile, isLoading: isProfileLoading } = useQuery({
     queryKey: ["userProfile"],
@@ -349,9 +392,82 @@ export default function Profile() {
                 </div>
               </Card>
             </form>
+
+            {/* Danger Zone */}
+            <Card className="glass-card border-rose-500/20 bg-rose-500/5 overflow-hidden mt-8">
+              <CardHeader className="p-8 pb-4">
+                <CardTitle className="text-2xl font-black tracking-tight text-rose-500 flex items-center gap-2">
+                  <AlertTriangle className="w-6 h-6 animate-pulse" />
+                  DANGER ZONE
+                </CardTitle>
+                <CardDescription className="text-sm font-medium text-rose-400/80">
+                  Irreversible actions related to your account.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-8 pt-6 space-y-6">
+                <div className="p-5 rounded-2xl bg-rose-500/10 border border-rose-500/20">
+                  <p className="text-sm font-bold text-rose-500 leading-relaxed">
+                    Permanently delete your CastHub account and all associated contacts, synced message groups, and outreach templates. This action is absolute, immediate, and cannot be undone.
+                  </p>
+                </div>
+                
+                <div className="flex justify-end">
+                  <Button 
+                    type="button"
+                    onClick={() => setIsDeleteConfirmOpen(true)}
+                    className="h-14 px-10 rounded-2xl font-black bg-rose-600 text-white hover:bg-rose-700 shadow-xl shadow-rose-600/10 hover:shadow-rose-600/20 transition-all active:scale-95 gap-3"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                    DELETE ACCOUNT
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
+
+      <AlertDialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
+        <AlertDialogContent className="glass-card border-rose-500/20 bg-background/95 rounded-[2.5rem] shadow-2xl p-8 max-w-md animate-in zoom-in-95 duration-300 z-[9999]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-2xl font-black text-rose-500 uppercase tracking-tight flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 animate-pulse" />
+              CONFIRM DELETION
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm font-medium leading-relaxed mt-4">
+              To verify and confirm, please type your email <span className="text-foreground font-black select-all">{user?.email}</span> in the field below:
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          
+          <div className="py-6 space-y-3">
+            <Input 
+              type="text" 
+              placeholder={user?.email || "Type email..."} 
+              value={deleteConfirmationText}
+              onChange={(e) => setDeleteConfirmationText(e.target.value)}
+              className="h-14 rounded-2xl bg-muted/40 font-bold border-rose-500/20 focus:border-rose-500 focus:ring-rose-500"
+            />
+          </div>
+
+          <AlertDialogFooter className="gap-3 mt-2">
+            <AlertDialogCancel className="h-12 rounded-xl border-white/10 font-black text-[10px] uppercase tracking-widest">
+              CANCEL
+            </AlertDialogCancel>
+            <Button
+              disabled={deleteConfirmationText !== user?.email || deleteAccountMutation.isPending}
+              onClick={() => deleteAccountMutation.mutate()}
+              className="h-12 rounded-xl bg-rose-600 text-white hover:bg-rose-700 disabled:opacity-40 disabled:cursor-not-allowed font-black text-[10px] uppercase tracking-widest gap-2 shadow-xl shadow-rose-600/10"
+            >
+              {deleteAccountMutation.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Trash2 className="w-4 h-4" />
+              )}
+              CONFIRM DELETE
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppLayout>
   );
 }
