@@ -165,9 +165,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
                   {isActive && (
                     <div className="absolute right-4 w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_rgba(139,92,246,0.8)]" />
                   )}
-                </Link>
-              );
-            </nav>
+            })}
+          </nav>
 
           {/* Status Indicators */}
           <div className="mt-auto pt-10 border-t border-border/30 space-y-6 relative">
