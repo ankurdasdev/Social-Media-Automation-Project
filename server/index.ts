@@ -66,7 +66,8 @@ import {
   handleResetPassword, 
   handleResetPasswordConfirm,
   handleGetAIKeywords,
-  handleUpdateAIKeywords
+  handleUpdateAIKeywords,
+  handleDeleteAccount
 } from "./routes/auth";
 import { runIngestionJob } from "./jobs/ingestion-job";
 import { initIngestionSchedules, ingestionRouter } from "./routes/ingestion-schedule";
@@ -111,6 +112,7 @@ export function createServer() {
   app.post("/api/auth/reset-password/confirm", handleResetPasswordConfirm);
   app.get("/api/auth/keywords", handleGetAIKeywords);
   app.put("/api/auth/keywords", handleUpdateAIKeywords);
+  app.delete("/api/auth/delete-account", handleDeleteAccount);
 
   // ── Source Group Management ────────────────────────────────────────────────
   app.get("/api/groups", handleGetGroups);

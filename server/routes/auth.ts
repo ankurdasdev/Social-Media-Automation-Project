@@ -384,3 +384,47 @@ export const handleUpdateAIKeywords: RequestHandler = async (req, res) => {
   }
 };
 
+// ── DELETE /api/auth/delete-account ───────────────────────────────────────────
+export const handleDeleteAccount: RequestHandler = async (req, res) => {
+  const { userId } = req.body;
+  const queryUserId = req.query.userId as string;
+  const targetUserId = userId || queryUserId;
+
+  if (!targetUserId) {
+    return res.status(400).json({ error: "userId is required" });
+  }
+
+  // 🛡️ Secure Authorization Check: Ensure request contains valid JWT token matching the targetUserId
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "No authorization token provided" });
+  }
+
+  const token = authHeader.slice(7);
+  try {
+    const payload = jwt.verify(token, JWT_SECRET) as { userId: string };
+    if (payload.userId !== targetUserId) {
+      return res.status(403).json({ error: "Forbidden: You are not authorized to delete this account" });
+    }
+  } catch (err) {
+    return res.status(401).json({ error: "Session expired or invalid token" });
+  }
+
+  try {
+    const deleted = await queryOne(
+      "DELETE FROM users WHERE id = $1 RETURNING id",
+      [targetUserId]
+    );
+
+    if (!deleted) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({ message: "Account successfully deleted." });
+  } catch (err: any) {
+    console.error("[auth] Delete account error:", err);
+    res.status(500).json({ error: "Failed to delete account" });
+  }
+};
+
+
