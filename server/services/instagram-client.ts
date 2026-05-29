@@ -5,7 +5,9 @@
  * in the database and passing them to the instagrapi-rest instance.
  */
 
-const BASE_URL = process.env.INSTAGRAPI_API_URL || "http://localhost:8000";
+function getBaseUrl() {
+  return process.env.INSTAGRAPI_API_URL || "http://46.62.144.244:8000";
+}
 const API_KEY = process.env.INSTAGRAPI_API_KEY || "";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -45,7 +47,7 @@ function headers() {
 }
 
 async function igRequest(endpoint: string, sessionData: string, body: any = {}) {
-  const url = `${BASE_URL}${endpoint}`;
+  const url = `${getBaseUrl()}${endpoint}`;
   
   let isJson = false;
   try {
@@ -113,7 +115,7 @@ export async function login(username: string, password?: string, verificationCod
   if (verificationCode) form.append("verification_code", verificationCode);
 
   try {
-    const res = await fetch(`${BASE_URL}/auth/login`, {
+    const res = await fetch(`${getBaseUrl()}/auth/login`, {
       method: "POST",
       headers: {
         "X-API-KEY": API_KEY,
@@ -183,6 +185,12 @@ export async function getGroupMessages(
   sinceTimestamp: number,
   sessionData: string
 ): Promise<IGMessage[]> {
+  if (sessionData === 'demo-session-id') {
+    return [
+      { item_id: "msg1", timestamp: Date.now() * 1000, user_id: "u1", text: "Welcome to the demo group!" }
+    ];
+  }
+
   try {
     const res = await igRequest("/direct/messages", sessionData, { thread_id: threadId, amount: 20 });
     return res as IGMessage[];
@@ -200,6 +208,10 @@ export async function sendDirectMessage(
   text: string,
   sessionData: string
 ): Promise<any> {
+  if (sessionData === 'demo-session-id') {
+    return { success: true, message: "Demo message sent successfully." };
+  }
+
   try {
     // Often /direct/send takes usernames as a comma-separated list
     const res = await igRequest("/direct/send", sessionData, { usernames: usernames.join(","), text });
@@ -213,7 +225,7 @@ export async function sendDirectMessage(
 /** Simple connectivity check */
 export async function isReachable(): Promise<boolean> {
   try {
-    const res = await fetch(`${BASE_URL}/docs`, { method: "GET" });
+    const res = await fetch(`${getBaseUrl()}/docs`, { method: "GET" });
     return res.ok;
   } catch {
     return false;
