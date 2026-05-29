@@ -227,35 +227,6 @@ export default function Profile() {
                     </div>
                 </CardContent>
             </Card>
-
-            {/* Danger Zone */}
-            <Card className="glass-card border-rose-500/20 bg-rose-500/5 overflow-hidden">
-              <CardHeader className="p-6 pb-2">
-                <CardTitle className="text-xl font-black tracking-tight text-rose-500 flex items-center gap-2">
-                  <AlertTriangle className="w-5 h-5 animate-pulse shrink-0" />
-                  DANGER ZONE
-                </CardTitle>
-                <CardDescription className="text-xs font-semibold text-rose-400/80">
-                  Irreversible actions related to your account.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-6 pt-4 space-y-4">
-                <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20">
-                  <p className="text-xs font-bold text-rose-500 leading-relaxed">
-                    Permanently delete your CastHub account and all associated data. This action is absolute, immediate, and cannot be undone.
-                  </p>
-                </div>
-                
-                <Button 
-                  type="button"
-                  onClick={() => setIsDeleteConfirmOpen(true)}
-                  className="w-full h-12 rounded-xl font-black bg-rose-600 text-white hover:bg-rose-700 shadow-xl shadow-rose-600/10 hover:shadow-rose-600/20 transition-all active:scale-95 gap-2 text-xs"
-                >
-                  <Trash2 className="w-4 h-4 shrink-0" />
-                  DELETE ACCOUNT
-                </Button>
-              </CardContent>
-            </Card>
           </div>
 
           {/* Right Column: Edit Form */}
@@ -413,6 +384,39 @@ export default function Profile() {
                 </div>
               </Card>
             </form>
+
+            {/* Danger Zone */}
+            <div className="mt-8">
+              <Card className="glass-card border-rose-500/20 bg-rose-500/5 overflow-hidden">
+                <CardHeader className="p-8 pb-4">
+                  <CardTitle className="text-2xl font-black tracking-tight text-rose-500 flex items-center gap-2">
+                    <AlertTriangle className="w-6 h-6 animate-pulse shrink-0" />
+                    Danger Zone
+                  </CardTitle>
+                  <CardDescription className="text-sm font-medium text-rose-400/80">
+                    Irreversible actions related to your account.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-8 pt-4 space-y-6">
+                  <div className="p-5 rounded-2xl bg-rose-500/10 border border-rose-500/20">
+                    <p className="text-sm font-bold text-rose-500 leading-relaxed">
+                      Permanently delete your CastHub account and all associated data. This action is absolute, immediate, and cannot be undone.
+                    </p>
+                  </div>
+                  
+                  <div className="flex justify-end">
+                    <Button 
+                      type="button"
+                      onClick={() => setIsDeleteConfirmOpen(true)}
+                      className="h-14 px-8 rounded-2xl font-black bg-rose-600 text-white hover:bg-rose-700 shadow-xl shadow-rose-600/10 hover:shadow-rose-600/20 transition-all active:scale-95 gap-3"
+                    >
+                      <Trash2 className="w-5 h-5 shrink-0" />
+                      DELETE ACCOUNT
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </div>

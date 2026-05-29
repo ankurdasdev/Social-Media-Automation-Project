@@ -167,19 +167,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                   )}
                 </Link>
               );
-            })}
-            
-            <button
-              id="tutorial-restart-btn"
-              onClick={() => startTutorial()}
-              className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 group relative text-muted-foreground hover:text-foreground hover:bg-muted/30"
-            >
-              <div className="w-5 h-5 flex items-center justify-center">
-                <Sparkles className="w-4 h-4 transition-transform group-hover:scale-110 text-amber-500" />
-              </div>
-              <span className="font-bold text-sm tracking-tight text-amber-500/90 group-hover:text-amber-500">View Tutorial</span>
-            </button>
-          </nav>
+            </nav>
 
           {/* Status Indicators */}
           <div className="mt-auto pt-10 border-t border-border/30 space-y-6 relative">
@@ -278,15 +266,17 @@ export default function AppLayout({ children }: AppLayoutProps) {
           </div>
 
           <div className="flex items-center gap-4">
-             <Button
-               variant="outline"
-               size="sm"
-               onClick={() => startTutorial()}
-               className="h-11 rounded-xl bg-amber-500/10 border-amber-500/20 text-amber-500 hover:text-amber-400 gap-2 hover:bg-amber-500/20 transition-all font-black text-[10px] tracking-widest uppercase shadow-md shadow-amber-500/5 group"
-             >
-               <Sparkles className="w-4 h-4 text-amber-500 group-hover:rotate-45 transition-transform" />
-               Page Guide
-             </Button>
+             {location.pathname !== "/profile" && (
+               <Button
+                 variant="outline"
+                 size="sm"
+                 onClick={() => startTutorial()}
+                 className="h-11 rounded-xl bg-amber-500/10 border-amber-500/20 text-amber-500 hover:text-amber-400 gap-2 hover:bg-amber-500/20 transition-all font-black text-[10px] tracking-widest uppercase shadow-md shadow-amber-500/5 group"
+               >
+                 <Sparkles className="w-4 h-4 text-amber-500 group-hover:rotate-45 transition-transform" />
+                 Page Guide
+               </Button>
+             )}
 
              {/* Dark Mode Toggle */}
              <button
