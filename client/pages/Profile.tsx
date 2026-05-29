@@ -228,21 +228,6 @@ export default function Profile() {
                 </CardContent>
             </Card>
 
-            <Card className="glass-card border-white/10">
-                <CardHeader>
-                    <CardTitle className="text-lg font-black flex items-center gap-2">
-                        <Fingerprint className="w-5 h-5 text-primary" />
-                        SYSTEM INFO
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">User ID</p>
-                        <p className="text-xs font-mono bg-muted/50 p-2 rounded-lg truncate">{user?.userId}</p>
-                    </div>
-                </CardContent>
-            </Card>
-
             {/* Danger Zone */}
             <Card className="glass-card border-rose-500/20 bg-rose-500/5 overflow-hidden">
               <CardHeader className="p-6 pb-2">
