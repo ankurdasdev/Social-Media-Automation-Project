@@ -290,7 +290,7 @@ export const handleInstagramSyncThreads: RequestHandler = async (req, res) => {
          ON CONFLICT (user_id, name, platform) DO UPDATE SET
            url = EXCLUDED.url,
            updated_at = NOW()`,
-        [userId, name, t.id]
+        [userId, name, `thread:${t.id}`]
       );
       addedCount++;
     }

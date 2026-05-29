@@ -9,6 +9,7 @@ import {
   getAccountPosts,
   getHashtagPosts,
   getGroupMessages as getIGGroupMessages,
+  getThreads as getIGThreads,
 } from "../services/instagram-client";
 import { parseMessages, RawMessage } from "../services/ai-parser";
 import type { IngestionRunResult } from "@shared/api";
@@ -98,6 +99,19 @@ export async function runIngestionJob(): Promise<IngestionRunResult> {
 
         const userMessages: RawMessage[] = [];
 
+        let igThreadsMap: Record<string, any> = {};
+        if (igSession?.session_data) {
+          try {
+            console.log(`[ingestion] Pre-fetching IG threads for user ${userId} to check activity timestamps...`);
+            const igThreads = await getIGThreads(igSession.session_data, 100);
+            for (const t of igThreads || []) {
+               igThreadsMap[t.id] = t;
+            }
+          } catch (err: any) {
+             console.error(`[ingestion] Failed to pre-fetch IG threads:`, err.message);
+          }
+        }
+
         for (const grp of groups) {
           try {
             // ── WhatsApp Groups ─────────────────────────────────────────────
@@ -168,12 +182,44 @@ export async function runIngestionJob(): Promise<IngestionRunResult> {
               } else if (grp.type === "group") {
                 const threadMatch = grp.url?.match(/thread:([^,\s]+)/);
                 if (threadMatch) {
-                  const msgs = await getIGGroupMessages(threadMatch[1], since, session);
-                  messagesScanned += msgs.length;
-                  for (const m of msgs) {
-                    if (m.text?.trim().length >= 20) {
-                      userMessages.push({ text: m.text, source: "instagram" });
+                  const threadId = threadMatch[1];
+                  const thread = igThreadsMap[threadId];
+                  
+                  // Check activity timestamp to avoid rate limits
+                  let shouldFetch = true;
+                  if (thread) {
+                    // Instagram timestamps can be numeric epoch or ISO string depending on instagrapi format
+                    let lastActivityAt = 0;
+                    if (thread.last_activity_at) {
+                      lastActivityAt = new Date(thread.last_activity_at).getTime();
+                    } else if (thread.last_permanent_item?.timestamp) {
+                      // Some items use microseconds timestamp
+                      lastActivityAt = Number(thread.last_permanent_item.timestamp) / 1000;
                     }
+
+                    const lastScrapedAt = grp.last_scraped ? new Date(grp.last_scraped).getTime() : 0;
+                    if (lastActivityAt && lastActivityAt <= lastScrapedAt) {
+                      console.log(`[ingestion] Skipping IG group "${grp.name}" - no new activity since last scrape.`);
+                      shouldFetch = false;
+                    }
+                  }
+
+                  if (shouldFetch) {
+                    console.log(`[ingestion] Fetching messages for IG group "${grp.name}"... (sleeping to avoid rate-limits)`);
+                    // Sleep 10-20 seconds to avoid ban
+                    const sleepMs = Math.floor(Math.random() * 10000) + 10000;
+                    await new Promise(r => setTimeout(r, sleepMs));
+
+                    const msgs = await getIGGroupMessages(threadId, since, session);
+                    messagesScanned += msgs.length;
+                    for (const m of msgs) {
+                      if (m.text?.trim().length >= 20) {
+                        userMessages.push({ text: m.text, source: "instagram" });
+                      }
+                    }
+                    
+                    // Update last_scraped
+                    await query("UPDATE source_groups SET last_scraped = NOW() WHERE id = $1", [grp.id]);
                   }
                 }
               } else {
