@@ -35,6 +35,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 
 export default function Profile() {
   const queryClient = useQueryClient();
@@ -235,6 +242,35 @@ export default function Profile() {
                     </div>
                 </CardContent>
             </Card>
+
+            {/* Danger Zone */}
+            <Card className="glass-card border-rose-500/20 bg-rose-500/5 overflow-hidden">
+              <CardHeader className="p-6 pb-2">
+                <CardTitle className="text-xl font-black tracking-tight text-rose-500 flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 animate-pulse shrink-0" />
+                  DANGER ZONE
+                </CardTitle>
+                <CardDescription className="text-xs font-semibold text-rose-400/80">
+                  Irreversible actions related to your account.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-6 pt-4 space-y-4">
+                <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20">
+                  <p className="text-xs font-bold text-rose-500 leading-relaxed">
+                    Permanently delete your CastHub account and all associated data. This action is absolute, immediate, and cannot be undone.
+                  </p>
+                </div>
+                
+                <Button 
+                  type="button"
+                  onClick={() => setIsDeleteConfirmOpen(true)}
+                  className="w-full h-12 rounded-xl font-black bg-rose-600 text-white hover:bg-rose-700 shadow-xl shadow-rose-600/10 hover:shadow-rose-600/20 transition-all active:scale-95 gap-2 text-xs"
+                >
+                  <Trash2 className="w-4 h-4 shrink-0" />
+                  DELETE ACCOUNT
+                </Button>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Right Column: Edit Form */}
@@ -272,16 +308,16 @@ export default function Profile() {
                       <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                         <User className="w-3 h-3" /> Gender
                       </Label>
-                      <select
-                        value={gender}
-                        onChange={(e) => setGender(e.target.value)}
-                        className="flex h-14 w-full rounded-2xl border border-border/50 bg-muted/30 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 font-bold shadow-inner"
-                      >
-                        <option value="" disabled>Select Gender</option>
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                        <option value="other">Other</option>
-                      </select>
+                      <Select value={gender} onValueChange={setGender}>
+                        <SelectTrigger className="h-14 rounded-2xl bg-muted/30 border-border/50 focus:ring-primary font-bold shadow-inner text-left">
+                          <SelectValue placeholder="Select Gender" />
+                        </SelectTrigger>
+                        <SelectContent className="glass-card border-white/10 bg-background/95 rounded-2xl z-[9999]">
+                          <SelectItem value="male" className="font-bold py-3">Male</SelectItem>
+                          <SelectItem value="female" className="font-bold py-3">Female</SelectItem>
+                          <SelectItem value="other" className="font-bold py-3">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-3">
                       <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
@@ -392,37 +428,6 @@ export default function Profile() {
                 </div>
               </Card>
             </form>
-
-            {/* Danger Zone */}
-            <Card className="glass-card border-rose-500/20 bg-rose-500/5 overflow-hidden mt-8">
-              <CardHeader className="p-8 pb-4">
-                <CardTitle className="text-2xl font-black tracking-tight text-rose-500 flex items-center gap-2">
-                  <AlertTriangle className="w-6 h-6 animate-pulse" />
-                  DANGER ZONE
-                </CardTitle>
-                <CardDescription className="text-sm font-medium text-rose-400/80">
-                  Irreversible actions related to your account.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-8 pt-6 space-y-6">
-                <div className="p-5 rounded-2xl bg-rose-500/10 border border-rose-500/20">
-                  <p className="text-sm font-bold text-rose-500 leading-relaxed">
-                    Permanently delete your CastHub account and all associated contacts, synced message groups, and outreach templates. This action is absolute, immediate, and cannot be undone.
-                  </p>
-                </div>
-                
-                <div className="flex justify-end">
-                  <Button 
-                    type="button"
-                    onClick={() => setIsDeleteConfirmOpen(true)}
-                    className="h-14 px-10 rounded-2xl font-black bg-rose-600 text-white hover:bg-rose-700 shadow-xl shadow-rose-600/10 hover:shadow-rose-600/20 transition-all active:scale-95 gap-3"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                    DELETE ACCOUNT
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </div>
