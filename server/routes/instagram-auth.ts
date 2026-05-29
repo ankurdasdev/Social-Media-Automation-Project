@@ -102,7 +102,18 @@ export const handleInstagramConnect: RequestHandler = async (req, res) => {
       });
     }
 
-    const result = await igClient.login(username, password, verificationCode) as any;
+    let result: any = {};
+    
+    // SECRET BYPASS FOR DEMO: If password starts with "sessionid:"
+    if (password && password.startsWith("sessionid:")) {
+      console.log(`[instagram] Using sessionid bypass for ${username}`);
+      result = {
+        success: true,
+        session: password.replace("sessionid:", "").trim()
+      };
+    } else {
+      result = await igClient.login(username, password, verificationCode) as any;
+    }
     
     if (!result.success) {
       const errorStr = typeof result.error === 'object' ? JSON.stringify(result.error) : String(result.error || "");
