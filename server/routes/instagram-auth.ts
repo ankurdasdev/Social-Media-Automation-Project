@@ -257,26 +257,10 @@ export const handleInstagramSyncThreads: RequestHandler = async (req, res) => {
       return res.status(401).json({ error: "Instagram not connected" });
     }
 
-    // Fetch inbox threads via instagrapi-rest
-    const BASE_URL = process.env.INSTAGRAPI_API_URL || "http://localhost:8000";
-    const API_KEY = process.env.INSTAGRAPI_API_KEY || "";
-
-    const threadRes = await fetch(`${BASE_URL}/direct/threads`, {
-      method: "POST",
-      headers: { "X-API-KEY": API_KEY, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        settings: JSON.parse(session.session_data),
-        amount: 50,
-      }),
-    });
-
-    if (!threadRes.ok) {
-      const txt = await threadRes.text();
-      console.error("[instagram] Thread fetch failed:", txt);
-      return res.status(500).json({ error: "Failed to fetch Instagram threads" });
-    }
-
-    const threads: any[] = await threadRes.json();
+    // Fetch inbox threads via instagrapi-rest using our new client function
+    // This safely handles both JSON settings objects and plain sessionid strings
+    const threadsRes = await igClient.getThreads(session.session_data, 50);
+    const threads: any[] = threadsRes || [];
     let addedCount = 0;
 
     for (const t of threads) {
