@@ -130,6 +130,9 @@ async function runMigrations(): Promise<void> {
     ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS url TEXT;
     ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS platform TEXT NOT NULL DEFAULT 'whatsapp';
     ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS description TEXT;
+    ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS enabled BOOLEAN DEFAULT TRUE;
+    ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS is_manual BOOLEAN DEFAULT FALSE;
+    ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS last_verified_at TIMESTAMPTZ;
     ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending';
     ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS status_message TEXT;
     ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS member_count INTEGER;
