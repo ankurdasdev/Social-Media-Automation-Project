@@ -44,6 +44,7 @@ import {
   Trash2,
   FileText,
   Paperclip,
+  HardDrive,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -185,8 +186,9 @@ export default function Templates() {
   const [activeTab, setActiveTab] = React.useState<TemplateCategory>("whatsapp");
   const [editorOpen, setEditorOpen] = React.useState(false);
   const [editingTemplate, setEditingTemplate] = React.useState<Template | null>(null);
-  const [emailTypeSelectOpen, setEmailTypeSelectOpen] = React.useState(false);
+  const [typeSelectOpen, setTypeSelectOpen] = React.useState(false);
   const [selectedEmailType, setSelectedEmailType] = React.useState<"body" | "footer" | undefined>(undefined);
+  const [forceAttachment, setForceAttachment] = React.useState(false);
 
   // Rename dialog state
   const [renameOpen, setRenameOpen] = React.useState(false);
@@ -203,23 +205,33 @@ export default function Templates() {
   });
 
   const handleCreateNew = () => {
-    if (activeTab === "email") {
-      setEmailTypeSelectOpen(true);
+    setEditingTemplate(null);
+    setForceAttachment(false);
+    setSelectedEmailType(undefined);
+    setTypeSelectOpen(true);
+  };
+
+  const handleSelectType = (type: "text" | "attachment" | "body" | "footer") => {
+    setTypeSelectOpen(false);
+    if (type === "attachment") {
+      setForceAttachment(true);
+      setEditorOpen(true);
+    } else if (type === "body" || type === "footer") {
+      setForceAttachment(false);
+      setSelectedEmailType(type);
+      setEditorOpen(true);
     } else {
-      setEditingTemplate(null);
+      setForceAttachment(false);
       setSelectedEmailType(undefined);
       setEditorOpen(true);
     }
   };
 
-  const handleSelectEmailType = (type: "body" | "footer") => {
-    setEmailTypeSelectOpen(false);
-    setEditingTemplate(null);
-    setSelectedEmailType(type);
-    setEditorOpen(true);
-  };
+  // keep old handler name alias for edit flow
+  const handleSelectEmailType = (type: "body" | "footer") => handleSelectType(type);
 
   const handleEdit = (t: Template) => {
+    setForceAttachment(false);
     setEditingTemplate(t);
     setEditorOpen(true);
   };
@@ -334,36 +346,79 @@ export default function Templates() {
         template={editingTemplate}
         defaultCategory={activeTab}
         selectedEmailType={selectedEmailType}
+        forceAttachment={forceAttachment}
       />
 
-      {/* Email Template Type Selector Dialog */}
-      <Dialog open={emailTypeSelectOpen} onOpenChange={setEmailTypeSelectOpen}>
-        <DialogContent className="sm:max-w-[450px] glass-card border-white/10 dark:border-white/5 rounded-[2rem] p-10 shadow-2xl">
+      {/* Template Type Selector Dialog — shown for all platforms */}
+      <Dialog open={typeSelectOpen} onOpenChange={setTypeSelectOpen}>
+        <DialogContent className="sm:max-w-[480px] glass-card border-white/10 dark:border-white/5 rounded-[2rem] p-10 shadow-2xl">
           <DialogHeader className="space-y-3">
-            <DialogTitle className="text-2xl font-black tracking-tight text-center">EMAIL TEMPLATE TYPE</DialogTitle>
+            <DialogTitle className="text-2xl font-black tracking-tight text-center">
+              {activeTab === "whatsapp" ? "WHATSAPP" : activeTab === "email" ? "EMAIL" : "INSTAGRAM"} TEMPLATE TYPE
+            </DialogTitle>
             <DialogDescription className="text-center font-medium uppercase tracking-widest text-[9px]">
               Choose the template structure to initialize
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="grid grid-cols-1 gap-4 pt-6">
-            <Button 
-              onClick={() => handleSelectEmailType("body")} 
-              className="h-24 rounded-2xl flex flex-col items-center justify-center p-4 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 gap-1.5 transition-all text-sm font-black uppercase"
+            {/* Text Template — all platforms */}
+            {activeTab !== "email" && (
+              <button
+                onClick={() => handleSelectType("text")}
+                className="h-24 rounded-2xl flex flex-col items-center justify-center p-4 bg-muted/20 hover:bg-muted/40 border border-white/10 hover:border-white/20 text-foreground gap-1.5 transition-all"
+              >
+                <FileText className="h-6 w-6 text-primary" />
+                <span className="text-sm font-black uppercase">
+                  {activeTab === "whatsapp" ? "WhatsApp" : "Instagram"} Message Template
+                </span>
+                <span className="text-[9px] text-muted-foreground/60 font-bold uppercase tracking-widest">
+                  Plain text with personalization tags
+                </span>
+              </button>
+            )}
+
+            {/* Email body / footer */}
+            {activeTab === "email" && (
+              <>
+                <button
+                  onClick={() => handleSelectType("body")}
+                  className="h-24 rounded-2xl flex flex-col items-center justify-center p-4 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 gap-1.5 transition-all"
+                >
+                  <Mail className="h-6 w-6" />
+                  <span className="text-sm font-black uppercase">Email Body Template</span>
+                  <span className="text-[9px] text-muted-foreground/60 font-bold uppercase tracking-widest">Contains Subject &amp; Main Content</span>
+                </button>
+                <button
+                  onClick={() => handleSelectType("footer")}
+                  className="h-24 rounded-2xl flex flex-col items-center justify-center p-4 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 gap-1.5 transition-all"
+                >
+                  <FileText className="h-6 w-6" />
+                  <span className="text-sm font-black uppercase">Email Footer Template</span>
+                  <span className="text-[9px] text-muted-foreground/60 font-bold uppercase tracking-widest">Appended to the bottom of drafts</span>
+                </button>
+              </>
+            )}
+
+            {/* Attachment — all platforms */}
+            <button
+              onClick={() => handleSelectType("attachment")}
+              className={`h-24 rounded-2xl flex flex-col items-center justify-center p-4 border gap-1.5 transition-all ${
+                activeTab === "whatsapp"
+                  ? "bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/30 text-emerald-400"
+                  : activeTab === "instagram"
+                  ? "bg-pink-500/10 hover:bg-pink-500/20 border-pink-500/30 text-pink-400"
+                  : "bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/30 text-purple-400"
+              }`}
             >
-              <Mail className="h-6 w-6" />
-              <span>Email Body Template</span>
-              <span className="text-[9px] text-muted-foreground/60 font-bold uppercase tracking-widest mt-0.5">Contains Subject & Main Content</span>
-            </Button>
-            
-            <Button 
-              onClick={() => handleSelectEmailType("footer")} 
-              className="h-24 rounded-2xl flex flex-col items-center justify-center p-4 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 gap-1.5 transition-all text-sm font-black uppercase"
-            >
-              <FileText className="h-6 w-6" />
-              <span>Email Footer Template</span>
-              <span className="text-[9px] text-muted-foreground/60 font-bold uppercase tracking-widest mt-0.5">Appended to the bottom of drafts</span>
-            </Button>
+              <Paperclip className="h-6 w-6" />
+              <span className="text-sm font-black uppercase">Attachment Template</span>
+              <span className="text-[9px] text-muted-foreground/60 font-bold uppercase tracking-widest">
+                {activeTab === "whatsapp" ? "Image, Video, Audio, PDF (max 64MB)" :
+                 activeTab === "instagram" ? "Images only (max 8MB)" :
+                 "Any file type (max 25MB total)"}
+              </span>
+            </button>
           </div>
         </DialogContent>
       </Dialog>
