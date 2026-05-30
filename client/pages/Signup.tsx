@@ -63,6 +63,8 @@ export default function Signup() {
       newErrors.password = "Password must be at least 8 characters";
     } else if (!/[A-Z]/.test(pass)) {
       newErrors.password = "Password must contain at least one uppercase letter";
+    } else if (!/[a-z]/.test(pass)) {
+      newErrors.password = "Password must contain at least one lowercase letter";
     } else if (!/[0-9]/.test(pass)) {
       newErrors.password = "Password must contain at least one number";
     } else if (!/[^A-Za-z0-9]/.test(pass)) {
@@ -101,9 +103,9 @@ export default function Signup() {
         return;
       }
 
-      // Store JWT and go to dashboard
+      // Store JWT and go to onboarding page
       setAuthToken(data.token);
-      navigate("/dashboard", { replace: true });
+      navigate("/onboarding", { replace: true });
     } catch (err) {
       setError("Network error — please check your connection and try again.");
     } finally {

@@ -7,10 +7,12 @@ interface RichTextareaProps {
   onChange: (value: string) => void;
   className?: string;
   placeholder?: string;
+  platform?: "whatsapp" | "email" | "instagram";
 }
 
-export function RichTextarea({ value, onChange, className, placeholder }: RichTextareaProps) {
+export function RichTextarea({ value, onChange, className, placeholder, platform = "email" }: RichTextareaProps) {
   const editorRef = useRef<HTMLDivElement>(null);
+  const timeoutRef = useRef<NodeJS.Timeout>();
 
   // Sync external value changes if the editor is not currently focused
   useEffect(() => {
@@ -23,7 +25,20 @@ export function RichTextarea({ value, onChange, className, placeholder }: RichTe
 
   const handleInput = () => {
     if (editorRef.current) {
-      onChange(editorRef.current.innerHTML);
+      const currentHTML = editorRef.current.innerHTML;
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => {
+        onChange(currentHTML);
+      }, 300); // 300ms debounce to fix lagging
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    if (platform === "whatsapp" || platform === "instagram") {
+      // Strip formatting on paste for WhatsApp and Instagram
+      e.preventDefault();
+      const text = e.clipboardData.getData("text/plain");
+      document.execCommand("insertText", false, text);
     }
   };
 
@@ -38,39 +53,49 @@ export function RichTextarea({ value, onChange, className, placeholder }: RichTe
   return (
     <div className={cn("flex flex-col border border-input rounded-md shadow-sm overflow-hidden bg-background", className)}>
       <div className="flex items-center gap-1 p-2 border-b bg-muted/20">
-        <button
-          type="button"
-          onMouseDown={(e) => { e.preventDefault(); execCommand("bold"); }}
-          className="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"
-          title="Bold"
-        >
-          <Bold className="w-4 h-4" />
-        </button>
-        <button
-          type="button"
-          onMouseDown={(e) => { e.preventDefault(); execCommand("italic"); }}
-          className="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"
-          title="Italic"
-        >
-          <Italic className="w-4 h-4" />
-        </button>
-        <button
-          type="button"
-          onMouseDown={(e) => { e.preventDefault(); execCommand("underline"); }}
-          className="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"
-          title="Underline"
-        >
-          <Underline className="w-4 h-4" />
-        </button>
-        <div className="w-px h-4 bg-border mx-1" />
-        <button
-          type="button"
-          onMouseDown={(e) => { e.preventDefault(); execCommand("hiliteColor", "yellow"); }}
-          className="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"
-          title="Highlight"
-        >
-          <Highlighter className="w-4 h-4 text-yellow-500" />
-        </button>
+        {platform !== "instagram" && (
+          <>
+            <button
+              type="button"
+              onMouseDown={(e) => { e.preventDefault(); execCommand("bold"); }}
+              className="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"
+              title="Bold"
+            >
+              <Bold className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onMouseDown={(e) => { e.preventDefault(); execCommand("italic"); }}
+              className="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"
+              title="Italic"
+            >
+              <Italic className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onMouseDown={(e) => { e.preventDefault(); execCommand("underline"); }}
+              className="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"
+              title="Underline"
+            >
+              <Underline className="w-4 h-4" />
+            </button>
+          </>
+        )}
+        
+        {platform === "email" && (
+          <>
+            <div className="w-px h-4 bg-border mx-1" />
+            <button
+              type="button"
+              onMouseDown={(e) => { e.preventDefault(); execCommand("hiliteColor", "yellow"); }}
+              className="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"
+              title="Highlight"
+            >
+              <Highlighter className="w-4 h-4 text-yellow-500" />
+            </button>
+            {/* Extended email options could go here */}
+          </>
+        )}
       </div>
       <div
         ref={editorRef}
@@ -78,6 +103,7 @@ export function RichTextarea({ value, onChange, className, placeholder }: RichTe
         contentEditable
         onInput={handleInput}
         onBlur={handleInput}
+        onPaste={handlePaste}
         data-placeholder={placeholder}
         dangerouslySetInnerHTML={{ __html: value || "" }}
       />

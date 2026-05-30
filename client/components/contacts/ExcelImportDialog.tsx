@@ -64,10 +64,14 @@ export function ExcelImportDialog({ isOpen, onClose, onImportComplete }: ExcelIm
   const [sheets, setSheets] = React.useState<ParsedSheet[]>([]);
   const [activeSheetIdx, setActiveSheetIdx] = React.useState<number>(0);
   
-  // Mapping state: record of active targetSchema.key -> excel header
-  const [mappings, setMappings] = React.useState<Record<string, string>>({});
+  // Mapping state per sheet: record of sheetIndex -> active targetSchema.key -> excel header
+  const [mappingsBySheet, setMappingsBySheet] = React.useState<Record<number, Record<string, string>>>({});
   // Track sheets that have been successfully queued for import
-  const [queuedSheets, setQueuedSheets] = React.useState<Set<string>>(new Set());
+  const [importedSheets, setImportedSheets] = React.useState<Set<string>>(new Set());
+  const [skippedSheets, setSkippedSheets] = React.useState<Set<string>>(new Set());
+
+  // Helper to get total processed sheets
+  const getProcessedSheets = () => new Set([...importedSheets, ...skippedSheets]);
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -87,7 +91,10 @@ export function ExcelImportDialog({ isOpen, onClose, onImportComplete }: ExcelIm
       }
     });
 
-    setMappings(newMappings);
+    setMappingsBySheet((prev) => ({
+      ...prev,
+      [sheetIdx]: newMappings,
+    }));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -139,8 +146,27 @@ export function ExcelImportDialog({ isOpen, onClose, onImportComplete }: ExcelIm
 
         setSheets(parsedSheets);
         setActiveSheetIdx(0);
-        setQueuedSheets(new Set());
-        runAutoMapper(parsedSheets[0].headers);
+        setImportedSheets(new Set());
+        setSkippedSheets(new Set());
+        setMappingsBySheet({});
+        
+        // Only run auto mapper if we don't have mappings for this sheet yet
+        const initialMappings: Record<number, Record<string, string>> = {};
+        const firstSheetMappings: Record<string, string> = {};
+        targetSchema.forEach((schema) => {
+          const match = parsedSheets[0].headers.find((h) => {
+            const cleanedHeader = h.toLowerCase().trim();
+            return schema.synonyms.some(
+              (syn) => cleanedHeader === syn || cleanedHeader.includes(syn) || syn.includes(cleanedHeader)
+            );
+          });
+          if (match) {
+            firstSheetMappings[schema.key] = match;
+          }
+        });
+        initialMappings[0] = firstSheetMappings;
+        setMappingsBySheet(initialMappings);
+        
         setStep("mapping");
 
         toast({
@@ -184,14 +210,17 @@ export function ExcelImportDialog({ isOpen, onClose, onImportComplete }: ExcelIm
 
   const handleSheetChange = (idx: number) => {
     setActiveSheetIdx(idx);
-    runAutoMapper(sheets[idx].headers);
+    if (!mappingsBySheet[idx]) {
+      runAutoMapper(sheets[idx].headers, idx);
+    }
   };
 
   const handleImportCurrentSheet = async () => {
     const activeSheet = sheets[activeSheetIdx];
+    const currentMappings = mappingsBySheet[activeSheetIdx] || {};
     
     // Validate mappings: Name is strictly required
-    const nameMapping = mappings["name"];
+    const nameMapping = currentMappings["name"];
     if (!nameMapping) {
       toast({
         variant: "destructive",
@@ -215,7 +244,7 @@ export function ExcelImportDialog({ isOpen, onClose, onImportComplete }: ExcelIm
           };
 
           targetSchema.forEach((schema) => {
-            const mappedHeader = mappings[schema.key];
+            const mappedHeader = currentMappings[schema.key];
             if (mappedHeader) {
               const colIdx = activeSheetHeaders.indexOf(mappedHeader);
               if (colIdx !== -1 && row[colIdx] !== undefined) {
@@ -252,28 +281,32 @@ export function ExcelImportDialog({ isOpen, onClose, onImportComplete }: ExcelIm
         throw new Error(err.error || "Failed to batch insert contacts");
       }
 
-      // Add to queued sheets
-      const nextQueued = new Set(queuedSheets);
-      nextQueued.add(activeSheet.name);
-      setQueuedSheets(nextQueued);
+      // Add to imported sheets
+      const nextImported = new Set(importedSheets);
+      nextImported.add(activeSheet.name);
+      setImportedSheets(nextImported);
+      
+      const processed = new Set([...nextImported, ...skippedSheets]);
 
       toast({
         title: "SHEET IMPORTED",
         description: `Imported ${contactsPayload.length} contacts to sheet "${activeSheet.name}".`,
       });
 
-      // If all sheets are queued or imported, close dialog
-      const unimported = sheets.filter((s) => !nextQueued.has(s.name));
+      // If all sheets are processed, close dialog
+      const unimported = sheets.filter((s) => !processed.has(s.name));
       if (unimported.length === 0) {
-        onImportComplete(Array.from(nextQueued));
+        onImportComplete(Array.from(nextImported));
         onClose();
         resetDialog();
       } else {
         // Go to the first unimported sheet
-        const nextIdx = sheets.findIndex((s) => !nextQueued.has(s.name));
+        const nextIdx = sheets.findIndex((s) => !processed.has(s.name));
         if (nextIdx !== -1) {
           setActiveSheetIdx(nextIdx);
-          runAutoMapper(sheets[nextIdx].headers);
+          if (!mappingsBySheet[nextIdx]) {
+            runAutoMapper(sheets[nextIdx].headers, nextIdx);
+          }
         }
         setStep("mapping");
       }
@@ -290,22 +323,25 @@ export function ExcelImportDialog({ isOpen, onClose, onImportComplete }: ExcelIm
 
   const handleSkipSheet = () => {
     const activeSheet = sheets[activeSheetIdx];
-    const nextQueued = new Set(queuedSheets);
-    nextQueued.add(activeSheet.name); // mark as resolved (skipped)
-    setQueuedSheets(nextQueued);
+    const nextSkipped = new Set(skippedSheets);
+    nextSkipped.add(activeSheet.name); // mark as resolved (skipped)
+    setSkippedSheets(nextSkipped);
 
-    const unimported = sheets.filter((s) => !nextQueued.has(s.name));
+    const processed = new Set([...importedSheets, ...nextSkipped]);
+    const unimported = sheets.filter((s) => !processed.has(s.name));
     if (unimported.length === 0) {
-      if (nextQueued.size > 0) {
-        onImportComplete(Array.from(nextQueued));
+      if (importedSheets.size > 0) {
+        onImportComplete(Array.from(importedSheets));
       }
       onClose();
       resetDialog();
     } else {
-      const nextIdx = sheets.findIndex((s) => !nextQueued.has(s.name));
+      const nextIdx = sheets.findIndex((s) => !processed.has(s.name));
       if (nextIdx !== -1) {
         setActiveSheetIdx(nextIdx);
-        runAutoMapper(sheets[nextIdx].headers);
+        if (!mappingsBySheet[nextIdx]) {
+          runAutoMapper(sheets[nextIdx].headers, nextIdx);
+        }
       }
     }
   };
@@ -315,11 +351,13 @@ export function ExcelImportDialog({ isOpen, onClose, onImportComplete }: ExcelIm
     setFile(null);
     setSheets([]);
     setActiveSheetIdx(0);
-    setMappings({});
-    setQueuedSheets(new Set());
+    setMappingsBySheet({});
+    setImportedSheets(new Set());
+    setSkippedSheets(new Set());
   };
 
   const activeSheet = sheets[activeSheetIdx];
+  const currentMappings = mappingsBySheet[activeSheetIdx] || {};
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) { onClose(); resetDialog(); } }}>
@@ -387,7 +425,7 @@ export function ExcelImportDialog({ isOpen, onClose, onImportComplete }: ExcelIm
                 
                 {sheets.map((sheet, index) => {
                   const isCurrent = activeSheetIdx === index;
-                  const isQueued = queuedSheets.has(sheet.name);
+                  const isProcessed = importedSheets.has(sheet.name) || skippedSheets.has(sheet.name);
                   
                   return (
                     <button
@@ -397,13 +435,13 @@ export function ExcelImportDialog({ isOpen, onClose, onImportComplete }: ExcelIm
                         "w-full flex items-center justify-between p-3.5 rounded-xl text-left font-black text-xs transition-all relative group shrink-0",
                         isCurrent
                           ? "bg-primary/10 text-primary shadow-inner border border-primary/20"
-                          : isQueued
+                          : isProcessed
                             ? "bg-emerald-500/5 text-emerald-500/80 border border-emerald-500/10 cursor-default"
                             : "text-muted-foreground hover:bg-muted/30 hover:text-foreground border border-transparent"
                       )}
                     >
                       <span className="truncate pr-2">{sheet.name}</span>
-                      {isQueued ? (
+                      {isProcessed ? (
                         <CheckCircle2 className="h-4 w-4 text-emerald-500 flex-shrink-0" />
                       ) : (
                         <ChevronRight className={cn("h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity", isCurrent && "opacity-100 text-primary")} />
@@ -433,7 +471,7 @@ export function ExcelImportDialog({ isOpen, onClose, onImportComplete }: ExcelIm
 
                 <div className="flex-1 overflow-y-auto space-y-4 pr-2 scrollbar-thin scrollbar-thumb-white/5">
                   {targetSchema.map((schema) => {
-                    const isMapped = !!mappings[schema.key];
+                    const isMapped = !!currentMappings[schema.key];
                     
                     return (
                       <div
@@ -463,15 +501,17 @@ export function ExcelImportDialog({ isOpen, onClose, onImportComplete }: ExcelIm
                         </div>
 
                         <Select
-                          value={mappings[schema.key] || "skip"}
+                          value={currentMappings[schema.key] || "skip"}
                           onValueChange={(val) => {
-                            setMappings((prev) => {
+                            setMappingsBySheet((prev) => {
                               const next = { ...prev };
+                              const sheetMappings = { ...(next[activeSheetIdx] || {}) };
                               if (val === "skip") {
-                                delete next[schema.key];
+                                delete sheetMappings[schema.key];
                               } else {
-                                next[schema.key] = val;
+                                sheetMappings[schema.key] = val;
                               }
+                              next[activeSheetIdx] = sheetMappings;
                               return next;
                             });
                           }}
@@ -528,7 +568,7 @@ export function ExcelImportDialog({ isOpen, onClose, onImportComplete }: ExcelIm
             </Button>
             <Button
               onClick={handleImportCurrentSheet}
-              disabled={!mappings["name"]}
+              disabled={!currentMappings["name"]}
               className="h-14 px-8 rounded-xl bg-primary text-white font-black text-[10px] tracking-widest uppercase shadow-xl shadow-primary/20 hover:shadow-primary/30"
             >
               IMPORT WORKBOOK SHEET

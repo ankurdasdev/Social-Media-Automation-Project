@@ -266,6 +266,7 @@ export function TemplateEditor({
                 <RichTextarea
                   value={content}
                   onChange={(val) => setContent(val)}
+                  platform={defaultCategory}
                   placeholder={
                     isAttachment
                       ? "Message content is hidden while sending an attachment."
@@ -277,8 +278,11 @@ export function TemplateEditor({
                   )}
                 />
                 {!isAttachment && (
-                  <div className="absolute bottom-4 right-6 text-[10px] font-black text-muted-foreground/50 tracking-widest uppercase pointer-events-none">
-                    {content.length} CHARACTERS
+                  <div className={cn(
+                    "absolute bottom-4 right-6 text-[10px] font-black tracking-widest uppercase pointer-events-none",
+                    defaultCategory === "instagram" && content.length > 1000 ? "text-destructive" : "text-muted-foreground/50"
+                  )}>
+                    {content.length} {defaultCategory === "instagram" ? "/ 1000 CHARACTERS" : "CHARACTERS"}
                   </div>
                 )}
             </div>

@@ -71,10 +71,36 @@ export function DataTable<TData, TValue>({
   initialGlobalFilter = "",
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({});
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(initialFilters);
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(() => {
+    const filters = [...initialFilters];
+    try {
+      const savedFollowups = localStorage.getItem("casthub-followup-filter");
+      if (savedFollowups) {
+        if (savedFollowups !== "0" && !filters.find(f => f.id === "followups")) {
+          filters.push({ id: "followups", value: savedFollowups });
+        }
+      } else {
+        // Default to 30 days if nothing is saved
+        if (!filters.find(f => f.id === "followups")) {
+          filters.push({ id: "followups", value: "30" });
+        }
+      }
+    } catch {}
+    return filters;
+  });
+
+  React.useEffect(() => {
+    const followupFilter = columnFilters.find(f => f.id === "followups");
+    if (followupFilter) {
+      localStorage.setItem("casthub-followup-filter", followupFilter.value as string);
+    } else {
+      localStorage.setItem("casthub-followup-filter", "0");
+    }
+  }, [columnFilters]);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = React.useState(initialGlobalFilter);
   const [isFullscreen, setIsFullscreen] = React.useState(false);
+  const [zoomLevel, setZoomLevel] = React.useState(100);
   const [showFilters, setShowFilters] = React.useState(true);
   
   // Drawer state
@@ -159,6 +185,8 @@ export function DataTable<TData, TValue>({
           onAddContact={onAddContact}
           isFullscreen={isFullscreen}
           onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}
+          zoomLevel={zoomLevel}
+          onZoomChange={setZoomLevel}
           className="flex-1"
         />
       </div>
@@ -167,7 +195,10 @@ export function DataTable<TData, TValue>({
         "glass-card rounded-[2.5rem] border-white/10 shadow-2xl relative flex-1 flex flex-col min-h-0 overflow-hidden",
         isFullscreen ? "rounded-none border-none bg-card/50" : ""
       )}>
-        <div className="overflow-auto flex-1 scrollbar-thin scrollbar-thumb-white/10 hover:scrollbar-thumb-primary/50 transition-all">
+        <div 
+          className="overflow-auto flex-1 scrollbar-thin scrollbar-thumb-white/10 hover:scrollbar-thumb-primary/50 transition-all origin-top-left"
+          style={{ zoom: `${zoomLevel}%` } as React.CSSProperties}
+        >
           <Table style={{ width: table.getCenterTotalSize(), minWidth: "100%" }}>
             <TableHeader className="bg-muted/30 border-b border-white/5 sticky top-0 z-30 backdrop-blur-3xl">
               {table.getHeaderGroups().map((headerGroup) => (
@@ -220,8 +251,9 @@ export function DataTable<TData, TValue>({
                       key={row.id}
                       data-state={row.getIsSelected() && "selected"}
                       className={cn(
-                        "cursor-pointer border-b border-white/[0.03] hover:bg-white/[0.03] transition-all h-20 group relative border-l-[6px]",
-                        row.getIsSelected() && "bg-primary/20 border-l-primary shadow-inner"
+                        "cursor-pointer border-b border-white/[0.03] hover:bg-muted/20 transition-all h-20 group relative border-l-[6px]",
+                        row.index % 2 === 0 ? "bg-muted/10" : "bg-background",
+                        row.getIsSelected() && "!bg-primary/20 border-l-primary shadow-inner"
                       )}
                       style={{ 
                         backgroundColor: isCustom ? `${rColor}1a` : undefined, // Add transparency if hex

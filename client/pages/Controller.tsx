@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -69,8 +70,6 @@ import type {
   GroupsResponse,
   CreateGroupRequest,
   UpdateGroupRequest,
-} from "@shared/api";
-import { TemplateManager } from "@/components/templates/TemplateManager";
 import { AIProfilingDialog } from "@/components/ai-profiling/AIProfilingDialog";
 import { AIScheduleDialog } from "@/components/settings/AIScheduleDialog";
 
@@ -157,7 +156,6 @@ export default function Controller() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<Platform>("whatsapp");
   const [searchQuery, setSearchQuery] = useState("");
-  const [isTemplateManagerOpen, setIsTemplateManagerOpen] = useState(false);
   const [isAIProfilingOpen, setIsAIProfilingOpen] = useState(false);
   const [isAIScheduleOpen, setIsAIScheduleOpen] = useState(false);
 
@@ -406,12 +404,14 @@ export default function Controller() {
             )}
             <Button 
                 id="tutorial-controller-templates"
-                variant="outline" 
-                onClick={() => setIsTemplateManagerOpen(true)} 
+                variant="outline"
+                asChild
                 className="h-12 px-6 rounded-xl font-bold bg-background/50 border-border/50 gap-2 hover:bg-muted transition-all"
             >
-              <LayoutTemplate className="w-4 h-4 text-primary" />
-              Manage Templates
+              <Link to="/templates">
+                <LayoutTemplate className="w-4 h-4 text-primary" />
+                Manage Templates
+              </Link>
             </Button>
             <Button 
                 id="tutorial-controller-profiling"
@@ -682,7 +682,6 @@ export default function Controller() {
           </AlertDialogContent>
         </AlertDialog>
 
-        <TemplateManager open={isTemplateManagerOpen} onOpenChange={setIsTemplateManagerOpen} />
         <AIProfilingDialog open={isAIProfilingOpen} onOpenChange={setIsAIProfilingOpen} />
         <AIScheduleDialog open={isAIScheduleOpen} onOpenChange={setIsAIScheduleOpen} />
       </div>

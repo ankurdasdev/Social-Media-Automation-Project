@@ -361,6 +361,18 @@ export function MultiTemplateSelect({
   const userId = getOrCreateUserId();
   const currentIds = Array.isArray(selectedIds) ? selectedIds : (selectedIds ? [selectedIds] : []);
   
+  const moveItem = (index: number, direction: 'left' | 'right') => {
+    if (direction === 'left' && index > 0) {
+      const newIds = [...currentIds];
+      [newIds[index - 1], newIds[index]] = [newIds[index], newIds[index - 1]];
+      onUpdate(newIds);
+    } else if (direction === 'right' && index < currentIds.length - 1) {
+      const newIds = [...currentIds];
+      [newIds[index], newIds[index + 1]] = [newIds[index + 1], newIds[index]];
+      onUpdate(newIds);
+    }
+  };
+
   const { data: templates = [] } = useQuery({
     queryKey: ["templates", userId],
     queryFn: async () => {
@@ -384,9 +396,23 @@ export function MultiTemplateSelect({
       {currentIds.map((id, idx) => {
         const t = templates.find((tmp: any) => tmp.id === id);
         return (
-          <Badge key={id} variant="secondary" className="h-5 px-1 gap-1 text-[9px] font-black bg-primary/10 text-primary border-none">
+          <Badge key={id} variant="secondary" className="h-5 px-1 gap-1 text-[9px] font-black bg-primary/10 text-primary border-none group/badge">
+            <button
+              onClick={(e) => { e.stopPropagation(); moveItem(idx, 'left'); }}
+              disabled={idx === 0}
+              className="opacity-0 group-hover/badge:opacity-100 disabled:!opacity-30 hover:text-foreground transition-opacity"
+            >
+              ←
+            </button>
             {idx + 1}. {t?.name || "..."}
-            <X className="w-2 h-2 cursor-pointer" onClick={() => handleToggle(id)} />
+            <button
+              onClick={(e) => { e.stopPropagation(); moveItem(idx, 'right'); }}
+              disabled={idx === currentIds.length - 1}
+              className="opacity-0 group-hover/badge:opacity-100 disabled:!opacity-30 hover:text-foreground transition-opacity"
+            >
+              →
+            </button>
+            <X className="w-2 h-2 cursor-pointer hover:text-destructive" onClick={(e) => { e.stopPropagation(); handleToggle(id); }} />
           </Badge>
         );
       })}

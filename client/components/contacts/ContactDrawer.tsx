@@ -311,6 +311,18 @@ export function DrawerMultiTemplateSelect({
     queryFn: () => fetchTemplates(userId, category),
   });
 
+  const moveItem = (index: number, direction: 'left' | 'right') => {
+    if (direction === 'left' && index > 0) {
+      const newIds = [...currentIds];
+      [newIds[index - 1], newIds[index]] = [newIds[index], newIds[index - 1]];
+      onChange(newIds);
+    } else if (direction === 'right' && index < currentIds.length - 1) {
+      const newIds = [...currentIds];
+      [newIds[index], newIds[index + 1]] = [newIds[index + 1], newIds[index]];
+      onChange(newIds);
+    }
+  };
+
   const handleToggle = (id: string) => {
     if (currentIds.includes(id)) {
       onChange(currentIds.filter((i) => i !== id));
@@ -324,8 +336,22 @@ export function DrawerMultiTemplateSelect({
       {currentIds.map((id, idx) => {
         const t = templates.find((tmp) => tmp.id === id);
         return (
-          <Badge key={id} variant="secondary" className="h-6 px-2 gap-1.5 text-[10px] font-black bg-primary/10 text-primary border-none">
+          <Badge key={id} variant="secondary" className="h-6 px-2 gap-1.5 text-[10px] font-black bg-primary/10 text-primary border-none group/badge">
+            <button
+              onClick={(e) => { e.stopPropagation(); moveItem(idx, 'left'); }}
+              disabled={idx === 0}
+              className="opacity-0 group-hover/badge:opacity-100 disabled:!opacity-30 hover:text-foreground transition-opacity text-[10px]"
+            >
+              ←
+            </button>
             {idx + 1}. {t?.name || "..."}
+            <button
+              onClick={(e) => { e.stopPropagation(); moveItem(idx, 'right'); }}
+              disabled={idx === currentIds.length - 1}
+              className="opacity-0 group-hover/badge:opacity-100 disabled:!opacity-30 hover:text-foreground transition-opacity text-[10px]"
+            >
+              →
+            </button>
             <X className="w-3 h-3 cursor-pointer hover:text-destructive transition-colors" onClick={() => handleToggle(id)} />
           </Badge>
         );
@@ -359,6 +385,30 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
       setForm({ ...contact });
     }
   }, [contact]);
+
+  // Debounced auto-save for editing persistence
+  React.useEffect(() => {
+    if (!contact || !form.id) return;
+    
+    // Check if form is actually different from the original contact
+    const isDifferent = Object.keys(form).some(k => form[k as keyof Contact] !== contact[k as keyof Contact]);
+    if (!isDifferent) return;
+
+    const timer = setTimeout(() => {
+      // Auto-save silently
+      fetch(`/api/contacts/${contact.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, userId: contact.user_id }),
+      }).then(res => {
+        if (res.ok) {
+          queryClient.invalidateQueries({ queryKey: ["contacts"] });
+        }
+      }).catch(console.error);
+    }, 800); // 800ms debounce
+
+    return () => clearTimeout(timer);
+  }, [form, contact, queryClient]);
 
   const set = (field: keyof Contact) => (val: any) => {
     setForm((prev) => ({ ...prev, [field]: val }));
@@ -485,13 +535,27 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-[9px] font-black text-muted-foreground">SALUTATION</Label>
-                    <SalutationPicker
-                      value={form.personalizedNameWA || "Hi"}
-                      onChange={(v) => set("personalizedNameWA")(v)}
-                      accentClass="text-emerald-400"
-                      borderClass="border-emerald-500/20"
-                    />
+                    <Label className="text-[9px] font-black text-muted-foreground">SALUTATION & REF</Label>
+                    <div className="flex gap-2">
+                      <div className="flex-1 min-w-0">
+                        <SalutationPicker
+                          value={form.salutationWA || "Hi"}
+                          onChange={(v) => set("salutationWA")(v)}
+                          accentClass="text-emerald-400"
+                          borderClass="border-emerald-500/20"
+                        />
+                      </div>
+                      <Select value={form.personalizedNameWA || "NA"} onValueChange={(val) => set("personalizedNameWA")(val)}>
+                        <SelectTrigger className="w-24 h-11 rounded-xl bg-background/50 border-emerald-500/20 font-bold text-emerald-400 text-xs">
+                           <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                           <SelectItem value="N">Lead Name</SelectItem>
+                           <SelectItem value="C">Casting Name</SelectItem>
+                           <SelectItem value="NA">None</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black text-muted-foreground">TEMPLATES</Label>
@@ -520,13 +584,27 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-[9px] font-black text-muted-foreground">SALUTATION</Label>
-                    <SalutationPicker
-                      value={form.personalizedNameGmail || "Hi"}
-                      onChange={(v) => set("personalizedNameGmail")(v)}
-                      accentClass="text-blue-400"
-                      borderClass="border-blue-500/20"
-                    />
+                    <Label className="text-[9px] font-black text-muted-foreground">SALUTATION & REF</Label>
+                    <div className="flex gap-2">
+                      <div className="flex-1 min-w-0">
+                        <SalutationPicker
+                          value={form.salutationEmail || "Hi"}
+                          onChange={(v) => set("salutationEmail")(v)}
+                          accentClass="text-blue-400"
+                          borderClass="border-blue-500/20"
+                        />
+                      </div>
+                      <Select value={form.personalizedNameGmail || "NA"} onValueChange={(val) => set("personalizedNameGmail")(val)}>
+                        <SelectTrigger className="w-24 h-11 rounded-xl bg-background/50 border-blue-500/20 font-bold text-blue-400 text-xs">
+                           <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                           <SelectItem value="N">Lead Name</SelectItem>
+                           <SelectItem value="C">Casting Name</SelectItem>
+                           <SelectItem value="NA">None</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black text-muted-foreground">TEMPLATES</Label>
@@ -564,13 +642,27 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-[9px] font-black text-muted-foreground">SALUTATION</Label>
-                    <SalutationPicker
-                      value={form.personalizedNameIG || "Hi"}
-                      onChange={(v) => set("personalizedNameIG")(v)}
-                      accentClass="text-pink-400"
-                      borderClass="border-pink-500/20"
-                    />
+                    <Label className="text-[9px] font-black text-muted-foreground">SALUTATION & REF</Label>
+                    <div className="flex gap-2">
+                      <div className="flex-1 min-w-0">
+                        <SalutationPicker
+                          value={form.salutationIG || "Hi"}
+                          onChange={(v) => set("salutationIG")(v)}
+                          accentClass="text-pink-400"
+                          borderClass="border-pink-500/20"
+                        />
+                      </div>
+                      <Select value={form.personalizedNameIG || "NA"} onValueChange={(val) => set("personalizedNameIG")(val)}>
+                        <SelectTrigger className="w-24 h-11 rounded-xl bg-background/50 border-pink-500/20 font-bold text-pink-400 text-xs">
+                           <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                           <SelectItem value="N">Lead Name</SelectItem>
+                           <SelectItem value="C">Casting Name</SelectItem>
+                           <SelectItem value="NA">None</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black text-muted-foreground">TEMPLATES</Label>
