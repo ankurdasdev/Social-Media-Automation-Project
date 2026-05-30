@@ -70,6 +70,7 @@ import type {
   GroupsResponse,
   CreateGroupRequest,
   UpdateGroupRequest,
+} from "@shared/api";
 import { AIProfilingDialog } from "@/components/ai-profiling/AIProfilingDialog";
 import { AIScheduleDialog } from "@/components/settings/AIScheduleDialog";
 

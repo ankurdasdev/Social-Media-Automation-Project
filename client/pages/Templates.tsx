@@ -43,7 +43,7 @@ import {
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import type { Template, TemplateCategory, TemplatesResponse } from "@shared/api";
-import { TemplateEditor } from "./TemplateEditor";
+import { TemplateEditor } from "../components/templates/TemplateEditor";
 import { getOrCreateUserId, cn } from "@/lib/utils";
 
 async function fetchTemplates(category?: string): Promise<Template[]> {
