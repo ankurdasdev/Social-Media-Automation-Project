@@ -165,6 +165,9 @@ export default function Controller() {
   const [editingGroup, setEditingGroup] = useState<SourceGroup | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<SourceGroup | null>(null);
 
+  // Bulk selection state
+  const [selectedGroupIds, setSelectedGroupIds] = useState<Set<string>>(new Set());
+
   // Form state
   const [formName, setFormName] = useState("");
   const [formPlatform, setFormPlatform] = useState<Platform>("whatsapp");
@@ -230,6 +233,34 @@ export default function Controller() {
       updateGroup(id, { enabled, userId: getOrCreateUserId() }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["groups"] });
+    },
+  });
+
+  const bulkActionMutation = useMutation({
+    mutationFn: async ({ action, ids }: { action: "enable" | "disable" | "delete"; ids: string[] }) => {
+      const userId = getOrCreateUserId();
+      await Promise.all(
+        ids.map((id) =>
+          action === "delete"
+            ? fetch(`/api/groups/${id}?userId=${userId}`, { method: "DELETE" })
+            : fetch(`/api/groups/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ enabled: action === "enable", userId }),
+              })
+        )
+      );
+    },
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["groups"] });
+      setSelectedGroupIds(new Set());
+      toast({
+        title: "Bulk Action Complete",
+        description: `${vars.ids.length} sources updated successfully.`,
+      });
+    },
+    onError: () => {
+      toast({ title: "Bulk Action Failed", variant: "destructive", description: "Some operations could not complete." });
     },
   });
 
@@ -498,6 +529,9 @@ export default function Controller() {
                       toggleMutation.mutate({ id, enabled })
                     }
                     platform="whatsapp"
+                    selectedIds={selectedGroupIds}
+                    onSelectionChange={setSelectedGroupIds}
+                    onBulkAction={(action, ids) => bulkActionMutation.mutate({ action, ids })}
                   />
                 </div>
               </TabsContent>
@@ -516,6 +550,9 @@ export default function Controller() {
                       toggleMutation.mutate({ id, enabled })
                     }
                     platform="instagram"
+                    selectedIds={selectedGroupIds}
+                    onSelectionChange={setSelectedGroupIds}
+                    onBulkAction={(action, ids) => bulkActionMutation.mutate({ action, ids })}
                   />
                 </div>
               </TabsContent>
@@ -779,6 +816,9 @@ interface GroupListProps {
   onDelete: (group: SourceGroup) => void;
   onToggle: (id: string, enabled: boolean) => void;
   platform: Platform;
+  selectedIds: Set<string>;
+  onSelectionChange: (ids: Set<string>) => void;
+  onBulkAction: (action: "enable" | "disable" | "delete", ids: string[]) => void;
 }
 
 function GroupList({
@@ -790,6 +830,9 @@ function GroupList({
   onDelete,
   onToggle,
   platform,
+  selectedIds,
+  onSelectionChange,
+  onBulkAction,
 }: GroupListProps) {
   if (isLoading) {
     return (
@@ -834,17 +877,100 @@ function GroupList({
     );
   }
 
+  const allSelected = groups.length > 0 && groups.every((g) => selectedIds.has(g.id));
+  const someSelected = selectedIds.size > 0;
+
+  const toggleOne = (id: string) => {
+    const next = new Set(selectedIds);
+    next.has(id) ? next.delete(id) : next.add(id);
+    onSelectionChange(next);
+  };
+
+  const toggleAll = () => {
+    if (allSelected) {
+      onSelectionChange(new Set());
+    } else {
+      onSelectionChange(new Set(groups.map((g) => g.id)));
+    }
+  };
+
   return (
     <div className="space-y-3">
+      {/* Bulk Action Bar */}
+      {someSelected && (
+        <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-primary/5 border border-primary/20 animate-in slide-in-from-top-2 duration-200">
+          <span className="text-[11px] font-black uppercase tracking-widest text-primary">
+            {selectedIds.size} SELECTED
+          </span>
+          <div className="flex-1" />
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onBulkAction("enable", Array.from(selectedIds))}
+            className="h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10"
+          >
+            Enable All
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onBulkAction("disable", Array.from(selectedIds))}
+            className="h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest border-yellow-500/30 text-yellow-500 hover:bg-yellow-500/10"
+          >
+            Disable All
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onBulkAction("delete", Array.from(selectedIds))}
+            className="h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest border-destructive/30 text-destructive hover:bg-destructive/10"
+          >
+            Delete Selected
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => onSelectionChange(new Set())}
+            className="h-9 w-9 p-0 rounded-xl text-muted-foreground hover:text-foreground"
+          >
+            ✕
+          </Button>
+        </div>
+      )}
+
+      {/* Select All Row */}
+      <div className="flex items-center gap-3 px-2 pb-1">
+        <input
+          type="checkbox"
+          checked={allSelected}
+          onChange={toggleAll}
+          className="w-4 h-4 rounded accent-primary cursor-pointer"
+          title="Select all"
+        />
+        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">
+          {allSelected ? "Deselect All" : `Select All (${groups.length})`}
+        </span>
+      </div>
+
       {groups.map((group) => (
         <div
           key={group.id}
-          className={`flex items-center justify-between p-4 rounded-lg border border-border bg-card transition-all duration-200 ${
-            group.enabled
+          className={`flex items-center gap-3 p-4 rounded-lg border border-border bg-card transition-all duration-200 ${
+            selectedIds.has(group.id)
+              ? "border-primary/30 bg-primary/5"
+              : group.enabled
               ? "hover:bg-muted/50 hover:shadow-sm"
               : "opacity-60 bg-muted/30"
           }`}
         >
+          {/* Checkbox */}
+          <input
+            type="checkbox"
+            checked={selectedIds.has(group.id)}
+            onChange={() => toggleOne(group.id)}
+            className="w-4 h-4 rounded accent-primary cursor-pointer shrink-0"
+          />
+
           {/* Left: Info */}
           <div className="flex-1 min-w-0 mr-4">
             <div className="flex items-center gap-3 flex-wrap">

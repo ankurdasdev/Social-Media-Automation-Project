@@ -50,6 +50,9 @@ function injectVariables(content: string, contact: Contact, channel: "whatsapp" 
 
   const variables = [
     { name: "salutation", value: finalSalutation },
+    // {{leadName}} is the canonical name — synced with "Lead Name" column header
+    { name: "leadName", value: pName },
+    // {{name}} kept for backward compatibility with existing templates
     { name: "name", value: pName },
     { name: "castingName", value: cName },
     { name: "age", value: contact.age || "the age bracket" },
