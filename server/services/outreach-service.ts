@@ -25,18 +25,33 @@ function injectVariables(content: string, contact: Contact, channel: "whatsapp" 
   if (!content) return "";
   let result = content;
   
-  // Resolve Salutation based on channel-specific column
-  const salutation = 
+  // Resolve base salutation (e.g. "Hi", "Hey")
+  const baseSalutation = 
+    channel === "whatsapp" ? (contact.salutationWA || "Hi") :
+    channel === "email" ? (contact.salutationEmail || "Hi") :
+    (contact.salutationIG || "Hi");
+
+  // Resolve referencing toggle (N = Lead Name, C = Casting Name, NA = None)
+  const refToggle = 
     channel === "whatsapp" ? contact.personalizedNameWA :
     channel === "email" ? contact.personalizedNameGmail :
     contact.personalizedNameIG;
   
   const pName = contact.name || "Talent";
+  const cName = contact.castingName || "the casting";
+
+  // Combine them
+  let finalSalutation = baseSalutation;
+  if (refToggle === "N" && contact.name) {
+    finalSalutation = `${baseSalutation} ${contact.name}`;
+  } else if (refToggle === "C" && contact.castingName) {
+    finalSalutation = `${baseSalutation} ${contact.castingName}`;
+  }
 
   const variables = [
-    { name: "salutation", value: salutation || "Hi" },
+    { name: "salutation", value: finalSalutation },
     { name: "name", value: pName },
-    { name: "castingName", value: contact.castingName || "the casting" },
+    { name: "castingName", value: cName },
     { name: "age", value: contact.age || "the age bracket" },
     { name: "project", value: contact.project || "Project" },
     { name: "actingContext", value: contact.actingContext || "the role" },

@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, ChevronDown, Zap, RefreshCw, Plus, Trash2, X, Sparkles, MessageCircle, Mail, Instagram, Maximize2, Minimize2, Filter, Upload } from "lucide-react";
+import { Search, ChevronDown, Zap, RefreshCw, Plus, Trash2, X, Sparkles, MessageCircle, Mail, Instagram, Maximize2, Minimize2, Filter, Upload, ZoomIn, ZoomOut } from "lucide-react";
 import { Contact } from "@shared/api";
 import { AISearchBar } from "./AISearchBar";
 import { AdvancedColorPicker } from "./AdvancedColorPicker";
@@ -50,6 +50,8 @@ interface DataTableToolbarProps<TData> {
   className?: string;
   isFullscreen?: boolean;
   onToggleFullscreen?: () => void;
+  zoomLevel?: number;
+  onZoomChange?: (zoom: number) => void;
   onAddContact?: () => void;
 }
 
@@ -67,6 +69,8 @@ export function DataTableToolbar<TData>({
   className,
   isFullscreen,
   onToggleFullscreen,
+  zoomLevel = 100,
+  onZoomChange,
   onAddContact,
 }: DataTableToolbarProps<TData>) {
   const selectedRows = table.getFilteredSelectedRowModel().rows;
@@ -184,6 +188,29 @@ export function DataTableToolbar<TData>({
             >
               {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
             </Button>
+          )}
+          {onZoomChange && (
+            <div className="flex items-center gap-1 bg-muted/20 border border-white/5 rounded-2xl p-1 h-12">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onZoomChange(Math.max(50, zoomLevel - 15))}
+                className="h-full w-10 rounded-xl hover:bg-muted/40 transition-all text-muted-foreground hover:text-foreground"
+                title="Zoom Out"
+              >
+                <ZoomOut className="w-4 h-4" />
+              </Button>
+              <span className="text-[10px] font-black w-8 text-center">{zoomLevel}%</span>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onZoomChange(Math.min(150, zoomLevel + 15))}
+                className="h-full w-10 rounded-xl hover:bg-muted/40 transition-all text-muted-foreground hover:text-foreground"
+                title="Zoom In"
+              >
+                <ZoomIn className="w-4 h-4" />
+              </Button>
+            </div>
           )}
         </div>
       </div>
@@ -324,6 +351,13 @@ export function DataTableToolbar<TData>({
                     <p className="px-4 py-2 text-[9px] font-bold text-muted-foreground/50 italic">No other sheets found.</p>
                   )}
                 </div>
+                <DropdownMenuSeparator className="my-3 bg-white/5" />
+                <DropdownMenuItem
+                  className="h-12 px-4 rounded-xl text-[10px] font-black uppercase tracking-[0.1em] text-blue-500 focus:bg-blue-500/10 focus:text-blue-500 cursor-pointer gap-3"
+                  onSelect={(e) => { e.preventDefault(); executeBulkAction("reset_automation"); }}
+                >
+                  <RefreshCw className="h-4 w-4" /> RESET AUTOMATION
+                </DropdownMenuItem>
                 <DropdownMenuSeparator className="my-3 bg-white/5" />
                 <DropdownMenuItem
                   className="h-12 px-4 rounded-xl text-[10px] font-black uppercase tracking-[0.1em] text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer gap-3"

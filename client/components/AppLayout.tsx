@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useTutorial } from "./TutorialProvider";
+import { LayoutTemplate } from "lucide-react";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -42,7 +43,17 @@ interface AppLayoutProps {
 
 const navItems = [
   {
-    label: "Controller",
+    label: "Integrations Centre",
+    href: "/settings",
+    icon: SlidersHorizontal,
+  },
+  {
+    label: "Template Library",
+    href: "/templates",
+    icon: LayoutTemplate,
+  },
+  {
+    label: "Source Manager",
     href: "/controller",
     icon: Settings,
   },
@@ -55,11 +66,6 @@ const navItems = [
     label: "Analytics",
     href: "/analytics",
     icon: BarChart3,
-  },
-  {
-    label: "Integrations Center",
-    href: "/settings",
-    icon: SlidersHorizontal,
   },
 ];
 

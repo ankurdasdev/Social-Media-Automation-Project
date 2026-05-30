@@ -529,12 +529,28 @@ export const columns: ColumnDef<Contact>[] = [
     cell: ({ row, column }) => {
       const dates = row.original.contacted_dates || [];
       const filterDays = parseInt((column.getFilterValue() as string) || "0", 10);
-      let count = dates.length;
+      
+      let applicableDates = dates;
       if (filterDays > 0) {
         const cutoff = new Date(Date.now() - filterDays * 24 * 60 * 60 * 1000);
-        count = dates.filter(d => new Date(d) >= cutoff).length;
-      } else if (!dates.length && row.original.followups) {
-        // Fallback to legacy count if dates array is missing but count exists
+        applicableDates = dates.filter(d => new Date(d) >= cutoff);
+      }
+      
+      // Calculate unique days (YYYY-MM-DD)
+      const uniqueDays = new Set(applicableDates.map(d => {
+        try { return new Date(d).toISOString().split('T')[0]; } 
+        catch { return d; }
+      })).size;
+      
+      let count = 0;
+      if (filterDays === 0) {
+        count = uniqueDays > 0 ? uniqueDays - 1 : 0;
+      } else {
+        count = uniqueDays;
+      }
+
+      if (filterDays === 0 && !dates.length && row.original.followups) {
+        // Fallback to legacy count
         count = parseInt(row.original.followups, 10);
       }
       return (

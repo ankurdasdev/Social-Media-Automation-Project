@@ -250,6 +250,17 @@ export default function Contacts() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body),
           });
+        } else if (action === "reset_automation") {
+          return fetch(`/api/contacts/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              userId,
+              whatsappRun: false, emailRun: false, instagramRun: false,
+              whatsappCompleted: null, emailCompleted: null, instagramCompleted: null,
+              status: "pending"
+            }),
+          });
         }
       });
       await Promise.all(promises);
@@ -267,11 +278,15 @@ export default function Contacts() {
     mutationFn: async (contactIds: string[]) => {
       setSendingProgress({ current: 0, total: contactIds.length, message: "Initializing bulk outreach..." });
       let current = 0;
+      let successes = 0;
+      let failures = 0;
+      let skipped = 0;
       
       for (const id of contactIds) {
         const contact = contacts.find(c => c.id === id);
         if (!contact) {
           current++;
+          skipped++;
           continue;
         }
         
@@ -289,9 +304,7 @@ export default function Contacts() {
 
         // Fallback: if no flags set, use presence of fields
         if (channels.length === 0) {
-          if (contact.whatsapp) channels.push("whatsapp");
-          if (contact.email) channels.push("email");
-          if (contact.instaHandle) channels.push("instagram");
+          skipped++;
         }
 
         for (const channel of channels) {
@@ -306,9 +319,13 @@ export default function Contacts() {
             if (!res.ok) {
               const error = await res.json();
               console.error(`Failed to send ${channel} to ${contact.name}:`, error);
+              failures++;
+            } else {
+              successes++;
             }
           } catch (err) {
             console.error(`Network error sending ${channel} to ${contact.name}:`, err);
+            failures++;
           }
         }
         
@@ -319,12 +336,28 @@ export default function Contacts() {
           message: `Finished ${contact.name || 'Record'}.` 
         });
       }
+      
+      return { successes, failures, skipped };
     },
-    onSuccess: (_, ids) => {
-      toast({
-        title: "OUTREACH DISPATCHED",
-        description: `Successfully processed outreach for ${ids.length} contacts.`,
-      });
+    onSuccess: (data, ids) => {
+      if (data.failures > 0) {
+        toast({
+          variant: "destructive",
+          title: "OUTREACH PARTIALLY COMPLETED",
+          description: `Sent: ${data.successes} | Failed: ${data.failures} | Skipped: ${data.skipped}`,
+        });
+      } else if (data.successes === 0) {
+        toast({
+          variant: "default",
+          title: "NO OUTREACH SENT",
+          description: `No valid channels found. Skipped: ${data.skipped}`,
+        });
+      } else {
+        toast({
+          title: "OUTREACH COMPLETED",
+          description: `Successfully sent ${data.successes} messages. (Skipped: ${data.skipped})`,
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
     },
     onSettled: () => {

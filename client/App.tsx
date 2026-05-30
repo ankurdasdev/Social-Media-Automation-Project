@@ -12,11 +12,13 @@ import { TutorialProvider } from "./components/TutorialProvider";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ResetPassword from "./pages/ResetPassword";
+import Onboarding from "./pages/Onboarding";
 
 // App Pages
 import Dashboard from "./pages/Dashboard";
 import Controller from "./pages/Controller";
 import Contacts from "./pages/Contacts";
+import Templates from "./pages/Templates";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
@@ -55,9 +57,11 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPassword />} />
 
             {/* Protected App Routes */}
+            <Route path="/onboarding" element={<ProtectedRoute element={<Onboarding />} />} />
             <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} />} />
             <Route path="/controller" element={<ProtectedRoute element={<Controller />} />} />
             <Route path="/contacts" element={<ProtectedRoute element={<Contacts />} />} />
+            <Route path="/templates" element={<ProtectedRoute element={<Templates />} />} />
             <Route path="/analytics" element={<ProtectedRoute element={<Analytics />} />} />
             <Route path="/settings" element={<ProtectedRoute element={<Settings />} />} />
             <Route path="/profile" element={<ProtectedRoute element={<Profile />} />} />

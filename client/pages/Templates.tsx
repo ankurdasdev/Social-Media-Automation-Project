@@ -1,11 +1,5 @@
 import * as React from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -51,11 +45,6 @@ import { useToast } from "@/hooks/use-toast";
 import type { Template, TemplateCategory, TemplatesResponse } from "@shared/api";
 import { TemplateEditor } from "./TemplateEditor";
 import { getOrCreateUserId, cn } from "@/lib/utils";
-
-interface TemplateManagerProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
 
 async function fetchTemplates(category?: string): Promise<Template[]> {
   const userId = getOrCreateUserId();
@@ -184,7 +173,7 @@ function TemplateTabContent({
   );
 }
 
-export function TemplateManager({ open, onOpenChange }: TemplateManagerProps) {
+export default function Templates() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -206,7 +195,6 @@ export function TemplateManager({ open, onOpenChange }: TemplateManagerProps) {
   const { data: templates = [] } = useQuery({
     queryKey: ["templates"],
     queryFn: () => fetchTemplates(),
-    enabled: open,
   });
 
   const handleCreateNew = () => {
@@ -275,28 +263,27 @@ export function TemplateManager({ open, onOpenChange }: TemplateManagerProps) {
   };
 
   return (
-    <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[720px] glass-card border-white/10 dark:border-white/5 p-0 overflow-hidden shadow-2xl rounded-[2rem] max-h-[90vh] flex flex-col">
-          <DialogHeader className="p-10 pb-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-              <div className="space-y-1">
-                <DialogTitle className="text-3xl font-black tracking-tighter">Template <span className="text-primary italic">Library</span></DialogTitle>
-                <DialogDescription className="text-muted-foreground font-medium uppercase tracking-widest text-[10px]">
-                  Architect and manage cross-platform outreach templates.
-                </DialogDescription>
-              </div>
-              <Button onClick={handleCreateNew} className="h-12 px-6 rounded-xl font-black bg-foreground text-background hover:bg-foreground/90 gap-2 shadow-xl transition-all active:scale-95 shrink-0">
-                <Plus className="h-5 w-5" /> NEW TEMPLATE
-              </Button>
-            </div>
-          </DialogHeader>
+    <AppLayout>
+      <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-[calc(100vh-8rem)]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div className="space-y-1">
+            <h1 className="text-4xl font-black tracking-tighter text-foreground sm:text-5xl">
+              Template <span className="text-primary italic">Library</span>
+            </h1>
+            <p className="text-muted-foreground font-medium uppercase tracking-widest text-[10px]">
+              Architect and manage cross-platform outreach templates.
+            </p>
+          </div>
+          <Button onClick={handleCreateNew} className="h-12 px-6 rounded-xl font-black bg-foreground text-background hover:bg-foreground/90 gap-2 shadow-xl transition-all active:scale-95 shrink-0">
+            <Plus className="h-5 w-5" /> NEW TEMPLATE
+          </Button>
+        </div>
 
-          <Tabs
-            value={activeTab}
-            onValueChange={(v) => setActiveTab(v as TemplateCategory)}
-            className="flex-1 flex flex-col overflow-hidden px-10 pb-10"
-          >
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as TemplateCategory)}
+          className="flex-1 flex flex-col"
+        >
             <TabsList className="bg-muted/50 border border-border/50 p-1.5 h-14 rounded-2xl w-full mb-8">
               <TabsTrigger value="whatsapp" className="flex-1 rounded-xl gap-2 font-black data-[state=active]:bg-background transition-all data-[state=active]:text-emerald-500">
                 <MessageCircle className="h-4 w-4" /> WHATSAPP
@@ -332,9 +319,8 @@ export function TemplateManager({ open, onOpenChange }: TemplateManagerProps) {
                 </TabsContent>
               ))}
             </div>
-          </Tabs>
-        </DialogContent>
-      </Dialog>
+        </Tabs>
+      </div>
 
       {/* Template Editor (create / edit) */}
       <TemplateEditor
@@ -423,7 +409,7 @@ export function TemplateManager({ open, onOpenChange }: TemplateManagerProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </AppLayout>
   );
 }
 
