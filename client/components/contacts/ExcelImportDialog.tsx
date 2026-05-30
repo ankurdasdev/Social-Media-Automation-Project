@@ -76,7 +76,7 @@ export function ExcelImportDialog({ isOpen, onClose, onImportComplete }: ExcelIm
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   // Smart Auto-Mapping Synonyms Matcher
-  const runAutoMapper = (headers: string[]) => {
+  const runAutoMapper = (headers: string[], sheetIdx: number) => {
     const newMappings: Record<string, string> = {};
     
     targetSchema.forEach((schema) => {

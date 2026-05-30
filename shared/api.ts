@@ -88,6 +88,10 @@ export interface Contact {
   personalizedNameWA: "N" | "C" | "NA" | string;
   personalizedNameGmail: "N" | "C" | "NA" | string;
   personalizedNameIG?: "N" | "C" | "NA" | string;
+  
+  salutationWA?: string;
+  salutationEmail?: string;
+  salutationIG?: string;
   notes: string;
   name: string;
   castingName: string;
