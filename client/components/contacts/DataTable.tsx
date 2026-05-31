@@ -134,6 +134,8 @@ export function DataTable<TData, TValue>({
       globalFilter,
       columnOrder,
     },
+    enableRowSelection: true,
+    getRowId: (row: any) => row.id,
     // Enable column resizing
     columnResizeMode: "onChange",
     // We want a bigger page size for Excel-like feel
