@@ -255,14 +255,14 @@ export default function InstagramSettings() {
                           <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[radial-gradient(circle_at_2px_2px,#fff_1px,transparent_0)] bg-[size:32px_32px]" />
                           
                           <div className="flex flex-col gap-8 relative z-10">
-                             <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row items-start sm:items-center lg:items-start xl:items-center justify-between gap-6 w-full">
-                                <div className="flex items-center gap-4 min-w-0 w-full sm:w-auto lg:w-full xl:w-auto">
+                             <div className="flex flex-wrap items-center justify-between gap-6 w-full">
+                                <div className="flex items-center gap-4">
                                    <div className="w-16 h-16 rounded-2.5xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center shadow-[0_0_30px_rgba(236,72,153,0.1)] shrink-0">
                                       <div className="w-8 h-8 rounded-full bg-pink-500 flex items-center justify-center">
                                          <Instagram className="h-4 w-4 text-white" />
                                       </div>
                                    </div>
-                                   <div className="min-w-0 flex-1">
+                                   <div>
                                       <p className="text-[10px] font-black text-pink-500 uppercase tracking-[0.3em] whitespace-nowrap">Status :: Connected</p>
                                       <h4 className="text-xl md:text-2xl font-black text-foreground tracking-tighter uppercase leading-none whitespace-nowrap">AUTHENTICATED</h4>
                                    </div>
@@ -281,11 +281,11 @@ export default function InstagramSettings() {
 
                             <div className="space-y-4 p-8 rounded-[2.5rem] bg-white/[0.02] border border-white/5 overflow-hidden">
                                <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.2em] md:tracking-[0.4em] text-center">Connected Account</p>
-                               <div className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-center text-foreground py-2 break-all">
+                               <div className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-center text-foreground py-2 truncate max-w-full px-2">
                                   @{status?.username}
                                </div>
                                <div className="h-px w-12 bg-pink-500/20 mx-auto" />
-                               <p className="text-[10px] font-black text-pink-500/40 uppercase tracking-[0.2em] text-center">
+                               <p className="text-[10px] font-black text-pink-500/40 uppercase tracking-[0.2em] text-center truncate max-w-full px-2">
                                  {status?.connectedAt ? `ESTABLISHED :: ${new Date(status.connectedAt).toLocaleDateString()}` : "ANONYMOUS SESSION"}
                                </p>
                             </div>

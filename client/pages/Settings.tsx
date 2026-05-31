@@ -257,16 +257,16 @@ export default function Settings() {
                               <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[radial-gradient(circle_at_2px_2px,#fff_1px,transparent_0)] bg-[size:32px_32px]" />
                               
                               <div className="flex flex-col gap-10 relative z-10">
-                                 <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row items-center justify-between gap-4 w-full">
-                                    <div className="flex items-center gap-4 min-w-0 w-full sm:w-auto lg:w-full xl:w-auto">
+                                 <div className="flex flex-wrap items-center justify-between gap-4 w-full">
+                                    <div className="flex items-center gap-4">
                                        <div className="w-16 h-16 rounded-2.5xl bg-primary/10 border border-primary/20 flex items-center justify-center shadow-[0_0_30px_rgba(139,92,246,0.1)] shrink-0">
                                           <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
                                              <CheckCircle2 className="h-4 w-4 text-white" />
                                           </div>
                                        </div>
-                                       <div className="min-w-0 flex-1">
-                                          <p className="text-[10px] font-black text-primary uppercase tracking-widest truncate">Protocol :: Secure</p>
-                                          <h4 className="text-xl md:text-2xl font-black text-foreground tracking-tighter uppercase leading-none break-words">AUTHENTICATED</h4>
+                                       <div>
+                                          <p className="text-[10px] font-black text-primary uppercase tracking-widest">Protocol :: Secure</p>
+                                          <h4 className="text-xl md:text-2xl font-black text-foreground tracking-tighter uppercase leading-none">AUTHENTICATED</h4>
                                        </div>
                                     </div>
                                     
@@ -288,12 +288,12 @@ export default function Settings() {
 
                                  <div className="space-y-4 p-6 rounded-[2.5rem] bg-white/[0.02] border border-white/5 overflow-hidden">
                                     <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest text-center">Connected Workspace Account</p>
-                                    <div className="text-center">
-                                       <h3 className="text-2xl md:text-3xl font-black tracking-tighter text-foreground">{googleStatus.userName}</h3>
-                                       <p className="text-[12px] font-black text-primary/60 uppercase tracking-widest mt-1">{googleStatus.userEmail}</p>
+                                    <div className="text-center w-full min-w-0">
+                                       <h3 className="text-2xl md:text-3xl font-black tracking-tighter text-foreground truncate max-w-full px-2">{googleStatus.userName}</h3>
+                                       <p className="text-[12px] font-black text-primary/60 uppercase tracking-widest mt-1 truncate max-w-full px-2">{googleStatus.userEmail}</p>
                                     </div>
                                     <div className="h-px w-12 bg-primary/20 mx-auto" />
-                                    <p className="text-[10px] font-black text-primary/40 uppercase tracking-[0.2em] text-center break-words leading-snug">
+                                    <p className="text-[10px] font-black text-primary/40 uppercase tracking-[0.2em] text-center break-words leading-snug truncate max-w-full px-2">
                                        SESSION ACTIVE :: OAUTH 2.0 VERIFIED
                                     </p>
                                  </div>
