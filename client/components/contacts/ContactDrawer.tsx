@@ -403,7 +403,7 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
       fetch(`/api/contacts/${contact.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, userId: contact.user_id }),
+        body: JSON.stringify({ ...form, userId: getOrCreateUserId() }),
       }).then(res => {
         if (res.ok) {
           queryClient.invalidateQueries({ queryKey: ["contacts"] });
@@ -425,7 +425,7 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
       const res = await fetch(`/api/contacts/${contact.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, userId: contact.user_id }),
+        body: JSON.stringify({ ...form, userId: getOrCreateUserId() }),
       });
       if (!res.ok) throw new Error("Failed to save");
       toast({ title: "Updated", description: "Database record synchronized." });
@@ -491,7 +491,7 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
               </div>
               <div className="col-span-2 space-y-2">
                 <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Notes</Label>
-                <Input value={form.notes ?? ""} onChange={(e) => set("notes")(e.target.value)} className="h-11 rounded-xl bg-background/50" />
+                <Textarea value={form.notes ?? ""} onChange={(e) => set("notes")(e.target.value)} className="min-h-[80px] rounded-xl bg-background/50 resize-none" />
               </div>
             </div>
           </section>
@@ -740,7 +740,7 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
              </Button>
              <Button size="lg" className="flex-[2] rounded-2xl font-black h-14 bg-foreground text-background shadow-2xl transition-all" onClick={handleSave} disabled={isSaving}>
                 {isSaving ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <ShieldCheck className="mr-2 h-5 w-5" />}
-                SYNC TO DATABASE
+                SAVE
              </Button>
           </div>
         </div>

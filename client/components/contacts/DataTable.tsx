@@ -235,7 +235,7 @@ export function DataTable<TData, TValue>({
                         "relative group border-r border-white/5 last:border-r-0",
                         isGroupHeader ? "p-0 border-b border-white/5 align-top" : "px-6 text-[10px] font-black uppercase text-muted-foreground tracking-[0.3em] cursor-move active:cursor-grabbing"
                       )}
-                      style={{ width: header.getSize() }}
+                      style={{ width: header.getSize(), minWidth: "max-content" }}
                     >
                       {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                       <div
@@ -299,6 +299,7 @@ export function DataTable<TData, TValue>({
                                 style={{
                                   backgroundColor: cColor ? (cColor.includes("gradient") ? undefined : cColor) : undefined,
                                   background: cColor?.includes("gradient") ? cColor : undefined,
+                                  minWidth: "max-content"
                                 }}
                               >
                                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
