@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useTransition } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Loader2, RefreshCw } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
@@ -41,7 +41,7 @@ export default function Contacts() {
   const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState("all");
-  const [isTabTransitioning, startTabTransition] = React.useTransition();
+  const [isTabTransitioning, startTabTransition] = useTransition();
   const [localSheets, setLocalSheets] = useState<string[]>([]);
   const [sendingProgress, setSendingProgress] = useState<{ current: number; total: number; message: string } | null>(null);
   const [aiSearchResults, setAISearchResults] = useState<Contact[] | null>(null);
