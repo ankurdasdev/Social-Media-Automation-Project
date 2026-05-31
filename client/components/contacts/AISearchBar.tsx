@@ -41,7 +41,7 @@ export function AISearchBar({ onSearch, isLoading, onClear, className }: AISearc
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
         className={cn(
-          "h-14 pl-14 pr-12 rounded-2xl bg-primary/5 border-primary/20 focus:bg-background focus:ring-primary font-bold shadow-[0_0_20px_rgba(var(--primary-rgb),0.05)] transition-all placeholder:text-primary/30",
+          "h-14 pl-14 pr-[110px] rounded-2xl bg-primary/5 border-primary/20 focus:bg-background focus:ring-primary font-bold shadow-[0_0_20px_rgba(var(--primary-rgb),0.05)] transition-all placeholder:text-primary/30 text-ellipsis overflow-hidden",
           isLoading && "opacity-50 pointer-events-none"
         )}
       />
@@ -52,7 +52,7 @@ export function AISearchBar({ onSearch, isLoading, onClear, className }: AISearc
             setPrompt("");
             onClear?.();
           }}
-          className="absolute inset-y-0 right-4 flex items-center text-muted-foreground hover:text-foreground transition-colors"
+          className="absolute inset-y-0 right-[88px] flex items-center text-muted-foreground hover:text-foreground transition-colors"
         >
           <X className="h-4 w-4" />
         </button>

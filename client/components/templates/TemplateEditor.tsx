@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RichTextarea } from "@/components/ui/rich-textarea";
 import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Loader2, AlertTriangle, Info, GripVertical, Sparkles, X as XIcon, Wand2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Template, CreateTemplateRequest, UpdateTemplateRequest } from "@shared/api";
@@ -389,7 +390,30 @@ export function TemplateEditor({
               {/* Variable Chips */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Personalization Tags</Label>
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Personalization Tags</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button type="button" className="text-muted-foreground hover:text-primary transition-colors">
+                          <Info className="w-3.5 h-3.5" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-80 p-4 space-y-3 glass-card rounded-xl">
+                        <div className="space-y-1">
+                          <h4 className="font-black text-sm uppercase tracking-widest">Token Mapping</h4>
+                          <p className="text-xs text-muted-foreground">These tokens map directly to columns in your imported Excel sheet.</p>
+                        </div>
+                        <div className="space-y-2 text-xs">
+                          {VARIABLES.map((v) => (
+                            <div key={v.label} className="grid grid-cols-2 gap-2 border-b border-white/5 pb-2 last:border-0 last:pb-0">
+                              <span className="font-black text-primary">{v.label}</span>
+                              <span className="text-muted-foreground">{v.description.replace('column: ', '')}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                   <span className="text-[10px] font-bold text-primary animate-pulse">DRAG &amp; DROP READY</span>
                 </div>
                 <div className="flex flex-wrap gap-2.5">
