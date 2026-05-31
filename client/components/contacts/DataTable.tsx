@@ -160,7 +160,7 @@ export function DataTable<TData, TValue>({
     // We want a bigger page size for Excel-like feel
     initialState: {
       pagination: {
-        pageSize: 25,
+        pageSize: 100,
       },
       columnVisibility: {
         whatsappCompleted: false,
@@ -175,10 +175,10 @@ export function DataTable<TData, TValue>({
   });
 
   React.useEffect(() => {
-    if (!isFullscreen) {
+    if (!isFullscreen && table.getState().pagination.pageSize !== 100) {
       table.setPageSize(100);
     }
-  }, [isFullscreen, table]);
+  }, [isFullscreen]);
 
   // Reorder Handler (restricted to within groups)
   const handleDragHeader = (columnId: string, targetId: string) => {
