@@ -434,17 +434,7 @@ export default function Controller() {
                 Sync Threads
               </Button>
             )}
-            <Button 
-                id="tutorial-controller-templates"
-                variant="outline"
-                asChild
-                className="h-12 px-6 rounded-xl font-bold bg-background/50 border-border/50 gap-2 hover:bg-muted transition-all"
-            >
-              <Link to="/templates">
-                <LayoutTemplate className="w-4 h-4 text-primary" />
-                Manage Templates
-              </Link>
-            </Button>
+
             <Button 
                 id="tutorial-controller-profiling"
                 variant="outline" 
