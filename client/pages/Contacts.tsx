@@ -29,7 +29,7 @@ import { getOrCreateUserId } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import { RichTextarea } from "@/components/ui/rich-textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DrawerMultiTemplateSelect, SalutationPicker } from "@/components/contacts/ContactDrawer";
+import { DrawerMultiTemplateSelect, SalutationPicker, MessageEditor } from "@/components/contacts/ContactDrawer";
 import { AttachmentCell } from "@/components/contacts/GridCells";
 import { Progress } from "@/components/ui/progress";
 
@@ -628,16 +628,16 @@ export default function Contacts() {
                         <AttachmentCell attachments={newLead.drive_attachments_wa || []} onUpdate={v => setNewLead({...newLead, drive_attachments_wa: v})} />
                     </div>
                  </div>
-                 <div className="flex items-center gap-2 p-3 bg-muted/20 rounded-xl border border-white/5">
-                    <Switch checked={newLead.hasCustomMessageWA} onCheckedChange={v => setNewLead({...newLead, hasCustomMessageWA: v})} />
-                    <Label className="text-xs font-bold uppercase">Editable MSG WP</Label>
-                 </div>
-                 {newLead.hasCustomMessageWA && (
-                    <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
-                       <Label className="text-[10px] font-black text-primary uppercase tracking-widest px-1">Custom Message</Label>
-                      <RichTextarea value={newLead.editableMessageWP} onChange={val => setNewLead({...newLead, editableMessageWP: val})} className="min-h-[100px] rounded-xl bg-muted/40" />
-                    </div>
-                 )}
+                 <MessageEditor
+                    checked={!!newLead.hasCustomMessageWA}
+                    onCheckedChange={v => setNewLead({...newLead, hasCustomMessageWA: v})}
+                    value={newLead.editableMessageWP || ""}
+                    onChange={val => setNewLead({...newLead, editableMessageWP: val})}
+                    placeholder="Write custom WhatsApp message..."
+                    accentColor="text-emerald-500"
+                    label="Editable MSG WP"
+                    platform="whatsapp"
+                 />
               </TabsContent>
 
               <TabsContent value="email" className="space-y-6">
@@ -670,16 +670,16 @@ export default function Contacts() {
                         <Input value={newLead.editableGmailSubject} onChange={e => setNewLead({...newLead, editableGmailSubject: e.target.value})} className="h-12 rounded-xl bg-muted/40 font-bold" placeholder="Subject..." />
                     </div>
                  </div>
-                 <div className="flex items-center gap-2 p-3 bg-muted/20 rounded-xl border border-white/5">
-                    <Switch checked={newLead.hasCustomMessageEmail} onCheckedChange={v => setNewLead({...newLead, hasCustomMessageEmail: v})} />
-                    <Label className="text-xs font-bold uppercase">Editable MSG Gmail</Label>
-                 </div>
-                 {newLead.hasCustomMessageEmail && (
-                    <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
-                       <Label className="text-[10px] font-black text-primary uppercase tracking-widest px-1">Custom Body</Label>
-                      <RichTextarea value={newLead.editableMessageGmail} onChange={val => setNewLead({...newLead, editableMessageGmail: val})} className="min-h-[100px] rounded-xl bg-muted/40" />
-                    </div>
-                 )}
+                 <MessageEditor
+                    checked={!!newLead.hasCustomMessageEmail}
+                    onCheckedChange={v => setNewLead({...newLead, hasCustomMessageEmail: v})}
+                    value={newLead.editableMessageGmail || ""}
+                    onChange={val => setNewLead({...newLead, editableMessageGmail: val})}
+                    placeholder="Write custom email body..."
+                    accentColor="text-blue-500"
+                    label="Editable MSG Gmail"
+                    platform="email"
+                 />
               </TabsContent>
 
               <TabsContent value="instagram" className="space-y-6">
@@ -708,16 +708,16 @@ export default function Contacts() {
                         <AttachmentCell attachments={newLead.drive_attachments_ig || []} onUpdate={v => setNewLead({...newLead, drive_attachments_ig: v})} />
                     </div>
                  </div>
-                 <div className="flex items-center gap-2 p-3 bg-muted/20 rounded-xl border border-white/5">
-                    <Switch checked={newLead.hasCustomMessageIG} onCheckedChange={v => setNewLead({...newLead, hasCustomMessageIG: v})} />
-                    <Label className="text-xs font-bold uppercase">Editable MSG Insta</Label>
-                 </div>
-                 {newLead.hasCustomMessageIG && (
-                    <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
-                       <Label className="text-[10px] font-black text-primary uppercase tracking-widest px-1">Custom Message</Label>
-                      <RichTextarea value={newLead.editableMessageIG} onChange={val => setNewLead({...newLead, editableMessageIG: val})} className="min-h-[100px] rounded-xl bg-muted/40" />
-                    </div>
-                 )}
+                 <MessageEditor
+                    checked={!!newLead.hasCustomMessageIG}
+                    onCheckedChange={v => setNewLead({...newLead, hasCustomMessageIG: v})}
+                    value={newLead.editableMessageIG || ""}
+                    onChange={val => setNewLead({...newLead, editableMessageIG: val})}
+                    placeholder="Write custom Instagram message..."
+                    accentColor="text-pink-500"
+                    label="Editable MSG Insta"
+                    platform="instagram"
+                 />
               </TabsContent>
             </Tabs>
           </div>
