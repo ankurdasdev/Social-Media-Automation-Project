@@ -178,7 +178,7 @@ export default function Settings() {
                             <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Secure Gateway</span>
                           </div>
                           
-                          <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground uppercase leading-none whitespace-nowrap">
+                          <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground uppercase leading-none break-words">
                             GOOGLE<br/>
                             <span className="text-primary drop-shadow-[0_0_15px_rgba(139,92,246,0.3)]">WORKSPACE</span>
                           </h2>
@@ -202,12 +202,12 @@ export default function Settings() {
                             { icon: ShieldCheck, title: "OAuth 2.0 Secure", sub: "Enterprise-grade encryption" },
                           ].map(({ icon: Icon, title, sub }) => (
                             <div key={title} className="flex items-center gap-5 group p-3 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-primary/20 transition-all">
-                              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-all">
+                              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-all shrink-0">
                                 <Icon className="h-5 w-5 text-primary" />
                               </div>
-                              <div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-foreground whitespace-nowrap">{title}</p>
-                                <p className="text-[10px] text-muted-foreground font-bold mt-0.5 whitespace-nowrap">{sub}</p>
+                              <div className="min-w-0">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-foreground truncate">{title}</p>
+                                <p className="text-[10px] text-muted-foreground font-bold mt-0.5 truncate">{sub}</p>
                               </div>
                             </div>
                           ))}
@@ -215,10 +215,10 @@ export default function Settings() {
                                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                                   <AlertTriangle className="h-5 w-5 text-amber-500" />
                                </div>
-                               <div className="flex flex-col">
-                                  <p className="text-[10px] font-black uppercase tracking-widest text-foreground whitespace-nowrap">Action Required</p>
-                                  <p className="text-xs text-muted-foreground font-bold mt-1 whitespace-nowrap">IMPORTANT: Check all permission boxes</p>
-                                  <p className="text-[10px] text-muted-foreground mt-0.5 whitespace-nowrap">Google hides these by default. You MUST check them to send emails.</p>
+                               <div className="flex flex-col min-w-0">
+                                  <p className="text-[10px] font-black uppercase tracking-widest text-foreground truncate">Action Required</p>
+                                  <p className="text-xs text-muted-foreground font-bold mt-1 break-words leading-snug">IMPORTANT: Check all permission boxes</p>
+                                  <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug break-words">Google hides these by default. You MUST check them to send emails.</p>
                                </div>
                             </div>
                        </div>
@@ -260,8 +260,8 @@ export default function Settings() {
                                           </div>
                                        </div>
                                        <div className="min-w-0 flex-1">
-                                          <p className="text-[10px] font-black text-primary uppercase tracking-widest whitespace-nowrap">Protocol :: Secure</p>
-                                          <h4 className="text-xl md:text-2xl font-black text-foreground tracking-tighter uppercase leading-none break-all">AUTHENTICATED</h4>
+                                          <p className="text-[10px] font-black text-primary uppercase tracking-widest truncate">Protocol :: Secure</p>
+                                          <h4 className="text-xl md:text-2xl font-black text-foreground tracking-tighter uppercase leading-none break-words">AUTHENTICATED</h4>
                                        </div>
                                     </div>
                                     
@@ -285,10 +285,10 @@ export default function Settings() {
                                     <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest text-center">Connected Workspace Account</p>
                                     <div className="text-center">
                                        <h3 className="text-2xl md:text-3xl font-black tracking-tighter text-foreground">{googleStatus.userName}</h3>
-                                       <p className="text-[12px] font-black text-primary/60 uppercase tracking-widest mt-1 break-all">{googleStatus.userEmail}</p>
+                                       <p className="text-[12px] font-black text-primary/60 uppercase tracking-widest mt-1">{googleStatus.userEmail}</p>
                                     </div>
                                     <div className="h-px w-12 bg-primary/20 mx-auto" />
-                                    <p className="text-[10px] font-black text-primary/40 uppercase tracking-[0.2em] text-center whitespace-nowrap">
+                                    <p className="text-[10px] font-black text-primary/40 uppercase tracking-[0.2em] text-center break-words leading-snug">
                                        SESSION ACTIVE :: OAUTH 2.0 VERIFIED
                                     </p>
                                  </div>
