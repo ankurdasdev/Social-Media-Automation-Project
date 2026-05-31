@@ -330,6 +330,22 @@ export default function InstagramSettings() {
                     </p>
                   </div>
 
+                  {/* Pre-Connection Warning & Steps */}
+                  <div className="max-w-md mx-auto w-full space-y-4 text-left p-6 rounded-2xl bg-pink-500/5 border border-pink-500/20">
+                    <div className="flex gap-3">
+                      <AlertTriangle className="h-5 w-5 text-pink-500 shrink-0 mt-0.5" />
+                      <div className="space-y-2">
+                        <h4 className="text-xs font-black uppercase tracking-widest text-pink-500">Connection Steps & Limitations</h4>
+                        <div className="text-xs text-muted-foreground font-medium leading-relaxed space-y-2">
+                          <p>1. Enter your Instagram username and password below.</p>
+                          <p>2. We log in securely from your IP address to avoid getting blocked by Instagram.</p>
+                          <p>3. <strong className="text-foreground">Two-Factor Auth:</strong> If enabled, you will be prompted to enter a 6-digit code on the next step.</p>
+                          <p>4. <strong className="text-foreground">Attachment Limits:</strong> Instagram only supports sending <strong>Image</strong> attachments up to 8MB. Videos or PDFs will fail to send.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Step indicator during login */}
                   {isBusy && (
                     <div className="w-full max-w-md p-5 rounded-3xl bg-pink-500/5 border border-pink-500/10 flex items-center gap-4 animate-in fade-in">

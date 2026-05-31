@@ -31,6 +31,7 @@ import {
   PicklistCell, 
   ConditionalTextareaCell,
   SheetDropdownCell,
+  PersonalizedCell,
 } from "./GridCells";
 import { cn } from "@/lib/utils";
 import * as React from "react";
@@ -238,49 +239,6 @@ export const columns: ColumnDef<Contact>[] = [
       </div>
     ),
   },
-  // ── Run Flags ───────────────────────────────────────────────────────────────
-  {
-    accessorKey: "whatsappRun",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="WP Run" icon={MessageCircle} columnId="whatsappRun" />,
-    size: 110,
-    cell: ({ row, table }) => (
-      <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
-        <Checkbox 
-          checked={!!row.original.whatsappRun}
-          onCheckedChange={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { whatsappRun: !!val })}
-          className="w-5 h-5 rounded-lg border-emerald-500/30"
-        />
-      </div>
-    ),
-  },
-  {
-    accessorKey: "emailRun",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Gmail Run" icon={Mail} columnId="emailRun" />,
-    size: 110,
-    cell: ({ row, table }) => (
-      <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
-        <Checkbox 
-          checked={!!row.original.emailRun}
-          onCheckedChange={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { emailRun: !!val })}
-          className="w-5 h-5 rounded-lg border-blue-500/30"
-        />
-      </div>
-    ),
-  },
-  {
-    accessorKey: "instagramRun",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Insta Run" icon={Instagram} columnId="instagramRun" />,
-    size: 110,
-    cell: ({ row, table }) => (
-      <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
-        <Checkbox 
-          checked={!!row.original.instagramRun}
-          onCheckedChange={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { instagramRun: !!val })}
-          className="w-5 h-5 rounded-lg border-pink-500/30"
-        />
-      </div>
-    ),
-  },
 
   // ── Hidden columns for filtering ──────────────────────────────────────────
   {
@@ -299,136 +257,10 @@ export const columns: ColumnDef<Contact>[] = [
     enableHiding: true,
   },
 
-  // ── Combined Outreach Status ────────────────────────────────────────────────
-  {
-    id: "status",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Status" columnId="status" disableRename={true} />,
-    accessorFn: (row) => {
-      const wa = (row.whatsappCompleted || "").toLowerCase();
-      const em = (row.emailCompleted || "").toLowerCase();
-      const ig = (row.instagramCompleted || "").toLowerCase();
-      const statuses = [wa, em, ig];
-      if (statuses.some(s => s === "yes" || s === "sent")) return "SENT";
-      if (statuses.some(s => s === "failed" || s === "error")) return "FAILED";
-      if (statuses.some(s => s === "in progress")) return "BUSY";
-      return "PENDING";
-    },
-    size: 200,
-    cell: ({ row }) => {
-      const contact = row.original;
-      
-      const getStatusColor = (val: string | undefined) => {
-        const s = (val || "").toLowerCase();
-        if (s === "yes" || s === "sent") return "bg-emerald-500/10 text-emerald-500 border-emerald-500/20";
-        if (s === "failed" || s === "error") return "bg-rose-500/10 text-rose-500 border-rose-500/20";
-        if (s === "in progress") return "bg-blue-500/10 text-blue-500 border-blue-500/20";
-        return "bg-slate-500/10 text-slate-400 border-slate-500/10";
-      };
-
-      const getStatusLabel = (val: string | undefined) => {
-        const s = (val || "").toLowerCase();
-        if (s === "yes" || s === "sent") return "SENT";
-        if (s === "failed" || s === "error") return "FAILED";
-        if (s === "in progress") return "BUSY";
-        return "PENDING";
-      };
-
-      return (
-        <div className="flex flex-col gap-1.5 py-1">
-          {/* WhatsApp Status */}
-          <div className="flex items-center gap-2 group/st">
-            <MessageCircle className="w-3 h-3 text-emerald-500/50 group-hover/st:text-emerald-500 transition-colors" />
-            <Badge variant="outline" className={cn(
-              "px-1.5 py-0 rounded-md font-black text-[8px] uppercase tracking-tighter border",
-              getStatusColor(contact.whatsappCompleted)
-            )}>
-              {getStatusLabel(contact.whatsappCompleted)}
-            </Badge>
-          </div>
-          
-          {/* Gmail Status */}
-          <div className="flex items-center gap-2 group/st">
-            <Mail className="w-3 h-3 text-blue-500/50 group-hover/st:text-blue-500 transition-colors" />
-            <Badge variant="outline" className={cn(
-              "px-1.5 py-0 rounded-md font-black text-[8px] uppercase tracking-tighter border",
-              getStatusColor(contact.emailCompleted)
-            )}>
-              {getStatusLabel(contact.emailCompleted)}
-            </Badge>
-          </div>
-
-          {/* Instagram Status */}
-          <div className="flex items-center gap-2 group/st">
-            <Instagram className="w-3 h-3 text-pink-500/50 group-hover/st:text-pink-500 transition-colors" />
-            <Badge variant="outline" className={cn(
-              "px-1.5 py-0 rounded-md font-black text-[8px] uppercase tracking-tighter border",
-              getStatusColor(contact.instagramCompleted)
-            )}>
-              {getStatusLabel(contact.instagramCompleted)}
-            </Badge>
-          </div>
-        </div>
-      );
-    },
-  },
-  // ── Personalized Names ───────────────────────────────────────────────────────
-  {
-    accessorKey: "personalizedNameWA",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Pers. Name WA" icon={Type} columnId="personalizedNameWA" />,
-    size: 140,
-    cell: ({ row, table }) => (
-       <div onClick={(e) => e.stopPropagation()}>
-          <PicklistCell 
-            value={row.original.personalizedNameWA}
-            onUpdate={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { personalizedNameWA: val })}
-          />
-       </div>
-    ),
-  },
-  {
-    accessorKey: "personalizedNameGmail",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Pers. Name Gmail" icon={Type} columnId="personalizedNameGmail" />,
-    size: 145,
-    cell: ({ row, table }) => (
-       <div onClick={(e) => e.stopPropagation()}>
-          <PicklistCell 
-            value={row.original.personalizedNameGmail}
-            onUpdate={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { personalizedNameGmail: val })}
-          />
-       </div>
-    ),
-  },
-  {
-    accessorKey: "personalizedNameIG",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Pers. Name IG" icon={Type} columnId="personalizedNameIG" />,
-    size: 140,
-    cell: ({ row, table }) => (
-       <div onClick={(e) => e.stopPropagation()}>
-          <PicklistCell 
-            value={row.original.personalizedNameIG || "Hi"}
-            onUpdate={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { personalizedNameIG: val })}
-          />
-       </div>
-    ),
-  },
-  // ── Notes ────────────────────────────────────────────────────────────────────
-  {
-    accessorKey: "notes",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Notes" columnId="notes" />,
-    size: 250,
-    cell: ({ row, table }) => (
-      <div onClick={(e) => e.stopPropagation()}>
-        <EditableTextCell 
-          value={row.original.notes} 
-          onUpdate={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { notes: val })}
-        />
-      </div>
-    ),
-  },
-  // ── Contact Info ─────────────────────────────────────────────────────────────
+  // ── 1. Contact Details ────────────────────────────────────────────────────────
   {
     accessorKey: "name",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Full Name" icon={UserIcon} columnId="name" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Lead Name" icon={UserIcon} columnId="name" />,
     size: 180,
     cell: ({ row, table }) => (
       <div onClick={(e) => e.stopPropagation()}>
@@ -441,7 +273,7 @@ export const columns: ColumnDef<Contact>[] = [
   },
   {
     accessorKey: "castingName",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Casting Agency" icon={Briefcase} columnId="castingName" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Casting Name" icon={Briefcase} columnId="castingName" />,
     size: 180,
     cell: ({ row, table }) => (
       <div onClick={(e) => e.stopPropagation()}>
@@ -484,8 +316,8 @@ export const columns: ColumnDef<Contact>[] = [
   },
   {
     accessorKey: "instaHandle",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Insta Profile" icon={Instagram} columnId="instaHandle" />,
-    size: 150,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Instagram Profile" icon={Instagram} columnId="instaHandle" />,
+    size: 180,
     cell: ({ row, table }) => (
       <div onClick={(e) => e.stopPropagation()}>
         <EditableTextCell 
@@ -497,80 +329,77 @@ export const columns: ColumnDef<Contact>[] = [
       </div>
     ),
   },
-  // ── Tracking (Read-Only) ─────────────────────────────────────────────────────
   {
-    accessorKey: "visit",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Visit Log" columnId="visit" />,
-    size: 120,
+    accessorKey: "notes",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Notes" columnId="notes" />,
+    size: 250,
     cell: ({ row, table }) => (
       <div onClick={(e) => e.stopPropagation()}>
         <EditableTextCell 
-          value={row.original.visit} 
-          onUpdate={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { visit: val })}
+          value={row.original.notes} 
+          onUpdate={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { notes: val })}
         />
       </div>
     ),
   },
   {
-    accessorKey: "lastContactedDate",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Last Contacted" columnId="lastContactedDate" />,
+    accessorKey: "sheetName",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Source Sheet" columnId="sheetName" />,
     size: 160,
-    cell: ({ row }) => (
-      <div className="px-2 text-[10px] font-black text-muted-foreground/60 uppercase font-mono">
-        {row.original.lastContactedDate || "NEVER"}
+    cell: ({ row, table }) => (
+      <div onClick={(e) => e.stopPropagation()}>
+        <SheetDropdownCell
+          value={row.original.sheetName || ""}
+          onUpdate={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { sheetName: val })}
+          sheets={(table.options.meta as any)?.uniqueSheets || []}
+        />
       </div>
     ),
   },
-  {
-    accessorKey: "followups",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Follow-ups" columnId="followups" isFollowupFilter={true} />,
-    filterFn: () => true, // Allow all rows, filter is only used for UI state
-    size: 110,
-    cell: ({ row, column }) => {
-      const dates = row.original.contacted_dates || [];
-      const filterDays = parseInt((column.getFilterValue() as string) || "0", 10);
-      
-      let applicableDates = dates;
-      if (filterDays > 0) {
-        const cutoff = new Date(Date.now() - filterDays * 24 * 60 * 60 * 1000);
-        applicableDates = dates.filter(d => new Date(d) >= cutoff);
-      }
-      
-      // Calculate unique days (YYYY-MM-DD)
-      const uniqueDays = new Set(applicableDates.map(d => {
-        try { return new Date(d).toISOString().split('T')[0]; } 
-        catch { return d; }
-      })).size;
-      
-      let count = 0;
-      if (filterDays === 0) {
-        count = uniqueDays > 0 ? uniqueDays - 1 : 0;
-      } else {
-        count = uniqueDays;
-      }
 
-      if (filterDays === 0 && !dates.length && row.original.followups) {
-        // Fallback to legacy count
-        count = parseInt(row.original.followups, 10);
-      }
-      return (
-        <div className="px-2 text-[10px] font-black text-primary text-center">
-          {count}
-        </div>
-      );
-    },
-  },
+  // ── 2. Automation Run ────────────────────────────────────────────────────────
   {
-    accessorKey: "totalDatesContacts",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Dates History" columnId="totalDatesContacts" />,
-    size: 180,
-    cell: ({ row }) => (
-      <div className="px-2 text-[9px] font-bold text-muted-foreground/50 truncate uppercase tracking-tighter">
-        {row.original.totalDatesContacts || "NO SESSIONS"}
+    accessorKey: "whatsappRun",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="WP Run" icon={MessageCircle} columnId="whatsappRun" />,
+    size: 110,
+    cell: ({ row, table }) => (
+      <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
+        <Checkbox 
+          checked={!!row.original.whatsappRun}
+          onCheckedChange={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { whatsappRun: !!val })}
+          className="w-5 h-5 rounded-lg border-emerald-500/30"
+        />
       </div>
     ),
   },
-  // ── Context ──────────────────────────────────────────────────────────────────
+  {
+    accessorKey: "emailRun",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Gmail Run" icon={Mail} columnId="emailRun" />,
+    size: 110,
+    cell: ({ row, table }) => (
+      <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
+        <Checkbox 
+          checked={!!row.original.emailRun}
+          onCheckedChange={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { emailRun: !!val })}
+          className="w-5 h-5 rounded-lg border-blue-500/30"
+        />
+      </div>
+    ),
+  },
+  {
+    accessorKey: "instagramRun",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Instagram Run" icon={Instagram} columnId="instagramRun" />,
+    size: 110,
+    cell: ({ row, table }) => (
+      <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
+        <Checkbox 
+          checked={!!row.original.instagramRun}
+          onCheckedChange={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { instagramRun: !!val })}
+          className="w-5 h-5 rounded-lg border-pink-500/30"
+        />
+      </div>
+    ),
+  },
   {
     accessorKey: "actingContext",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Acting Context" icon={Layers} columnId="actingContext" />,
@@ -586,7 +415,7 @@ export const columns: ColumnDef<Contact>[] = [
   },
   {
     accessorKey: "project",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Target Project" icon={Calendar} columnId="project" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Project Details" icon={Calendar} columnId="project" />,
     size: 180,
     cell: ({ row, table }) => (
       <div onClick={(e) => e.stopPropagation()}>
@@ -599,7 +428,7 @@ export const columns: ColumnDef<Contact>[] = [
   },
   {
     accessorKey: "age",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Age Group" columnId="age" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Age Range" columnId="age" />,
     size: 100,
     cell: ({ row, table }) => (
       <div onClick={(e) => e.stopPropagation()}>
@@ -610,25 +439,50 @@ export const columns: ColumnDef<Contact>[] = [
       </div>
     ),
   },
-  // ── Outreach Controls ────────────────────────────────────────────────────────
+
+  // ── 3. WhatsApp ─────────────────────────────────────────────────────────────
   {
-    accessorKey: "instagramDone",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Insta Done" columnId="instagramDone" />,
-    size: 110,
-    cell: ({ row }) => (
-      <div className="px-2">
-        <Badge variant="outline" className={cn(
-          "text-[8px] font-black uppercase tracking-widest px-1.5 py-0",
-          row.original.instagramDone === "Yes" ? "border-pink-500 text-pink-500" : "opacity-30"
-        )}>
-          {row.original.instagramDone || "NO"}
-        </Badge>
+    accessorKey: "salutationWA",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Salutation for WP" icon={Type} columnId="salutationWA" />,
+    size: 140,
+    cell: ({ row, table }) => (
+       <div onClick={(e) => e.stopPropagation()}>
+          <PicklistCell 
+            value={row.original.salutationWA}
+            onUpdate={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { salutationWA: val })}
+          />
+       </div>
+    ),
+  },
+  {
+    accessorKey: "personalizedNameWA",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Personalized WP" icon={Type} columnId="personalizedNameWA" />,
+    size: 140,
+    cell: ({ row, table }) => (
+       <div onClick={(e) => e.stopPropagation()}>
+          <PersonalizedCell 
+            value={row.original.personalizedNameWA}
+            onUpdate={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { personalizedNameWA: val })}
+          />
+       </div>
+    ),
+  },
+  {
+    accessorKey: "templateSelectionWP",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Template WP" columnId="templateSelectionWP" />,
+    size: 200,
+    cell: ({ row, table }) => (
+      <div onClick={(e) => e.stopPropagation()}>
+        <MultiTemplateSelect 
+          selectedIds={row.original.templateSelectionWP || []} 
+          onUpdate={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { templateSelectionWP: val })}
+        />
       </div>
     ),
   },
   {
     accessorKey: "hasCustomMessageWA",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Editable Msg WA" columnId="hasCustomMessageWA" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Editable MSG WP" columnId="hasCustomMessageWA" />,
     size: 220,
     cell: ({ row, table }) => (
       <div className="px-2" onClick={(e) => e.stopPropagation()}>
@@ -643,14 +497,56 @@ export const columns: ColumnDef<Contact>[] = [
     ),
   },
   {
-    accessorKey: "templateSelectionWP",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Template WP" columnId="templateSelectionWP" />,
+    id: "specialAttachmentWA",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Attachment for WP" columnId="specialAttachmentWA" />,
+    size: 180,
+    cell: ({ row, table }) => (
+      <div onClick={(e) => e.stopPropagation()}>
+        <AttachmentCell 
+          attachments={row.original.drive_attachments_wa || []} 
+          onUpdate={(files) => (table.options.meta as any)?.updateContact?.(row.original.id, { drive_attachments_wa: files })}
+        />
+      </div>
+    ),
+  },
+
+  // ── 4. Gmail ────────────────────────────────────────────────────────────────
+  {
+    accessorKey: "salutationEmail",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Salutation for Mail" icon={Type} columnId="salutationEmail" />,
+    size: 140,
+    cell: ({ row, table }) => (
+       <div onClick={(e) => e.stopPropagation()}>
+          <PicklistCell 
+            value={row.original.salutationEmail}
+            onUpdate={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { salutationEmail: val })}
+          />
+       </div>
+    ),
+  },
+  {
+    accessorKey: "personalizedNameGmail",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Personalized Gmail" icon={Type} columnId="personalizedNameGmail" />,
+    size: 145,
+    cell: ({ row, table }) => (
+       <div onClick={(e) => e.stopPropagation()}>
+          <PersonalizedCell 
+            value={row.original.personalizedNameGmail}
+            onUpdate={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { personalizedNameGmail: val })}
+          />
+       </div>
+    ),
+  },
+  {
+    accessorKey: "editableGmailSubject",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Gmail Subject" columnId="editableGmailSubject" />,
     size: 200,
     cell: ({ row, table }) => (
       <div onClick={(e) => e.stopPropagation()}>
-        <MultiTemplateSelect 
-          selectedIds={row.original.templateSelectionWP || []} 
-          onUpdate={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { templateSelectionWP: val })}
+        <EditableTextCell 
+          value={row.original.editableGmailSubject} 
+          onUpdate={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { editableGmailSubject: val })}
+          placeholder="Override Subject..."
         />
       </div>
     ),
@@ -670,7 +566,7 @@ export const columns: ColumnDef<Contact>[] = [
   },
   {
     accessorKey: "hasCustomMessageEmail",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Editable Msg Gmail" columnId="hasCustomMessageEmail" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Editable MSG Gmail" columnId="hasCustomMessageEmail" />,
     size: 220,
     cell: ({ row, table }) => (
       <div className="px-2" onClick={(e) => e.stopPropagation()}>
@@ -685,34 +581,44 @@ export const columns: ColumnDef<Contact>[] = [
     ),
   },
   {
-    accessorKey: "editableGmailSubject",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Gmail Subject" columnId="editableGmailSubject" />,
-    size: 200,
+    id: "specialAttachmentGmail",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Attachment for Gmail" columnId="specialAttachmentGmail" />,
+    size: 180,
     cell: ({ row, table }) => (
       <div onClick={(e) => e.stopPropagation()}>
-        <EditableTextCell 
-          value={row.original.editableGmailSubject} 
-          onUpdate={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { editableGmailSubject: val })}
-          placeholder="Override Subject..."
+        <AttachmentCell 
+          attachments={row.original.drive_attachments_email || []} 
+          onUpdate={(files) => (table.options.meta as any)?.updateContact?.(row.original.id, { drive_attachments_email: files })}
         />
       </div>
     ),
   },
-  // ── Instagram Editable Message ─────────────────────────────────────────────
+
+  // ── 5. Instagram ────────────────────────────────────────────────────────────
   {
-    accessorKey: "hasCustomMessageIG",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Editable Msg IG" columnId="hasCustomMessageIG" />,
-    size: 220,
+    accessorKey: "salutationIG",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Salutation for IG" icon={Type} columnId="salutationIG" />,
+    size: 140,
     cell: ({ row, table }) => (
-      <div className="px-2" onClick={(e) => e.stopPropagation()}>
-        <ConditionalTextareaCell 
-          checked={!!row.original.hasCustomMessageIG}
-          onCheckedChange={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { hasCustomMessageIG: val })}
-          value={row.original.editableMessageIG}
-          onValueChange={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { editableMessageIG: val })}
-          placeholder="Override IG Message..."
-        />
-      </div>
+       <div onClick={(e) => e.stopPropagation()}>
+          <PicklistCell 
+            value={row.original.salutationIG}
+            onUpdate={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { salutationIG: val })}
+          />
+       </div>
+    ),
+  },
+  {
+    accessorKey: "personalizedNameIG",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Personalized IG" icon={Type} columnId="personalizedNameIG" />,
+    size: 140,
+    cell: ({ row, table }) => (
+       <div onClick={(e) => e.stopPropagation()}>
+          <PersonalizedCell 
+            value={row.original.personalizedNameIG}
+            onUpdate={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { personalizedNameIG: val })}
+          />
+       </div>
     ),
   },
   {
@@ -728,36 +634,25 @@ export const columns: ColumnDef<Contact>[] = [
       </div>
     ),
   },
-  // ── Attachments ──────────────────────────────────────────────────────────────
   {
-    id: "specialAttachmentWA",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Attach WA" columnId="specialAttachmentWA" />,
-    size: 180,
+    accessorKey: "hasCustomMessageIG",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Editable MSG Insta" columnId="hasCustomMessageIG" />,
+    size: 220,
     cell: ({ row, table }) => (
-      <div onClick={(e) => e.stopPropagation()}>
-        <AttachmentCell 
-          attachments={row.original.drive_attachments_wa || []} 
-          onUpdate={(files) => (table.options.meta as any)?.updateContact?.(row.original.id, { drive_attachments_wa: files })}
-        />
-      </div>
-    ),
-  },
-  {
-    id: "specialAttachmentGmail",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Attach Gmail" columnId="specialAttachmentGmail" />,
-    size: 180,
-    cell: ({ row, table }) => (
-      <div onClick={(e) => e.stopPropagation()}>
-        <AttachmentCell 
-          attachments={row.original.drive_attachments_email || []} 
-          onUpdate={(files) => (table.options.meta as any)?.updateContact?.(row.original.id, { drive_attachments_email: files })}
+      <div className="px-2" onClick={(e) => e.stopPropagation()}>
+        <ConditionalTextareaCell 
+          checked={!!row.original.hasCustomMessageIG}
+          onCheckedChange={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { hasCustomMessageIG: val })}
+          value={row.original.editableMessageIG}
+          onValueChange={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { editableMessageIG: val })}
+          placeholder="Override IG Message..."
         />
       </div>
     ),
   },
   {
     id: "specialAttachmentIG",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Attach IG" columnId="specialAttachmentIG" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Attachment for IG" columnId="specialAttachmentIG" />,
     size: 180,
     cell: ({ row, table }) => (
       <div onClick={(e) => e.stopPropagation()}>
@@ -768,36 +663,54 @@ export const columns: ColumnDef<Contact>[] = [
       </div>
     ),
   },
-  // ── Completion Status ────────────────────────────────────────────────────────
+
+  // ── 6. Tracking ─────────────────────────────────────────────────────────────
   {
-    accessorKey: "whatsappCompleted",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="WP Done" icon={CheckCircle2} columnId="whatsappCompleted" />,
-    size: 110,
+    accessorKey: "lastContactedDate",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Last Contacted" columnId="lastContactedDate" />,
+    size: 160,
     cell: ({ row }) => (
-      <div className="px-2">
-        <Badge variant="outline" className={cn(
-          "text-[8px] font-black uppercase tracking-widest px-1.5 py-0",
-          row.original.whatsappCompleted === "Yes" ? "border-emerald-500 text-emerald-500" : "opacity-30"
-        )}>
-          {row.original.whatsappCompleted || "NO"}
-        </Badge>
+      <div className="px-2 text-[10px] font-black text-muted-foreground/60 uppercase font-mono">
+        {row.original.lastContactedDate || "NEVER"}
       </div>
     ),
   },
   {
-    accessorKey: "emailCompleted",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Gmail Done" icon={CheckCircle2} columnId="emailCompleted" />,
+    accessorKey: "followups",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Follow-ups" columnId="followups" isFollowupFilter={true} />,
+    filterFn: () => true,
     size: 110,
-    cell: ({ row }) => (
-      <div className="px-2">
-        <Badge variant="outline" className={cn(
-          "text-[8px] font-black uppercase tracking-widest px-1.5 py-0",
-          row.original.emailCompleted === "Yes" ? "border-blue-500 text-blue-500" : "opacity-30"
-        )}>
-          {row.original.emailCompleted || "NO"}
-        </Badge>
-      </div>
-    ),
+    cell: ({ row, column }) => {
+      const dates = row.original.contacted_dates || [];
+      const filterDays = parseInt((column.getFilterValue() as string) || "0", 10);
+      
+      let applicableDates = dates;
+      if (filterDays > 0) {
+        const cutoff = new Date(Date.now() - filterDays * 24 * 60 * 60 * 1000);
+        applicableDates = dates.filter(d => new Date(d) >= cutoff);
+      }
+      
+      const uniqueDays = new Set(applicableDates.map(d => {
+        try { return new Date(d).toISOString().split('T')[0]; } 
+        catch { return d; }
+      })).size;
+      
+      let count = 0;
+      if (filterDays === 0) {
+        count = uniqueDays > 0 ? uniqueDays - 1 : 0;
+      } else {
+        count = uniqueDays;
+      }
+
+      if (filterDays === 0 && !dates.length && row.original.followups) {
+        count = parseInt(row.original.followups, 10);
+      }
+      return (
+        <div className="px-2 text-[10px] font-black text-primary text-center">
+          {count}
+        </div>
+      );
+    },
   },
   {
     accessorKey: "automationComment",
@@ -809,17 +722,15 @@ export const columns: ColumnDef<Contact>[] = [
       </div>
     ),
   },
-  // ── Sheet Assignment ─────────────────────────────────────────────────────────
   {
-    accessorKey: "sheetName",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Source Sheet" columnId="sheetName" />,
-    size: 160,
+    accessorKey: "visit",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Visit Log" columnId="visit" />,
+    size: 120,
     cell: ({ row, table }) => (
       <div onClick={(e) => e.stopPropagation()}>
-        <SheetDropdownCell
-          value={row.original.sheetName || ""}
-          onUpdate={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { sheetName: val })}
-          sheets={(table.options.meta as any)?.uniqueSheets || []}
+        <EditableTextCell 
+          value={row.original.visit} 
+          onUpdate={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { visit: val })}
         />
       </div>
     ),

@@ -26,9 +26,11 @@ const VARIABLES = [
   { label: "{{leadName}}", description: "Lead Name (column: Lead Name)" },
   { label: "{{castingName}}", description: "Casting Name (column: Casting Name)" },
   { label: "{{actingContext}}", description: "Acting Context (column: Acting Context)" },
-  { label: "{{project}}", description: "Target Project (column: Project / Reference)" },
-  { label: "{{age}}", description: "Age (column: Age)" },
-  { label: "{{salutation}}", description: "Salutation + Name (e.g. 'Hi Ankur')" },
+  { label: "{{project}}", description: "Project Details (column: Project Details)" },
+  { label: "{{age}}", description: "Age Range (column: Age Range)" },
+  { label: "{{personalizedWP}}", description: "Salutation + Name for WA (column: Personalized WP)" },
+  { label: "{{personalizedGmail}}", description: "Salutation + Name for Gmail (column: Personalized Gmail)" },
+  { label: "{{personalizedIG}}", description: "Salutation + Name for IG (column: Personalized IG)" },
 ];
 
 // ─── Platform-specific attachment constraints ─────────────────────────────────

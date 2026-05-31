@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, QrCode, LogOut, CheckCircle2, RefreshCw, MessageSquare, Zap, ShieldCheck } from "lucide-react";
+import { Loader2, QrCode, LogOut, CheckCircle2, RefreshCw, MessageSquare, Zap, ShieldCheck, AlertTriangle } from "lucide-react";
 import { WhatsAppStatusResponse, WhatsAppQRResponse } from "@shared/api";
 import { toast } from "sonner";
 import { getOrCreateUserId, cn } from "@/lib/utils";
@@ -351,6 +351,21 @@ export function WhatsAppSettings() {
                     <p className="text-sm font-medium text-muted-foreground max-w-sm mx-auto leading-relaxed">
                       Connect your WhatsApp account. Enter your mobile number to generate a QR code.
                     </p>
+                  </div>
+
+                  {/* Pre-Connection Warning & Steps */}
+                  <div className="max-w-md mx-auto w-full space-y-4 text-left p-6 rounded-2xl bg-emerald-500/5 border border-emerald-500/20">
+                    <div className="flex gap-3">
+                      <AlertTriangle className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
+                      <div className="space-y-2">
+                        <h4 className="text-xs font-black uppercase tracking-widest text-emerald-500">Connection Steps & Limitations</h4>
+                        <div className="text-xs text-muted-foreground font-medium leading-relaxed space-y-2">
+                          <p>1. Enter your mobile number below (with country code, e.g., 919876543210).</p>
+                          <p>2. A QR code will be generated. Open WhatsApp on your phone, go to <strong>Linked Devices</strong>, and scan the QR code.</p>
+                          <p>3. <strong className="text-foreground">Session limitation:</strong> If you log out from your phone or the session expires, you will need to come back and scan a new QR code to reconnect.</p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="w-full max-w-md space-y-6">
