@@ -127,6 +127,7 @@ async function runMigrations(): Promise<void> {
     ALTER TABLE contacts ADD COLUMN IF NOT EXISTS cell_colors JSONB DEFAULT '{}'::jsonb;
     ALTER TABLE contacts ADD COLUMN IF NOT EXISTS whatsapp_completed TEXT DEFAULT 'No';
     ALTER TABLE contacts ADD COLUMN IF NOT EXISTS email_completed TEXT DEFAULT 'No';
+    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS notes TEXT;
     ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS url TEXT;
     ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS platform TEXT NOT NULL DEFAULT 'whatsapp';
     ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS description TEXT;
