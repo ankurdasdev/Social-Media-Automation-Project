@@ -155,6 +155,14 @@ export function DataTable<TData, TValue>({
     },
   });
 
+  React.useEffect(() => {
+    if (isFullscreen) {
+      table.setPageSize(99999);
+    } else {
+      table.setPageSize(25);
+    }
+  }, [isFullscreen, table]);
+
   // Reorder Handler (restricted to within groups)
   const handleDragHeader = (columnId: string, targetId: string) => {
     const col1 = table.getColumn(columnId);
@@ -389,27 +397,29 @@ export function DataTable<TData, TValue>({
            </div>
         </div>
         
-        <div className="flex items-center gap-3">
-          <button
-            className="h-12 px-6 rounded-xl border border-white/10 font-black text-[10px] uppercase tracking-widest hover:bg-muted/50 transition-all disabled:opacity-20 active:scale-95"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            PREVIOUS
-          </button>
-          <div className="flex items-center gap-2 px-4 h-12 rounded-xl bg-muted/30 border border-white/5 font-black text-[10px]">
-            <span className="text-primary">{table.getState().pagination.pageIndex + 1}</span>
-            <span className="opacity-20">/</span>
-            <span>{table.getPageCount()}</span>
+        {!isFullscreen && (
+          <div className="flex items-center gap-3">
+            <button
+              className="h-12 px-6 rounded-xl border border-white/10 font-black text-[10px] uppercase tracking-widest hover:bg-muted/50 transition-all disabled:opacity-20 active:scale-95"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              PREVIOUS
+            </button>
+            <div className="flex items-center gap-2 px-4 h-12 rounded-xl bg-muted/30 border border-white/5 font-black text-[10px]">
+              <span className="text-primary">{table.getState().pagination.pageIndex + 1}</span>
+              <span className="opacity-20">/</span>
+              <span>{table.getPageCount()}</span>
+            </div>
+            <button
+              className="h-12 px-6 rounded-xl border border-white/10 font-black text-[10px] uppercase tracking-widest hover:bg-muted/50 transition-all disabled:opacity-20 active:scale-95"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              NEXT
+            </button>
           </div>
-          <button
-            className="h-12 px-6 rounded-xl border border-white/10 font-black text-[10px] uppercase tracking-widest hover:bg-muted/50 transition-all disabled:opacity-20 active:scale-95"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            NEXT
-          </button>
-        </div>
+        )}
       </div>
 
       <ContactDrawer 
