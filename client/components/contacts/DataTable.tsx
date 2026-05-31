@@ -155,8 +155,16 @@ export function DataTable<TData, TValue>({
     },
   });
 
-  // Reorder Handler (Basic drag simulation support)
+  // Reorder Handler (restricted to within groups)
   const handleDragHeader = (columnId: string, targetId: string) => {
+    const col1 = table.getColumn(columnId);
+    const col2 = table.getColumn(targetId);
+    
+    // Check if they belong to the same group
+    if (!col1 || !col2 || col1.parent?.id !== col2.parent?.id) {
+      return;
+    }
+
     const newOrder = [...columnOrder];
     const oldIdx = newOrder.indexOf(columnId);
     const newIdx = newOrder.indexOf(targetId);
@@ -201,21 +209,32 @@ export function DataTable<TData, TValue>({
           className="overflow-auto flex-1 scrollbar-thin scrollbar-thumb-white/10 hover:scrollbar-thumb-primary/50 transition-all origin-top-left"
           style={{ zoom: `${zoomLevel}%` } as React.CSSProperties}
         >
-          <Table style={{ width: table.getCenterTotalSize(), minWidth: "100%" }}>
+          <Table className="table-fixed" style={{ width: table.getCenterTotalSize(), minWidth: "100%" }}>
             <TableHeader className="bg-muted/30 border-b border-white/5 sticky top-0 z-30 backdrop-blur-3xl">
               {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id} className="hover:bg-transparent border-b-0 h-16">
-                  {headerGroup.headers.map((header) => (
+                <TableRow key={headerGroup.id} className={cn("hover:bg-transparent border-b-0", headerGroup.depth === 0 ? "h-10" : "h-16")}>
+                  {headerGroup.headers.map((header) => {
+                    const isGroupHeader = header.subHeaders.length > 0;
+                    return (
                     <TableHead 
                       key={header.id} 
-                      draggable
-                      onDragStart={(e) => e.dataTransfer.setData("colId", header.column.id)}
-                      onDragOver={(e) => e.preventDefault()}
+                      colSpan={header.colSpan}
+                      draggable={!isGroupHeader && !header.isPlaceholder}
+                      onDragStart={(e) => {
+                        if (!isGroupHeader) e.dataTransfer.setData("colId", header.column.id);
+                      }}
+                      onDragOver={(e) => {
+                        if (!isGroupHeader) e.preventDefault();
+                      }}
                       onDrop={(e) => {
+                        if (isGroupHeader) return;
                         const colId = e.dataTransfer.getData("colId");
                         if (colId !== header.column.id) handleDragHeader(colId, header.column.id);
                       }}
-                      className="px-6 text-[10px] font-black uppercase text-muted-foreground tracking-[0.3em] relative group border-r border-white/5 last:border-r-0 cursor-move active:cursor-grabbing"
+                      className={cn(
+                        "relative group border-r border-white/5 last:border-r-0",
+                        isGroupHeader ? "p-0 border-b border-white/5 align-top" : "px-6 text-[10px] font-black uppercase text-muted-foreground tracking-[0.3em] cursor-move active:cursor-grabbing"
+                      )}
                       style={{ width: header.getSize() }}
                     >
                       {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
@@ -227,7 +246,7 @@ export function DataTable<TData, TValue>({
                         }`}
                       />
                     </TableHead>
-                  ))}
+                  )})}
                 </TableRow>
               ))}
             </TableHeader>

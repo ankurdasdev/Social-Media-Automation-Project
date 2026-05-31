@@ -298,11 +298,18 @@ export function DriveFilePicker({
                 className="flex items-center gap-3 pl-4 pr-2 py-2 rounded-2xl border border-primary/20 bg-primary/5 text-primary max-w-[280px] hover:bg-primary/10 transition-all group animate-in zoom-in duration-300"
               >
                 {isImage(file.mimeType) && file.thumbnailLink ? (
-                  <img
-                    src={file.thumbnailLink}
-                    alt={file.name}
-                    className="w-5 h-5 rounded object-cover border border-primary/20 shrink-0"
-                  />
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setLightboxFile(file); }}
+                    className="relative shrink-0 hover:opacity-80 transition-opacity"
+                    title="Preview image"
+                  >
+                    <img
+                      src={file.thumbnailLink}
+                      alt={file.name}
+                      className="w-5 h-5 rounded object-cover border border-primary/20"
+                    />
+                  </button>
                 ) : (
                   <span className="text-sm grayscale group-hover:grayscale-0 transition-all shrink-0">
                     {getMimeIcon(file.mimeType)}
