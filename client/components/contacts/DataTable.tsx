@@ -52,6 +52,7 @@ interface DataTableProps<TData, TValue> {
   onAddContact?: () => void;
   initialFilters?: ColumnFiltersState;
   initialGlobalFilter?: string;
+  isExternalTransitioning?: boolean;
 }
 
 export function DataTable<TData, TValue>({
@@ -71,8 +72,10 @@ export function DataTable<TData, TValue>({
   onAddContact,
   initialFilters = [],
   initialGlobalFilter = "",
+  isExternalTransitioning = false,
 }: DataTableProps<TData, TValue>) {
   const [isTransitioning, startTransition] = React.useTransition();
+  const isRendering = isTransitioning || isExternalTransitioning;
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(() => {
     const filters = [...initialFilters];
@@ -225,7 +228,7 @@ export function DataTable<TData, TValue>({
           className="overflow-auto flex-1 scrollbar-thin scrollbar-thumb-white/10 hover:scrollbar-thumb-primary/50 transition-all origin-top-left relative"
           style={{ zoom: `${zoomLevel}%` } as React.CSSProperties}
         >
-          {isTransitioning && (
+          {isRendering && (
             <div className="absolute inset-0 z-50 bg-background/50 backdrop-blur-sm flex flex-col items-center justify-center">
               <Loader2 className="w-12 h-12 animate-spin text-primary" />
               <p className="mt-4 text-[10px] font-black uppercase tracking-[0.4em] text-primary">Rendering Rows...</p>
