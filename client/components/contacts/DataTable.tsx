@@ -115,9 +115,27 @@ export function DataTable<TData, TValue>({
     columns.map(c => (c as any).id || (c as any).accessorKey).filter(Boolean)
   );
   
+  const filterFns = React.useMemo(() => ({
+    customStringFilter: (row: any, columnId: string, filterValue: any) => {
+      const value = row.getValue(columnId);
+      if (filterValue === "___NULL___") {
+        return value === null || value === undefined || String(value).trim() === "";
+      }
+      const rowValue = String(value ?? "").toLowerCase();
+      const searchValue = String(filterValue ?? "").toLowerCase();
+      return rowValue.includes(searchValue);
+    }
+  }), []);
+
+  const defaultColumn = React.useMemo(() => ({
+    filterFn: "customStringFilter",
+  }), []);
+
   const table = useReactTable({
     data,
     columns,
+    filterFns,
+    defaultColumn,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     onRowSelectionChange: setRowSelection,
