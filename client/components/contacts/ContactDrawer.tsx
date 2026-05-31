@@ -160,8 +160,8 @@ export function SalutationPicker({
   );
 }
 
-// ─── AI-Powered Message Editor (drawer version) ──────────────────────────────
-function MessageEditor({
+// ─── AI-Powered Message Editor ──────────────────────────────
+export function MessageEditor({
   checked,
   onCheckedChange,
   value,
