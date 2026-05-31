@@ -403,7 +403,7 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
       fetch(`/api/contacts/${contact.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, userId: getOrCreateUserId() }),
+        body: JSON.stringify({ ...form, userId: contact.user_id }),
       }).then(res => {
         if (res.ok) {
           queryClient.invalidateQueries({ queryKey: ["contacts"] });
@@ -425,7 +425,7 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
       const res = await fetch(`/api/contacts/${contact.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, userId: getOrCreateUserId() }),
+        body: JSON.stringify({ ...form, userId: contact.user_id }),
       });
       if (!res.ok) throw new Error("Failed to save");
       toast({ title: "Updated", description: "Database record synchronized." });

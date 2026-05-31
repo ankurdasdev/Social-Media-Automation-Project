@@ -257,17 +257,21 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const updateRect = () => {
+    const updateRectOnly = () => {
+      const el = document.getElementById(step.targetId);
+      if (el) {
+        setTargetRect(el.getBoundingClientRect());
+      }
+    };
+
+    const updateRectAndScroll = () => {
       const el = document.getElementById(step.targetId);
       if (el) {
         // Scroll into view gently if not visible
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         
         setTimeout(() => {
-          const freshEl = document.getElementById(step.targetId);
-          if (freshEl) {
-             setTargetRect(freshEl.getBoundingClientRect());
-          }
+          updateRectOnly();
         }, 300); // wait for scroll
       } else {
         // If element not found, just center the modal
@@ -277,13 +281,15 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
 
     // Calculate rect after a tiny delay to ensure the page has loaded/rendered if navigating
     const timer = setTimeout(() => {
-      updateRect();
+      updateRectAndScroll();
     }, 150);
 
-    window.addEventListener("resize", updateRect);
+    window.addEventListener("resize", updateRectOnly);
+    window.addEventListener("scroll", updateRectOnly, true); // true for capture phase to catch all scrolls
     return () => {
       clearTimeout(timer);
-      window.removeEventListener("resize", updateRect);
+      window.removeEventListener("resize", updateRectOnly);
+      window.removeEventListener("scroll", updateRectOnly, true);
     };
   }, [isActive, currentStep, activeSteps, location.pathname, navigate]);
 
