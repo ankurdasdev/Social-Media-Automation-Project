@@ -41,6 +41,7 @@ export default function Contacts() {
   const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState("all");
+  const [isTabTransitioning, startTabTransition] = React.useTransition();
   const [localSheets, setLocalSheets] = useState<string[]>([]);
   const [sendingProgress, setSendingProgress] = useState<{ current: number; total: number; message: string } | null>(null);
   const [aiSearchResults, setAISearchResults] = useState<Contact[] | null>(null);
@@ -497,7 +498,8 @@ export default function Contacts() {
               }}
               uniqueSheets={dynamicSheets}
               activeTab={activeTab}
-              onTabChange={setActiveTab}
+              onTabChange={(tab) => startTabTransition(() => setActiveTab(tab))}
+              isExternalTransitioning={isTabTransitioning}
               onAddSheet={(sheet) => setLocalSheets(prev => [...prev, sheet])}
               onDeleteSheet={handleDeleteSheet}
               onAISearch={(prompt) => aiSearchMutation.mutate(prompt)}
