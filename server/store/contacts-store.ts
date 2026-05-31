@@ -138,8 +138,6 @@ export async function updateContact(userId: string, id: string, data: Partial<Co
     whatsappRun: "whatsapp_run",
     emailRun: "email_run",
     instagramRun: "instagram_run",
-    whatsappNeeded: "whatsapp_run", // Direct mapping for UI override
-    emailNeeded: "email_run", // Direct mapping for UI override
     personalizedNameWA: "personalized_name_wa",
     personalizedNameGmail: "personalized_name_gmail",
     personalizedNameIG: "personalized_name_ig",
@@ -203,7 +201,7 @@ export async function updateContact(userId: string, id: string, data: Partial<Co
     const val = (data as any)[f];
     // Stringify JSON values for JSONB columns
     const col = fieldMap[f];
-    const isJsonb = ["drive_attachments_wa", "drive_attachments_email", "drive_attachments_ig", "unified_attachments", "contacted_dates", "contact_links"].includes(col);
+    const isJsonb = ["drive_attachments_wa", "drive_attachments_email", "drive_attachments_ig", "unified_attachments", "contacted_dates", "contact_links", "cell_colors"].includes(col);
     return isJsonb && val !== null && val !== undefined ? JSON.stringify(val) : val;
   })];
 
