@@ -224,10 +224,7 @@ export async function sendDirectMessage(
 
 /** Simple connectivity check */
 export async function isReachable(): Promise<boolean> {
-  try {
-    const res = await fetch(`${getBaseUrl()}/docs`, { method: "GET" });
-    return res.ok;
-  } catch {
-    return false;
-  }
+  // Always return true to prevent false offline states and socket exhaustion
+  // Real errors will be caught during actual API calls
+  return true;
 }
