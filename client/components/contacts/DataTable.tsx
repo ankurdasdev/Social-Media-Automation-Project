@@ -20,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, Maximize2, Minimize2, Filter } from "lucide-react";
+import { Search, Maximize2, Minimize2, Filter, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Contact } from "@shared/api";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -72,6 +72,7 @@ export function DataTable<TData, TValue>({
   initialFilters = [],
   initialGlobalFilter = "",
 }: DataTableProps<TData, TValue>) {
+  const [isTransitioning, startTransition] = React.useTransition();
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(() => {
     const filters = [...initialFilters];
@@ -221,9 +222,15 @@ export function DataTable<TData, TValue>({
         isFullscreen ? "rounded-none border-none bg-card/50" : ""
       )}>
         <div 
-          className="overflow-auto flex-1 scrollbar-thin scrollbar-thumb-white/10 hover:scrollbar-thumb-primary/50 transition-all origin-top-left"
+          className="overflow-auto flex-1 scrollbar-thin scrollbar-thumb-white/10 hover:scrollbar-thumb-primary/50 transition-all origin-top-left relative"
           style={{ zoom: `${zoomLevel}%` } as React.CSSProperties}
         >
+          {isTransitioning && (
+            <div className="absolute inset-0 z-50 bg-background/50 backdrop-blur-sm flex flex-col items-center justify-center">
+              <Loader2 className="w-12 h-12 animate-spin text-primary" />
+              <p className="mt-4 text-[10px] font-black uppercase tracking-[0.4em] text-primary">Rendering Rows...</p>
+            </div>
+          )}
           <Table className="table-fixed" style={{ width: "max-content", minWidth: Math.max(table.getCenterTotalSize(), 100) }}>
             <TableHeader className="bg-muted/30 border-b border-white/5 sticky top-0 z-30 backdrop-blur-3xl">
               {table.getHeaderGroups().map((headerGroup) => (
@@ -408,7 +415,7 @@ export function DataTable<TData, TValue>({
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Rows</span>
             <Select
               value={table.getState().pagination.pageSize.toString()}
-              onValueChange={(value) => table.setPageSize(Number(value))}
+              onValueChange={(value) => startTransition(() => table.setPageSize(Number(value)))}
             >
               <SelectTrigger className="h-10 w-[70px] bg-muted/30 border border-white/10 rounded-xl text-[10px] font-black focus:ring-primary outline-none">
                 <SelectValue />
@@ -426,8 +433,8 @@ export function DataTable<TData, TValue>({
           <div className="flex items-center gap-2">
             <button
               className="h-10 px-4 sm:px-6 rounded-xl border border-white/10 font-black text-[10px] uppercase tracking-widest hover:bg-muted/50 transition-all disabled:opacity-20 active:scale-95"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
+              onClick={() => startTransition(() => table.previousPage())}
+              disabled={!table.getCanPreviousPage() || isTransitioning}
             >
               PREV
             </button>
@@ -438,8 +445,8 @@ export function DataTable<TData, TValue>({
             </div>
             <button
               className="h-10 px-4 sm:px-6 rounded-xl border border-white/10 font-black text-[10px] uppercase tracking-widest hover:bg-muted/50 transition-all disabled:opacity-20 active:scale-95"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
+              onClick={() => startTransition(() => table.nextPage())}
+              disabled={!table.getCanNextPage() || isTransitioning}
             >
               NEXT
             </button>
