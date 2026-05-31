@@ -272,8 +272,8 @@ export function DataTable<TData, TValue>({
                       key={row.id}
                       data-state={row.getIsSelected() && "selected"}
                       className={cn(
-                        "cursor-pointer border-b border-white/[0.03] hover:bg-muted/20 transition-all h-20 group relative border-l-[6px]",
-                        row.index % 2 === 0 ? "bg-muted/10" : "bg-background",
+                        "cursor-pointer border-b border-border/20 hover:bg-muted/30 transition-all h-20 group relative border-l-[6px]",
+                        row.index % 2 === 0 ? "bg-muted/30" : "bg-transparent",
                         row.getIsSelected() && "!bg-primary/20 border-l-primary shadow-inner"
                       )}
                       style={{ 
@@ -295,7 +295,7 @@ export function DataTable<TData, TValue>({
                         return (
                           <ContextMenu key={cell.id}>
                             <ContextMenuTrigger asChild>
-                              <TableCell className="relative py-2 px-6 group-hover:translate-x-0.5 transition-transform"
+                              <TableCell className="relative py-2 px-6 group-hover:translate-x-0.5 transition-transform border-r border-border/10 last:border-r-0"
                                 style={{
                                   backgroundColor: cColor ? (cColor.includes("gradient") ? undefined : cColor) : undefined,
                                   background: cColor?.includes("gradient") ? cColor : undefined,
