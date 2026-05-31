@@ -567,7 +567,7 @@ export const columns: ColumnDef<Contact>[] = [
       {
         accessorKey: "salutationWA",
         header: ({ column }) => <DataTableColumnHeader column={column} title="Salutation for WP" icon={Type} columnId="salutationWA" />,
-        size: 140,
+        size: 220,
         cell: ({ row, table }) => (
            <div onClick={(e) => e.stopPropagation()}>
               <PicklistCell 
@@ -580,7 +580,7 @@ export const columns: ColumnDef<Contact>[] = [
       {
         accessorKey: "personalizedNameWA",
         header: ({ column }) => <DataTableColumnHeader column={column} title="Personalized WP" icon={Type} columnId="personalizedNameWA" />,
-        size: 140,
+        size: 220,
         cell: ({ row, table }) => (
            <div onClick={(e) => e.stopPropagation()}>
               <PersonalizedCell 
@@ -593,7 +593,7 @@ export const columns: ColumnDef<Contact>[] = [
       {
         accessorKey: "templateSelectionWP",
         header: ({ column }) => <DataTableColumnHeader column={column} title="Template WP" columnId="templateSelectionWP" />,
-        size: 200,
+        size: 260,
         cell: ({ row, table }) => (
           <div onClick={(e) => e.stopPropagation()}>
             <MultiTemplateSelect 
@@ -606,7 +606,7 @@ export const columns: ColumnDef<Contact>[] = [
       {
         accessorKey: "hasCustomMessageWA",
         header: ({ column }) => <DataTableColumnHeader column={column} title="Editable MSG WP" columnId="hasCustomMessageWA" />,
-        size: 220,
+        size: 260,
         cell: ({ row, table }) => (
           <div className="px-2" onClick={(e) => e.stopPropagation()}>
             <ConditionalTextareaCell 
@@ -644,7 +644,7 @@ export const columns: ColumnDef<Contact>[] = [
       {
         accessorKey: "salutationEmail",
         header: ({ column }) => <DataTableColumnHeader column={column} title="Salutation for Mail" icon={Type} columnId="salutationEmail" />,
-        size: 140,
+        size: 220,
         cell: ({ row, table }) => (
            <div onClick={(e) => e.stopPropagation()}>
               <PicklistCell 
@@ -657,7 +657,7 @@ export const columns: ColumnDef<Contact>[] = [
       {
         accessorKey: "personalizedNameGmail",
         header: ({ column }) => <DataTableColumnHeader column={column} title="Personalized Gmail" icon={Type} columnId="personalizedNameGmail" />,
-        size: 145,
+        size: 220,
         cell: ({ row, table }) => (
            <div onClick={(e) => e.stopPropagation()}>
               <PersonalizedCell 
@@ -670,7 +670,7 @@ export const columns: ColumnDef<Contact>[] = [
       {
         accessorKey: "editableGmailSubject",
         header: ({ column }) => <DataTableColumnHeader column={column} title="Gmail Subject" columnId="editableGmailSubject" />,
-        size: 200,
+        size: 260,
         cell: ({ row, table }) => (
           <div onClick={(e) => e.stopPropagation()}>
             <EditableTextCell 
@@ -684,7 +684,7 @@ export const columns: ColumnDef<Contact>[] = [
       {
         accessorKey: "templateSelectionGmail",
         header: ({ column }) => <DataTableColumnHeader column={column} title="Template Gmail" columnId="templateSelectionGmail" />,
-        size: 200,
+        size: 260,
         cell: ({ row, table }) => (
           <div onClick={(e) => e.stopPropagation()}>
             <MultiTemplateSelect 
@@ -697,7 +697,7 @@ export const columns: ColumnDef<Contact>[] = [
       {
         accessorKey: "hasCustomMessageEmail",
         header: ({ column }) => <DataTableColumnHeader column={column} title="Editable MSG Gmail" columnId="hasCustomMessageEmail" />,
-        size: 220,
+        size: 260,
         cell: ({ row, table }) => (
           <div className="px-2" onClick={(e) => e.stopPropagation()}>
             <ConditionalTextareaCell 
@@ -735,7 +735,7 @@ export const columns: ColumnDef<Contact>[] = [
       {
         accessorKey: "salutationIG",
         header: ({ column }) => <DataTableColumnHeader column={column} title="Salutation for IG" icon={Type} columnId="salutationIG" />,
-        size: 140,
+        size: 220,
         cell: ({ row, table }) => (
            <div onClick={(e) => e.stopPropagation()}>
               <PicklistCell 
@@ -748,7 +748,7 @@ export const columns: ColumnDef<Contact>[] = [
       {
         accessorKey: "personalizedNameIG",
         header: ({ column }) => <DataTableColumnHeader column={column} title="Personalized IG" icon={Type} columnId="personalizedNameIG" />,
-        size: 140,
+        size: 220,
         cell: ({ row, table }) => (
            <div onClick={(e) => e.stopPropagation()}>
               <PersonalizedCell 
@@ -761,7 +761,7 @@ export const columns: ColumnDef<Contact>[] = [
       {
         accessorKey: "templateSelectionIG",
         header: ({ column }) => <DataTableColumnHeader column={column} title="Template IG" columnId="templateSelectionIG" />,
-        size: 200,
+        size: 260,
         cell: ({ row, table }) => (
           <div onClick={(e) => e.stopPropagation()}>
             <MultiTemplateSelect 
@@ -774,7 +774,7 @@ export const columns: ColumnDef<Contact>[] = [
       {
         accessorKey: "hasCustomMessageIG",
         header: ({ column }) => <DataTableColumnHeader column={column} title="Editable MSG Insta" columnId="hasCustomMessageIG" />,
-        size: 220,
+        size: 260,
         cell: ({ row, table }) => (
           <div className="px-2" onClick={(e) => e.stopPropagation()}>
             <ConditionalTextareaCell 

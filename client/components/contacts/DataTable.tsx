@@ -209,7 +209,7 @@ export function DataTable<TData, TValue>({
           className="overflow-auto flex-1 scrollbar-thin scrollbar-thumb-white/10 hover:scrollbar-thumb-primary/50 transition-all origin-top-left"
           style={{ zoom: `${zoomLevel}%` } as React.CSSProperties}
         >
-          <Table className="table-fixed" style={{ width: table.getCenterTotalSize(), minWidth: "100%" }}>
+          <Table className="table-fixed" style={{ width: "max-content", minWidth: Math.max(table.getCenterTotalSize(), 100) }}>
             <TableHeader className="bg-muted/30 border-b border-white/5 sticky top-0 z-30 backdrop-blur-3xl">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id} className={cn("hover:bg-transparent border-b-0", headerGroup.depth === 0 ? "h-10" : "h-16")}>
