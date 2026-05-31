@@ -66,12 +66,10 @@ export function ExcelImportDialog({ isOpen, onClose, onImportComplete }: ExcelIm
   
   // Mapping state per sheet: record of sheetIndex -> active targetSchema.key -> excel header
   const [mappingsBySheet, setMappingsBySheet] = React.useState<Record<number, Record<string, string>>>({});
+  
   // Track sheets that have been successfully queued for import
-  const [importedSheets, setImportedSheets] = React.useState<Set<string>>(new Set());
+  const [selectedSheets, setSelectedSheets] = React.useState<Set<string>>(new Set());
   const [skippedSheets, setSkippedSheets] = React.useState<Set<string>>(new Set());
-
-  // Helper to get total processed sheets
-  const getProcessedSheets = () => new Set([...importedSheets, ...skippedSheets]);
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -146,7 +144,7 @@ export function ExcelImportDialog({ isOpen, onClose, onImportComplete }: ExcelIm
 
         setSheets(parsedSheets);
         setActiveSheetIdx(0);
-        setImportedSheets(new Set());
+        setSelectedSheets(new Set());
         setSkippedSheets(new Set());
         setMappingsBySheet({});
         
@@ -215,53 +213,125 @@ export function ExcelImportDialog({ isOpen, onClose, onImportComplete }: ExcelIm
     }
   };
 
-  const handleImportCurrentSheet = async () => {
+  const advanceToNextPending = (processedSet: Set<string>) => {
+    const unimported = sheets.filter((s) => !processedSet.has(s.name));
+    if (unimported.length > 0) {
+      const nextIdx = sheets.findIndex((s) => !processedSet.has(s.name));
+      if (nextIdx !== -1) {
+        setActiveSheetIdx(nextIdx);
+        if (!mappingsBySheet[nextIdx]) {
+          runAutoMapper(sheets[nextIdx].headers, nextIdx);
+        }
+      }
+    }
+  };
+
+  const handleSelectSheet = () => {
     const activeSheet = sheets[activeSheetIdx];
     const currentMappings = mappingsBySheet[activeSheetIdx] || {};
     
-    // Validate mappings: Name is strictly required
     const nameMapping = currentMappings["name"];
     if (!nameMapping) {
       toast({
         variant: "destructive",
         title: "MAPPING REQUIRED",
-        description: "You must map the Lead Name field to continue.",
+        description: "You must map the Lead Name field to select this sheet.",
       });
       return;
     }
 
+    const nextSelected = new Set(selectedSheets);
+    const nextSkipped = new Set(skippedSheets);
+
+    // Toggle logic if already selected
+    if (nextSelected.has(activeSheet.name)) {
+      nextSelected.delete(activeSheet.name);
+      setSelectedSheets(nextSelected);
+      return;
+    }
+
+    nextSelected.add(activeSheet.name);
+    nextSkipped.delete(activeSheet.name);
+
+    setSelectedSheets(nextSelected);
+    setSkippedSheets(nextSkipped);
+    
+    advanceToNextPending(new Set([...nextSelected, ...nextSkipped]));
+  };
+
+  const handleSkipSheet = () => {
+    const activeSheet = sheets[activeSheetIdx];
+    const nextSkipped = new Set(skippedSheets);
+    const nextSelected = new Set(selectedSheets);
+
+    // Toggle logic if already skipped
+    if (nextSkipped.has(activeSheet.name)) {
+      nextSkipped.delete(activeSheet.name);
+      setSkippedSheets(nextSkipped);
+      return;
+    }
+
+    nextSkipped.add(activeSheet.name); 
+    nextSelected.delete(activeSheet.name);
+
+    setSkippedSheets(nextSkipped);
+    setSelectedSheets(nextSelected);
+
+    advanceToNextPending(new Set([...nextSelected, ...nextSkipped]));
+  };
+
+  const handleNextSheet = () => {
+    const nextIdx = (activeSheetIdx + 1) % sheets.length;
+    setActiveSheetIdx(nextIdx);
+    if (!mappingsBySheet[nextIdx]) {
+      runAutoMapper(sheets[nextIdx].headers, nextIdx);
+    }
+  };
+
+  const handleImportAllSelected = async () => {
+    if (selectedSheets.size === 0) return;
+
     setStep("importing");
 
     try {
-      const activeSheetHeaders = activeSheet.headers;
-      
-      const contactsPayload = activeSheet.rows
-        .map((row) => {
-          const contactObj: Record<string, any> = {
-            sheetName: activeSheet.name,
-            source: "manual",
-            status: "pending",
-          };
+      let allContactsPayload: any[] = [];
 
-          targetSchema.forEach((schema) => {
-            const mappedHeader = currentMappings[schema.key];
-            if (mappedHeader) {
-              const colIdx = activeSheetHeaders.indexOf(mappedHeader);
-              if (colIdx !== -1 && row[colIdx] !== undefined) {
-                contactObj[schema.key] = String(row[colIdx]).trim();
-              }
-            }
-          });
+      sheets.forEach((sheet, idx) => {
+        if (selectedSheets.has(sheet.name)) {
+          const currentMappings = mappingsBySheet[idx] || {};
+          const sheetHeaders = sheet.headers;
+          
+          const sheetContacts = sheet.rows
+            .map((row) => {
+              const contactObj: Record<string, any> = {
+                sheetName: sheet.name,
+                source: "manual",
+                status: "pending",
+              };
 
-          return contactObj;
-        })
-        .filter((c) => c.name); // only include rows that have a name
+              targetSchema.forEach((schema) => {
+                const mappedHeader = currentMappings[schema.key];
+                if (mappedHeader) {
+                  const colIdx = sheetHeaders.indexOf(mappedHeader);
+                  if (colIdx !== -1 && row[colIdx] !== undefined) {
+                    contactObj[schema.key] = String(row[colIdx]).trim();
+                  }
+                }
+              });
 
-      if (contactsPayload.length === 0) {
+              return contactObj;
+            })
+            .filter((c) => c.name); // only include rows that have a name
+
+          allContactsPayload = allContactsPayload.concat(sheetContacts);
+        }
+      });
+
+      if (allContactsPayload.length === 0) {
         toast({
           variant: "destructive",
           title: "NO DATA TO IMPORT",
-          description: `No valid contact rows with names found in sheet "${activeSheet.name}".`,
+          description: "No valid contact rows with names found in the selected sheets.",
         });
         setStep("mapping");
         return;
@@ -272,7 +342,7 @@ export function ExcelImportDialog({ isOpen, onClose, onImportComplete }: ExcelIm
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId,
-          contacts: contactsPayload,
+          contacts: allContactsPayload,
         }),
       });
 
@@ -281,35 +351,15 @@ export function ExcelImportDialog({ isOpen, onClose, onImportComplete }: ExcelIm
         throw new Error(err.error || "Failed to batch insert contacts");
       }
 
-      // Add to imported sheets
-      const nextImported = new Set(importedSheets);
-      nextImported.add(activeSheet.name);
-      setImportedSheets(nextImported);
-      
-      const processed = new Set([...nextImported, ...skippedSheets]);
-
       toast({
-        title: "SHEET IMPORTED",
-        description: `Imported ${contactsPayload.length} contacts to sheet "${activeSheet.name}".`,
+        title: "SHEETS IMPORTED",
+        description: `Imported ${allContactsPayload.length} contacts from ${selectedSheets.size} sheet(s).`,
       });
 
-      // If all sheets are processed, close dialog
-      const unimported = sheets.filter((s) => !processed.has(s.name));
-      if (unimported.length === 0) {
-        onImportComplete(Array.from(nextImported));
-        onClose();
-        resetDialog();
-      } else {
-        // Go to the first unimported sheet
-        const nextIdx = sheets.findIndex((s) => !processed.has(s.name));
-        if (nextIdx !== -1) {
-          setActiveSheetIdx(nextIdx);
-          if (!mappingsBySheet[nextIdx]) {
-            runAutoMapper(sheets[nextIdx].headers, nextIdx);
-          }
-        }
-        setStep("mapping");
-      }
+      onImportComplete(Array.from(selectedSheets));
+      onClose();
+      resetDialog();
+
     } catch (err: any) {
       console.error("[ExcelImport] Server error:", err);
       toast({
@@ -321,38 +371,13 @@ export function ExcelImportDialog({ isOpen, onClose, onImportComplete }: ExcelIm
     }
   };
 
-  const handleSkipSheet = () => {
-    const activeSheet = sheets[activeSheetIdx];
-    const nextSkipped = new Set(skippedSheets);
-    nextSkipped.add(activeSheet.name); // mark as resolved (skipped)
-    setSkippedSheets(nextSkipped);
-
-    const processed = new Set([...importedSheets, ...nextSkipped]);
-    const unimported = sheets.filter((s) => !processed.has(s.name));
-    if (unimported.length === 0) {
-      if (importedSheets.size > 0) {
-        onImportComplete(Array.from(importedSheets));
-      }
-      onClose();
-      resetDialog();
-    } else {
-      const nextIdx = sheets.findIndex((s) => !processed.has(s.name));
-      if (nextIdx !== -1) {
-        setActiveSheetIdx(nextIdx);
-        if (!mappingsBySheet[nextIdx]) {
-          runAutoMapper(sheets[nextIdx].headers, nextIdx);
-        }
-      }
-    }
-  };
-
   const resetDialog = () => {
     setStep("upload");
     setFile(null);
     setSheets([]);
     setActiveSheetIdx(0);
     setMappingsBySheet({});
-    setImportedSheets(new Set());
+    setSelectedSheets(new Set());
     setSkippedSheets(new Set());
   };
 
@@ -425,7 +450,8 @@ export function ExcelImportDialog({ isOpen, onClose, onImportComplete }: ExcelIm
                 
                 {sheets.map((sheet, index) => {
                   const isCurrent = activeSheetIdx === index;
-                  const isProcessed = importedSheets.has(sheet.name) || skippedSheets.has(sheet.name);
+                  const isSelected = selectedSheets.has(sheet.name);
+                  const isSkipped = skippedSheets.has(sheet.name);
                   
                   return (
                     <button
@@ -435,14 +461,18 @@ export function ExcelImportDialog({ isOpen, onClose, onImportComplete }: ExcelIm
                         "w-full flex items-center justify-between p-3.5 rounded-xl text-left font-black text-xs transition-all relative group shrink-0",
                         isCurrent
                           ? "bg-primary/10 text-primary shadow-inner border border-primary/20"
-                          : isProcessed
-                            ? "bg-emerald-500/5 text-emerald-500/80 border border-emerald-500/10 cursor-default"
-                            : "text-muted-foreground hover:bg-muted/30 hover:text-foreground border border-transparent"
+                          : isSelected
+                            ? "bg-emerald-500/5 text-emerald-500/80 border border-emerald-500/10"
+                            : isSkipped
+                              ? "bg-muted/30 text-muted-foreground border border-white/5 opacity-50"
+                              : "text-muted-foreground hover:bg-muted/30 hover:text-foreground border border-transparent"
                       )}
                     >
-                      <span className="truncate pr-2">{sheet.name}</span>
-                      {isProcessed ? (
+                      <span className={cn("truncate pr-2", isSkipped && "line-through")}>{sheet.name}</span>
+                      {isSelected ? (
                         <CheckCircle2 className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                      ) : isSkipped ? (
+                        <X className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                       ) : (
                         <ChevronRight className={cn("h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity", isCurrent && "opacity-100 text-primary")} />
                       )}
@@ -558,20 +588,45 @@ export function ExcelImportDialog({ isOpen, onClose, onImportComplete }: ExcelIm
 
         {/* Modal Footer */}
         {step === "mapping" && activeSheet && (
-          <DialogFooter className="p-8 bg-muted/30 border-t border-white/5 gap-3 flex-shrink-0 flex flex-row justify-end">
+          <DialogFooter className="p-8 bg-muted/30 border-t border-white/5 flex-shrink-0 flex flex-col md:flex-row items-center justify-between w-full gap-4">
+            <div className="flex gap-3 w-full md:w-auto">
+              <Button
+                variant="ghost"
+                onClick={handleSkipSheet}
+                className={cn(
+                  "h-14 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all w-full md:w-auto",
+                  skippedSheets.has(activeSheet.name) ? "bg-muted/50 text-muted-foreground" : "text-muted-foreground hover:text-foreground hover:bg-red-500/10"
+                )}
+              >
+                {skippedSheets.has(activeSheet.name) ? "MARK PENDING" : "SKIP THIS SHEET"}
+              </Button>
+              
+              <Button
+                variant="ghost"
+                onClick={handleNextSheet}
+                className="h-14 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground hover:bg-white/5 w-full md:w-auto"
+              >
+                NEXT SHEET
+              </Button>
+              
+              <Button
+                variant="secondary"
+                onClick={handleSelectSheet}
+                className={cn(
+                  "h-14 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all w-full md:w-auto",
+                  selectedSheets.has(activeSheet.name) ? "bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30" : "bg-primary/10 text-primary hover:bg-primary/20"
+                )}
+              >
+                {selectedSheets.has(activeSheet.name) ? "UNSELECT SHEET" : "SELECT FOR IMPORT"}
+              </Button>
+            </div>
+            
             <Button
-              variant="ghost"
-              onClick={handleSkipSheet}
-              className="h-14 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
+              onClick={handleImportAllSelected}
+              disabled={selectedSheets.size === 0}
+              className="h-14 px-8 rounded-xl bg-primary text-white font-black text-[10px] tracking-widest uppercase shadow-xl shadow-primary/20 hover:shadow-primary/30 disabled:opacity-50 w-full md:w-auto"
             >
-              SKIP THIS SHEET
-            </Button>
-            <Button
-              onClick={handleImportCurrentSheet}
-              disabled={!currentMappings["name"]}
-              className="h-14 px-8 rounded-xl bg-primary text-white font-black text-[10px] tracking-widest uppercase shadow-xl shadow-primary/20 hover:shadow-primary/30"
-            >
-              IMPORT WORKBOOK SHEET
+              IMPORT {selectedSheets.size} SELECTED SHEETS
             </Button>
           </DialogFooter>
         )}

@@ -338,9 +338,8 @@ export default function InstagramSettings() {
                         <h4 className="text-xs font-black uppercase tracking-widest text-pink-500">Connection Steps & Limitations</h4>
                         <div className="text-xs text-muted-foreground font-medium leading-relaxed space-y-2">
                           <p>1. Enter your Instagram username and password below.</p>
-                          <p>2. We log in securely from your IP address to avoid getting blocked by Instagram.</p>
-                          <p>3. <strong className="text-foreground">Two-Factor Auth:</strong> If enabled, you will be prompted to enter a 6-digit code on the next step.</p>
-                          <p>4. <strong className="text-foreground">Attachment Limits:</strong> Instagram only supports sending <strong>Image</strong> attachments up to 8MB. Videos or PDFs will fail to send.</p>
+                          <p>2. <strong className="text-foreground">Two-Factor Auth:</strong> If enabled, you will be prompted to enter a 6-digit code on the next step.</p>
+                          <p>3. <strong className="text-foreground">Attachment Limits:</strong> Instagram only supports sending <strong>Image</strong> attachments up to 8MB. Videos or PDFs will fail to send.</p>
                         </div>
                       </div>
                     </div>
