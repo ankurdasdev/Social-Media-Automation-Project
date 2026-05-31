@@ -437,11 +437,11 @@ export function MultiTemplateSelect({
   };
 
   return (
-    <div className="flex flex-wrap gap-1 min-w-[120px] p-1 rounded-md border border-transparent hover:border-border/50 transition-all group">
+    <div className="flex flex-col gap-1 min-w-[120px] max-h-[68px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 p-1 rounded-md border border-transparent hover:border-border/50 transition-all group">
       {currentIds.map((id, idx) => {
         const t = templates.find((tmp: any) => tmp.id === id);
         return (
-          <Badge key={id} variant="secondary" className="h-5 px-1 gap-1 text-[9px] font-black bg-primary/10 text-primary border-none group/badge">
+          <Badge key={id} variant="secondary" className="h-5 px-1 flex shrink-0 items-center gap-1 text-[9px] font-black bg-primary/10 text-primary border-none group/badge whitespace-nowrap">
             <button
               onClick={(e) => { e.stopPropagation(); moveItem(idx, 'left'); }}
               disabled={idx === 0}
