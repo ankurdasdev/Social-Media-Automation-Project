@@ -43,6 +43,7 @@ import {
   Wand2,
   Sparkles,
   Check,
+  Layers,
 } from "lucide-react";
 import { useQueryClient, useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -56,7 +57,7 @@ import {
 } from "./GridCells";
 
 // ─── Salutation Picker (full-size, drawer version) ────────────────────────────
-function SalutationPicker({
+export function SalutationPicker({
   value,
   onChange,
   accentClass = "text-primary",
@@ -458,79 +459,93 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
         </SheetHeader>
 
         <div className="p-8 space-y-12">
-          {/* 1. Core Identity */}
+          {/* 1. Contact Details */}
           <section className="space-y-6">
             <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
-              <User className="h-3 w-3" /> Core Identity
+              <User className="h-3 w-3" /> Contact Details
             </h4>
             <div className="grid grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Full Name</Label>
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Lead Name</Label>
                 <Input value={form.name ?? ""} onChange={(e) => set("name")(e.target.value)} className="h-11 rounded-xl bg-background/50" />
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Casting Alias</Label>
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Casting Name</Label>
                 <Input value={form.castingName ?? ""} onChange={(e) => set("castingName")(e.target.value)} className="h-11 rounded-xl bg-background/50" />
               </div>
               <div className="space-y-2">
-                 <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Acting Context</Label>
-                 <Input value={form.actingContext ?? ""} onChange={(e) => set("actingContext")(e.target.value)} className="h-11 rounded-xl bg-background/50" />
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">WA Number</Label>
+                <Input value={form.whatsapp ?? ""} onChange={(e) => set("whatsapp")(e.target.value)} placeholder="+91..." className="h-11 rounded-xl bg-background/50" />
               </div>
               <div className="space-y-2">
-                 <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Target Project</Label>
-                 <Input value={form.project ?? ""} onChange={(e) => set("project")(e.target.value)} className="h-11 rounded-xl bg-background/50" />
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Gmail Address</Label>
+                <Input value={form.email ?? ""} onChange={(e) => set("email")(e.target.value)} placeholder="mail@example.com" className="h-11 rounded-xl bg-background/50" />
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Age Group</Label>
-                <Input value={form.age ?? ""} onChange={(e) => set("age")(e.target.value)} className="h-11 rounded-xl bg-background/50" />
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Instagram Profile</Label>
+                <Input value={form.instaHandle ?? ""} onChange={(e) => set("instaHandle")(e.target.value)} placeholder="@handle" className="h-11 rounded-xl bg-background/50" />
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Source Sheet</Label>
                 <Input value={form.sheetName ?? ""} onChange={(e) => set("sheetName")(e.target.value)} className="h-11 rounded-xl bg-background/50 font-mono text-xs" />
               </div>
+              <div className="col-span-2 space-y-2">
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Notes</Label>
+                <Input value={form.notes ?? ""} onChange={(e) => set("notes")(e.target.value)} className="h-11 rounded-xl bg-background/50" />
+              </div>
             </div>
           </section>
 
           <Separator className="bg-white/5" />
 
-          {/* 2. Communication Channels */}
+          {/* 2. Automation Run */}
           <section className="space-y-6">
             <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
-              <MessageCircle className="h-3 w-3" /> Outreach Channels
+              <Layers className="h-3 w-3" /> Automation Run
             </h4>
-            <div className="grid grid-cols-2 gap-6">
-               <div className="space-y-2">
-                 <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Whatsapp</Label>
-                 <Input value={form.whatsapp ?? ""} onChange={(e) => set("whatsapp")(e.target.value)} placeholder="+91..." className="h-11 rounded-xl bg-emerald-500/5 border-emerald-500/10" />
+            <div className="grid grid-cols-3 gap-6">
+               <div className="flex items-center gap-3 bg-emerald-500/5 p-4 rounded-xl border border-emerald-500/10">
+                 <Checkbox checked={!!form.whatsappRun} onCheckedChange={(c) => set("whatsappRun")(c)} className="border-emerald-500/50" />
+                 <Label className="text-[10px] font-bold uppercase tracking-wider text-emerald-500">WP Run</Label>
                </div>
-               <div className="space-y-2">
-                 <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Gmail</Label>
-                 <Input value={form.email ?? ""} onChange={(e) => set("email")(e.target.value)} placeholder="mail@example.com" className="h-11 rounded-xl bg-blue-500/5 border-blue-500/10" />
+               <div className="flex items-center gap-3 bg-blue-500/5 p-4 rounded-xl border border-blue-500/10">
+                 <Checkbox checked={!!form.emailRun} onCheckedChange={(c) => set("emailRun")(c)} className="border-blue-500/50" />
+                 <Label className="text-[10px] font-bold uppercase tracking-wider text-blue-500">Gmail Run</Label>
                </div>
-               <div className="space-y-2">
-                 <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Instagram</Label>
-                 <Input value={form.instaHandle ?? ""} onChange={(e) => set("instaHandle")(e.target.value)} placeholder="@handle" className="h-11 rounded-xl bg-pink-500/5 border-pink-500/10" />
+               <div className="flex items-center gap-3 bg-pink-500/5 p-4 rounded-xl border border-pink-500/10">
+                 <Checkbox checked={!!form.instagramRun} onCheckedChange={(c) => set("instagramRun")(c)} className="border-pink-500/50" />
+                 <Label className="text-[10px] font-bold uppercase tracking-wider text-pink-500">Instagram Run</Label>
                </div>
-               <div className="space-y-2">
-                 <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Visit Log</Label>
-                 <Input value={form.visit ?? ""} onChange={(e) => set("visit")(e.target.value)} className="h-11 rounded-xl bg-background/50" />
-               </div>
+            </div>
+            <div className="grid grid-cols-2 gap-6 pt-4">
+              <div className="space-y-2">
+                 <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Acting Context</Label>
+                 <Input value={form.actingContext ?? ""} onChange={(e) => set("actingContext")(e.target.value)} className="h-11 rounded-xl bg-background/50" />
+              </div>
+              <div className="space-y-2">
+                 <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Project Details</Label>
+                 <Input value={form.project ?? ""} onChange={(e) => set("project")(e.target.value)} className="h-11 rounded-xl bg-background/50" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Age Range</Label>
+                <Input value={form.age ?? ""} onChange={(e) => set("age")(e.target.value)} className="h-11 rounded-xl bg-background/50" />
+              </div>
             </div>
           </section>
 
           <Separator className="bg-white/5" />
 
-          {/* 3. Personalized Outreach Control */}
+          {/* 3, 4, 5. Personalization */}
           <section className="space-y-8">
             <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
-              <FileText className="h-3 w-3" /> Outreach Personalization
+              <FileText className="h-3 w-3" /> Outreach Protocols
             </h4>
 
             <div className="space-y-8">
-              {/* WhatsApp Config */}
+              {/* 3. WhatsApp Config */}
               <div className="space-y-4 p-6 rounded-2xl bg-emerald-500/5 border border-emerald-500/10">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-black uppercase tracking-widest text-emerald-500">WA PROTOCOL</span>
+                  <span className="text-[11px] font-black uppercase tracking-widest text-emerald-500">3. WA PROTOCOL</span>
                   <div className="flex items-center gap-2">
                     <span className="text-[9px] font-bold text-muted-foreground">DRIVE ATTACHMENTS</span>
                     <AttachmentCell attachments={form.drive_attachments_wa || []} onUpdate={(val) => set("drive_attachments_wa")(val)} />
@@ -553,9 +568,9 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
                            <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                           <SelectItem value="N">Lead Name</SelectItem>
-                           <SelectItem value="C">Casting Name</SelectItem>
-                           <SelectItem value="NA">None</SelectItem>
+                           <SelectItem value="N">N (Lead)</SelectItem>
+                           <SelectItem value="C">C (Casting)</SelectItem>
+                           <SelectItem value="NA">NA (None)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -572,15 +587,15 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
                   onChange={(v) => set("editableMessageWP")(v)}
                   placeholder="Write custom WhatsApp message..."
                   accentColor="text-emerald-400"
-                  label="Custom Message Override"
+                  label="Editable MSG WP"
                   platform="whatsapp"
                 />
               </div>
 
-              {/* Gmail Config */}
+              {/* 4. Gmail Config */}
               <div className="space-y-4 p-6 rounded-2xl bg-blue-500/5 border border-blue-500/10">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-black uppercase tracking-widest text-blue-500">GMAIL PROTOCOL</span>
+                  <span className="text-[11px] font-black uppercase tracking-widest text-blue-500">4. GMAIL PROTOCOL</span>
                   <div className="flex items-center gap-2">
                     <span className="text-[9px] font-bold text-muted-foreground">DRIVE ATTACHMENTS</span>
                     <AttachmentCell attachments={form.drive_attachments_email || []} onUpdate={(val) => set("drive_attachments_email")(val)} />
@@ -603,9 +618,9 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
                            <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                           <SelectItem value="N">Lead Name</SelectItem>
-                           <SelectItem value="C">Casting Name</SelectItem>
-                           <SelectItem value="NA">None</SelectItem>
+                           <SelectItem value="N">N (Lead)</SelectItem>
+                           <SelectItem value="C">C (Casting)</SelectItem>
+                           <SelectItem value="NA">NA (None)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -616,7 +631,7 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[9px] font-black text-muted-foreground">EMAIL SUBJECT</Label>
+                  <Label className="text-[9px] font-black text-muted-foreground">GMAIL SUBJECT</Label>
                   <Input
                     value={form.editableGmailSubject || ""}
                     onChange={(e) => set("editableGmailSubject")(e.target.value)}
@@ -631,15 +646,15 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
                   onChange={(v) => set("editableMessageGmail")(v)}
                   placeholder="Write custom email body..."
                   accentColor="text-blue-400"
-                  label="Custom Body Override"
+                  label="Editable MSG Gmail"
                   platform="email"
                 />
               </div>
 
-              {/* Instagram Config */}
+              {/* 5. Instagram Config */}
               <div className="space-y-4 p-6 rounded-2xl bg-pink-500/5 border border-pink-500/10">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-black uppercase tracking-widest text-pink-500">INSTAGRAM PROTOCOL</span>
+                  <span className="text-[11px] font-black uppercase tracking-widest text-pink-500">5. INSTAGRAM PROTOCOL</span>
                   <div className="flex items-center gap-2">
                     <span className="text-[9px] font-bold text-muted-foreground">DRIVE ATTACHMENTS</span>
                     <AttachmentCell attachments={form.drive_attachments_ig || []} onUpdate={(val) => set("drive_attachments_ig")(val)} />
@@ -662,9 +677,9 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
                            <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                           <SelectItem value="N">Lead Name</SelectItem>
-                           <SelectItem value="C">Casting Name</SelectItem>
-                           <SelectItem value="NA">None</SelectItem>
+                           <SelectItem value="N">N (Lead)</SelectItem>
+                           <SelectItem value="C">C (Casting)</SelectItem>
+                           <SelectItem value="NA">NA (None)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -681,7 +696,7 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
                   onChange={(v) => set("editableMessageIG")(v)}
                   placeholder="Write custom Instagram DM..."
                   accentColor="text-pink-400"
-                  label="Custom Message Override"
+                  label="Editable MSG Insta"
                   platform="instagram"
                 />
               </div>
@@ -690,29 +705,31 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
 
           <Separator className="bg-white/5" />
 
-          {/* 4. Tracking Intel (Read-Only) */}
+          {/* 6. Tracking Intel */}
           <section className="space-y-6">
             <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
-              <ShieldCheck className="h-3 w-3" /> Data Intel
+              <ShieldCheck className="h-3 w-3" /> Data Tracking
             </h4>
             <div className="space-y-6">
-               <div className="grid grid-cols-3 gap-6">
+               <div className="grid grid-cols-2 gap-6">
                   <div className="p-4 rounded-2xl bg-muted/30 border border-white/5">
-                     <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-1">Followups</p>
+                     <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-1">Last Contacted</p>
+                     <p className="text-[10px] font-mono font-bold text-foreground truncate">{form.lastContactedDate || "NEVER"}</p>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-muted/30 border border-white/5">
+                     <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-1">Follow-ups</p>
                      <p className="text-xl font-black text-primary">{form.followups || "0"}</p>
                   </div>
-                  <div className="p-4 rounded-2xl bg-muted/30 border border-white/5">
-                     <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-1">Last Sync</p>
-                     <p className="text-[10px] font-mono font-bold text-foreground truncate">{form.lastContactedDate || "NONE"}</p>
-                  </div>
-                  <div className="p-4 rounded-2xl bg-muted/30 border border-white/5">
-                     <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-1">Sessions</p>
-                     <p className="text-xl font-black text-foreground">{form.totalDatesContacts || "0"}</p>
-                  </div>
                </div>
-               <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Bot Intel / Remarks</Label>
-                  <Input value={form.automationComment ?? ""} onChange={(e) => set("automationComment")(e.target.value)} placeholder="Bot diagnostics..." className="h-11 rounded-xl bg-primary/5 border-primary/20 italic text-xs" />
+               <div className="grid grid-cols-2 gap-6">
+                 <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Automation Status</Label>
+                    <Input value={form.automationComment ?? ""} onChange={(e) => set("automationComment")(e.target.value)} placeholder="Bot diagnostics..." className="h-11 rounded-xl bg-primary/5 border-primary/20 italic text-xs" />
+                 </div>
+                 <div className="space-y-2">
+                   <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Visit Log</Label>
+                   <Input value={form.visit ?? ""} onChange={(e) => set("visit")(e.target.value)} className="h-11 rounded-xl bg-background/50" />
+                 </div>
                </div>
             </div>
           </section>

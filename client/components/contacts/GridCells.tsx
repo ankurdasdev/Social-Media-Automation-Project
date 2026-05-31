@@ -202,6 +202,42 @@ export function PicklistCell({
   );
 }
 
+// ─── Personalized Cell (N/C/NA) ────────────────────────────────────────────────
+export function PersonalizedCell({ 
+  value, 
+  onUpdate 
+}: { 
+  value?: string; 
+  onUpdate: (val: string) => void;
+}) {
+  const options = [
+    { value: "N", label: "N" },
+    { value: "C", label: "C" },
+    { value: "NA", label: "NA" }
+  ];
+  
+  const currentVal = value || "NA";
+
+  return (
+    <Select value={currentVal} onValueChange={onUpdate}>
+      <SelectTrigger className="h-8 w-full border-none shadow-none text-[10px] font-black uppercase tracking-widest text-primary/80 hover:bg-muted/50 rounded-md px-2 focus:ring-0 truncate">
+        <SelectValue placeholder="NA" />
+      </SelectTrigger>
+      <SelectContent className="glass-card border-white/10 rounded-xl">
+        {options.map((opt) => (
+          <SelectItem 
+            key={opt.value} 
+            value={opt.value}
+            className="text-[10px] font-bold cursor-pointer"
+          >
+            {opt.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
 
 // ─── Conditional Textarea Cell (Checkbox -> Textarea) ────────────────────────
 export function ConditionalTextareaCell({
@@ -272,77 +308,86 @@ export function ConditionalTextareaCell({
       />
       
       {checked ? (
-        <Popover open={isEditing} onOpenChange={(open) => {
-          if (!open) handleFinishEditing();
-          else setIsEditing(true);
+        <>
+          <button 
+            onClick={() => setIsEditing(true)}
+            className="flex-1 min-h-[32px] py-1.5 px-3 rounded-md bg-primary/5 border border-primary/10 text-[10px] font-bold text-left whitespace-normal line-clamp-3 leading-tight text-primary hover:bg-primary/10 transition-all"
+          >
+            {value || "EDIT MESSAGE"}
+          </button>
           
-          if (!open) {
-            setIsAIMode(false);
-            setAiPrompt("");
-          }
-        }}>
-           <PopoverTrigger asChild>
-              <button className="flex-1 min-h-[32px] py-1.5 px-3 rounded-md bg-primary/5 border border-primary/10 text-[10px] font-bold text-left whitespace-normal line-clamp-3 leading-tight text-primary hover:bg-primary/10 transition-all">
-                {value || "EDIT MESSAGE"}
-              </button>
-           </PopoverTrigger>
-           <PopoverContent className="w-80 glass-card p-4 rounded-2xl border-white/10 shadow-2xl" align="start">
-              <div className="space-y-4">
-                 <div className="flex items-center justify-between">
-                    <h4 className="text-[10px] font-black uppercase tracking-widest text-primary">
-                      {isAIMode ? "AI Message Generator" : "Edit Custom Message"}
-                    </h4>
-                 </div>
- 
+          <Dialog open={isEditing} onOpenChange={(open) => {
+            if (!open) handleFinishEditing();
+            else setIsEditing(true);
+            
+            if (!open) {
+              setIsAIMode(false);
+              setAiPrompt("");
+            }
+          }}>
+            <DialogContent className="max-w-2xl bg-background/95 backdrop-blur-xl border-white/10 shadow-2xl rounded-3xl" onClick={(e) => e.stopPropagation()}>
+               <DialogHeader>
+                  <DialogTitle className="text-sm font-black uppercase tracking-widest text-primary flex items-center justify-between">
+                    {isAIMode ? "AI Message Generator" : "Edit Custom Message"}
+                  </DialogTitle>
+               </DialogHeader>
+  
+               <div className="space-y-4 py-2">
                  {isAIMode ? (
                    <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
                       <textarea 
-                        className="w-full h-24 rounded-xl bg-primary/5 border border-primary/10 p-3 text-sm font-medium focus:ring-1 focus:ring-primary outline-none resize-none"
+                        className="w-full h-32 rounded-xl bg-primary/5 border border-primary/10 p-4 text-sm font-medium focus:ring-1 focus:ring-primary outline-none resize-y"
                         value={aiPrompt}
                         onChange={(e) => setAiPrompt(e.target.value)}
                         placeholder="Enter prompt (e.g. Write a friendly outreach message for a casting call)..."
                         autoFocus
                       />
                       <Button 
-                        className="w-full h-10 rounded-xl font-black text-[10px] bg-primary hover:bg-primary/90 gap-2"
+                        className="w-full h-12 rounded-xl font-black text-xs bg-primary hover:bg-primary/90 gap-2"
                         onClick={handleGenerateAI}
                         disabled={isGenerating || !aiPrompt.trim()}
                       >
                         {isGenerating ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
-                          <Wand2 className="h-3.5 w-3.5" />
+                          <Wand2 className="h-4 w-4" />
                         )}
                         {isGenerating ? "GENERATING..." : "GENERATE MESSAGE"}
                       </Button>
                    </div>
                  ) : (
-                   <RichTextarea 
-                     className="w-full h-32 rounded-xl bg-muted/40 p-3 text-sm font-medium focus:ring-1 focus:ring-primary outline-none resize-none scrollbar-hide"
-                     value={localText}
-                     onChange={(val) => setLocalText(val)}
-                     placeholder={placeholder}
-                   />
+                   <div className="relative">
+                     <p className="text-[10px] text-muted-foreground font-bold absolute -top-5 right-1">Drag bottom right to resize</p>
+                     <RichTextarea 
+                       className="w-full min-h-[250px] max-h-[600px] rounded-2xl bg-muted/40 border border-white/10 p-4 text-sm font-medium focus:ring-1 focus:ring-primary outline-none resize-y scrollbar-hide shadow-inner"
+                       value={localText}
+                       onChange={(val) => setLocalText(val)}
+                       placeholder={placeholder}
+                     />
+                   </div>
                  )}
- 
-                 <div className="flex items-center justify-between pt-3 border-t border-white/5">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setIsAIMode(!isAIMode)}
-                      className={cn(
-                        "h-10 w-10 rounded-xl transition-all",
-                        isAIMode ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-primary/10 text-primary hover:bg-primary/20"
-                      )}
-                      title={isAIMode ? "Switch to Manual Edit" : "Use AI to Generate/Improve"}
-                    >
-                      <Sparkles className="h-4 w-4" />
-                    </Button>
-                    <Button size="sm" onClick={handleFinishEditing} className="h-10 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest bg-foreground text-background hover:bg-foreground/90 transition-all active:scale-95">DONE</Button>
-                 </div>
-              </div>
-           </PopoverContent>
-        </Popover>
+               </div>
+  
+               <DialogFooter className="flex items-center justify-between sm:justify-between border-t border-white/5 pt-4">
+                  <Button
+                    variant="ghost"
+                    onClick={() => setIsAIMode(!isAIMode)}
+                    className={cn(
+                      "h-12 px-6 rounded-xl transition-all font-black text-[10px] uppercase tracking-widest flex items-center gap-2",
+                      isAIMode ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-primary/10 text-primary hover:bg-primary/20"
+                    )}
+                    title={isAIMode ? "Switch to Manual Edit" : "Use AI to Generate/Improve"}
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    {isAIMode ? "Manual Edit" : "AI Helper"}
+                  </Button>
+                  <Button onClick={handleFinishEditing} className="h-12 px-8 rounded-xl font-black text-xs uppercase tracking-widest bg-foreground text-background hover:bg-foreground/90 transition-all active:scale-95">
+                    SAVE & CLOSE
+                  </Button>
+               </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </>
       ) : (
         <span className="text-[10px] font-black text-muted-foreground/30 uppercase tracking-widest px-1">DISABLED</span>
       )}

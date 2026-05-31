@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -43,6 +44,10 @@ import InstagramSettings from "@/components/settings/InstagramSettings";
 
 export default function Settings() {
   const { toast } = useToast();
+  const [isRefreshingGroup, setIsRefreshingGroup] = React.useState<string | null>(null);
+  
+  // Google Pre-connection State
+  const [googleAccepted, setGoogleAccepted] = React.useState(false);
   const queryClient = useQueryClient();
   const userId = getOrCreateUserId();
 
@@ -329,7 +334,36 @@ export default function Settings() {
                           </p>
                         </div>
 
-                        <Button onClick={handleConnectGoogle} className="h-20 w-full max-w-md bg-foreground text-background hover:bg-foreground/90 rounded-[1.5rem] text-lg font-black tracking-widest shadow-2xl transition-all active:scale-[0.98] group relative overflow-hidden">
+                        {/* Pre-Connection Warning */}
+                        <div className="max-w-md mx-auto w-full space-y-4 text-left p-6 rounded-2xl bg-amber-500/5 border border-amber-500/20">
+                          <div className="flex gap-3">
+                            <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+                            <div className="space-y-2">
+                              <h4 className="text-xs font-black uppercase tracking-widest text-amber-500">Important Permissions Required</h4>
+                              <p className="text-xs text-muted-foreground font-medium leading-relaxed">
+                                On the next screen, Google will ask for permissions. <strong className="text-foreground">You must manually check all the boxes</strong> (especially Gmail and Drive access). Google hides these by default. If you don't check them, automation will fail.
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <div className="pt-4 flex items-start space-x-3">
+                            <Checkbox 
+                              id="google-ack" 
+                              checked={googleAccepted}
+                              onCheckedChange={(c) => setGoogleAccepted(!!c)}
+                              className="mt-1"
+                            />
+                            <Label htmlFor="google-ack" className="text-xs text-muted-foreground font-medium leading-relaxed cursor-pointer">
+                              I understand I need to check all permission boxes on the Google screen.
+                            </Label>
+                          </div>
+                        </div>
+
+                        <Button 
+                          onClick={handleConnectGoogle} 
+                          disabled={!googleAccepted}
+                          className="h-20 w-full max-w-md bg-foreground text-background hover:bg-foreground/90 rounded-[1.5rem] text-lg font-black tracking-widest shadow-2xl transition-all active:scale-[0.98] group relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
                            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                            CONNECT GOOGLE WORKSPACE
                         </Button>
