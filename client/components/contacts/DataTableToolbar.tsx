@@ -288,6 +288,16 @@ export function DataTableToolbar<TData>({
         {/* Spacer */}
         <div className="flex-1" />
 
+        {/* Filtered Rows Count */}
+        {table.getState().columnFilters.length > 0 && (
+          <div className="hidden lg:flex items-center gap-2 px-4 h-11 rounded-xl bg-primary/5 border border-primary/10 shrink-0">
+            <Filter className="w-3.5 h-3.5 text-primary" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-primary">
+              {table.getFilteredRowModel().rows.length} MATCHED
+            </span>
+          </div>
+        )}
+
         {/* Refresh All */}
         <Button
           variant="outline"

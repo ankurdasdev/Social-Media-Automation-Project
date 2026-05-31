@@ -271,15 +271,31 @@ function DataTableColumnHeader({
                 <Button variant="outline" size="sm" onClick={() => column.setFilterValue(undefined)} className={cn("text-[10px] font-black uppercase", !column.getFilterValue() && "bg-primary/20 text-primary border-primary/50")}>All Time</Button>
               </div>
             ) : (
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground opacity-50" />
-                <Input
-                  placeholder={`Search ${displayTitle}...`}
-                  value={(column.getFilterValue() as string) ?? ""}
-                  onChange={(event) => column.setFilterValue(event.target.value)}
-                  className="h-10 pl-10 rounded-xl bg-muted/40 border-white/5 font-bold focus:ring-primary text-sm"
-                  autoFocus
-                />
+              <div className="space-y-3 relative">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground opacity-50" />
+                  <Input
+                    placeholder={`Search ${displayTitle}...`}
+                    value={(column.getFilterValue() as string) !== "___NULL___" ? ((column.getFilterValue() as string) ?? "") : ""}
+                    onChange={(event) => column.setFilterValue(event.target.value)}
+                    className="h-10 pl-10 rounded-xl bg-muted/40 border-white/5 font-bold focus:ring-primary text-sm"
+                    autoFocus
+                  />
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => {
+                     if (column.getFilterValue() === "___NULL___") {
+                       column.setFilterValue(undefined);
+                     } else {
+                       column.setFilterValue("___NULL___");
+                     }
+                  }}
+                  className={cn("w-full h-8 text-[10px] font-black uppercase transition-all", column.getFilterValue() === "___NULL___" ? "bg-primary/20 text-primary border-primary/50 hover:bg-primary/30 hover:text-primary" : "text-muted-foreground hover:bg-white/5 hover:text-foreground")}
+                >
+                  {column.getFilterValue() === "___NULL___" ? "Showing Empty/Null Only" : "Filter Empty/Null"}
+                </Button>
               </div>
             )}
           </div>
