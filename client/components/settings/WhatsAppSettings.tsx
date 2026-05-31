@@ -244,31 +244,31 @@ export function WhatsAppSettings() {
                          <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[radial-gradient(circle_at_2px_2px,#fff_1px,transparent_0)] bg-[size:32px_32px]" />
                          
                          <div className="flex flex-col gap-10 relative z-10">
-                            <div className="flex flex-wrap items-center justify-between gap-4 w-full">
-                               <div className="flex items-center gap-4">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 w-full min-w-0">
+                               <div className="flex items-center gap-4 min-w-0">
                                   <div className="w-16 h-16 rounded-2.5xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.1)] shrink-0">
                                      <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center">
                                         <CheckCircle2 className="h-4 w-4 text-black" strokeWidth={3} />
                                      </div>
                                   </div>
-                                  <div>
-                                     <p className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em] whitespace-nowrap">Protocol :: Online</p>
-                                     <h4 className="text-xl md:text-2xl font-black text-foreground tracking-tighter uppercase leading-none">AUTHENTICATED</h4>
+                                  <div className="min-w-0">
+                                     <p className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em] whitespace-nowrap truncate">Protocol :: Online</p>
+                                     <h4 className="text-xl md:text-2xl font-black text-foreground tracking-tighter uppercase leading-none whitespace-nowrap truncate">AUTHENTICATED</h4>
                                   </div>
                                </div>
                                
                                <Button
                                   variant="ghost"
                                   onClick={handleDisconnect}
-                                  className="h-12 px-6 rounded-xl bg-rose-500/5 border border-rose-500/10 hover:bg-rose-500/10 hover:border-rose-500/20 hover:text-rose-500 text-rose-500/60 font-black text-[10px] uppercase tracking-widest transition-all group"
+                                  className="h-12 px-6 rounded-xl bg-rose-500/5 border border-rose-500/10 hover:bg-rose-500/10 hover:border-rose-500/20 hover:text-rose-500 text-rose-500/60 font-black text-[10px] uppercase tracking-widest transition-all group shrink-0"
                                >
-                                  <LogOut className="h-4 w-4 mr-2" /> DISCONNECT
+                                  <LogOut className="h-4 w-4 mr-2 shrink-0" /> <span className="whitespace-nowrap">DISCONNECT</span>
                                </Button>
                             </div>
 
                             <div className="space-y-4 p-8 rounded-[2.5rem] bg-white/[0.02] border border-white/5">
                                <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest text-center">Active Mobile Instance</p>
-                               <div className="text-2xl md:text-4xl font-black tracking-tight text-center text-foreground py-2 truncate max-w-full px-2">
+                               <div className="text-xl sm:text-2xl md:text-4xl font-black tracking-tight text-center text-foreground py-2 break-all max-w-full px-2">
                                   {instance?.instanceName.split('_')[1] || '916200469935'}
                                </div>
                                <div className="h-px w-12 bg-emerald-500/20 mx-auto" />
