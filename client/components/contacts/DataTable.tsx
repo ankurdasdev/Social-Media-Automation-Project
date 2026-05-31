@@ -160,7 +160,7 @@ export function DataTable<TData, TValue>({
     // We want a bigger page size for Excel-like feel
     initialState: {
       pagination: {
-        pageSize: 100,
+        pageSize: 50,
       },
       columnVisibility: {
         whatsappCompleted: false,
@@ -175,8 +175,8 @@ export function DataTable<TData, TValue>({
   });
 
   React.useEffect(() => {
-    if (!isFullscreen && table.getState().pagination.pageSize !== 100) {
-      table.setPageSize(100);
+    if (!isFullscreen && table.getState().pagination.pageSize !== 50) {
+      table.setPageSize(50);
     }
   }, [isFullscreen]);
 

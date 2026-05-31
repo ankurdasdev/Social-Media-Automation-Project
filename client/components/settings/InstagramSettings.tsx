@@ -110,30 +110,15 @@ export default function InstagramSettings() {
     setLoginStep("logging_in");
 
     try {
-      let endpoint = "/api/instagram/connect";
-      let bodyData: any = {
-        userId,
-        username: username.trim().toLowerCase().replace(/^@/, ""),
-        password,
-        verificationCode: verificationCode.trim() || undefined,
-      };
-
-      // Auto-detect Session ID cookie (usually contains %3A and is long)
-      const isSessionId = password.includes("%3A") || (password.length > 40 && !password.includes(" "));
-      
-      if (isSessionId) {
-        endpoint = "/api/instagram/connect-session";
-        bodyData = {
-          userId,
-          username: username.trim().toLowerCase().replace(/^@/, ""),
-          sessionId: password,
-        };
-      }
-
-      const connectRes = await fetch(endpoint, {
+      const connectRes = await fetch("/api/instagram/connect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(bodyData),
+        body: JSON.stringify({
+          userId,
+          username: username.trim().toLowerCase().replace(/^@/, ""),
+          password,
+          verificationCode: verificationCode.trim() || undefined,
+        }),
       });
 
       if (!connectRes.ok) {
