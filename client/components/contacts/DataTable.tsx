@@ -174,6 +174,12 @@ export function DataTable<TData, TValue>({
     },
   });
 
+  React.useEffect(() => {
+    if (!isFullscreen) {
+      table.setPageSize(100);
+    }
+  }, [isFullscreen, table]);
+
   // Reorder Handler (restricted to within groups)
   const handleDragHeader = (columnId: string, targetId: string) => {
     const col1 = table.getColumn(columnId);
@@ -414,24 +420,26 @@ export function DataTable<TData, TValue>({
            </div>
         </div>
         <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-          <div className="flex items-center gap-3">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Rows</span>
-            <Select
-              value={table.getState().pagination.pageSize.toString()}
-              onValueChange={(value) => startTransition(() => table.setPageSize(Number(value)))}
-            >
-              <SelectTrigger className="h-10 w-[70px] bg-muted/30 border border-white/10 rounded-xl text-[10px] font-black focus:ring-primary outline-none">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="glass-card border-white/10 shadow-2xl rounded-xl z-[150]">
-                {[25, 50, 100, 250, 500].map(pageSize => (
-                  <SelectItem key={pageSize} value={pageSize.toString()} className="text-[10px] font-black cursor-pointer hover:bg-primary/20">
-                    {pageSize}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {isFullscreen && (
+            <div className="flex items-center gap-3">
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Rows</span>
+              <Select
+                value={table.getState().pagination.pageSize.toString()}
+                onValueChange={(value) => startTransition(() => table.setPageSize(Number(value)))}
+              >
+                <SelectTrigger className="h-10 w-[70px] bg-muted/30 border border-white/10 rounded-xl text-[10px] font-black focus:ring-primary outline-none">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="glass-card border-white/10 shadow-2xl rounded-xl z-[150]">
+                  {[25, 50, 100, 250, 500].map(pageSize => (
+                    <SelectItem key={pageSize} value={pageSize.toString()} className="text-[10px] font-black cursor-pointer hover:bg-primary/20">
+                      {pageSize}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="flex items-center gap-2">
             <button
