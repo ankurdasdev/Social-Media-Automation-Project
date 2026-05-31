@@ -168,6 +168,7 @@ function MessageEditor({
   placeholder,
   accentColor,
   label,
+  platform = "email",
 }: {
   checked: boolean;
   onCheckedChange: (v: boolean) => void;
@@ -176,6 +177,7 @@ function MessageEditor({
   placeholder: string;
   accentColor: string;
   label: string;
+  platform?: "whatsapp" | "email" | "instagram";
 }) {
   const [localText, setLocalText] = React.useState(value || "");
   const [isAIMode, setIsAIMode] = React.useState(false);
@@ -270,6 +272,7 @@ function MessageEditor({
                 onChange(val);
               }}
               placeholder={placeholder}
+              platform={platform}
               className="min-h-[140px] rounded-xl text-sm font-medium bg-background/50 border-white/10 resize-none focus:ring-1 focus:ring-primary leading-relaxed"
             />
           )}
@@ -570,6 +573,7 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
                   placeholder="Write custom WhatsApp message..."
                   accentColor="text-emerald-400"
                   label="Custom Message Override"
+                  platform="whatsapp"
                 />
               </div>
 
@@ -628,6 +632,7 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
                   placeholder="Write custom email body..."
                   accentColor="text-blue-400"
                   label="Custom Body Override"
+                  platform="email"
                 />
               </div>
 
@@ -677,6 +682,7 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
                   placeholder="Write custom Instagram DM..."
                   accentColor="text-pink-400"
                   label="Custom Message Override"
+                  platform="instagram"
                 />
               </div>
             </div>

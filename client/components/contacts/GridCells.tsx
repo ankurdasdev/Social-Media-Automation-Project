@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { X, Plus, Search, FileText, Sparkles, Wand2, Loader2, ExternalLink } from "lucide-react";
+import { X, Plus, Search, FileText, Sparkles, Wand2, Loader2, ExternalLink, GripVertical, ZoomIn, HardDrive, Paperclip } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RichTextarea } from "@/components/ui/rich-textarea";
 import { DriveFilePicker } from "../drive/DriveFilePicker";
@@ -433,6 +433,38 @@ export function MultiTemplateSelect({
 }
 
 // ─── Unified Attachment Cell ─────────────────────────────────────────────────
+// ─── Image Lightbox (local) ───────────────────────────────────────────────────
+function InlineLightbox({ src, name, onClose }: { src: string; name: string; onClose: () => void }) {
+  React.useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [onClose]);
+  return (
+    <div className="fixed inset-0 z-[300] bg-black/80 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-200" onClick={onClose}>
+      <div className="relative max-w-2xl w-full bg-card rounded-3xl overflow-hidden shadow-2xl border border-white/10" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-3 border-b border-white/10">
+          <p className="text-sm font-black truncate">{name}</p>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted transition-colors"><X className="w-4 h-4" /></button>
+        </div>
+        <div className="p-4 bg-black/20 flex items-center justify-center min-h-[260px]">
+          <img src={src} alt={name} className="max-h-[55vh] max-w-full object-contain rounded-xl" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function getMimeEmoji(mimeType: string): string {
+  if (mimeType.includes("pdf")) return "📄";
+  if (mimeType.includes("image")) return "🖼️";
+  if (mimeType.includes("video")) return "🎬";
+  if (mimeType.includes("spreadsheet") || mimeType.includes("excel")) return "📊";
+  if (mimeType.includes("presentation") || mimeType.includes("powerpoint")) return "📑";
+  if (mimeType.includes("document") || mimeType.includes("word")) return "📝";
+  return "📁";
+}
+
 export function AttachmentCell({
   attachments,
   onUpdate
@@ -441,45 +473,232 @@ export function AttachmentCell({
   onUpdate: (files: DriveFile[]) => void
 }) {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [debouncedSearch, setDebouncedSearch] = React.useState("");
+  const [lightboxFile, setLightboxFile] = React.useState<DriveFile | null>(null);
+  const [dragIdx, setDragIdx] = React.useState<number | null>(null);
+  const userId = getOrCreateUserId();
+
+  React.useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchTerm), 350);
+    return () => clearTimeout(t);
+  }, [searchTerm]);
+
+  const { data: driveData, isLoading } = useQuery<{ files: DriveFile[]; folderName?: string }>({
+    queryKey: ["drive-files", userId, debouncedSearch],
+    queryFn: async () => {
+      const params = new URLSearchParams({ userId, q: debouncedSearch });
+      const res = await fetch(`/api/drive/files?${params}`);
+      if (!res.ok) throw new Error("failed");
+      return res.json();
+    },
+    enabled: isOpen && !!userId,
+    staleTime: 0,
+  });
+
+  const toggleFile = (file: DriveFile) => {
+    const exists = (attachments || []).some((f) => f.id === file.id);
+    if (exists) {
+      onUpdate((attachments || []).filter((f) => f.id !== file.id));
+    } else {
+      onUpdate([...(attachments || []), file]);
+    }
+  };
+
+  // Drag-to-reorder handlers
+  const handleDragStart = (idx: number) => setDragIdx(idx);
+  const handleDragOver = (e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    if (dragIdx === null || dragIdx === idx) return;
+    const next = [...(attachments || [])];
+    const [moved] = next.splice(dragIdx, 1);
+    next.splice(idx, 0, moved);
+    onUpdate(next);
+    setDragIdx(idx);
+  };
+  const handleDragEnd = () => setDragIdx(null);
+
+  const isImage = (mimeType: string) => mimeType.startsWith("image/");
+  const files = attachments || [];
 
   return (
     <div className="flex flex-wrap gap-1 items-center min-w-[100px] group">
-       {(attachments || []).map((file, idx) => (
-         <Badge key={file.id} variant="outline" className="h-6 px-2 gap-2 border-border/50 bg-muted/30 text-[10px] font-bold">
-           <FileText className="w-3 h-3 text-blue-500" />
-           <span className="max-w-[60px] truncate">{file.name}</span>
-           <X className="w-3 h-3 cursor-pointer hover:text-destructive" onClick={() => onUpdate(attachments.filter((_, i) => i !== idx))} />
-         </Badge>
-       ))}
-       
-       <button 
-         onClick={() => setIsOpen(true)}
-         className="h-6 w-6 rounded-md flex items-center justify-center hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all opacity-0 group-hover:opacity-100"
-       >
-         <Search className="w-3.5 h-3.5" />
-       </button>
+      {/* Lightbox */}
+      {lightboxFile && (
+        <InlineLightbox
+          src={lightboxFile.thumbnailLink || lightboxFile.webViewLink || ""}
+          name={lightboxFile.name}
+          onClose={() => setLightboxFile(null)}
+        />
+      )}
 
-       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-         <DialogContent className="glass-card border-white/10 rounded-[2rem] p-8 max-w-md">
-           <DialogHeader>
-             <DialogTitle className="text-xl font-black uppercase tracking-tighter">Unified Attachments</DialogTitle>
-           </DialogHeader>
-           <div className="py-4">
-              <DriveFilePicker
-                userId={getOrCreateUserId()}
-                selectedFiles={attachments}
-                onChange={(files) => {
-                  onUpdate(files);
-                }}
-                placeholder="Search drive for resume, photos..."
-                inline={true}
-              />
-           </div>
-           <DialogFooter>
-             <Button onClick={() => setIsOpen(false)} className="rounded-xl font-black">DONE</Button>
-           </DialogFooter>
-         </DialogContent>
-       </Dialog>
+      {/* Compact chips */}
+      {files.map((file, idx) => (
+        <div
+          key={file.id}
+          className="flex items-center gap-1.5 pl-2 pr-1.5 py-1 rounded-xl border border-border/50 bg-muted/30 text-[10px] font-bold group/chip max-w-[120px]"
+        >
+          {isImage(file.mimeType) && file.thumbnailLink ? (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setLightboxFile(file); }}
+              className="relative w-4 h-4 shrink-0"
+              title="Preview"
+            >
+              <img src={file.thumbnailLink} alt="" className="w-4 h-4 rounded object-cover" />
+            </button>
+          ) : (
+            <FileText className="w-3 h-3 text-blue-500 shrink-0" />
+          )}
+          <span className="truncate max-w-[60px]">{file.name}</span>
+          <X
+            className="w-3 h-3 cursor-pointer hover:text-destructive shrink-0"
+            onClick={(e) => { e.stopPropagation(); onUpdate(files.filter((_, i) => i !== idx)); }}
+          />
+        </div>
+      ))}
+
+      {/* Open dialog button */}
+      <button
+        onClick={(e) => { e.stopPropagation(); setIsOpen(true); }}
+        className="h-6 w-6 rounded-md flex items-center justify-center hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all opacity-0 group-hover:opacity-100"
+      >
+        <HardDrive className="w-3.5 h-3.5" />
+      </button>
+
+      {/* Redesigned dialog */}
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="glass-card border-white/10 rounded-[2rem] p-0 max-w-2xl w-[95vw] max-h-[85vh] overflow-hidden flex flex-col shadow-2xl">
+          <DialogHeader className="px-8 pt-8 pb-4 border-b border-white/5 flex-shrink-0">
+            <DialogTitle className="text-2xl font-black tracking-tighter flex items-center gap-3">
+              <HardDrive className="h-6 w-6 text-primary" />
+              DRIVE ATTACHMENTS
+            </DialogTitle>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">
+              Search, select, and reorder files from Google Drive
+            </p>
+          </DialogHeader>
+
+          <div className="flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden">
+            {/* Left: Search & Select */}
+            <div className="flex-1 flex flex-col min-h-0 border-r border-white/5">
+              {/* Search */}
+              <div className="flex items-center gap-3 px-6 py-4 border-b border-white/5">
+                <Search className="h-4 w-4 text-primary shrink-0" />
+                <input
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search Google Drive..."
+                  className="flex-1 bg-transparent text-sm font-bold outline-none placeholder:text-muted-foreground/50"
+                  autoFocus
+                />
+                {isLoading && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
+              </div>
+
+              {/* File list */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                {(driveData?.files || []).map((file) => {
+                  const isSelected = files.some((f) => f.id === file.id);
+                  const isImg = isImage(file.mimeType);
+                  return (
+                    <div
+                      key={file.id}
+                      onClick={() => toggleFile(file)}
+                      className={cn(
+                        "flex items-center gap-4 px-4 py-3 rounded-2xl cursor-pointer transition-all group/item",
+                        isSelected
+                          ? "bg-primary text-white shadow-lg shadow-primary/20 scale-[1.01]"
+                          : "hover:bg-muted/60 hover:translate-x-1"
+                      )}
+                    >
+                      <div className="shrink-0 w-9 h-9 relative">
+                        {isImg && file.thumbnailLink ? (
+                          <div className="relative w-9 h-9">
+                            <img src={file.thumbnailLink} alt={file.name} className="w-9 h-9 rounded-lg object-cover border border-white/10" />
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); setLightboxFile(file); }}
+                              className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg opacity-0 group-hover/item:opacity-100 transition-opacity"
+                            >
+                              <ZoomIn className="w-3 h-3 text-white" />
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-2xl block text-center leading-9">{getMimeEmoji(file.mimeType)}</span>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className={cn("text-sm font-black truncate", isSelected ? "text-white" : "")}>{file.name}</p>
+                        <p className={cn("text-[9px] font-black uppercase tracking-widest", isSelected ? "text-white/60" : "text-muted-foreground/50")}>
+                          {file.mimeType.split("/").pop()}
+                        </p>
+                      </div>
+                      {isSelected && <div className="shrink-0 w-6 h-6 rounded-md bg-white/20 flex items-center justify-center"><FileText className="w-3.5 h-3.5 text-white" /></div>}
+                    </div>
+                  );
+                })}
+                {!isLoading && (driveData?.files || []).length === 0 && (
+                  <div className="flex flex-col items-center justify-center gap-3 py-12 opacity-30">
+                    <Search className="w-8 h-8" />
+                    <p className="text-[10px] font-black uppercase tracking-widest">No files found</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Right: Selected & Order */}
+            {files.length > 0 && (
+              <div className="w-full lg:w-64 flex-shrink-0 flex flex-col border-t lg:border-t-0 border-white/5">
+                <div className="px-5 py-4 border-b border-white/5">
+                  <p className="text-[10px] font-black text-primary uppercase tracking-widest">ATTACHMENT ORDER</p>
+                  <p className="text-[9px] text-muted-foreground font-bold mt-0.5">Drag to reorder</p>
+                </div>
+                <div className="flex-1 overflow-y-auto p-3 space-y-2">
+                  {files.map((file, idx) => (
+                    <div
+                      key={file.id}
+                      draggable
+                      onDragStart={() => handleDragStart(idx)}
+                      onDragOver={(e) => handleDragOver(e, idx)}
+                      onDragEnd={handleDragEnd}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-2.5 rounded-xl bg-muted/30 border border-white/5 cursor-grab active:cursor-grabbing transition-all group/order",
+                        dragIdx === idx && "opacity-50 scale-95 border-primary/50 bg-primary/10"
+                      )}
+                    >
+                      <GripVertical className="w-3.5 h-3.5 text-muted-foreground/40 group-hover/order:text-muted-foreground shrink-0" />
+                      <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+                        <span className="text-[9px] font-black text-primary">{idx + 1}</span>
+                      </div>
+                      {isImage(file.mimeType) && file.thumbnailLink ? (
+                        <img src={file.thumbnailLink} alt="" className="w-5 h-5 rounded object-cover shrink-0" />
+                      ) : (
+                        <span className="text-xs shrink-0">{getMimeEmoji(file.mimeType)}</span>
+                      )}
+                      <span className="text-[10px] font-bold truncate flex-1">{file.name}</span>
+                      <button
+                        onClick={() => onUpdate(files.filter((_, i) => i !== idx))}
+                        className="opacity-0 group-hover/order:opacity-100 text-muted-foreground hover:text-destructive transition-all p-0.5 rounded shrink-0"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="px-8 py-5 border-t border-white/5 flex-shrink-0">
+            <Button
+              onClick={() => setIsOpen(false)}
+              className="h-12 px-8 rounded-xl bg-primary font-black text-[10px] uppercase tracking-widest text-white shadow-lg shadow-primary/20"
+            >
+              DONE — {files.length} FILE{files.length !== 1 ? "S" : ""} LINKED
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

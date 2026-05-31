@@ -1,8 +1,11 @@
 import React, { useRef, useEffect, useCallback, useState } from "react";
-import { Bold, Italic, Underline, Highlighter, AlertTriangle } from "lucide-react";
+import {
+  Bold, Italic, Underline, Highlighter, AlertTriangle, RotateCcw,
+  ChevronDown, X as XIcon, GripVertical
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// ─── Platform Constraints ────────────────────────────────────────────────────
+// ─── Platform Constraints ─────────────────────────────────────────────────────
 
 const PLATFORM_CONFIG = {
   whatsapp: {
@@ -12,7 +15,7 @@ const PLATFORM_CONFIG = {
     supportsItalic: true,
     supportsUnderline: false,
     supportsHighlight: false,
-    isRichText: false, // WA uses plain text with *bold* _italic_ markers
+    isRichText: false,
     warnings: {
       formatting: "WhatsApp only supports *bold* and _italic_ markdown — HTML formatting will be stripped on send.",
       charLimit: (n: number) => `WhatsApp has a 65,536 character limit. You are at ${n.toLocaleString()} characters.`,
@@ -56,20 +59,27 @@ interface RichTextareaProps {
   textareaRef?: React.RefObject<HTMLTextAreaElement>;
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Strip HTML tags — used to count real chars for WA/IG which are plain text */
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, "");
 }
 
-/** Get actual display character count */
 function getCharCount(value: string, platform: string): number {
   if (platform === "whatsapp" || platform === "instagram") {
     return stripHtml(value).length;
   }
   return value.length;
 }
+
+// ─── Highlight Color Options ──────────────────────────────────────────────────
+
+const HIGHLIGHT_COLORS = [
+  { label: "Yellow", color: "#fef08a", tw: "bg-yellow-200" },
+  { label: "Cyan", color: "#a5f3fc", tw: "bg-cyan-200" },
+  { label: "Green", color: "#bbf7d0", tw: "bg-green-200" },
+  { label: "Pink", color: "#fbcfe8", tw: "bg-pink-200" },
+];
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
@@ -84,19 +94,17 @@ export function RichTextarea({
   const config = PLATFORM_CONFIG[platform];
   const isRich = config.isRichText;
 
-  // For plain-text platforms (WA, IG), use a <textarea>
-  // For email, use a contentEditable div
   const textareaInternalRef = useRef<HTMLTextAreaElement>(null);
   const textareaRef = externalRef || textareaInternalRef;
   const editorRef = useRef<HTMLDivElement>(null);
 
   const [warning, setWarning] = useState<string | null>(null);
+  const [highlightOpen, setHighlightOpen] = useState(false);
   const charCount = getCharCount(value, platform);
 
-  // ── Sync value → textarea (plain-text platforms) ──────────────────────────
+  // ── Sync value → textarea ────────────────────────────────────────────────
   useEffect(() => {
     if (!isRich && textareaRef.current) {
-      // Strip any HTML that may have been stored and show as plain text
       const plain = stripHtml(value);
       if (textareaRef.current.value !== plain) {
         textareaRef.current.value = plain;
@@ -104,7 +112,7 @@ export function RichTextarea({
     }
   }, [value, isRich]);
 
-  // ── Sync value → contentEditable (email) ─────────────────────────────────
+  // ── Sync value → contentEditable ─────────────────────────────────────────
   useEffect(() => {
     if (isRich && editorRef.current) {
       if (document.activeElement !== editorRef.current) {
@@ -115,7 +123,7 @@ export function RichTextarea({
     }
   }, [value, isRich]);
 
-  // ── Check warnings on value change ────────────────────────────────────────
+  // ── Char limit warning ────────────────────────────────────────────────────
   useEffect(() => {
     if (charCount >= config.warnAt) {
       setWarning((config.warnings as any).charLimit?.(charCount) ?? null);
@@ -124,11 +132,10 @@ export function RichTextarea({
     }
   }, [charCount, config]);
 
-  // ── Plain-text handler (WA + IG) ─────────────────────────────────────────
+  // ── Plain-text input handler (WA + IG) ───────────────────────────────────
   const handlePlainInput = useCallback(
     (e: React.FormEvent<HTMLTextAreaElement>) => {
       const raw = (e.currentTarget as HTMLTextAreaElement).value;
-      // For IG, enforce hard limit
       if (platform === "instagram" && raw.length > config.maxChars) {
         (e.currentTarget as HTMLTextAreaElement).value = raw.slice(0, config.maxChars);
         onChange(raw.slice(0, config.maxChars));
@@ -139,14 +146,14 @@ export function RichTextarea({
     [onChange, platform, config.maxChars]
   );
 
-  // ── Rich-text handler (email) ─────────────────────────────────────────────
+  // ── Rich-text input handler (email) ──────────────────────────────────────
   const handleRichInput = useCallback(() => {
     if (editorRef.current) {
       onChange(editorRef.current.innerHTML);
     }
   }, [onChange]);
 
-  // ── Handle paste on plain-text (strip formatting) ─────────────────────────
+  // ── Strip paste formatting on plain-text ─────────────────────────────────
   const handlePlainPaste = useCallback(
     (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
       e.preventDefault();
@@ -154,9 +161,7 @@ export function RichTextarea({
       const ta = e.currentTarget;
       const start = ta.selectionStart;
       const end = ta.selectionEnd;
-      const before = ta.value.slice(0, start);
-      const after = ta.value.slice(end);
-      const next = before + text + after;
+      const next = ta.value.slice(0, start) + text + ta.value.slice(end);
       ta.value = next;
       ta.selectionStart = ta.selectionEnd = start + text.length;
       onChange(next);
@@ -164,7 +169,7 @@ export function RichTextarea({
     [onChange]
   );
 
-  // ── WA Bold shortcut: wrap selection in *…* ───────────────────────────────
+  // ── WhatsApp markdown wrap ────────────────────────────────────────────────
   const wrapWaMarkdown = useCallback(
     (marker: string) => {
       const ta = textareaRef.current;
@@ -183,15 +188,53 @@ export function RichTextarea({
     [onChange, textareaRef]
   );
 
+  // ── WhatsApp: remove markdown markers from selection ─────────────────────
+  const clearWaMarkdown = useCallback(() => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    const cleaned = ta.value
+      .replace(/\*(.*?)\*/g, "$1")
+      .replace(/_(.*?)_/g, "$1")
+      .replace(/~(.*?)~/g, "$1");
+    ta.value = cleaned;
+    onChange(cleaned);
+    ta.focus();
+  }, [onChange, textareaRef]);
+
   // ── Email execCommand toolbar ─────────────────────────────────────────────
   const execRich = useCallback(
     (command: string, val?: string) => {
-      document.execCommand(command, false, val);
       editorRef.current?.focus();
+      document.execCommand(command, false, val);
       if (editorRef.current) onChange(editorRef.current.innerHTML);
     },
     [onChange]
   );
+
+  // ── Email: apply highlight color ──────────────────────────────────────────
+  const applyHighlight = useCallback(
+    (color: string | null) => {
+      editorRef.current?.focus();
+      if (color === null) {
+        // Remove highlight
+        document.execCommand("hiliteColor", false, "transparent");
+        document.execCommand("backColor", false, "transparent");
+      } else {
+        document.execCommand("hiliteColor", false, color);
+      }
+      if (editorRef.current) onChange(editorRef.current.innerHTML);
+      setHighlightOpen(false);
+    },
+    [onChange]
+  );
+
+  // ── Email: Reset All formatting ───────────────────────────────────────────
+  const resetAllFormatting = useCallback(() => {
+    editorRef.current?.focus();
+    document.execCommand("selectAll", false);
+    document.execCommand("removeFormat", false);
+    if (editorRef.current) onChange(editorRef.current.innerHTML);
+  }, [onChange]);
 
   const isOverLimit = charCount > config.maxChars;
   const isNearLimit = charCount >= config.warnAt;
@@ -200,26 +243,31 @@ export function RichTextarea({
   return (
     <div className={cn("flex flex-col border border-input rounded-xl shadow-sm overflow-hidden bg-background", className)}>
       {/* Toolbar */}
-      <div className="flex items-center gap-1 p-2 border-b bg-muted/20 flex-wrap">
+      <div className="flex items-center gap-1 p-2 border-b bg-muted/20 flex-wrap min-h-[44px]">
+
+        {/* ── WhatsApp toolbar ── */}
         {platform === "whatsapp" && (
           <>
-            <ToolbarButton
-              title="Bold (*bold*)"
-              onClick={() => wrapWaMarkdown("*")}
-            >
+            <ToolbarButton title="Bold (*bold*)" onClick={() => wrapWaMarkdown("*")}>
               <Bold className="w-4 h-4" />
             </ToolbarButton>
-            <ToolbarButton
-              title="Italic (_italic_)"
-              onClick={() => wrapWaMarkdown("_")}
-            >
+            <ToolbarButton title="Italic (_italic_)" onClick={() => wrapWaMarkdown("_")}>
               <Italic className="w-4 h-4" />
+            </ToolbarButton>
+            <div className="w-px h-5 bg-border/50 mx-1" />
+            <ToolbarButton
+              title="Clear all markdown formatting"
+              onClick={clearWaMarkdown}
+              className="text-rose-500 hover:bg-rose-500/10"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
             </ToolbarButton>
             <div className="w-px h-5 bg-border/50 mx-1" />
             <PlatformTag label="WA MARKDOWN" color="emerald" />
           </>
         )}
 
+        {/* ── Email toolbar ── */}
         {platform === "email" && (
           <>
             <ToolbarButton title="Bold" onMouseDown={(e) => { e.preventDefault(); execRich("bold"); }}>
@@ -231,15 +279,65 @@ export function RichTextarea({
             <ToolbarButton title="Underline" onMouseDown={(e) => { e.preventDefault(); execRich("underline"); }}>
               <Underline className="w-4 h-4" />
             </ToolbarButton>
+
             <div className="w-px h-5 bg-border/50 mx-1" />
-            <ToolbarButton title="Highlight" onMouseDown={(e) => { e.preventDefault(); execRich("hiliteColor", "yellow"); }}>
-              <Highlighter className="w-4 h-4 text-yellow-500" />
+
+            {/* Highlight picker */}
+            <div className="relative">
+              <ToolbarButton
+                title="Highlight"
+                onMouseDown={(e) => { e.preventDefault(); setHighlightOpen((o) => !o); }}
+                className={cn(highlightOpen && "bg-muted ring-1 ring-primary/30")}
+              >
+                <span className="flex items-center gap-1">
+                  <Highlighter className="w-4 h-4 text-yellow-500" />
+                  <ChevronDown className="w-2.5 h-2.5 text-muted-foreground" />
+                </span>
+              </ToolbarButton>
+              {highlightOpen && (
+                <div className="absolute top-full left-0 mt-1 z-50 bg-popover border border-border/50 rounded-xl shadow-xl p-2 flex flex-col gap-1.5 min-w-[160px] animate-in fade-in zoom-in-95 duration-150">
+                  {HIGHLIGHT_COLORS.map((hc) => (
+                    <button
+                      key={hc.label}
+                      type="button"
+                      onMouseDown={(e) => { e.preventDefault(); applyHighlight(hc.color); }}
+                      className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg hover:bg-muted transition-colors text-left"
+                    >
+                      <span className={cn("w-4 h-4 rounded border border-border/50 shrink-0", hc.tw)} />
+                      <span className="text-xs font-bold">{hc.label}</span>
+                    </button>
+                  ))}
+                  <div className="h-px bg-border/50 my-1" />
+                  <button
+                    type="button"
+                    onMouseDown={(e) => { e.preventDefault(); applyHighlight(null); }}
+                    className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
+                  >
+                    <XIcon className="w-3.5 h-3.5 shrink-0" />
+                    <span className="text-xs font-bold">Remove Highlight</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Reset All button */}
+            <ToolbarButton
+              title="Reset all formatting (removes bold, italic, underline, highlight)"
+              onMouseDown={(e) => { e.preventDefault(); resetAllFormatting(); }}
+              className="text-rose-500 hover:bg-rose-500/10"
+            >
+              <span className="flex items-center gap-1">
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span className="text-[9px] font-black uppercase tracking-wider hidden sm:block">Reset</span>
+              </span>
             </ToolbarButton>
+
             <div className="w-px h-5 bg-border/50 mx-1" />
             <PlatformTag label="HTML RICH TEXT" color="blue" />
           </>
         )}
 
+        {/* ── Instagram: plain text banner ── */}
         {platform === "instagram" && (
           <>
             <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-pink-500/10 border border-pink-500/20">
@@ -269,7 +367,6 @@ export function RichTextarea({
 
       {/* Editor area */}
       {isRich ? (
-        // Email: contentEditable div
         <div
           ref={editorRef}
           className="flex-1 p-4 outline-none min-h-[180px] overflow-y-auto text-sm leading-relaxed"
@@ -277,17 +374,9 @@ export function RichTextarea({
           suppressContentEditableWarning
           onInput={handleRichInput}
           onBlur={handleRichInput}
-          onPaste={(e) => {
-            // Allow rich paste for email
-          }}
           data-placeholder={placeholder}
-          style={{
-            // Placeholder via CSS
-          }}
-          dangerouslySetInnerHTML={value ? undefined : undefined}
         />
       ) : (
-        // WA / IG: plain textarea (no RTL / cursor bugs)
         <textarea
           ref={textareaRef}
           className={cn(
@@ -328,18 +417,20 @@ export function RichTextarea({
   );
 }
 
-// ─── Sub-components ──────────────────────────────────────────────────────────
+// ─── Sub-components ───────────────────────────────────────────────────────────
 
 function ToolbarButton({
   children,
   title,
   onClick,
   onMouseDown,
+  className,
 }: {
   children: React.ReactNode;
   title?: string;
   onClick?: () => void;
   onMouseDown?: (e: React.MouseEvent) => void;
+  className?: string;
 }) {
   return (
     <button
@@ -347,7 +438,10 @@ function ToolbarButton({
       title={title}
       onClick={onClick}
       onMouseDown={onMouseDown}
-      className="p-1.5 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition-colors"
+      className={cn(
+        "p-1.5 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition-colors",
+        className
+      )}
     >
       {children}
     </button>
