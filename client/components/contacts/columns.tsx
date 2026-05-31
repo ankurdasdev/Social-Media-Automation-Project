@@ -210,7 +210,7 @@ export const columns: ColumnDef<Contact>[] = [
           }
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
           aria-label="Select all"
-          className="border-white/20 data-[state=checked]:bg-primary"
+          className="h-4 w-4 border-2 border-slate-400 dark:border-slate-400 bg-white dark:bg-slate-800 data-[state=checked]:bg-primary data-[state=checked]:border-primary data-[state=indeterminate]:bg-primary data-[state=indeterminate]:border-primary"
         />
       </div>
     ),
@@ -220,7 +220,7 @@ export const columns: ColumnDef<Contact>[] = [
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
           aria-label="Select row"
-          className="border-white/20 data-[state=checked]:bg-primary"
+          className="h-4 w-4 border-2 border-slate-400 dark:border-slate-400 bg-white dark:bg-slate-800 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
         />
       </div>
     ),

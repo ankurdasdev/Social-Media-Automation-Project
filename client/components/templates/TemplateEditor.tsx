@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RichTextarea } from "@/components/ui/rich-textarea";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, AlertTriangle, Info } from "lucide-react";
+import { Loader2, AlertTriangle, Info, GripVertical, Sparkles, X as XIcon, Wand2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Template, CreateTemplateRequest, UpdateTemplateRequest } from "@shared/api";
 import { useQueryClient } from "@tanstack/react-query";
@@ -86,6 +86,50 @@ export function TemplateEditor({
   const [driveFiles, setDriveFiles] = React.useState<DriveFile[]>([]);
   const [isSaving, setIsSaving] = React.useState(false);
   const [emailTemplateType, setEmailTemplateType] = React.useState<"body" | "footer" | undefined>("body");
+
+  // AI text helper state
+  const [isAIPanelOpen, setIsAIPanelOpen] = React.useState(false);
+  const [aiPrompt, setAiPrompt] = React.useState("");
+  const [isAIGenerating, setIsAIGenerating] = React.useState(false);
+
+  // Drag-to-reorder state for attachment order list
+  const [dragFileIdx, setDragFileIdx] = React.useState<number | null>(null);
+
+  const handleFileDragStart = (idx: number) => setDragFileIdx(idx);
+  const handleFileDragOver = (e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    if (dragFileIdx === null || dragFileIdx === idx) return;
+    const next = [...driveFiles];
+    const [moved] = next.splice(dragFileIdx, 1);
+    next.splice(idx, 0, moved);
+    setDriveFiles(next);
+    setDragFileIdx(idx);
+  };
+  const handleFileDragEnd = () => setDragFileIdx(null);
+
+  // AI generate/refine handler
+  const handleAIGenerate = async () => {
+    if (!aiPrompt.trim()) return;
+    setIsAIGenerating(true);
+    try {
+      const res = await fetch("/api/ai/improve-message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: aiPrompt, currentText: content }),
+      });
+      const data = await res.json();
+      if (res.ok && data.result) {
+        setContent(data.result);
+      } else {
+        toast({ title: "AI Error", description: data.error || "Generation failed.", variant: "destructive" });
+      }
+    } catch (e: any) {
+      toast({ title: "AI Error", description: e.message, variant: "destructive" });
+    } finally {
+      setIsAIGenerating(false);
+      setAiPrompt("");
+    }
+  };
 
   // Sync state when dialog opens / template changes
   React.useEffect(() => {
@@ -312,9 +356,21 @@ export function TemplateEditor({
               {driveFiles.length > 0 && (
                 <div className="space-y-3">
                   <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Attachment Order</Label>
+                  <p className="text-[10px] text-muted-foreground/60 font-bold -mt-1">Drag rows to reorder</p>
                   <div className="space-y-2.5">
                     {driveFiles.map((file, idx) => (
-                      <div key={file.id} className="flex items-center gap-3 p-3.5 rounded-2xl bg-muted/30 border border-white/5">
+                      <div
+                        key={file.id}
+                        draggable
+                        onDragStart={() => handleFileDragStart(idx)}
+                        onDragOver={(e) => handleFileDragOver(e, idx)}
+                        onDragEnd={handleFileDragEnd}
+                        className={cn(
+                          "flex items-center gap-3 p-3.5 rounded-2xl bg-muted/30 border border-white/5 cursor-grab active:cursor-grabbing transition-all group/dfile",
+                          dragFileIdx === idx && "opacity-50 scale-95 border-primary/50 bg-primary/10"
+                        )}
+                      >
+                        <GripVertical className="w-4 h-4 text-muted-foreground/30 group-hover/dfile:text-muted-foreground shrink-0 transition-colors" />
                         <span className="w-6 h-6 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-black text-xs shrink-0">{idx + 1}</span>
                         <span className="text-sm font-bold text-foreground truncate flex-1">{file.name}</span>
                         <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 border-white/10 text-muted-foreground">
@@ -361,7 +417,72 @@ export function TemplateEditor({
 
               {/* Message Content */}
               <div className="space-y-3">
-                <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Message Content</Label>
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Message Content</Label>
+                  <button
+                    type="button"
+                    onClick={() => setIsAIPanelOpen((o) => !o)}
+                    className={cn(
+                      "flex items-center gap-2 h-8 px-3 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all",
+                      isAIPanelOpen
+                        ? "bg-primary text-white shadow-lg shadow-primary/30"
+                        : "bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20"
+                    )}
+                    title="AI Text Helper — generate or refine your message"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    {content.trim() ? "Refine with AI" : "Generate with AI"}
+                  </button>
+                </div>
+
+                {/* AI panel */}
+                {isAIPanelOpen && (
+                  <div className="rounded-2xl bg-primary/5 border border-primary/20 p-4 space-y-3 animate-in slide-in-from-top-2 duration-200">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-3.5 h-3.5 text-primary" />
+                        <p className="text-[10px] font-black uppercase tracking-widest text-primary">
+                          {content.trim() ? "✦ Refine — describe what to improve" : "✦ Generate — describe your message"}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => { setIsAIPanelOpen(false); setAiPrompt(""); }}
+                        className="p-1 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <XIcon className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        value={aiPrompt}
+                        onChange={(e) => setAiPrompt(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleAIGenerate(); } }}
+                        placeholder={content.trim() ? "e.g. Make it shorter and more professional..." : "e.g. Warm outreach email for a casting director..."}
+                        className="flex-1 h-10 px-4 rounded-xl bg-background/70 border border-primary/20 text-sm font-bold placeholder:text-muted-foreground/50 outline-none focus:ring-1 focus:ring-primary"
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAIGenerate}
+                        disabled={isAIGenerating || !aiPrompt.trim()}
+                        className="h-10 px-4 rounded-xl bg-primary text-white font-black text-[10px] uppercase tracking-widest flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
+                      >
+                        {isAIGenerating ? (
+                          <><Loader2 className="w-3.5 h-3.5 animate-spin" /> THINKING...</>
+                        ) : (
+                          <><Wand2 className="w-3.5 h-3.5" /> {content.trim() ? "REFINE" : "GENERATE"}</>
+                        )}
+                      </button>
+                    </div>
+                    {content.trim() && (
+                      <p className="text-[9px] text-muted-foreground/60 font-bold">
+                        ↳ Your current text will be refined — not replaced from scratch
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 <RichTextarea
                   value={content}
                   onChange={setContent}
@@ -371,6 +492,7 @@ export function TemplateEditor({
                   textareaRef={textareaRef}
                 />
               </div>
+
             </>
           )}
         </div>
