@@ -9,7 +9,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -22,7 +21,7 @@ import {
   Upload,
   FileSpreadsheet,
   CheckCircle2,
-  AlertCircle,
+  Check,
   X,
   Sparkles,
   Info,
@@ -64,8 +63,10 @@ export function ExcelImportDialog({ isOpen, onClose, onImportComplete }: ExcelIm
   const [sheets, setSheets] = React.useState<ParsedSheet[]>([]);
   const [activeSheetIdx, setActiveSheetIdx] = React.useState<number>(0);
   
-  // Mapping state per sheet: record of sheetIndex -> active targetSchema.key -> excel header
+  // Mapping state per sheet: record of sheetIndex -> excel header -> active targetSchema.key
   const [mappingsBySheet, setMappingsBySheet] = React.useState<Record<number, Record<string, string>>>({});
+  // Track which excel columns are enabled per sheet: sheetIndex -> Set<string> of excel headers
+  const [selectedColumnsBySheet, setSelectedColumnsBySheet] = React.useState<Record<number, Set<string>>>({});
   
   // Track sheets that have been successfully queued for import
   const [selectedSheets, setSelectedSheets] = React.useState<Set<string>>(new Set());
@@ -73,19 +74,17 @@ export function ExcelImportDialog({ isOpen, onClose, onImportComplete }: ExcelIm
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  // Smart Auto-Mapping Synonyms Matcher
+  // Smart Auto-Mapping Synonyms Matcher (Inverted: Header -> TargetKey)
   const runAutoMapper = (headers: string[], sheetIdx: number) => {
     const newMappings: Record<string, string> = {};
     
-    targetSchema.forEach((schema) => {
-      const match = headers.find((h) => {
-        const cleanedHeader = h.toLowerCase().trim();
-        return schema.synonyms.some(
-          (syn) => cleanedHeader === syn || cleanedHeader.includes(syn) || syn.includes(cleanedHeader)
-        );
-      });
+    headers.forEach((h) => {
+      const cleanedHeader = h.toLowerCase().trim();
+      const match = targetSchema.find((schema) => 
+        schema.synonyms.some((syn) => cleanedHeader === syn || cleanedHeader.includes(syn) || syn.includes(cleanedHeader))
+      );
       if (match) {
-        newMappings[schema.key] = match;
+        newMappings[h] = match.key;
       }
     });
 
@@ -146,20 +145,27 @@ export function ExcelImportDialog({ isOpen, onClose, onImportComplete }: ExcelIm
         setActiveSheetIdx(0);
         setSelectedSheets(new Set());
         setSkippedSheets(new Set());
+        
+        // Default all columns to selected for all sheets
+        const initialSelections: Record<number, Set<string>> = {};
+        parsedSheets.forEach((s, idx) => {
+          initialSelections[idx] = new Set(s.headers);
+        });
+        setSelectedColumnsBySheet(initialSelections);
+
         setMappingsBySheet({});
         
         // Only run auto mapper if we don't have mappings for this sheet yet
         const initialMappings: Record<number, Record<string, string>> = {};
         const firstSheetMappings: Record<string, string> = {};
-        targetSchema.forEach((schema) => {
-          const match = parsedSheets[0].headers.find((h) => {
-            const cleanedHeader = h.toLowerCase().trim();
-            return schema.synonyms.some(
-              (syn) => cleanedHeader === syn || cleanedHeader.includes(syn) || syn.includes(cleanedHeader)
-            );
-          });
+        
+        parsedSheets[0].headers.forEach((h) => {
+          const cleanedHeader = h.toLowerCase().trim();
+          const match = targetSchema.find((schema) => 
+            schema.synonyms.some((syn) => cleanedHeader === syn || cleanedHeader.includes(syn) || syn.includes(cleanedHeader))
+          );
           if (match) {
-            firstSheetMappings[schema.key] = match;
+            firstSheetMappings[h] = match.key;
           }
         });
         initialMappings[0] = firstSheetMappings;
@@ -229,13 +235,16 @@ export function ExcelImportDialog({ isOpen, onClose, onImportComplete }: ExcelIm
   const handleSelectSheet = () => {
     const activeSheet = sheets[activeSheetIdx];
     const currentMappings = mappingsBySheet[activeSheetIdx] || {};
+    const currentSelectedCols = selectedColumnsBySheet[activeSheetIdx] || new Set();
     
-    const nameMapping = currentMappings["name"];
-    if (!nameMapping) {
+    // Check if name is mapped and selected
+    const isNameMapped = Array.from(currentSelectedCols).some(h => currentMappings[h] === "name");
+
+    if (!isNameMapped) {
       toast({
         variant: "destructive",
         title: "MAPPING REQUIRED",
-        description: "You must map the Lead Name field to select this sheet.",
+        description: "You must map at least one selected Excel column to the Lead Name field to select this sheet.",
       });
       return;
     }
@@ -299,6 +308,7 @@ export function ExcelImportDialog({ isOpen, onClose, onImportComplete }: ExcelIm
       sheets.forEach((sheet, idx) => {
         if (selectedSheets.has(sheet.name)) {
           const currentMappings = mappingsBySheet[idx] || {};
+          const currentSelectedCols = selectedColumnsBySheet[idx] || new Set();
           const sheetHeaders = sheet.headers;
           
           const sheetContacts = sheet.rows
@@ -309,15 +319,28 @@ export function ExcelImportDialog({ isOpen, onClose, onImportComplete }: ExcelIm
                 status: "pending",
               };
 
-              targetSchema.forEach((schema) => {
-                const mappedHeader = currentMappings[schema.key];
-                if (mappedHeader) {
-                  const colIdx = sheetHeaders.indexOf(mappedHeader);
-                  if (colIdx !== -1 && row[colIdx] !== undefined) {
-                    contactObj[schema.key] = String(row[colIdx]).trim();
+              const extraNotes: string[] = [];
+
+              sheetHeaders.forEach((header, colIdx) => {
+                if (currentSelectedCols.has(header)) {
+                  const val = row[colIdx];
+                  if (val !== undefined && val !== "") {
+                    const mappedKey = currentMappings[header];
+                    if (mappedKey) {
+                      // It's mapped to a target schema field
+                      contactObj[mappedKey] = String(val).trim();
+                    } else {
+                      // It's unmapped but selected, goes to notes
+                      extraNotes.push(`${header}: ${String(val).trim()}`);
+                    }
                   }
                 }
               });
+
+              if (extraNotes.length > 0) {
+                 const existingNotes = contactObj["notes"] ? contactObj["notes"] + "\n\n" : "";
+                 contactObj["notes"] = existingNotes + "Extra Data:\n" + extraNotes.join("\n");
+              }
 
               return contactObj;
             })
@@ -377,12 +400,14 @@ export function ExcelImportDialog({ isOpen, onClose, onImportComplete }: ExcelIm
     setSheets([]);
     setActiveSheetIdx(0);
     setMappingsBySheet({});
+    setSelectedColumnsBySheet({});
     setSelectedSheets(new Set());
     setSkippedSheets(new Set());
   };
 
   const activeSheet = sheets[activeSheetIdx];
   const currentMappings = mappingsBySheet[activeSheetIdx] || {};
+  const currentSelectedCols = selectedColumnsBySheet[activeSheetIdx] || new Set();
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) { onClose(); resetDialog(); } }}>
@@ -487,10 +512,10 @@ export function ExcelImportDialog({ isOpen, onClose, onImportComplete }: ExcelIm
                   <div>
                     <h4 className="text-lg font-black tracking-tight text-foreground flex items-center gap-2">
                       <Sparkles className="h-4 w-4 text-primary animate-pulse" />
-                      COLUMN MAPPING
+                      EXCEL COLUMNS
                     </h4>
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">
-                      Identify how excel headers map to our lead fields.
+                      Select columns to import and map them to database fields.
                     </p>
                   </div>
                   
@@ -500,62 +525,81 @@ export function ExcelImportDialog({ isOpen, onClose, onImportComplete }: ExcelIm
                 </div>
 
                 <div className="flex-1 overflow-y-auto space-y-4 pr-2 scrollbar-thin scrollbar-thumb-white/5">
-                  {targetSchema.map((schema) => {
-                    const isMapped = !!currentMappings[schema.key];
+                  {activeSheet.headers.map((header) => {
+                    const isSelected = currentSelectedCols.has(header);
+                    const mappedKey = currentMappings[header];
+                    const matchedSchema = targetSchema.find(s => s.key === mappedKey);
                     
                     return (
                       <div
-                        key={schema.key}
+                        key={header}
                         className={cn(
                           "grid grid-cols-1 md:grid-cols-2 items-center gap-4 p-4 rounded-2xl border transition-all",
-                          isMapped
-                            ? "bg-white/[0.02] border-primary/20"
-                            : schema.required
-                              ? "bg-red-500/5 border-red-500/20"
-                              : "bg-muted/10 border-white/5"
+                          isSelected 
+                            ? mappedKey 
+                              ? "bg-white/[0.02] border-primary/20" // selected & mapped
+                              : "bg-amber-500/5 border-amber-500/20" // selected & unmapped (goes to notes)
+                            : "bg-muted/10 border-white/5 opacity-50" // unselected
                         )}
                       >
-                        <div className="flex items-center gap-2.5">
-                          <div className={cn(
-                            "w-2.5 h-2.5 rounded-full shrink-0",
-                            isMapped ? "bg-primary shadow-[0_0_8px_rgba(139,92,246,0.6)]" : schema.required ? "bg-red-500 animate-pulse" : "bg-muted-foreground/30"
-                          )} />
-                          <div>
-                            <p className="text-[11px] font-black uppercase tracking-wider text-foreground">
-                              {schema.label} {schema.required && <span className="text-red-500 font-bold">*</span>}
+                        <div className="flex items-center gap-4">
+                          {/* Toggle selection */}
+                          <button
+                            onClick={() => {
+                              setSelectedColumnsBySheet(prev => {
+                                const next = { ...prev };
+                                const set = new Set(next[activeSheetIdx] || []);
+                                if (set.has(header)) set.delete(header);
+                                else set.add(header);
+                                next[activeSheetIdx] = set;
+                                return next;
+                              });
+                            }}
+                            className={cn(
+                              "w-5 h-5 rounded flex items-center justify-center shrink-0 transition-colors border",
+                              isSelected ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/30 hover:border-primary/50"
+                            )}
+                          >
+                            {isSelected && <Check className="w-3.5 h-3.5" />}
+                          </button>
+
+                          <div className="truncate">
+                            <p className="text-[11px] font-black uppercase tracking-wider text-foreground truncate pr-2">
+                              {header}
                             </p>
                             <p className="text-[9px] text-muted-foreground font-bold mt-0.5">
-                              {schema.required ? "Strictly required to build lead profile." : "Optional field."}
+                              {isSelected ? (mappedKey ? `Mapped to: ${matchedSchema?.label}` : "Will append to notes") : "Excluded from import"}
                             </p>
                           </div>
                         </div>
 
                         <Select
-                          value={currentMappings[schema.key] || "skip"}
+                          disabled={!isSelected}
+                          value={mappedKey || "unmapped"}
                           onValueChange={(val) => {
                             setMappingsBySheet((prev) => {
                               const next = { ...prev };
                               const sheetMappings = { ...(next[activeSheetIdx] || {}) };
-                              if (val === "skip") {
-                                delete sheetMappings[schema.key];
+                              if (val === "unmapped") {
+                                delete sheetMappings[header];
                               } else {
-                                sheetMappings[schema.key] = val;
+                                sheetMappings[header] = val;
                               }
                               next[activeSheetIdx] = sheetMappings;
                               return next;
                             });
                           }}
                         >
-                          <SelectTrigger className="h-11 rounded-xl bg-muted/40 border-border/50 focus:ring-primary text-xs font-bold font-mono">
-                            <SelectValue placeholder="Skip Column" />
+                          <SelectTrigger className="h-11 rounded-xl bg-muted/40 border-border/50 focus:ring-primary text-xs font-bold font-mono truncate">
+                            <SelectValue placeholder="Do Not Map" />
                           </SelectTrigger>
                           <SelectContent className="glass-card border-white/10 rounded-2xl max-h-56 z-[120]">
-                            <SelectItem value="skip" className="text-xs font-bold font-mono text-muted-foreground hover:text-foreground">
-                              [ Skip Column ]
+                            <SelectItem value="unmapped" className="text-xs font-bold font-mono text-muted-foreground hover:text-foreground">
+                              [ Map to Notes (Unmapped) ]
                             </SelectItem>
-                            {activeSheet.headers.map((h) => (
-                              <SelectItem key={h} value={h} className="text-xs font-bold font-mono">
-                                {h}
+                            {targetSchema.map((schema) => (
+                              <SelectItem key={schema.key} value={schema.key} className="text-xs font-bold font-mono flex items-center gap-2">
+                                {schema.label} {schema.required && "*"}
                               </SelectItem>
                             ))}
                           </SelectContent>
