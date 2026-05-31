@@ -223,7 +223,13 @@ export function DataTableToolbar<TData>({
           id="tutorial-contacts-ai"
           variant="ghost"
           size="icon"
-          onClick={() => setSearchMode(searchMode === "normal" ? "ai" : "normal")}
+          onClick={() => {
+            const nextMode = searchMode === "normal" ? "ai" : "normal";
+            if (nextMode === "normal") {
+              onClearAISearch?.();
+            }
+            setSearchMode(nextMode);
+          }}
           className={cn(
             "h-11 w-11 rounded-xl border transition-all shrink-0",
             searchMode === "ai"
@@ -235,19 +241,22 @@ export function DataTableToolbar<TData>({
           <Sparkles className="h-4 w-4" />
         </Button>
 
-        {/* Search bar */}
-        {searchMode === "ai" ? (
-          <div className="flex-1 min-w-[200px]">
-            <AISearchBar
-              onSearch={onAISearch || (() => {})}
-              isLoading={isAISearching}
-              onClear={() => { onClearAISearch?.(); setSearchMode("normal"); }}
-            />
-          </div>
-        ) : (
-          <>
+        {/* Search bars container */}
+        <div className="flex flex-1 gap-2 min-w-[200px] items-center">
+          {searchMode === "ai" && (
+            <div className="flex-[2] transition-all duration-300 min-w-[250px]">
+              <AISearchBar
+                onSearch={onAISearch || (() => {})}
+                isLoading={isAISearching}
+                onClear={() => { onClearAISearch?.(); setSearchMode("normal"); }}
+                className="max-w-none"
+              />
+            </div>
+          )}
+
+          <div className={cn("transition-all duration-300", searchMode === "ai" ? "flex-1 min-w-[150px]" : "flex-1 max-w-md")}>
             {(!isFullscreen || isSearchExpanded) ? (
-              <div className="relative group transition-all duration-300 flex-1 min-w-[180px] max-w-md">
+              <div className="relative group w-full">
                 <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
                   <Search className="h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                 </div>
@@ -255,7 +264,10 @@ export function DataTableToolbar<TData>({
                   placeholder="Search Contacts..."
                   value={table.getState().globalFilter ?? ""}
                   onChange={(event) => table.setGlobalFilter(event.target.value)}
-                  className="h-11 pl-11 rounded-xl bg-muted/20 border-white/5 focus:bg-background focus:ring-primary font-bold shadow-inner transition-all text-sm"
+                  className={cn(
+                    "pl-11 bg-muted/20 border-white/5 focus:bg-background focus:ring-primary font-bold shadow-inner transition-all text-sm",
+                    searchMode === "ai" ? "h-14 rounded-2xl" : "h-11 rounded-xl"
+                  )}
                   autoFocus={isSearchExpanded}
                   onBlur={() => { if (isFullscreen && !table.getState().globalFilter) setIsSearchExpanded(false); }}
                 />
@@ -270,8 +282,8 @@ export function DataTableToolbar<TData>({
                 <Search className="h-4 w-4 text-muted-foreground" />
               </Button>
             )}
-          </>
-        )}
+          </div>
+        </div>
 
         {/* Spacer */}
         <div className="flex-1" />
