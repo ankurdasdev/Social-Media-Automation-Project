@@ -10,6 +10,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import { createPortal } from "react-dom";
 
 import {
   Table,
@@ -22,6 +23,7 @@ import {
 import { Search, Maximize2, Minimize2, Filter } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Contact } from "@shared/api";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTableToolbar } from "./DataTableToolbar";
 import { ContactDrawer } from "./ContactDrawer";
 import { Input } from "@/components/ui/input";
@@ -168,14 +170,6 @@ export function DataTable<TData, TValue>({
     },
   });
 
-  React.useEffect(() => {
-    if (isFullscreen) {
-      table.setPageSize(99999);
-    } else {
-      table.setPageSize(25);
-    }
-  }, [isFullscreen, table]);
-
   // Reorder Handler (restricted to within groups)
   const handleDragHeader = (columnId: string, targetId: string) => {
     const col1 = table.getColumn(columnId);
@@ -196,10 +190,10 @@ export function DataTable<TData, TValue>({
     }
   };
 
-  return (
+  const content = (
     <div className={cn(
-      "space-y-6 transition-all duration-500",
-      isFullscreen ? "fixed inset-0 z-[50] bg-background p-6 lg:p-10 space-y-8 overflow-hidden flex flex-col" : "animate-in fade-in slide-in-from-bottom-2 duration-700"
+      "transition-all duration-500",
+      isFullscreen ? "fixed inset-0 z-[40] bg-background p-6 lg:p-10 space-y-8 overflow-hidden flex flex-col" : "space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-700"
     )}>
       <div className="flex items-center justify-between gap-4">
         <DataTableToolbar 
@@ -409,30 +403,48 @@ export function DataTable<TData, TValue>({
              <span className="text-foreground">{table.getFilteredSelectedRowModel().rows.length}</span> selected :: <span className="text-foreground">{table.getFilteredRowModel().rows.length}</span> total contacts
            </div>
         </div>
-        
-        {!isFullscreen && (
+        <div className="flex flex-wrap items-center gap-4 sm:gap-6">
           <div className="flex items-center gap-3">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Rows</span>
+            <Select
+              value={table.getState().pagination.pageSize.toString()}
+              onValueChange={(value) => table.setPageSize(Number(value))}
+            >
+              <SelectTrigger className="h-10 w-[70px] bg-muted/30 border border-white/10 rounded-xl text-[10px] font-black focus:ring-primary outline-none">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="glass-card border-white/10 shadow-2xl rounded-xl z-[150]">
+                {[25, 50, 100, 250, 500].map(pageSize => (
+                  <SelectItem key={pageSize} value={pageSize.toString()} className="text-[10px] font-black cursor-pointer hover:bg-primary/20">
+                    {pageSize}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center gap-2">
             <button
-              className="h-12 px-6 rounded-xl border border-white/10 font-black text-[10px] uppercase tracking-widest hover:bg-muted/50 transition-all disabled:opacity-20 active:scale-95"
+              className="h-10 px-4 sm:px-6 rounded-xl border border-white/10 font-black text-[10px] uppercase tracking-widest hover:bg-muted/50 transition-all disabled:opacity-20 active:scale-95"
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
             >
-              PREVIOUS
+              PREV
             </button>
-            <div className="flex items-center gap-2 px-4 h-12 rounded-xl bg-muted/30 border border-white/5 font-black text-[10px]">
+            <div className="flex items-center gap-2 px-3 sm:px-4 h-10 rounded-xl bg-muted/30 border border-white/5 font-black text-[10px]">
               <span className="text-primary">{table.getState().pagination.pageIndex + 1}</span>
               <span className="opacity-20">/</span>
               <span>{table.getPageCount()}</span>
             </div>
             <button
-              className="h-12 px-6 rounded-xl border border-white/10 font-black text-[10px] uppercase tracking-widest hover:bg-muted/50 transition-all disabled:opacity-20 active:scale-95"
+              className="h-10 px-4 sm:px-6 rounded-xl border border-white/10 font-black text-[10px] uppercase tracking-widest hover:bg-muted/50 transition-all disabled:opacity-20 active:scale-95"
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
             >
               NEXT
             </button>
           </div>
-        )}
+        </div>
       </div>
 
       <ContactDrawer 
@@ -442,4 +454,10 @@ export function DataTable<TData, TValue>({
       />
     </div>
   );
+
+  if (isFullscreen) {
+    return createPortal(content, document.body);
+  }
+
+  return content;
 }
