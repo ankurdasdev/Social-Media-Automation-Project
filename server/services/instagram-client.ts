@@ -222,9 +222,51 @@ export async function sendDirectMessage(
   }
 }
 
+/**
+ * Send a photo DM to users.
+ */
+export async function sendDirectPhoto(
+  usernames: string[],
+  fileBuffer: Buffer,
+  fileName: string,
+  sessionData: string
+): Promise<any> {
+  if (sessionData === 'demo-session-id') {
+    return { success: true, message: "Demo photo sent successfully." };
+  }
+
+  try {
+    const url = `${getBaseUrl()}/direct/photo`;
+    const formData = new FormData();
+    formData.append("sessionid", sessionData);
+    formData.append("usernames", usernames.join(","));
+    
+    const blob = new Blob([new Uint8Array(fileBuffer)]);
+    formData.append("file", blob, fileName);
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "X-API-KEY": API_KEY,
+      },
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`instagrapi error (${res.status}): ${errorText}`);
+    }
+    return res.json();
+  } catch (err: any) {
+    console.error("[igClient] sendDirectPhoto error:", err.message);
+    throw err;
+  }
+}
+
 /** Simple connectivity check */
 export async function isReachable(): Promise<boolean> {
   // Always return true to prevent false offline states and socket exhaustion
   // Real errors will be caught during actual API calls
   return true;
 }
+

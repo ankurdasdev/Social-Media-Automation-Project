@@ -327,31 +327,39 @@ export default function Contacts() {
         if (contact.emailRun && contact.email) channels.push("email");
         if (contact.instagramRun && contact.instaHandle) channels.push("instagram");
 
-        // Fallback: if no flags set, use presence of fields
-        if (channels.length === 0) {
-          skipped++;
-        }
-
-        for (const channel of channels) {
+        if (channels.length > 0) {
           try {
-            setSendingProgress(prev => prev ? { ...prev, message: `Sending ${channel} to ${contact.name || 'Record'}...` } : null);
+            setSendingProgress(prev => prev ? { ...prev, message: `Sending [${channels.join(", ")}] to ${contact.name || 'Record'}...` } : null);
             
             const res = await fetch("/api/outreach/send", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ contactId: id, userId, channel })
+              body: JSON.stringify({ contactId: id, userId, channels })
             });
             if (!res.ok) {
               const error = await res.json();
-              console.error(`Failed to send ${channel} to ${contact.name}:`, error);
-              failures++;
+              console.error(`Failed bulk outreach for ${contact.name}:`, error);
+              failures += channels.length;
             } else {
-              successes++;
+              const data = await res.json();
+              if (data.results) {
+                for (const chan of channels) {
+                  if (data.results[chan]?.success) {
+                    successes++;
+                  } else {
+                    failures++;
+                  }
+                }
+              } else {
+                successes += channels.length;
+              }
             }
           } catch (err) {
-            console.error(`Network error sending ${channel} to ${contact.name}:`, err);
-            failures++;
+            console.error(`Network error doing outreach for ${contact.name}:`, err);
+            failures += channels.length;
           }
+        } else {
+          skipped++;
         }
         
         current++;

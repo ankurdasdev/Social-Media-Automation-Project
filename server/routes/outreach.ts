@@ -9,17 +9,19 @@ import { sendOutreach } from "../services/outreach-service";
  */
 
 export const handleSendOutreach: RequestHandler = async (req, res) => {
-  const { contactId, userId, channel } = req.body;
+  const { contactId, userId, channel, channels } = req.body;
 
-  if (!contactId || !userId || !channel) {
-    return res.status(400).json({ error: "contactId, userId, and channel are required" });
+  const activeChannels = channels || (channel ? [channel] : []);
+
+  if (!contactId || !userId || activeChannels.length === 0) {
+    return res.status(400).json({ error: "contactId, userId, and at least one channel are required" });
   }
 
   try {
-    const result = await sendOutreach(req.body);
+    const result = await sendOutreach({ ...req.body, channels: activeChannels });
     res.json(result);
   } catch (err: any) {
-    console.error(`[outreach] Error sending ${channel}:`, err);
+    console.error(`[outreach] Error sending outreach channels [${activeChannels.join(", ")}]:`, err);
     res.status(500).json({ error: err.message || "Outreach failed" });
   }
 };
