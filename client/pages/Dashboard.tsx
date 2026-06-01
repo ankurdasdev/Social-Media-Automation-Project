@@ -143,8 +143,8 @@ export default function Dashboard() {
                       <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] opacity-70">
                         {stat.label}
                       </p>
-                      <div className="flex items-baseline gap-3">
-                        <p className="text-5xl font-black tracking-tighter">
+                      <div className="flex items-baseline gap-3 flex-wrap">
+                        <p className="text-5xl font-black tracking-tighter whitespace-nowrap">
                             {stat.value}
                         </p>
                         <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-500 border-none font-black text-[9px] px-2 py-0.5 rounded-lg">
