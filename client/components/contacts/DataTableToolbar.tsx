@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { Table } from "@tanstack/react-table";
 import { cn } from "@/lib/utils";
+import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
