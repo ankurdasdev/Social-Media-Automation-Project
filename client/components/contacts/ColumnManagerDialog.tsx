@@ -13,13 +13,16 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { GripVertical, Plus, Trash2, Settings2, Palette } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ChevronDown } from "lucide-react";
+
 export const DEFAULT_GROUPS = [
   { id: "group-contact-details", title: "Contact Details", color: "#1e293b", columns: ["name", "castingName", "whatsapp", "email", "instaHandle", "notes", "sheetName"] },
-  { id: "group-automation-run", title: "Automation Run", color: "#f59e0b", columns: ["whatsappRun", "emailRun", "instagramRun"] },
-  { id: "group-whatsapp", title: "WhatsApp Protocol", color: "#10b981", columns: ["personalizedNameWA", "salutationWA", "templateSelectionWP", "hasCustomMessageWA", "editableMessageWP", "specialAttachmentWA"] },
-  { id: "group-gmail", title: "Gmail Protocol", color: "#3b82f6", columns: ["personalizedNameGmail", "salutationEmail", "templateSelectionGmail", "editableGmailSubject", "hasCustomMessageEmail", "editableMessageGmail", "specialAttachmentGmail"] },
-  { id: "group-instagram", title: "Instagram Protocol", color: "#ec4899", columns: ["personalizedNameIG", "salutationIG", "templateSelectionIG", "hasCustomMessageIG", "editableMessageIG", "specialAttachmentIG"] },
-  { id: "group-tracking", title: "Tracking", color: "#6366f1", columns: ["lastContactedDate", "followups", "automationComment", "visit"] }
+  { id: "group-automation-run", title: "Automation Run", color: "#f59e0b", columns: ["whatsappRun", "emailRun", "instagramRun", "actingContext", "project", "age"] },
+  { id: "group-whatsapp-protocol", title: "WhatsApp Protocol", color: "#10b981", columns: ["salutationWA", "personalizedNameWA", "templateSelectionWP", "hasCustomMessageWA", "specialAttachmentWA"] },
+  { id: "group-gmail-protocol", title: "Gmail Protocol", color: "#3b82f6", columns: ["salutationEmail", "personalizedNameGmail", "editableGmailSubject", "templateSelectionGmail", "hasCustomMessageEmail", "specialAttachmentGmail"] },
+  { id: "group-instagram-protocol", title: "Instagram Protocol", color: "#ec4899", columns: ["salutationIG", "personalizedNameIG", "templateSelectionIG", "hasCustomMessageIG", "specialAttachmentIG"] },
 ];
 
 export const ALL_COLUMNS = [
@@ -33,29 +36,25 @@ export const ALL_COLUMNS = [
   { id: "whatsappRun", label: "WP Run" },
   { id: "emailRun", label: "Gmail Run" },
   { id: "instagramRun", label: "Insta Run" },
-  { id: "personalizedNameWA", label: "WA Display Name" },
+  { id: "actingContext", label: "Acting Context" },
+  { id: "project", label: "Project Details" },
+  { id: "age", label: "Age Range" },
   { id: "salutationWA", label: "WA Salutation" },
+  { id: "personalizedNameWA", label: "WA Display Name" },
   { id: "templateSelectionWP", label: "WA Template" },
   { id: "hasCustomMessageWA", label: "WA Custom Msg" },
-  { id: "editableMessageWP", label: "WA Override Msg" },
   { id: "specialAttachmentWA", label: "WA Attachment" },
-  { id: "personalizedNameGmail", label: "Gmail Display Name" },
   { id: "salutationEmail", label: "Gmail Salutation" },
-  { id: "templateSelectionGmail", label: "Gmail Template" },
+  { id: "personalizedNameGmail", label: "Gmail Display Name" },
   { id: "editableGmailSubject", label: "Gmail Subject" },
+  { id: "templateSelectionGmail", label: "Gmail Template" },
   { id: "hasCustomMessageEmail", label: "Gmail Custom Msg" },
-  { id: "editableMessageGmail", label: "Gmail Override Msg" },
   { id: "specialAttachmentGmail", label: "Gmail Attachment" },
-  { id: "personalizedNameIG", label: "IG Display Name" },
   { id: "salutationIG", label: "IG Salutation" },
+  { id: "personalizedNameIG", label: "IG Display Name" },
   { id: "templateSelectionIG", label: "IG Template" },
   { id: "hasCustomMessageIG", label: "IG Custom Msg" },
-  { id: "editableMessageIG", label: "IG Override Msg" },
   { id: "specialAttachmentIG", label: "IG Attachment" },
-  { id: "lastContactedDate", label: "Last Contacted" },
-  { id: "followups", label: "Follow-ups" },
-  { id: "automationComment", label: "Automation Status" },
-  { id: "visit", label: "Visit Log" }
 ];
 
 interface ColumnManagerDialogProps {
@@ -121,6 +120,16 @@ export function ColumnManagerDialog({ isOpen, onOpenChange, onSaved }: ColumnMan
     setGroups(newGroups);
   };
 
+  const getAllAssignedColumns = (excludeGroupIdx: number) => {
+    const assigned = new Set<string>();
+    groups.forEach((g, idx) => {
+      if (idx !== excludeGroupIdx) {
+        g.columns.forEach(c => assigned.add(c));
+      }
+    });
+    return Array.from(assigned);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[700px] max-h-[85vh] glass-card border-white/10 rounded-[2.5rem] p-0 overflow-hidden shadow-2xl flex flex-col">
@@ -178,23 +187,62 @@ export function ColumnManagerDialog({ isOpen, onOpenChange, onSaved }: ColumnMan
                 </div>
                 
                 <div className="pl-7">
-                  <div className="flex flex-wrap gap-2">
-                    {ALL_COLUMNS.map(col => {
-                      const isActive = group.columns.includes(col.id);
-                      return (
-                        <div 
-                          key={col.id}
-                          onClick={() => toggleColumnInGroup(idx, col.id)}
-                          className={cn(
-                            "px-2 py-1 rounded text-[9px] font-black uppercase tracking-widest cursor-pointer border transition-all",
-                            isActive ? "bg-primary/20 border-primary text-primary" : "bg-background border-white/5 text-muted-foreground hover:bg-white/5"
-                          )}
-                        >
-                          {col.label}
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-between h-10 bg-background/50 border-white/10 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground">
+                        Select Columns ({group.columns.length})
+                        <ChevronDown className="w-4 h-4 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[300px] p-0 glass-card border-white/10" align="start">
+                      <ScrollArea className="h-64">
+                        <div className="p-2 space-y-1">
+                          {ALL_COLUMNS.map(col => {
+                            const isSelected = group.columns.includes(col.id);
+                            const disabledOptions = getAllAssignedColumns(idx);
+                            const isDisabled = !isSelected && disabledOptions.includes(col.id);
+                            return (
+                              <div 
+                                key={col.id}
+                                className={cn(
+                                  "flex items-center gap-3 px-3 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest cursor-pointer transition-colors",
+                                  isDisabled ? "opacity-30 cursor-not-allowed" : "hover:bg-white/5",
+                                  isSelected ? "bg-primary/20 text-primary" : "text-muted-foreground"
+                                )}
+                                onClick={() => {
+                                  if (!isDisabled) toggleColumnInGroup(idx, col.id);
+                                }}
+                              >
+                                <Checkbox 
+                                  checked={isSelected} 
+                                  disabled={isDisabled} 
+                                  className="pointer-events-none"
+                                />
+                                <span>{col.label}</span>
+                              </div>
+                            );
+                          })}
                         </div>
-                      );
-                    })}
-                  </div>
+                      </ScrollArea>
+                    </PopoverContent>
+                  </Popover>
+
+                  {group.columns.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {group.columns.map(colId => {
+                        const colDef = ALL_COLUMNS.find(c => c.id === colId);
+                        if (!colDef) return null;
+                        return (
+                          <div 
+                            key={colId}
+                            className="px-2 py-1 rounded text-[9px] font-black uppercase tracking-widest border bg-primary/20 border-primary text-primary flex items-center gap-2"
+                          >
+                            {colDef.label}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

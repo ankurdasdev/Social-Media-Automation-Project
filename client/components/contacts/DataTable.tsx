@@ -36,7 +36,6 @@ import { Search, Maximize2, Minimize2, Filter, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Contact } from "@shared/api";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ContextMenu } from "./ContextMenu";
 import { DataTableToolbar } from "./DataTableToolbar";
 import { ContactDrawer } from "./ContactDrawer";
 import { columns as defaultColumns, GroupHeader } from "./columns";
@@ -147,18 +146,17 @@ export function DataTable<TData, TValue>({
     return newColumns;
   }, [columnGroupConfig]);
 
-  const [columnPinning, setColumnPinning] = React.useState(() => {
+  const [isTitleFrozen, setIsTitleFrozen] = React.useState(() => {
     try {
-      const saved = localStorage.getItem("casthub-column-pinning");
-      return saved ? JSON.parse(saved) : { left: ["select", "name"] };
+      return localStorage.getItem("casthub-title-frozen") !== "false";
     } catch {
-      return { left: ["select", "name"] };
+      return true;
     }
   });
   
   React.useEffect(() => {
-    localStorage.setItem("casthub-column-pinning", JSON.stringify(columnPinning));
-  }, [columnPinning]);
+    localStorage.setItem("casthub-title-frozen", String(isTitleFrozen));
+  }, [isTitleFrozen]);
 
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(() => {
     const filters = [...initialFilters];
@@ -246,7 +244,7 @@ export function DataTable<TData, TValue>({
       sorting,
       globalFilter,
       columnOrder,
-      columnPinning,
+      columnPinning: { left: ["select"] },
     },
     enableRowSelection: true,
     enablePinning: true,
@@ -318,6 +316,8 @@ export function DataTable<TData, TValue>({
           onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}
           zoomLevel={zoomLevel}
           onZoomChange={setZoomLevel}
+          isTitleFrozen={isTitleFrozen}
+          onToggleTitleFreeze={setIsTitleFrozen}
           className="flex-1"
         />
       </div>
@@ -337,7 +337,7 @@ export function DataTable<TData, TValue>({
             </div>
           )}
           <Table className="table-fixed" style={{ width: "max-content", minWidth: Math.max(table.getCenterTotalSize(), 100) }}>
-            <TableHeader className="bg-muted/30 border-b border-white/5 sticky top-0 z-30 backdrop-blur-3xl">
+            <TableHeader className={cn("border-b border-white/5 backdrop-blur-3xl", isTitleFrozen ? "sticky top-0 z-30 bg-background/95" : "bg-muted/30")}>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id} className={cn("hover:bg-transparent border-b-0", headerGroup.depth === 0 ? "h-10" : "h-16")}>
                   {headerGroup.headers.map((header) => {
