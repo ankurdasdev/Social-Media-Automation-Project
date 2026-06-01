@@ -1,6 +1,6 @@
 import { getGmailClient, getDriveClient } from "../routes/google-auth";
 import { sendMessage as sendWA, sendMedia as sendWAMedia } from "./whatsapp-client";
-import { sendDirectMessage as sendIG } from "./instagram-client";
+import { sendDirectMessage as sendIG, sendDirectPhoto as sendIGPhoto } from "./instagram-client";
 import { query, queryOne } from "../db/index";
 import { getContactById } from "../store/contacts-store";
 import { DriveFile, Contact } from "@shared/api";
@@ -13,12 +13,41 @@ import { DriveFile, Contact } from "@shared/api";
 export interface OutreachRequest extends Partial<Contact> {
   contactId: string;
   userId: string;
-  channel: "whatsapp" | "email" | "instagram";
+  channel?: "whatsapp" | "email" | "instagram";
+  channels?: ("whatsapp" | "email" | "instagram")[];
 }
 
 function stripExtension(filename: string): string {
   if (!filename) return "";
   return filename.replace(/\.[^/.]+$/, "");
+}
+
+function cleanHtmlForPlainText(content: string): string {
+  if (!content) return "";
+  let text = content;
+  
+  // Replace break and paragraph tags with newlines
+  text = text.replace(/<br\s*\/?>/gi, "\n");
+  text = text.replace(/<\/p>/gi, "\n\n");
+  text = text.replace(/<p[^>]*>/gi, "");
+  
+  // Replace bold and italic tags
+  text = text.replace(/<(b|strong)[^>]*>(.*?)<\/\1>/gi, "*$2*");
+  text = text.replace(/<(i|em)[^>]*>(.*?)<\/\1>/gi, "_$2_");
+  
+  // Strip all other HTML tags
+  text = text.replace(/<[^>]+>/g, "");
+  
+  // Decode HTML entities
+  text = text
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+
+  return text.trim();
 }
 
 function injectVariables(content: string, contact: Contact, channel: "whatsapp" | "email" | "instagram"): string {
@@ -72,7 +101,12 @@ function injectVariables(content: string, contact: Contact, channel: "whatsapp" 
 }
 
 export async function sendOutreach(req: OutreachRequest) {
-  const { contactId, userId, channel } = req;
+  const { contactId, userId } = req;
+  const channels = req.channels || (req.channel ? [req.channel] : []);
+
+  if (channels.length === 0) {
+    return { success: true, message: "No channels specified" };
+  }
 
   // 1. Fetch full contact properly mapped
   const contact = await getContactById(userId, contactId);
@@ -81,56 +115,107 @@ export async function sendOutreach(req: OutreachRequest) {
   // Merge request overrides into contact data for this run
   const data = { ...contact, ...req };
 
-  let result: any;
+  const results: Record<string, { success: boolean; error?: string; result?: any }> = {};
+  const contactedDates = Array.isArray(contact.contacted_dates) ? contact.contacted_dates : [];
 
-  try {
-    if (channel === "whatsapp") {
-      result = await handleWhatsAppOutreach(userId, data);
-    } else if (channel === "email") {
-      result = await handleEmailOutreach(userId, data);
-    } else if (channel === "instagram") {
-      result = await handleInstagramOutreach(userId, data);
+  // Run in parallel with a 15-second timeout safeguard per channel
+  const promises = channels.map(async (channel) => {
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("Timeout (stalled)")), 15000)
+    );
+    const executePromise = (async () => {
+      if (channel === "whatsapp") {
+        return await handleWhatsAppOutreach(userId, data);
+      } else if (channel === "email") {
+        return await handleEmailOutreach(userId, data);
+      } else if (channel === "instagram") {
+        return await handleInstagramOutreach(userId, data);
+      }
+      throw new Error(`Unsupported channel: ${channel}`);
+    })();
+
+    try {
+      const res = await Promise.race([executePromise, timeoutPromise]);
+      results[channel] = { success: true, result: res };
+    } catch (err: any) {
+      console.error(`Outreach channel ${channel} failed for contact ${contactId}:`, err.message);
+      results[channel] = { success: false, error: err.message || "Unknown error" };
     }
+  });
 
-    // 2. Update contact status and tracking
-    const now = new Date().toISOString();
-    const contactedDates = Array.isArray(contact.contacted_dates) ? contact.contacted_dates : [];
+  await Promise.all(promises);
 
-    await query(
-      `UPDATE contacts SET 
-        status = 'sent',
-        last_contacted = $1,
-        contacted_dates = $2,
-        automation_comment = NULL,
-        whatsapp_completed = CASE WHEN $3 = 'whatsapp' THEN 'Yes' ELSE whatsapp_completed END,
-        email_completed = CASE WHEN $3 = 'email' THEN 'Yes' ELSE email_completed END,
-        instagram_completed = CASE WHEN $3 = 'instagram' THEN 'Yes' ELSE instagram_completed END,
-        instagram_done = CASE WHEN $3 = 'instagram' THEN 'Yes' ELSE instagram_done END,
-        whatsapp_run = CASE WHEN $3 = 'whatsapp' THEN TRUE ELSE whatsapp_run END,
-        email_run = CASE WHEN $3 = 'email' THEN TRUE ELSE email_run END,
-        instagram_run = CASE WHEN $3 = 'instagram' THEN TRUE ELSE instagram_run END,
-        follow_ups = COALESCE(follow_ups, 0) + 1,
-        updated_at = NOW()
-       WHERE id = $4 AND user_id = $5`,
-      [now, JSON.stringify([...contactedDates, now]), channel, contactId, userId]
-    );
+  // Analyze consolidated results
+  const attemptedCount = channels.length;
+  const successes = channels.filter(c => results[c]?.success);
+  const failures = channels.filter(c => !results[c]?.success);
 
-    return { success: true, result };
-  } catch (err: any) {
-    console.error(`Outreach failed for contact ${contactId} via ${channel}:`, err);
-    await query(
-      `UPDATE contacts SET 
-         status = CASE WHEN status = 'sent' THEN 'sent' ELSE 'failed' END, 
-         automation_comment = $2, 
-         whatsapp_completed = CASE WHEN $3 = 'whatsapp' THEN 'Failed' ELSE whatsapp_completed END,
-         email_completed = CASE WHEN $3 = 'email' THEN 'Failed' ELSE email_completed END,
-         instagram_completed = CASE WHEN $3 = 'instagram' THEN 'Failed' ELSE instagram_completed END,
-         updated_at = NOW() 
-       WHERE id = $1 AND user_id = $4`,
-      [contactId, `[${channel.toUpperCase()}]: ${err.message}`, channel, userId]
-    );
-    throw err;
+  const now = new Date().toISOString();
+  const errorsList = failures.map(c => `[${c.toUpperCase()}]: ${results[c].error}`);
+  const automationComment = errorsList.length > 0 ? errorsList.join(" | ") : null;
+
+  // Single consolidated database update
+  let statusUpdate = contact.status;
+  if (successes.length > 0) {
+    statusUpdate = 'sent';
+  } else if (failures.length > 0) {
+    statusUpdate = contact.status === 'sent' ? 'sent' : 'failed';
   }
+
+  const updatedDates = successes.length > 0 ? JSON.stringify([...contactedDates, now]) : JSON.stringify(contactedDates);
+  const lastContactedUpdate = successes.length > 0 ? now : contact.lastContactedDate;
+
+  const waCompleted = channels.includes("whatsapp") ? (results["whatsapp"]?.success ? "Yes" : "Failed") : contact.whatsappCompleted;
+  const emailCompleted = channels.includes("email") ? (results["email"]?.success ? "Yes" : "Failed") : contact.emailCompleted;
+  const igCompleted = channels.includes("instagram") ? (results["instagram"]?.success ? "Yes" : "Failed") : contact.instagramCompleted;
+  const igDone = channels.includes("instagram") ? (results["instagram"]?.success ? "Yes" : contact.instagramDone) : contact.instagramDone;
+
+  const waRun = channels.includes("whatsapp") ? true : !!contact.whatsappRun;
+  const emailRun = channels.includes("email") ? true : !!contact.emailRun;
+  const igRun = channels.includes("instagram") ? true : !!contact.instagramRun;
+
+  // Increment follow_ups exactly ONCE per run if at least one channel was attempted
+  const followUpsIncrement = attemptedCount > 0 ? 1 : 0;
+
+  await query(
+    `UPDATE contacts SET 
+      status = $1,
+      last_contacted = $2,
+      contacted_dates = $3,
+      automation_comment = $4,
+      whatsapp_completed = $5,
+      email_completed = $6,
+      instagram_completed = $7,
+      instagram_done = $8,
+      whatsapp_run = $9,
+      email_run = $10,
+      instagram_run = $11,
+      follow_ups = COALESCE(follow_ups, 0) + $12,
+      updated_at = NOW()
+     WHERE id = $13 AND user_id = $14`,
+    [
+      statusUpdate,
+      lastContactedUpdate,
+      updatedDates,
+      automationComment,
+      waCompleted,
+      emailCompleted,
+      igCompleted,
+      igDone,
+      waRun,
+      emailRun,
+      igRun,
+      followUpsIncrement,
+      contactId,
+      userId
+    ]
+  );
+
+  if (successes.length === 0 && failures.length > 0) {
+    throw new Error(errorsList.join(" | "));
+  }
+
+  return { success: true, results };
 }
 
 // ─── WhatsApp ─────────────────────────────────────────────────────────────────
@@ -167,7 +252,8 @@ async function handleWhatsAppOutreach(userId: string, contact: Contact) {
 
   // 1. Custom Message (Sent First)
   if (contact.hasCustomMessageWA && contact.editableMessageWP) {
-      await sendWA(instance.instance_name, jid, contact.editableMessageWP);
+      const cleanMsg = cleanHtmlForPlainText(contact.editableMessageWP);
+      await sendWA(instance.instance_name, jid, cleanMsg);
       await sleep(1500);
   }
 
@@ -193,7 +279,8 @@ async function handleWhatsAppOutreach(userId: string, contact: Contact) {
        }
     } else if (template.content) {
        const message = injectVariables(template.content, contact, "whatsapp");
-       await sendWA(instance.instance_name, jid, message);
+       const cleanMsg = cleanHtmlForPlainText(message);
+       await sendWA(instance.instance_name, jid, cleanMsg);
        await sleep(1500);
     }
   }
@@ -338,7 +425,8 @@ async function handleEmailOutreach(userId: string, contact: Contact) {
   // 2. Custom Message (Sent First)
   if (contact.hasCustomMessageEmail && contact.editableMessageGmail) {
      const subject = contact.editableGmailSubject || `Casting Outreach: ${contact.project || contact.name || "New Project"}`;
-     await sendEmail(subject, contact.editableMessageGmail);
+     const cleanMsg = cleanHtmlForPlainText(contact.editableMessageGmail);
+     await sendEmail(subject, cleanMsg);
   }
 
   // 3. Compose Templates (Gmail composed draft / body + footer sequence)
@@ -412,11 +500,12 @@ async function handleEmailOutreach(userId: string, contact: Contact) {
     if (footerTemplate) await processAttachments(footerTemplate);
 
     // Send the composed email!
+    const cleanComposedBody = cleanHtmlForPlainText(composedBody);
     const raw = await buildMimeMessage({
       from: `"${contact.name || "CastHub"}" <${from}>`,
       to,
       subject: composedSubject,
-      body: composedBody,
+      body: cleanComposedBody,
       attachments: thisTemplateAttachments,
     });
 
@@ -451,9 +540,37 @@ async function handleInstagramOutreach(userId: string, contact: Contact) {
   const handle = (contact.instaHandle || "").replace(/^@/, "");
   if (!handle) throw new Error("No Instagram handle found on this contact");
 
+  const drive = await getDriveClient(userId);
+
+  // Helper to send a Drive file as Instagram attachment
+  const sendDriveFileAsIG = async (fileId: string, fileName: string) => {
+    try {
+      const response = await drive.files.get({ fileId, alt: "media" }, { responseType: "arraybuffer" });
+      const buffer = Buffer.from(response.data as ArrayBuffer);
+      const meta = await drive.files.get({ fileId, fields: "mimeType" });
+      const mimeType = meta.data.mimeType || "application/octet-stream";
+
+      if (mimeType.startsWith("image/")) {
+        // Send as actual photo file via the new VPS photo upload route!
+        await sendIGPhoto([handle], buffer, fileName, session.session_data);
+      } else {
+        // Fallback: send as a download URL link for non-images
+        const msg = `Attachment: ${stripExtension(fileName)} - https://drive.google.com/uc?export=download&id=${fileId}`;
+        await sendIG([handle], msg, session.session_data);
+      }
+    } catch (err: any) {
+      console.warn(`[instagram] Direct attachment failed for ${fileName}:`, err.message);
+      // Fallback in case Google Drive or photo upload fails
+      const msg = `Attachment: ${stripExtension(fileName)} - https://drive.google.com/uc?export=download&id=${fileId}`;
+      await sendIG([handle], msg, session.session_data);
+    }
+    await sleep(1500);
+  };
+
   // 1. Custom Message (Sent First)
   if (contact.hasCustomMessageIG && contact.editableMessageIG) {
-     await sendIG([handle], contact.editableMessageIG, session.session_data);
+     const cleanMsg = cleanHtmlForPlainText(contact.editableMessageIG);
+     await sendIG([handle], cleanMsg, session.session_data);
      await sleep(1500);
   }
 
@@ -474,14 +591,13 @@ async function handleInstagramOutreach(userId: string, contact: Contact) {
        
        for (const file of attachments) {
          if (file.id) {
-           const msg = `Attachment: ${stripExtension(file.name)} - https://drive.google.com/uc?export=download&id=${file.id}`;
-           await sendIG([handle], msg, session.session_data);
-           await sleep(1500);
+           await sendDriveFileAsIG(file.id, file.name);
          }
        }
     } else if (template.content) {
        const message = injectVariables(template.content, contact, "instagram");
-       await sendIG([handle], message, session.session_data);
+       const cleanMsg = cleanHtmlForPlainText(message);
+       await sendIG([handle], cleanMsg, session.session_data);
        await sleep(1500);
     }
   }
@@ -492,9 +608,7 @@ async function handleInstagramOutreach(userId: string, contact: Contact) {
     ...(contact.unified_attachments || [])
   ];
   for (const file of rowAttachments) {
-    const msg = `Attachment: ${stripExtension(file.name)} - https://drive.google.com/uc?export=download&id=${file.id}`;
-    await sendIG([handle], msg, session.session_data);
-    await sleep(1500);
+    await sendDriveFileAsIG(file.id, file.name);
   }
 
   return { success: true };
