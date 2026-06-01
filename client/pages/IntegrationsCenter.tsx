@@ -42,7 +42,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WhatsAppSettings } from "@/components/settings/WhatsAppSettings";
 import InstagramSettings from "@/components/settings/InstagramSettings";
 
-export default function Settings() {
+export default function IntegrationsCenter() {
   const { toast } = useToast();
   const [isRefreshingGroup, setIsRefreshingGroup] = React.useState<string | null>(null);
   
@@ -124,7 +124,7 @@ export default function Settings() {
       }
       refetchGoogle();
       toast({ title: "Google Connected!", description: "Your account has been linked successfully." });
-      window.history.replaceState({}, "", "/settings");
+      window.history.replaceState({}, "", "/integrations");
     }
   }, [refetchGoogle, toast]);
 

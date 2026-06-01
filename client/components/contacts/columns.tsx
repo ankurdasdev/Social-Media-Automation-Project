@@ -97,7 +97,7 @@ export function GroupHeader({ id, defaultTitle, defaultColor }: { id: string; de
       {/* Background if using tailwind class */}
       {!isCustomColor && <div className={cn("absolute inset-0 opacity-50", bgColor)} />}
       
-      <div className="relative z-10 flex items-center gap-2 flex-1">
+      <div className="relative z-10 flex items-center justify-center gap-2 flex-1">
         {isEditing ? (
           <input
             autoFocus

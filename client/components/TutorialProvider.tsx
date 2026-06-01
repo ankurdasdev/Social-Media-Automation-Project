@@ -168,28 +168,28 @@ const TUTORIAL_STEPS: Record<string, TutorialStep[]> = {
       title: "Integrations Center",
       content: "Connect and monitor your security-verified outreach networks. Set credentials, authentication, and API variables here.",
       placement: "bottom",
-      path: "/settings"
+      path: "/integrations"
     },
     {
       targetId: "tutorial-settings-google",
       title: "Google Auth & Drive Syncing",
       content: "Click here to securely connect Google Accounts to enable Gmail message sending and Drive attachment folder access.",
       placement: "bottom",
-      path: "/settings"
+      path: "/integrations"
     },
     {
       targetId: "tutorial-settings-whatsapp",
       title: "WhatsApp API Mapping",
       content: "Configure your phone number identifiers, system variables, and template tokens for target sequence dispatches.",
       placement: "top",
-      path: "/settings"
+      path: "/integrations"
     },
     {
       targetId: "tutorial-settings-instagram",
       title: "Instagram Bot Controller",
       content: "Define target usernames, passwords, and security codes to connect the scraper session for Direct Message automations.",
       placement: "top",
-      path: "/settings"
+      path: "/integrations"
     }
   ]
 };
@@ -221,7 +221,7 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
       if (location.pathname === "/contacts") resolvedPage = "contacts";
       else if (location.pathname === "/controller") resolvedPage = "controller";
       else if (location.pathname === "/analytics") resolvedPage = "analytics";
-      else if (location.pathname === "/settings") resolvedPage = "settings";
+      else if (location.pathname === "/integrations") resolvedPage = "settings";
       else resolvedPage = "dashboard";
     }
 

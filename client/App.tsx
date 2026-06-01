@@ -20,7 +20,7 @@ import Controller from "./pages/Controller";
 import Contacts from "./pages/Contacts";
 import Templates from "./pages/Templates";
 import Analytics from "./pages/Analytics";
-import Settings from "./pages/Settings";
+import IntegrationsCenter from "./pages/IntegrationsCenter";
 import Profile from "./pages/Profile";
 
 import NotFound from "./pages/NotFound";
@@ -63,7 +63,7 @@ const App = () => (
             <Route path="/contacts" element={<ProtectedRoute element={<Contacts />} />} />
             <Route path="/templates" element={<ProtectedRoute element={<Templates />} />} />
             <Route path="/analytics" element={<ProtectedRoute element={<Analytics />} />} />
-            <Route path="/settings" element={<ProtectedRoute element={<Settings />} />} />
+            <Route path="/integrations" element={<ProtectedRoute element={<IntegrationsCenter />} />} />
             <Route path="/profile" element={<ProtectedRoute element={<Profile />} />} />
 
             {/* Default redirect to dashboard (ProtectedRoute handles auth check) */}

@@ -300,9 +300,9 @@ export function DriveFilePicker({
               Connect Google Drive in Settings to access files.
             </p>
           </div>
-          <Link to="/settings" onClick={() => setOpen(false)}>
+          <Link to="/integrations" onClick={() => setOpen(false)}>
             <Button className="h-11 px-7 rounded-xl font-black bg-foreground text-background shadow-xl">
-              GO TO SETTINGS
+              GO TO INTEGRATIONS
             </Button>
           </Link>
         </div>
