@@ -214,12 +214,7 @@ export function DataTable<TData, TValue>({
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [ctxMenu]);
-
-  // Column Order & Pinning
-  const [columnOrder, setColumnOrder] = React.useState<string[]>(() =>
-    columns.map(c => (c as any).id || (c as any).accessorKey).filter(Boolean)
-  );
-  
+  // Pinning is handled separately
   const defaultColumn = React.useMemo<Partial<ColumnDef<TData, TValue>>>(() => ({
     filterFn: (row: any, columnId: string, filterValue: any) => {
       const value = row.getValue(columnId);
