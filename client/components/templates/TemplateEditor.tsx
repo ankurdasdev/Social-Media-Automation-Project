@@ -353,6 +353,7 @@ export function TemplateEditor({
                   selectedFiles={driveFiles}
                   onChange={(files) => setDriveFiles(files)}
                   placeholder="Search Google Drive..."
+                  platform={defaultCategory}
                 />
               </div>
 
