@@ -12,6 +12,18 @@ import {
 } from "@tanstack/react-table";
 import { createPortal } from "react-dom";
 
+// ─── Module-level helpers (never recreated during render) ─────────────────────
+function getBorderColor(rColor: string): string {
+  if (rColor === "yellow") return "#f59e0b";
+  if (rColor === "green") return "#10b981";
+  if (rColor === "red") return "#ef4444";
+  if (rColor === "blue") return "#3b82f6";
+  if (rColor.startsWith("#") || rColor.includes("gradient")) {
+    return rColor.includes("gradient") ? "#8b5cf6" : rColor;
+  }
+  return "transparent";
+}
+
 import {
   Table,
   TableBody,
@@ -29,11 +41,7 @@ import { ContactDrawer } from "./ContactDrawer";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AdvancedColorPicker } from "./AdvancedColorPicker";
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuTrigger,
-} from "@/components/ui/context-menu";
+
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -115,6 +123,22 @@ export function DataTable<TData, TValue>({
   // Drag-to-fill state
   const [dragFillStart, setDragFillStart] = React.useState<{ rowIdx: number, colId: string, value: any } | null>(null);
   const [dragFillHoverRowIdx, setDragFillHoverRowIdx] = React.useState<number | null>(null);
+
+  // Shared context menu state (one floating menu for ALL cells instead of 750 instances)
+  const [ctxMenu, setCtxMenu] = React.useState<{ x: number; y: number; contactId: string; cellId: string; currentColor: string; contact: any } | null>(null);
+  const ctxMenuRef = React.useRef<HTMLDivElement>(null);
+
+  // Close the shared context menu on outside click
+  React.useEffect(() => {
+    if (!ctxMenu) return;
+    const handler = (e: MouseEvent) => {
+      if (ctxMenuRef.current && !ctxMenuRef.current.contains(e.target as Node)) {
+        setCtxMenu(null);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [ctxMenu]);
 
   // Column Order & Pinning
   const [columnOrder, setColumnOrder] = React.useState<string[]>(() =>
@@ -287,30 +311,20 @@ export function DataTable<TData, TValue>({
                   const rowOriginal = row.original as unknown as Contact;
                   const rColor = rowOriginal.rowColor || "transparent";
                   const isCustom = rColor.startsWith("#") || rColor.includes("gradient");
-                  
-                  // Helper to get border color from hex or gradient
-                  const getBorderColor = () => {
-                    if (rColor === "yellow") return "#f59e0b";
-                    if (rColor === "green") return "#10b981";
-                    if (rColor === "red") return "#ef4444";
-                    if (rColor === "blue") return "#3b82f6";
-                    if (isCustom) return rColor.includes("gradient") ? "#8b5cf6" : rColor;
-                    return "transparent";
-                  };
 
                   return (
                     <TableRow
                       key={row.id}
                       data-state={row.getIsSelected() && "selected"}
                       className={cn(
-                        "cursor-pointer border-b border-border/20 hover:bg-muted/30 transition-all h-20 group relative border-l-[6px]",
+                        "cursor-pointer border-b border-border/20 hover:bg-muted/30 h-20 group relative border-l-[6px]",
                         row.index % 2 === 0 ? "bg-muted/30" : "bg-transparent",
                         row.getIsSelected() && "!bg-primary/20 border-l-primary shadow-inner"
                       )}
                       style={{ 
-                        backgroundColor: isCustom ? `${rColor}1a` : undefined, // Add transparency if hex
-                        background: rColor.includes("gradient") ? `${rColor}` : undefined,
-                        borderLeftColor: getBorderColor(),
+                        backgroundColor: isCustom ? `${rColor}1a` : undefined,
+                        background: rColor.includes("gradient") ? rColor : undefined,
+                        borderLeftColor: getBorderColor(rColor),
                       }}
                       onClick={() => setSelectedContact(rowOriginal)}
                       onDragOver={(e) => {
@@ -324,70 +338,58 @@ export function DataTable<TData, TValue>({
                         const cellId = cell.column.id;
                         const cColor = rowOriginal.cellColors?.[cellId];
                         return (
-                          <ContextMenu key={cell.id}>
-                            <ContextMenuTrigger asChild>
-                              <TableCell className="relative py-2 px-6 group-hover:translate-x-0.5 transition-transform border-r border-border/10 last:border-r-0"
-                                style={{
-                                  backgroundColor: cColor ? (cColor.includes("gradient") ? undefined : cColor) : undefined,
-                                  background: cColor?.includes("gradient") ? cColor : undefined,
-                                  minWidth: "max-content"
-                                }}
-                              >
-                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                
-                                {/* Excel Drag Fill Handle */}
-                                {!['select', 'actions'].includes(cellId) && (
-                                  <div 
-                                    draggable
-                                    onDragStart={(e) => {
-                                      e.stopPropagation();
-                                      const val = (rowOriginal as any)[cellId];
-                                      setDragFillStart({ rowIdx: row.index, colId: cellId, value: val });
-                                    }}
-                                    onDragEnd={() => {
-                                      if (dragFillStart && dragFillHoverRowIdx !== null && onUpdateContact) {
-                                        const startIdx = Math.min(dragFillStart.rowIdx, dragFillHoverRowIdx);
-                                        const endIdx = Math.max(dragFillStart.rowIdx, dragFillHoverRowIdx);
-                                        const rowsToUpdate = table.getRowModel().rows.slice(startIdx, endIdx + 1);
-                                        rowsToUpdate.forEach(r => {
-                                          if (r.index !== dragFillStart.rowIdx) {
-                                            const rOrig = r.original as any;
-                                            onUpdateContact(rOrig.id, { [dragFillStart.colId]: dragFillStart.value });
-                                          }
-                                        });
-                                      }
-                                      setDragFillStart(null);
-                                      setDragFillHoverRowIdx(null);
-                                    }}
-                                    className="absolute bottom-0 right-0 w-2 h-2 bg-primary cursor-crosshair opacity-0 group-hover:opacity-100 hover:scale-150 transition-transform z-10"
-                                  />
-                                )}
+                          <TableCell
+                            key={cell.id}
+                            className="relative py-2 px-6 border-r border-border/10 last:border-r-0"
+                            style={{
+                              backgroundColor: cColor ? (cColor.includes("gradient") ? undefined : cColor) : undefined,
+                              background: cColor?.includes("gradient") ? cColor : undefined,
+                              minWidth: "max-content"
+                            }}
+                            onContextMenu={(e) => {
+                              if (['select', 'actions'].includes(cellId)) return;
+                              e.preventDefault();
+                              setCtxMenu({ x: e.clientX, y: e.clientY, contactId: rowOriginal.id, cellId, currentColor: cColor || "transparent", contact: rowOriginal });
+                            }}
+                          >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
 
-                                {/* Drag Fill Highlight Overlay */}
-                                {dragFillStart?.colId === cellId && 
-                                 dragFillHoverRowIdx !== null && 
-                                 row.index >= Math.min(dragFillStart.rowIdx, dragFillHoverRowIdx) && 
-                                 row.index <= Math.max(dragFillStart.rowIdx, dragFillHoverRowIdx) && (
-                                    <div className="absolute inset-0 bg-primary/20 border-2 border-primary border-dashed pointer-events-none z-20 animate-pulse" />
-                                 )}
-                              </TableCell>
-                            </ContextMenuTrigger>
-                            <ContextMenuContent className="w-[280px] glass-card p-1 rounded-3xl border-white/10 shadow-2xl z-[100]" alignOffset={-50}>
-                              <div className="px-4 py-2 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-1">Set Cell Color</div>
-                              <div onSelect={(e) => e.preventDefault()} className="outline-none">
-                                <AdvancedColorPicker
-                                  color={cColor || "transparent"}
-                                  onChange={(color) => {
-                                    if (onUpdateContact) {
-                                      onUpdateContact(rowOriginal.id, {
-                                        cellColors: { ...rowOriginal.cellColors, [cellId]: color === "transparent" ? "" : color }
-                                      });
-                                    }
-                                  }}
-                                />
-                              </div>
-                            </ContextMenuContent>
-                          </ContextMenu>
+                            {/* Excel Drag Fill Handle */}
+                            {!['select', 'actions'].includes(cellId) && (
+                              <div 
+                                draggable
+                                onDragStart={(e) => {
+                                  e.stopPropagation();
+                                  const val = (rowOriginal as any)[cellId];
+                                  setDragFillStart({ rowIdx: row.index, colId: cellId, value: val });
+                                }}
+                                onDragEnd={() => {
+                                  if (dragFillStart && dragFillHoverRowIdx !== null && onUpdateContact) {
+                                    const startIdx = Math.min(dragFillStart.rowIdx, dragFillHoverRowIdx);
+                                    const endIdx = Math.max(dragFillStart.rowIdx, dragFillHoverRowIdx);
+                                    const rowsToUpdate = table.getRowModel().rows.slice(startIdx, endIdx + 1);
+                                    rowsToUpdate.forEach(r => {
+                                      if (r.index !== dragFillStart.rowIdx) {
+                                        const rOrig = r.original as any;
+                                        onUpdateContact(rOrig.id, { [dragFillStart.colId]: dragFillStart.value });
+                                      }
+                                    });
+                                  }
+                                  setDragFillStart(null);
+                                  setDragFillHoverRowIdx(null);
+                                }}
+                                className="absolute bottom-0 right-0 w-2 h-2 bg-primary cursor-crosshair opacity-0 group-hover:opacity-100 hover:scale-150 transition-transform z-10"
+                              />
+                            )}
+
+                            {/* Drag Fill Highlight Overlay */}
+                            {dragFillStart?.colId === cellId && 
+                             dragFillHoverRowIdx !== null && 
+                             row.index >= Math.min(dragFillStart.rowIdx, dragFillHoverRowIdx) && 
+                             row.index <= Math.max(dragFillStart.rowIdx, dragFillHoverRowIdx) && (
+                                <div className="absolute inset-0 bg-primary/20 border-2 border-primary border-dashed pointer-events-none z-20 animate-pulse" />
+                             )}
+                          </TableCell>
                         );
                       })}
                     </TableRow>
@@ -470,6 +472,31 @@ export function DataTable<TData, TValue>({
         open={!!selectedContact} 
         onOpenChange={(open) => !open && setSelectedContact(null)} 
       />
+
+      {/* Shared floating context menu - ONE instance for the whole table */}
+      {ctxMenu && createPortal(
+        <div
+          ref={ctxMenuRef}
+          style={{ position: "fixed", top: ctxMenu.y, left: ctxMenu.x, zIndex: 9999 }}
+          className="w-[280px] glass-card p-1 rounded-3xl border-white/10 shadow-2xl"
+        >
+          <div className="px-4 py-2 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-1">Set Cell Color</div>
+          <div className="outline-none">
+            <AdvancedColorPicker
+              color={ctxMenu.currentColor}
+              onChange={(color) => {
+                if (onUpdateContact) {
+                  onUpdateContact(ctxMenu.contactId, {
+                    cellColors: { ...ctxMenu.contact.cellColors, [ctxMenu.cellId]: color === "transparent" ? "" : color }
+                  });
+                }
+                setCtxMenu(null);
+              }}
+            />
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 
