@@ -265,6 +265,27 @@ export default function Contacts() {
               status: "pending"
             }),
           });
+        } else if (action === "smart_clear" && Array.isArray(payload)) {
+          // payload is the array of fields to clear
+          const body: Record<string, any> = { userId };
+          payload.forEach((field) => {
+            // Checkboxes (booleans)
+            if (["whatsappRun", "emailRun", "instagramRun"].includes(field)) {
+              body[field] = false;
+            } else if (field === "salutation") {
+              body["salutationWA"] = "Hi";
+              body["salutationEmail"] = "Hi";
+              body["salutationIG"] = "Hi";
+            } else {
+              // Text fields
+              body[field] = "";
+            }
+          });
+          return fetch(`/api/contacts/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
         }
       });
       await Promise.all(promises);

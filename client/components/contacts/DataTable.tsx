@@ -36,8 +36,10 @@ import { Search, Maximize2, Minimize2, Filter, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Contact } from "@shared/api";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ContextMenu } from "./ContextMenu";
 import { DataTableToolbar } from "./DataTableToolbar";
 import { ContactDrawer } from "./ContactDrawer";
+import { columns as defaultColumns, GroupHeader } from "./columns";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AdvancedColorPicker } from "./AdvancedColorPicker";
@@ -85,6 +87,79 @@ export function DataTable<TData, TValue>({
   const [isTransitioning, startTransition] = React.useTransition();
   const isRendering = isTransitioning || isExternalTransitioning;
   const [rowSelection, setRowSelection] = React.useState({});
+  const [columnOrder, setColumnOrder] = React.useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem("casthub-column-order");
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [];
+  });
+
+  const [columnGroupConfig, setColumnGroupConfig] = React.useState<any[] | null>(() => {
+    try {
+      const saved = localStorage.getItem("casthub-column-groups");
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return null;
+  });
+
+  React.useEffect(() => {
+    const handleUpdate = () => {
+      try {
+        const saved = localStorage.getItem("casthub-column-groups");
+        if (saved) setColumnGroupConfig(JSON.parse(saved));
+      } catch {}
+    };
+    window.addEventListener("casthub-groups-changed", handleUpdate);
+    return () => window.removeEventListener("casthub-groups-changed", handleUpdate);
+  }, []);
+
+  const activeColumns = React.useMemo(() => {
+    if (!columnGroupConfig) return defaultColumns;
+
+    const flatCols: Record<string, any> = {};
+    const extract = (cols: any[]) => {
+      cols.forEach(c => {
+        if (c.columns) extract(c.columns);
+        else flatCols[c.id || c.accessorKey] = c;
+      });
+    };
+    extract(defaultColumns);
+
+    const newColumns: any[] = [];
+    
+    // Top-level ones to preserve
+    ["select", "index", "whatsappCompleted", "emailCompleted", "instagramCompleted"].forEach(id => {
+      if (flatCols[id]) newColumns.push(flatCols[id]);
+    });
+
+    columnGroupConfig.forEach(g => {
+      const gCols = g.columns.map((id: string) => flatCols[id]).filter(Boolean);
+      if (gCols.length > 0) {
+        newColumns.push({
+          id: g.id,
+          header: () => <GroupHeader id={g.id} defaultTitle={g.title} defaultColor={g.color} />,
+          columns: gCols
+        });
+      }
+    });
+
+    return newColumns;
+  }, [columnGroupConfig]);
+
+  const [columnPinning, setColumnPinning] = React.useState(() => {
+    try {
+      const saved = localStorage.getItem("casthub-column-pinning");
+      return saved ? JSON.parse(saved) : { left: ["select", "name"] };
+    } catch {
+      return { left: ["select", "name"] };
+    }
+  });
+  
+  React.useEffect(() => {
+    localStorage.setItem("casthub-column-pinning", JSON.stringify(columnPinning));
+  }, [columnPinning]);
+
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(() => {
     const filters = [...initialFilters];
     try {
@@ -159,7 +234,7 @@ export function DataTable<TData, TValue>({
 
   const table = useReactTable({
     data,
-    columns,
+    columns: activeColumns,
     defaultColumn,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -176,8 +251,10 @@ export function DataTable<TData, TValue>({
       sorting,
       globalFilter,
       columnOrder,
+      columnPinning,
     },
     enableRowSelection: true,
+    enablePinning: true,
     getRowId: (row: any) => row.id,
     // Enable column resizing
     columnResizeMode: "onChange",
@@ -288,9 +365,14 @@ export function DataTable<TData, TValue>({
                       }}
                       className={cn(
                         "relative group border-r border-white/5 last:border-r-0",
-                        isGroupHeader ? "p-0 border-b border-white/5 align-top" : "px-6 text-[10px] font-black uppercase text-muted-foreground tracking-[0.3em] cursor-move active:cursor-grabbing"
+                        isGroupHeader ? "p-0 border-b border-white/5 align-top" : "px-6 text-[10px] font-black uppercase text-muted-foreground tracking-[0.3em] cursor-move active:cursor-grabbing",
+                        header.column.getIsPinned() === "left" && "sticky z-[35] bg-card/90 backdrop-blur-3xl"
                       )}
-                      style={{ width: header.getSize(), minWidth: "max-content" }}
+                      style={{ 
+                        width: header.getSize(), 
+                        minWidth: "max-content",
+                        left: header.column.getIsPinned() === "left" ? `${header.column.getStart("left")}px` : undefined
+                      }}
                     >
                       {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                       <div
@@ -340,11 +422,16 @@ export function DataTable<TData, TValue>({
                         return (
                           <TableCell
                             key={cell.id}
-                            className="relative py-2 px-6 border-r border-border/10 last:border-r-0"
+                            className={cn(
+                              "relative py-2 px-6 border-r border-border/10 last:border-r-0",
+                              cell.column.getIsPinned() === "left" && "sticky z-[15] bg-background shadow-[2px_0_10px_-3px_rgba(0,0,0,0.3)]",
+                              cell.column.getIsPinned() === "left" && cell.column.getIsLastColumn("left") && "border-r-[3px] border-r-border/50"
+                            )}
                             style={{
                               backgroundColor: cColor ? (cColor.includes("gradient") ? undefined : cColor) : undefined,
                               background: cColor?.includes("gradient") ? cColor : undefined,
-                              minWidth: "max-content"
+                              minWidth: "max-content",
+                              left: cell.column.getIsPinned() === "left" ? `${cell.column.getStart("left")}px` : undefined,
                             }}
                             onContextMenu={(e) => {
                               if (['select', 'actions'].includes(cellId)) return;

@@ -44,7 +44,7 @@ interface AppLayoutProps {
 const navItems = [
   {
     label: "Integrations Centre",
-    href: "/settings",
+    href: "/integrations",
     icon: SlidersHorizontal,
   },
   {

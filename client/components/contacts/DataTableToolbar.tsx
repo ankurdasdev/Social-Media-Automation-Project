@@ -12,12 +12,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, ChevronDown, Zap, RefreshCw, Plus, Trash2, X, Sparkles, MessageCircle, Mail, Instagram, Maximize2, Minimize2, Filter, Upload, ZoomIn, ZoomOut } from "lucide-react";
+import { Search, ChevronDown, Zap, RefreshCw, Plus, Trash2, X, Sparkles, MessageCircle, Mail, Instagram, Maximize2, Minimize2, Filter, Upload, ZoomIn, ZoomOut, View, Eraser } from "lucide-react";
 import { Contact } from "@shared/api";
 import { AISearchBar } from "./AISearchBar";
 import { AdvancedColorPicker } from "./AdvancedColorPicker";
 import { useQueryClient } from "@tanstack/react-query";
 import { ExcelImportDialog } from "./ExcelImportDialog";
+import { SmartClearDialog } from "./SmartClearDialog";
+import { ColumnManagerDialog } from "./ColumnManagerDialog";
 import {
   Dialog,
   DialogContent,
@@ -83,6 +85,8 @@ export function DataTableToolbar<TData>({
   const [showPlatformFilters, setShowPlatformFilters] = useState(false);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [isExcelImportOpen, setIsExcelImportOpen] = useState(false);
+  const [isSmartClearOpen, setIsSmartClearOpen] = useState(false);
+  const [isColumnManagerOpen, setIsColumnManagerOpen] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -335,6 +339,41 @@ export function DataTableToolbar<TData>({
           <span className="hidden md:inline">FILTERS</span>
         </Button>
 
+        {/* View Options */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-11 rounded-xl border-white/10 px-4 font-black text-[9px] uppercase tracking-widest gap-2 transition-all shrink-0 bg-muted/20 hover:bg-muted/40"
+            >
+              <View className="w-3.5 h-3.5 opacity-50" />
+              <span className="hidden md:inline">VIEW OPTIONS</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-[280px] glass-card border-white/10 p-2 rounded-2xl shadow-2xl z-[100]">
+             <DropdownMenuLabel className="px-3 py-1.5 text-[8px] font-black text-muted-foreground uppercase tracking-widest">Display Settings</DropdownMenuLabel>
+             <DropdownMenuSeparator className="bg-white/5 mx-2 my-1" />
+             <div className="px-3 py-2 flex items-center justify-between">
+                <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Freeze Title Columns</span>
+                <Switch 
+                   checked={table.getState().columnPinning?.left?.length > 0}
+                   onCheckedChange={(val) => table.setColumnPinning(val ? { left: ['select', 'name'] } : { left: [] })}
+                   className="scale-75"
+                />
+             </div>
+             <DropdownMenuSeparator className="bg-white/10" />
+            
+             <DropdownMenuItem 
+               onClick={() => setIsColumnManagerOpen(true)}
+               className="text-[11px] font-black uppercase tracking-widest text-primary cursor-pointer hover:bg-primary/20"
+             >
+               <Settings2 className="mr-2 h-3.5 w-3.5" />
+               Manage Column Groups
+             </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
         {/* Bulk Action Buttons - shown inline when rows selected */}
         {hasSelection && (
           <>
@@ -379,6 +418,13 @@ export function DataTableToolbar<TData>({
                   onSelect={(e) => { e.preventDefault(); executeBulkAction("reset_automation"); }}
                 >
                   <RefreshCw className="h-4 w-4" /> RESET AUTOMATION
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="my-3 bg-white/5" />
+                <DropdownMenuItem
+                  className="h-12 px-4 rounded-xl text-[10px] font-black uppercase tracking-[0.1em] text-amber-500 focus:bg-amber-500/10 focus:text-amber-500 cursor-pointer gap-3"
+                  onSelect={(e) => { e.preventDefault(); executeBulkAction("smart_clear"); }}
+                >
+                  <Eraser className="h-4 w-4" /> SMART CLEAR DATA
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="my-3 bg-white/5" />
                 <DropdownMenuItem
@@ -490,6 +536,27 @@ export function DataTableToolbar<TData>({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Smart Clear Dialog */}
+      <SmartClearDialog
+        isOpen={isSmartClearOpen}
+        onOpenChange={setIsSmartClearOpen}
+        selectedCount={selectedRows.length}
+        onConfirm={(fields) => {
+          if (onBulkAction) {
+            const ids = selectedRows.map(r => (r.original as any).id);
+            onBulkAction("smart_clear", ids, fields);
+          }
+        }}
+      />
+
+      <ColumnManagerDialog
+        isOpen={isColumnManagerOpen}
+        onOpenChange={setIsColumnManagerOpen}
+        onSaved={() => {
+          // Re-render handled by the event listener in DataTable
+        }}
+      />
 
       <ExcelImportDialog
         isOpen={isExcelImportOpen}
