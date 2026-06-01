@@ -13,12 +13,12 @@ import { Label } from "@/components/ui/label";
 import { RichTextarea } from "@/components/ui/rich-textarea";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Loader2, AlertTriangle, Info, GripVertical, Sparkles, X as XIcon, Wand2 } from "lucide-react";
+import { Loader2, AlertTriangle, Info, GripVertical, Sparkles, X as XIcon, Wand2, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Template, CreateTemplateRequest, UpdateTemplateRequest } from "@shared/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { getOrCreateUserId, cn } from "@/lib/utils";
-import { DriveFilePicker } from "@/components/drive/DriveFilePicker";
+import { DriveFilePicker, FilePreviewModal } from "@/components/drive/DriveFilePicker";
 import type { DriveFile } from "@shared/api";
 
 // ─── Variable Chips — synced with column headers in the Contacts grid ─────────
@@ -97,6 +97,7 @@ export function TemplateEditor({
 
   // Drag-to-reorder state for attachment order list
   const [dragFileIdx, setDragFileIdx] = React.useState<number | null>(null);
+  const [previewFile, setPreviewFile] = React.useState<DriveFile | null>(null);
 
   const handleFileDragStart = (idx: number) => setDragFileIdx(idx);
   const handleFileDragOver = (e: React.DragEvent, idx: number) => {
@@ -377,9 +378,36 @@ export function TemplateEditor({
                         <GripVertical className="w-4 h-4 text-muted-foreground/30 group-hover/dfile:text-muted-foreground shrink-0 transition-colors" />
                         <span className="w-6 h-6 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-black text-xs shrink-0">{idx + 1}</span>
                         <span className="text-sm font-bold text-foreground truncate flex-1">{file.name}</span>
+                        
+                        {/* Preview button */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPreviewFile(file);
+                          }}
+                          className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-primary transition-all shrink-0"
+                          title="Preview attachment"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+
                         <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 border-white/10 text-muted-foreground">
                           {idx === 0 ? "First" : idx === driveFiles.length - 1 ? "Last" : `#${idx + 1}`}
                         </Badge>
+
+                        {/* Remove attachment */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDriveFiles(driveFiles.filter((f) => f.id !== file.id));
+                          }}
+                          className="p-1.5 rounded-lg hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-all shrink-0 active:scale-95"
+                          title="Remove attachment"
+                        >
+                          <XIcon className="w-4 h-4" />
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -542,6 +570,12 @@ export function TemplateEditor({
           </Button>
         </DialogFooter>
       </DialogContent>
+      {previewFile && (
+        <FilePreviewModal
+          file={previewFile}
+          onClose={() => setPreviewFile(null)}
+        />
+      )}
     </Dialog>
   );
 }
