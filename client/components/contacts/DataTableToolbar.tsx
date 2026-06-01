@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, ChevronDown, Zap, RefreshCw, Plus, Trash2, X, Sparkles, MessageCircle, Mail, Instagram, Maximize2, Minimize2, Filter, Upload, ZoomIn, ZoomOut, View, Eraser, Settings2 } from "lucide-react";
+import { Search, ChevronDown, Zap, RefreshCw, Plus, Trash2, X, Sparkles, MessageCircle, Mail, Instagram, Maximize2, Minimize2, Filter, Upload, ZoomIn, ZoomOut, View, Eraser, Settings2, Palette, Layers } from "lucide-react";
 import { Contact } from "@shared/api";
 import { AISearchBar } from "./AISearchBar";
 import { AdvancedColorPicker } from "./AdvancedColorPicker";
@@ -224,48 +224,45 @@ export function DataTableToolbar<TData>({
         </div>
       </div>
 
-      {/* ROW 2: Search + Refresh + Filters + Bulk Actions */}
-      <div className="flex items-center gap-3 flex-wrap">
+      {/* ROW 2: Search + Refresh + Filters + View Options */}
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
 
-        {/* AI Mode Toggle */}
-        <Button
-          id="tutorial-contacts-ai"
-          variant="ghost"
-          size="icon"
-          onClick={() => {
-            const nextMode = searchMode === "normal" ? "ai" : "normal";
-            if (nextMode === "normal") {
-              onClearAISearch?.();
-            }
-            setSearchMode(nextMode);
-          }}
-          className={cn(
-            "h-11 w-11 rounded-xl border transition-all shrink-0",
-            searchMode === "ai"
-              ? "bg-primary/10 border-primary/30 text-primary shadow-lg shadow-primary/10"
-              : "bg-muted/20 border-white/5 text-muted-foreground hover:bg-muted/40"
-          )}
-          title={searchMode === "ai" ? "Switch to Normal Search" : "Switch to AI Search"}
-        >
-          <Sparkles className="h-4 w-4" />
-        </Button>
+        {/* Search area */}
+        <div className="flex items-center gap-2 flex-1 w-full xl:max-w-2xl">
+          {/* AI Mode Toggle */}
+          <Button
+            id="tutorial-contacts-ai"
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              const nextMode = searchMode === "normal" ? "ai" : "normal";
+              if (nextMode === "normal") {
+                onClearAISearch?.();
+              }
+              setSearchMode(nextMode);
+            }}
+            className={cn(
+              "h-12 w-12 rounded-full border transition-all shrink-0",
+              searchMode === "ai"
+                ? "bg-primary/20 border-primary/50 text-primary shadow-lg shadow-primary/20"
+                : "bg-muted/20 border-white/5 text-muted-foreground hover:bg-muted/40"
+            )}
+            title={searchMode === "ai" ? "Switch to Normal Search" : "Switch to AI Search"}
+          >
+            <Sparkles className="h-5 w-5" />
+          </Button>
 
-        {/* Search bars container */}
-        <div className="flex flex-1 gap-2 min-w-[200px] items-center">
-          {searchMode === "ai" && (
-            <div className="flex-[2] transition-all duration-300 min-w-[250px]">
+          {/* Search bar */}
+          <div className="flex-1 min-w-[200px] h-12 relative group">
+            {searchMode === "ai" ? (
               <AISearchBar
                 onSearch={onAISearch || (() => {})}
                 isLoading={isAISearching}
                 onClear={() => { onClearAISearch?.(); setSearchMode("normal"); }}
-                className="max-w-none"
+                className="max-w-none h-12 rounded-full"
               />
-            </div>
-          )}
-
-          <div className={cn("transition-all duration-300", searchMode === "ai" ? "flex-1 min-w-[150px]" : "flex-1 max-w-md")}>
-            {(!isFullscreen || isSearchExpanded) ? (
-              <div className="relative group w-full">
+            ) : (
+              <>
                 <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
                   <Search className="h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                 </div>
@@ -273,132 +270,126 @@ export function DataTableToolbar<TData>({
                   placeholder="Search Contacts..."
                   value={table.getState().globalFilter ?? ""}
                   onChange={(event) => table.setGlobalFilter(event.target.value)}
-                  className={cn(
-                    "pl-11 bg-muted/20 border-white/5 focus:bg-background focus:ring-primary font-bold shadow-inner transition-all text-sm",
-                    searchMode === "ai" ? "h-14 rounded-2xl" : "h-11 rounded-xl"
-                  )}
-                  autoFocus={isSearchExpanded}
-                  onBlur={() => { if (isFullscreen && !table.getState().globalFilter) setIsSearchExpanded(false); }}
+                  className="h-12 pl-11 rounded-full bg-muted/20 border-white/5 focus:bg-background focus:ring-primary focus:border-primary font-bold shadow-inner transition-all text-sm w-full"
                 />
-              </div>
-            ) : (
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-11 w-11 rounded-xl bg-muted/20 border-white/5 shrink-0"
-                onClick={() => setIsSearchExpanded(true)}
-              >
-                <Search className="h-4 w-4 text-muted-foreground" />
-              </Button>
+              </>
             )}
           </div>
+
+          {/* Filtered Rows Count */}
+          {table.getState().columnFilters.length > 0 && (
+            <div className="hidden md:flex items-center gap-2 px-5 h-12 rounded-full bg-primary/10 border border-primary/20 shrink-0 shadow-inner">
+              <Filter className="w-4 h-4 text-primary" />
+              <span className="text-[11px] font-black uppercase tracking-widest text-primary">
+                {table.getFilteredRowModel().rows.length} Matches
+              </span>
+            </div>
+          )}
         </div>
 
-        {/* Spacer */}
-        <div className="flex-1" />
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 xl:pb-0 scrollbar-hide shrink-0 w-full xl:w-auto">
+          {/* Refresh All */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => { table.resetGlobalFilter(); table.resetColumnFilters(); onClearAISearch?.(); if (onTabChange) onTabChange("all"); }}
+            className="h-12 px-5 rounded-full border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary font-black text-[10px] uppercase tracking-widest gap-2 transition-all active:scale-95 group shrink-0 shadow-sm"
+          >
+            <RefreshCw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
+            <span className="hidden md:inline">REFRESH</span>
+          </Button>
 
-        {/* Filtered Rows Count */}
-        {table.getState().columnFilters.length > 0 && (
-          <div className="hidden lg:flex items-center gap-2 px-4 h-11 rounded-xl bg-primary/5 border border-primary/10 shrink-0">
-            <Filter className="w-3.5 h-3.5 text-primary" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-primary">
-              {table.getFilteredRowModel().rows.length} MATCHED
-            </span>
+          {/* Import Excel */}
+          <Button
+            id="tutorial-contacts-import"
+            variant="outline"
+            size="sm"
+            onClick={() => setIsExcelImportOpen(true)}
+            className="h-12 px-5 rounded-full border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/10 text-emerald-500 font-black text-[10px] uppercase tracking-widest gap-2 transition-all active:scale-95 group shrink-0 shadow-sm"
+          >
+            <Upload className="w-4 h-4" />
+            <span>IMPORT</span>
+          </Button>
+
+          {/* Status Filters */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowPlatformFilters(!showPlatformFilters)}
+            className={cn(
+              "h-12 rounded-full border-white/10 px-5 font-black text-[10px] uppercase tracking-widest gap-2 transition-all shrink-0 shadow-sm",
+              showPlatformFilters ? "bg-foreground text-background border-foreground" : "bg-muted/20 hover:bg-muted/40"
+            )}
+          >
+            <Filter className={cn("w-4 h-4", showPlatformFilters && "text-background")} />
+            <span className="hidden md:inline">FILTERS</span>
+          </Button>
+
+          {/* View Options */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-12 rounded-full border-white/10 px-5 font-black text-[10px] uppercase tracking-widest gap-2 transition-all shrink-0 bg-muted/20 hover:bg-muted/40 shadow-sm"
+              >
+                <View className="w-4 h-4 opacity-50" />
+                <span className="hidden md:inline">VIEW OPTIONS</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-[280px] glass-card border-white/10 p-2 rounded-2xl shadow-2xl z-[100]">
+               <DropdownMenuLabel className="px-3 py-1.5 text-[8px] font-black text-muted-foreground uppercase tracking-widest">Display Settings</DropdownMenuLabel>
+               <DropdownMenuSeparator className="bg-white/5 mx-2 my-1" />
+               <div className="px-3 py-2 flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Freeze Title</span>
+                  <Switch 
+                     checked={isTitleFrozen}
+                     onCheckedChange={(val) => onToggleTitleFreeze?.(val)}
+                     className="scale-75"
+                  />
+               </div>
+               <DropdownMenuSeparator className="bg-white/10" />
+              
+               <DropdownMenuItem 
+                 onClick={() => setIsColumnManagerOpen(true)}
+                 className="text-[11px] font-black uppercase tracking-widest text-primary cursor-pointer hover:bg-primary/20"
+               >
+                 <Settings2 className="mr-2 h-3.5 w-3.5" />
+                 Manage Column Groups
+               </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+
+      {/* ROW 3: Bulk Actions (Dedicated Section) */}
+      {hasSelection && (
+        <div className="animate-in slide-in-from-top-2 fade-in duration-300 w-full glass-card bg-primary/5 border border-primary/20 rounded-[2rem] p-4 flex flex-col xl:flex-row items-center justify-between gap-4 shadow-xl">
+          <div className="flex items-center gap-4 pr-6 xl:border-r border-primary/20 w-full xl:w-auto shrink-0 justify-center xl:justify-start">
+            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-black text-sm shadow-inner">
+              {selectedRows.length}
+            </div>
+            <span className="text-[12px] font-black uppercase tracking-[0.3em] text-primary">Selected</span>
           </div>
-        )}
-
-        {/* Refresh All */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => { table.resetGlobalFilter(); table.resetColumnFilters(); onClearAISearch?.(); if (onTabChange) onTabChange("all"); }}
-          className="h-11 px-4 rounded-xl border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary font-black text-[9px] uppercase tracking-widest gap-2 transition-all active:scale-95 group shrink-0"
-        >
-          <RefreshCw className="w-3.5 h-3.5 group-hover:rotate-180 transition-transform duration-500" />
-          <span className="hidden md:inline">REFRESH</span>
-        </Button>
-
-        {/* Import Excel */}
-        <Button
-          id="tutorial-contacts-import"
-          variant="outline"
-          size="sm"
-          onClick={() => setIsExcelImportOpen(true)}
-          className="h-11 px-4 rounded-xl border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/10 text-emerald-500 font-black text-[9px] uppercase tracking-widest gap-2 transition-all active:scale-95 group shrink-0"
-        >
-          <Upload className="w-3.5 h-3.5" />
-          <span>IMPORT EXCEL</span>
-        </Button>
-
-        {/* Status Filters */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setShowPlatformFilters(!showPlatformFilters)}
-          className={cn(
-            "h-11 rounded-xl border-white/10 px-4 font-black text-[9px] uppercase tracking-widest gap-2 transition-all shrink-0",
-            showPlatformFilters ? "bg-foreground text-background border-foreground" : "bg-muted/20"
-          )}
-        >
-          <Filter className={cn("w-3.5 h-3.5", showPlatformFilters && "text-background")} />
-          <span className="hidden md:inline">FILTERS</span>
-        </Button>
-
-        {/* View Options */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+          
+          <div className="flex flex-wrap items-center justify-center xl:justify-start gap-3 w-full">
             <Button
-              variant="outline"
-              size="sm"
-              className="h-11 rounded-xl border-white/10 px-4 font-black text-[9px] uppercase tracking-widest gap-2 transition-all shrink-0 bg-muted/20 hover:bg-muted/40"
-            >
-              <View className="w-3.5 h-3.5 opacity-50" />
-              <span className="hidden md:inline">VIEW OPTIONS</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-[280px] glass-card border-white/10 p-2 rounded-2xl shadow-2xl z-[100]">
-             <DropdownMenuLabel className="px-3 py-1.5 text-[8px] font-black text-muted-foreground uppercase tracking-widest">Display Settings</DropdownMenuLabel>
-             <DropdownMenuSeparator className="bg-white/5 mx-2 my-1" />
-             <div className="px-3 py-2 flex items-center justify-between">
-                <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Freeze Title</span>
-                <Switch 
-                   checked={isTitleFrozen}
-                   onCheckedChange={(val) => onToggleTitleFreeze?.(val)}
-                   className="scale-75"
-                />
-             </div>
-             <DropdownMenuSeparator className="bg-white/10" />
-            
-             <DropdownMenuItem 
-               onClick={() => setIsColumnManagerOpen(true)}
-               className="text-[11px] font-black uppercase tracking-widest text-primary cursor-pointer hover:bg-primary/20"
-             >
-               <Settings2 className="mr-2 h-3.5 w-3.5" />
-               Manage Column Groups
-             </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        {/* Bulk Action Buttons - shown inline when rows selected */}
-        {hasSelection && (
-          <>
-            <div className="w-px h-8 bg-white/10 shrink-0" />
-            <Button
-              variant="default"
               onClick={() => { const ids = selectedRows.map(r => (r.original as any).id); onTriggerAction?.(ids); }}
-              className="h-11 px-5 rounded-xl font-black text-[10px] uppercase tracking-widest bg-primary text-primary-foreground hover:bg-primary/90 gap-2 shadow-xl transition-all active:scale-95 shrink-0"
+              className="rounded-full bg-primary hover:bg-primary/90 text-white font-black text-[10px] uppercase tracking-widest h-12 px-6 shadow-lg shadow-primary/30 gap-2 transition-transform active:scale-95"
             >
-              <Zap className="h-4 w-4 fill-background" />
-              SEND ({selectedRows.length})
+              <Zap className="w-4 h-4 fill-current" /> SEND OUTREACH
             </Button>
+            
+            <div className="hidden md:block w-px h-8 bg-primary/20 mx-2" />
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="default" className="h-11 px-5 rounded-xl font-black text-[10px] uppercase tracking-widest bg-foreground text-background hover:bg-foreground/90 gap-2 shadow-xl transition-all active:scale-95 shrink-0">
-                  BULK
-                  <ChevronDown className="h-3 w-3 opacity-50" />
+                <Button variant="outline" className="rounded-full bg-background/50 hover:bg-background border-primary/20 h-12 px-5 text-[10px] font-bold uppercase gap-2 hover:border-primary/50 transition-colors">
+                  <Palette className="w-4 h-4 text-primary" /> ROW COLOR
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-[280px] glass-card border-white/10 p-1 rounded-3xl shadow-2xl animate-in zoom-in-95 duration-200 z-[100]">
+              <DropdownMenuContent align="center" className="w-[280px] glass-card border-white/10 p-1 rounded-3xl shadow-2xl z-[100]">
                 <DropdownMenuLabel className="px-4 py-2 text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Set Row Color</DropdownMenuLabel>
                 <div onSelect={(e) => e.preventDefault()} className="outline-none">
                   <AdvancedColorPicker
@@ -406,43 +397,46 @@ export function DataTableToolbar<TData>({
                     onChange={(color) => executeBulkAction("color", color)}
                   />
                 </div>
-                <DropdownMenuSeparator className="my-3 bg-white/5" />
-                <DropdownMenuLabel className="px-4 py-2 text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Move to Sheet</DropdownMenuLabel>
-                <div className="max-h-40 overflow-y-auto py-1">
-                  {dynamicSheets.length > 0 ? dynamicSheets.map((sheet: any) => (
-                    <DropdownMenuItem key={sheet} onSelect={(e) => { e.preventDefault(); executeBulkAction("move", sheet); }} className="h-10 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest text-muted-foreground focus:text-foreground cursor-pointer">
-                      MOVE TO :: {sheet}
-                    </DropdownMenuItem>
-                  )) : (
-                    <p className="px-4 py-2 text-[9px] font-bold text-muted-foreground/50 italic">No other sheets found.</p>
-                  )}
-                </div>
-                <DropdownMenuSeparator className="my-3 bg-white/5" />
-                <DropdownMenuItem
-                  className="h-12 px-4 rounded-xl text-[10px] font-black uppercase tracking-[0.1em] text-blue-500 focus:bg-blue-500/10 focus:text-blue-500 cursor-pointer gap-3"
-                  onSelect={(e) => { e.preventDefault(); executeBulkAction("reset_automation"); }}
-                >
-                  <RefreshCw className="h-4 w-4" /> RESET AUTOMATION
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="my-3 bg-white/5" />
-                <DropdownMenuItem
-                  className="h-12 px-4 rounded-xl text-[10px] font-black uppercase tracking-[0.1em] text-amber-500 focus:bg-amber-500/10 focus:text-amber-500 cursor-pointer gap-3"
-                  onSelect={(e) => { e.preventDefault(); executeBulkAction("smart_clear"); }}
-                >
-                  <Eraser className="h-4 w-4" /> SMART CLEAR DATA
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="my-3 bg-white/5" />
-                <DropdownMenuItem
-                  className="h-12 px-4 rounded-xl text-[10px] font-black uppercase tracking-[0.1em] text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer gap-3"
-                  onSelect={(e) => { e.preventDefault(); executeBulkAction("delete"); }}
-                >
-                  <Trash2 className="h-4 w-4" /> DELETE CONTACTS
-                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </>
-        )}
-      </div>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="rounded-full bg-background/50 hover:bg-background border-primary/20 h-12 px-5 text-[10px] font-bold uppercase gap-2 hover:border-primary/50 transition-colors">
+                  <Layers className="w-4 h-4 text-primary" /> MOVE TO SHEET
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="center" className="w-[240px] glass-card border-white/10 p-2 rounded-2xl shadow-2xl z-[100]">
+                <DropdownMenuLabel className="px-3 py-1.5 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Select Sheet</DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-white/5 my-1" />
+                <div className="max-h-48 overflow-y-auto py-1">
+                  {dynamicSheets.length > 0 ? dynamicSheets.map((sheet: any) => (
+                    <DropdownMenuItem key={sheet} onSelect={(e) => { e.preventDefault(); executeBulkAction("move", sheet); }} className="h-10 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest text-muted-foreground focus:text-foreground cursor-pointer">
+                      {sheet}
+                    </DropdownMenuItem>
+                  )) : (
+                    <p className="px-4 py-3 text-[10px] font-bold text-muted-foreground/50 italic text-center">No other sheets found.</p>
+                  )}
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Button variant="outline" onClick={() => executeBulkAction("reset_automation")} className="rounded-full bg-background/50 hover:bg-background border-blue-500/20 hover:border-blue-500/50 text-blue-500 h-12 px-5 text-[10px] font-bold uppercase gap-2 transition-colors">
+              <RefreshCw className="w-4 h-4" /> RESET AUTOMATION
+            </Button>
+
+            <Button variant="outline" onClick={() => setIsSmartClearOpen(true)} className="rounded-full bg-background/50 hover:bg-background border-amber-500/20 hover:border-amber-500/50 text-amber-500 h-12 px-5 text-[10px] font-bold uppercase gap-2 transition-colors">
+              <Eraser className="w-4 h-4" /> SMART CLEAR
+            </Button>
+
+            <div className="flex-1" />
+
+            <Button variant="outline" onClick={() => executeBulkAction("delete")} className="rounded-full bg-background/50 hover:bg-destructive/10 border-destructive/20 hover:border-destructive/50 text-destructive h-12 px-5 text-[10px] font-bold uppercase gap-2 transition-colors w-full xl:w-auto">
+              <Trash2 className="w-4 h-4" /> DELETE
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Platform filters expand row */}
       {showPlatformFilters && (
