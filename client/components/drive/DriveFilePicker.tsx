@@ -3,11 +3,15 @@ import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Link } from "react-router-dom";
 import {
   X, Search, Loader2, HardDrive, AlertTriangle, CheckCircle2,
@@ -23,7 +27,7 @@ import { createPortal } from "react-dom";
 
 export type AttachmentPlatform = "whatsapp" | "instagram" | "email";
 
-const PLATFORM_RULES: Record<AttachmentPlatform, {
+export const PLATFORM_RULES: Record<AttachmentPlatform, {
   maxMB: number;
   supported: string[];
   note?: string;
@@ -53,14 +57,14 @@ const PLATFORM_RULES: Record<AttachmentPlatform, {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function formatFileSize(bytes?: number): string {
+export function formatFileSize(bytes?: number): string {
   if (!bytes) return "";
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function getFileType(mimeType: string): string {
+export function getFileType(mimeType: string): string {
   if (mimeType.includes("pdf")) return "PDF";
   if (mimeType.includes("image")) return mimeType.split("/")[1]?.toUpperCase() || "IMAGE";
   if (mimeType.includes("video")) return "VIDEO";
@@ -71,7 +75,7 @@ function getFileType(mimeType: string): string {
   return mimeType.split("/").pop()?.toUpperCase() || "FILE";
 }
 
-function FileIcon({ mimeType, className }: { mimeType: string; className?: string }) {
+export function FileIcon({ mimeType, className }: { mimeType: string; className?: string }) {
   const cls = cn("shrink-0", className);
   if (mimeType.includes("image")) return <FileImage className={cls} />;
   if (mimeType.includes("video")) return <FileVideo className={cls} />;
@@ -80,10 +84,57 @@ function FileIcon({ mimeType, className }: { mimeType: string; className?: strin
   return <File className={cls} />;
 }
 
+// Enforce limits and validate
+export function validateFile(file: DriveFile, platform?: AttachmentPlatform): { valid: boolean; reason?: string } {
+  if (!platform) return { valid: true };
+  const rules = PLATFORM_RULES[platform];
+  if (!rules) return { valid: true };
+
+  // Check file size (maxMB)
+  if (file.size && file.size > rules.maxMB * 1024 * 1024) {
+    return {
+      valid: false,
+      reason: `File size exceeds ${rules.maxMB}MB platform limit (Selected file is ${formatFileSize(file.size)})`
+    };
+  }
+
+  // Check file type / mimeType
+  const mime = (file.mimeType || "").toLowerCase();
+  if (platform === "instagram") {
+    // Instagram only supports images
+    if (!mime.startsWith("image/")) {
+      return {
+        valid: false,
+        reason: "Instagram only supports image attachments (JPEG, PNG, GIF)"
+      };
+    }
+  } else if (platform === "whatsapp") {
+    // WhatsApp supports image, video, audio, pdf, document (docs)
+    const isSupported = mime.startsWith("image/") || 
+                        mime.startsWith("video/") || 
+                        mime.startsWith("audio/") || 
+                        mime.includes("pdf") || 
+                        mime.includes("document") || 
+                        mime.includes("word") || 
+                        mime.includes("spreadsheet") || 
+                        mime.includes("excel") || 
+                        mime.includes("presentation") || 
+                        mime.includes("powerpoint");
+    if (!isSupported && mime) {
+      return {
+        valid: false,
+        reason: "Unsupported file type for WhatsApp (Use image, video, audio, PDF, or documents)"
+      };
+    }
+  }
+
+  return { valid: true };
+}
+
 // ─── Preview Modal ────────────────────────────────────────────────────────────
 
-function FilePreviewModal({ file, onClose }: { file: DriveFile; onClose: () => void }) {
-  const isImg = file.mimeType.startsWith("image/");
+export function FilePreviewModal({ file, onClose }: { file: DriveFile; onClose: () => void }) {
+  const isImg = (file.mimeType || "").startsWith("image/");
 
   React.useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -134,7 +185,7 @@ function FilePreviewModal({ file, onClose }: { file: DriveFile; onClose: () => v
         <div className="p-6 bg-black/20 min-h-[280px] flex items-center justify-center">
           {isImg && (file.thumbnailLink || file.webViewLink) ? (
             <img
-              src={file.thumbnailLink || ""}
+              src={file.thumbnailLink || file.webViewLink || ""}
               alt={file.name}
               className="max-h-[55vh] max-w-full object-contain rounded-2xl shadow-lg border border-white/5"
             />
@@ -171,7 +222,7 @@ function FilePreviewModal({ file, onClose }: { file: DriveFile; onClose: () => v
 
 // ─── Platform Constraints Banner ──────────────────────────────────────────────
 
-function PlatformConstraintsBanner({ platform }: { platform: AttachmentPlatform }) {
+export function PlatformConstraintsBanner({ platform }: { platform: AttachmentPlatform }) {
   const rule = PLATFORM_RULES[platform];
   return (
     <div className={cn(
@@ -254,6 +305,17 @@ export function DriveFilePicker({
     if (isSelected) {
       onChange(selectedFiles.filter((f) => f.id !== file.id));
     } else {
+      if (platform) {
+        const check = validateFile(file, platform);
+        if (!check.valid) {
+          toast({
+            title: "Platform Constraint Error",
+            description: check.reason || "This file is ineligible for selection.",
+            variant: "destructive"
+          });
+          return;
+        }
+      }
       onChange([...selectedFiles, file]);
     }
   };
@@ -262,12 +324,15 @@ export function DriveFilePicker({
     onChange(selectedFiles.filter((f) => f.id !== id));
   };
 
-  const isImage = (mimeType: string) => mimeType.startsWith("image/");
+  const isImage = (mimeType: string) => (mimeType || "").startsWith("image/");
 
   // ── Picker content ──────────────────────────────────────────────────────────
 
   const pickerContent = (
-    <div className="flex flex-col w-full bg-background/50 border border-white/10 rounded-[2rem] overflow-hidden">
+    <div className={cn(
+      "flex flex-col w-full overflow-hidden",
+      inline ? "bg-background/50 border border-white/10 rounded-[2rem]" : "bg-transparent"
+    )}>
 
       {/* Platform Limits Banner — shown before search */}
       {platform && (
@@ -327,6 +392,7 @@ export function DriveFilePicker({
               const isImg = isImage(file.mimeType);
               const fileType = getFileType(file.mimeType);
               const fileSize = formatFileSize(file.size);
+              const validation = validateFile(file, platform);
               return (
                 <div
                   key={file.id}
@@ -334,6 +400,8 @@ export function DriveFilePicker({
                     "w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-left transition-all group relative overflow-hidden cursor-pointer",
                     isSelected
                       ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                      : !validation.valid
+                      ? "opacity-50 hover:bg-destructive/5 hover:border-destructive/10"
                       : "hover:bg-muted/60"
                   )}
                   onClick={() => toggleFile(file)}
@@ -384,8 +452,17 @@ export function DriveFilePicker({
                     </div>
                   </div>
 
-                  {/* Actions */}
+                  {/* Actions / Limitations warning badge */}
                   <div className="shrink-0 flex items-center gap-1.5 relative z-10">
+                    {!validation.valid && (
+                      <Badge
+                        variant="destructive"
+                        className="text-[8px] font-black tracking-widest uppercase px-2 py-0.5 bg-red-500/10 text-red-400 border border-red-500/20 shrink-0"
+                      >
+                        Ineligible
+                      </Badge>
+                    )}
+
                     {/* Preview button — works for all files, not just images */}
                     <button
                       type="button"
@@ -482,12 +559,12 @@ export function DriveFilePicker({
           </div>
         )}
 
-        {/* Picker: inline or popover */}
+        {/* Picker: inline or dialog */}
         {inline ? (
           pickerContent
         ) : (
-          <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
               <Button
                 variant="outline"
                 size="lg"
@@ -501,14 +578,32 @@ export function DriveFilePicker({
                 <span className="truncate text-sm tracking-widest uppercase flex-1 text-left">{placeholder}</span>
                 <Search className="h-4 w-4 text-muted-foreground/50 group-hover:text-primary shrink-0 transition-colors" />
               </Button>
-            </PopoverTrigger>
-            <PopoverContent
-              className="w-[min(480px,95vw)] p-0 glass-card rounded-[2rem] border-white/10 overflow-hidden shadow-2xl animate-in slide-in-from-top-4 duration-300"
-              align="start"
+            </DialogTrigger>
+            <DialogContent
+              className="w-[min(540px,95vw)] max-h-[85vh] p-0 glass-card rounded-[2rem] border border-white/10 overflow-hidden shadow-2xl animate-in slide-in-from-top-4 duration-300 flex flex-col"
             >
-              {pickerContent}
-            </PopoverContent>
-          </Popover>
+              <DialogHeader className="px-8 pt-8 pb-4 flex-shrink-0 border-b border-white/5 bg-muted/20 relative">
+                <DialogTitle className="text-2xl font-black tracking-tight flex items-center gap-3">
+                  <HardDrive className="h-6 w-6 text-primary shrink-0" />
+                  SELECT DRIVE FILES
+                </DialogTitle>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">
+                  Choose files matching platform size and type rules
+                </p>
+              </DialogHeader>
+              <div className="flex-1 min-h-0 overflow-y-auto">
+                {pickerContent}
+              </div>
+              <DialogFooter className="px-8 py-5 border-t border-white/5 flex-shrink-0 bg-muted/10">
+                <Button
+                  onClick={() => setOpen(false)}
+                  className="h-12 px-8 rounded-xl bg-foreground text-background hover:bg-foreground/90 font-black text-[10px] uppercase tracking-widest shadow-xl transition-all active:scale-95"
+                >
+                  DONE SELECTING ({selectedFiles.length})
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         )}
       </div>
     </>
