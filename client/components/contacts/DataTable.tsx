@@ -304,7 +304,7 @@ export function DataTable<TData, TValue>({
   const content = (
     <div className={cn(
       "transition-all duration-500",
-      isFullscreen ? "fixed inset-0 z-[40] bg-background p-6 lg:p-10 space-y-8 overflow-hidden flex flex-col" : "space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-700"
+      isFullscreen ? "fixed inset-0 z-[40] bg-background p-6 lg:p-10 space-y-8 overflow-y-auto flex flex-col" : "space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-700"
     )}>
       <div className="flex items-center justify-between gap-4">
         <DataTableToolbar 
@@ -328,8 +328,8 @@ export function DataTable<TData, TValue>({
       </div>
       
       <div id="tutorial-grid" className={cn(
-        "glass-card rounded-[2.5rem] border-white/10 shadow-2xl relative flex-1 flex flex-col min-h-0 overflow-hidden",
-        isFullscreen ? "rounded-none border-none bg-card/50" : ""
+        "glass-card rounded-[2.5rem] border-white/10 shadow-2xl relative flex flex-col overflow-hidden",
+        isFullscreen ? "rounded-none border-none bg-card/50 min-h-min" : "h-[450px]"
       )}>
         <div 
           className="overflow-auto flex-1 scrollbar-thin scrollbar-thumb-white/10 hover:scrollbar-thumb-primary/50 transition-all origin-top-left relative"
