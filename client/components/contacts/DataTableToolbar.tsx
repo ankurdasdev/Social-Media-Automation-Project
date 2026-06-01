@@ -56,6 +56,8 @@ interface DataTableToolbarProps<TData> {
   zoomLevel?: number;
   onZoomChange?: (zoom: number) => void;
   onAddContact?: () => void;
+  isTitleFrozen?: boolean;
+  onToggleTitleFreeze?: (frozen: boolean) => void;
 }
 
 export function DataTableToolbar<TData>({
@@ -75,6 +77,8 @@ export function DataTableToolbar<TData>({
   zoomLevel = 100,
   onZoomChange,
   onAddContact,
+  isTitleFrozen,
+  onToggleTitleFreeze,
 }: DataTableToolbarProps<TData>) {
   const selectedRows = table.getFilteredSelectedRowModel().rows;
   const hasSelection = selectedRows.length > 0;
@@ -356,10 +360,10 @@ export function DataTableToolbar<TData>({
              <DropdownMenuLabel className="px-3 py-1.5 text-[8px] font-black text-muted-foreground uppercase tracking-widest">Display Settings</DropdownMenuLabel>
              <DropdownMenuSeparator className="bg-white/5 mx-2 my-1" />
              <div className="px-3 py-2 flex items-center justify-between">
-                <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Freeze Title Columns</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Freeze Title</span>
                 <Switch 
-                   checked={table.getState().columnPinning?.left?.length > 0}
-                   onCheckedChange={(val) => table.setColumnPinning(val ? { left: ['select', 'name'] } : { left: [] })}
+                   checked={isTitleFrozen}
+                   onCheckedChange={(val) => onToggleTitleFreeze?.(val)}
                    className="scale-75"
                 />
              </div>

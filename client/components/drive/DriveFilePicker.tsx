@@ -91,10 +91,10 @@ export function validateFile(file: DriveFile, platform?: AttachmentPlatform): { 
   if (!rules) return { valid: true };
 
   // Check file size (maxMB)
-  if (file.size && file.size > rules.maxMB * 1024 * 1024) {
+  if (file.size && Number(file.size) > rules.maxMB * 1024 * 1024) {
     return {
       valid: false,
-      reason: `File size exceeds ${rules.maxMB}MB platform limit (Selected file is ${formatFileSize(file.size)})`
+      reason: `File size exceeds ${rules.maxMB}MB platform limit (Selected file is ${formatFileSize(Number(file.size))})`
     };
   }
 
@@ -157,7 +157,7 @@ export function FilePreviewModal({ file, onClose }: { file: DriveFile; onClose: 
           <div className="flex-1 min-w-0">
             <p className="text-sm font-black truncate">{file.name}</p>
             <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold mt-0.5">
-              {getFileType(file.mimeType)}{file.size ? ` · ${formatFileSize(file.size)}` : ""}
+              {getFileType(file.mimeType)}{file.size ? ` · ${formatFileSize(Number(file.size))}` : ""}
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -197,7 +197,7 @@ export function FilePreviewModal({ file, onClose }: { file: DriveFile; onClose: 
               <div className="space-y-1">
                 <p className="text-sm font-black">{file.name}</p>
                 <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-widest">
-                  {getFileType(file.mimeType)}{file.size ? ` · ${formatFileSize(file.size)}` : ""}
+                  {getFileType(file.mimeType)}{file.size ? ` · ${formatFileSize(Number(file.size))}` : ""}
                 </p>
               </div>
               {file.webViewLink && (
@@ -391,7 +391,7 @@ export function DriveFilePicker({
               const isSelected = selectedFiles.some((f) => f.id === file.id);
               const isImg = isImage(file.mimeType);
               const fileType = getFileType(file.mimeType);
-              const fileSize = formatFileSize(file.size);
+              const fileSize = formatFileSize(file.size ? Number(file.size) : undefined);
               const validation = validateFile(file, platform);
               return (
                 <div
