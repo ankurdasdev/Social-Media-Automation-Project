@@ -71,11 +71,17 @@ export function ColumnManagerDialog({ isOpen, onOpenChange, onSaved }: ColumnMan
     if (isOpen) {
       try {
         const saved = localStorage.getItem("casthub-column-groups");
-        if (saved) {
-          setGroups(JSON.parse(saved));
-        } else {
-          setGroups(DEFAULT_GROUPS);
-        }
+        let initialGroups = saved ? JSON.parse(saved) : DEFAULT_GROUPS;
+        
+        // Sync with inline group settings
+        const groupSettings = JSON.parse(localStorage.getItem("casthub-group-settings") || "{}");
+        initialGroups = initialGroups.map((g: any) => ({
+          ...g,
+          title: groupSettings[g.id]?.title || g.title,
+          color: groupSettings[g.id]?.color || g.color
+        }));
+        
+        setGroups(initialGroups);
       } catch (e) {
         setGroups(DEFAULT_GROUPS);
       }
@@ -84,6 +90,17 @@ export function ColumnManagerDialog({ isOpen, onOpenChange, onSaved }: ColumnMan
 
   const handleSave = () => {
     localStorage.setItem("casthub-column-groups", JSON.stringify(groups));
+    
+    // Sync to inline group settings
+    try {
+      const settings = JSON.parse(localStorage.getItem("casthub-group-settings") || "{}");
+      groups.forEach((g: any) => {
+        settings[g.id] = { title: g.title, color: g.color };
+      });
+      localStorage.setItem("casthub-group-settings", JSON.stringify(settings));
+      window.dispatchEvent(new Event("casthub-group-update"));
+    } catch (e) {}
+
     window.dispatchEvent(new Event("casthub-groups-changed"));
     onSaved();
     onOpenChange(false);

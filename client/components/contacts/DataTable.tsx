@@ -336,7 +336,7 @@ export function DataTable<TData, TValue>({
               <p className="mt-4 text-[10px] font-black uppercase tracking-[0.4em] text-primary">Rendering Rows...</p>
             </div>
           )}
-          <Table className="table-fixed" style={{ width: "max-content", minWidth: Math.max(table.getCenterTotalSize(), 100) }}>
+          <Table wrapperClassName="overflow-visible" className="table-fixed" style={{ width: "max-content", minWidth: Math.max(table.getCenterTotalSize(), 100) }}>
             <TableHeader className={cn("border-b border-white/5 backdrop-blur-3xl", isTitleFrozen ? "sticky top-0 z-30 bg-background/95" : "bg-muted/30")}>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id} className={cn("hover:bg-transparent border-b-0", headerGroup.depth === 0 ? "h-10" : "h-16")}>
