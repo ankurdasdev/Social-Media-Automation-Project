@@ -37,6 +37,7 @@ export const PLATFORM_RULES: Record<AttachmentPlatform, {
   whatsapp: {
     maxMB: 64,
     supported: ["Images", "Video", "Audio", "PDF", "Docs"],
+    note: "⚠ HEIC/HEIF images (iPhone defaults) are not supported. Please use JPG/PNG.",
     color: "#25D366",
     badgeClass: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
   },
@@ -100,6 +101,18 @@ export function validateFile(file: DriveFile, platform?: AttachmentPlatform): { 
 
   // Check file type / mimeType
   const mime = (file.mimeType || "").toLowerCase();
+  
+  // Globally block HEIF/HEIC for WhatsApp and Instagram as they lack server decoding support
+  if (platform === "whatsapp" || platform === "instagram") {
+    const name = (file.name || "").toLowerCase();
+    if (mime.includes("heic") || mime.includes("heif") || name.endsWith(".heic") || name.endsWith(".heif")) {
+      return {
+        valid: false,
+        reason: "HEIC/HEIF images (iPhone default) are not supported. Please convert to JPG or PNG."
+      };
+    }
+  }
+
   if (platform === "instagram") {
     // Instagram only supports images
     if (!mime.startsWith("image/")) {
