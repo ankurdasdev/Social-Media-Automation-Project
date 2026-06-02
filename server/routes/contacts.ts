@@ -20,7 +20,7 @@ import { runIngestionJob, getIngestionState } from "../jobs/ingestion-job";
 import { generateSearchSQL } from "../services/ai-service";
 import { query, queryOne } from "../db/index";
 import type { ContactsResponse, ContactResponse, ErrorResponse, IngestionStatusResponse } from "@shared/api";
-import { generateOpenAIResponse } from "../services/ai-service";
+import { generateOpenAIResponse, generateChatResponse } from "../services/ai-service";
 
 // ─── GET /api/contacts ────────────────────────────────────────────────────────
 
@@ -383,6 +383,78 @@ Please provide a concise, bulleted diagnosis summarizing the core reasons for th
     res.json({ diagnosis });
   } catch (err: any) {
     console.error("[AI Diagnose] Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ─── POST /api/analytics/chat ───────────────────────────────────────────────
+
+export const handleAnalyticsChat: RequestHandler = async (req, res) => {
+  const userId = req.body.userId || process.env.DEFAULT_USER_ID;
+  const { messages } = req.body;
+  
+  if (!userId || !messages || !Array.isArray(messages)) {
+    return res.status(400).json({ error: "userId and messages array required" });
+  }
+
+  try {
+    // 1. Fetch raw contacts (max 500 to save tokens)
+    const rawData = await query<any>(`
+      SELECT id, status, project, sheet_name, whatsapp_completed, email_completed, instagram_completed, automation_comment, updated_at
+      FROM contacts 
+      WHERE user_id = $1 
+      ORDER BY updated_at DESC 
+      LIMIT 500
+    `, [userId]);
+
+    // 2. Fetch metrics
+    const stats = await queryOne<{ total: string, failed: string, success: string }>(`
+      SELECT 
+        COUNT(*) as total,
+        COUNT(*) FILTER (WHERE email_completed = 'Failed' OR whatsapp_completed = 'Failed' OR instagram_completed = 'Failed') as failed,
+        COUNT(*) FILTER (WHERE email_completed = 'Yes' OR whatsapp_completed = 'Yes' OR instagram_completed = 'Yes') as success
+      FROM contacts WHERE user_id = $1
+    `, [userId]);
+
+    // 3. Sanitize data (Strict privacy: NO names, emails, phones, instagram handles fetched above at all)
+    const contextData = {
+      systemMetrics: {
+        totalContacts: parseInt(stats?.total || "0"),
+        totalFailed: parseInt(stats?.failed || "0"),
+        totalSuccess: parseInt(stats?.success || "0")
+      },
+      recentContactsSample: rawData.map(r => ({
+        id: r.id,
+        status: r.status,
+        project: r.project,
+        sheet: r.sheet_name,
+        whatsapp: r.whatsapp_completed,
+        email: r.email_completed,
+        instagram: r.instagram_completed,
+        error_log: r.automation_comment || "None",
+        updated: r.updated_at
+      }))
+    };
+
+    const systemPrompt = `You are a highly capable Data Analyst AI for an outreach automation platform.
+Your goal is to answer the user's questions about their analytics, conversion rates, and automation failures.
+You have access to the sanitized database context below. NEVER mention PII (names, emails, phones) because it is strictly protected and not provided to you.
+Analyze the provided JSON data to answer the user's queries accurately. Keep your answers concise, formatted in markdown, and highly actionable.
+
+DATABASE CONTEXT:
+${JSON.stringify(contextData)}
+`;
+
+    // Add system prompt to the beginning
+    const fullMessages = [
+      { role: "system", content: systemPrompt },
+      ...messages
+    ];
+
+    const responseText = await generateChatResponse(fullMessages);
+    res.json({ response: responseText });
+  } catch (err: any) {
+    console.error("[AI Chat] Error:", err);
     res.status(500).json({ error: err.message });
   }
 };

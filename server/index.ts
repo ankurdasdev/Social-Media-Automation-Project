@@ -20,6 +20,7 @@ import {
   handleAIContactSearch,
   handleGetAnalyticsStats,
   handleAIDiagnoseFailures,
+  handleAnalyticsChat,
 } from "./routes/contacts";
 import {
   handleGetTemplates,
@@ -146,6 +147,7 @@ export function createServer() {
   app.post("/api/ai/improve-message", handleImproveMessage);
   app.get("/api/analytics/stats", handleGetAnalyticsStats);
   app.post("/api/analytics/diagnose-failures", handleAIDiagnoseFailures);
+  app.post("/api/analytics/chat", handleAnalyticsChat);
 
   // ── Ingestion Job (legacy trigger endpoint kept for backward compat) ────────
   app.post("/api/ingestion/trigger", handleTriggerIngestion);
