@@ -42,6 +42,8 @@ export default function InstagramSettings() {
 
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const [sessionId, setSessionId] = React.useState("");
+  const [useSessionLogin, setUseSessionLogin] = React.useState(false);
   const [verificationCode, setVerificationCode] = React.useState("");
   const [needsVerification, setNeedsVerification] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
@@ -89,6 +91,7 @@ export default function InstagramSettings() {
       toast.success("Instagram disconnected.");
       setUsername("");
       setPassword("");
+      setSessionId("");
       setNeedsVerification(false);
       setLoginStep("idle");
       setLoginError(null);
@@ -101,56 +104,85 @@ export default function InstagramSettings() {
       toast.error("Service configuration not loaded. Please try again.");
       return;
     }
-    if (!username.trim() || !password) {
-      toast.error("Please enter your username and password.");
-      return;
+    
+    if (useSessionLogin) {
+      if (!sessionId.trim()) {
+        toast.error("Please enter your Session ID.");
+        return;
+      }
+    } else {
+      if (!username.trim() || !password) {
+        toast.error("Please enter your username and password.");
+        return;
+      }
     }
 
     setLoginError(null);
     setLoginStep("logging_in");
 
     try {
-      const connectRes = await fetch("/api/instagram/connect", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId,
-          username: username.trim().toLowerCase().replace(/^@/, ""),
-          password,
-          verificationCode: verificationCode.trim() || undefined,
-        }),
-      });
+      if (useSessionLogin) {
+        // --- SESSION ID LOGIN FLOW ---
+        const connectRes = await fetch("/api/instagram/connect-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId,
+            sessionId: sessionId.trim(),
+          }),
+        });
 
-      if (!connectRes.ok) {
-        const errBody = await connectRes.json();
-        const errStr = JSON.stringify(errBody);
-        
-        const isTwoFactor = errBody.twoFactorRequired || 
-          errStr.toLowerCase().includes("two_factor") ||
-          errStr.toLowerCase().includes("verification_code");
-
-        if (isTwoFactor) {
-          setNeedsVerification(true);
+        if (!connectRes.ok) {
+          const errBody = await connectRes.json();
+          setLoginError(errBody.message || "Failed to connect using Session ID. Make sure it's valid.");
           setLoginStep("idle");
-          toast.info("Two-factor authentication required. Enter your code and try again.");
           return;
         }
+      } else {
+        // --- PASSWORD LOGIN FLOW ---
+        const connectRes = await fetch("/api/instagram/connect", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId,
+            username: username.trim().toLowerCase().replace(/^@/, ""),
+            password,
+            verificationCode: verificationCode.trim() || undefined,
+          }),
+        });
 
-        let userMessage = errBody.message || "Login failed. Check your credentials and try again.";
-        if (errStr.toLowerCase().includes("badpassword")) {
-          userMessage = "Incorrect password. Please double-check and try again.";
-        } else if (errStr.toLowerCase().includes("challenge")) {
-          userMessage = "Instagram requires you to complete a challenge in the app. Please open Instagram on your phone, approve the login, and try again.";
+        if (!connectRes.ok) {
+          const errBody = await connectRes.json();
+          const errStr = JSON.stringify(errBody);
+          
+          const isTwoFactor = errBody.twoFactorRequired || 
+            errStr.toLowerCase().includes("two_factor") ||
+            errStr.toLowerCase().includes("verification_code");
+
+          if (isTwoFactor) {
+            setNeedsVerification(true);
+            setLoginStep("idle");
+            toast.info("Two-factor authentication required. Enter your code and try again.");
+            return;
+          }
+
+          let userMessage = errBody.message || "Login failed. Check your credentials and try again.";
+          if (errStr.toLowerCase().includes("badpassword")) {
+            userMessage = "Incorrect password. Please double-check and try again.";
+          } else if (errStr.toLowerCase().includes("challenge")) {
+            userMessage = "Instagram requires you to complete a challenge in the app. Please open Instagram on your phone, approve the login, and try again.";
+          }
+
+          setLoginError(userMessage);
+          setLoginStep("idle");
+          return;
         }
-
-        setLoginError(userMessage);
-        setLoginStep("idle");
-        return;
       }
 
       setLoginStep("done");
-      toast.success(`Instagram connected as @${username.trim()}!`);
+      toast.success(useSessionLogin ? "Instagram session connected!" : `Instagram connected as @${username.trim()}!`);
       setPassword("");
+      setSessionId("");
       setVerificationCode("");
       setNeedsVerification(false);
       queryClient.invalidateQueries({ queryKey: ["instagram-status", userId] });
@@ -370,48 +402,95 @@ export default function InstagramSettings() {
 
                   {/* Form */}
                   <div className="w-full max-w-md space-y-6">
-                    {/* Username */}
-                    <div className="space-y-3 text-left">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-4">Account Username</Label>
-                      <div className="relative group">
-                         <div className="absolute -inset-1 bg-gradient-to-tr from-pink-500/30 to-orange-500/30 rounded-[1.5rem] blur-lg opacity-30 group-focus-within:opacity-100 transition-all duration-700" />
-                         <span className="absolute left-6 top-1/2 -translate-y-1/2 text-pink-500 font-black text-xl opacity-30 group-focus-within:opacity-100 transition-opacity z-10">@</span>
-                         <Input
-                           value={username}
-                           onChange={(e) => setUsername(e.target.value)}
-                           onKeyDown={(e) => e.key === "Enter" && handleConnect()}
-                           placeholder="your.username"
-                           autoComplete="username"
-                           disabled={isBusy}
-                           className="h-20 pl-14 rounded-[1.5rem] bg-muted/60 border-border/50 focus:bg-background focus:ring-pink-500 text-center text-2xl font-black tracking-tight shadow-inner transition-all relative z-0"
-                         />
-                      </div>
+                    {/* Method Toggle */}
+                    <div className="flex items-center justify-center p-1 bg-white/5 rounded-full border border-white/10 w-fit mx-auto">
+                      <button
+                        onClick={() => setUseSessionLogin(false)}
+                        className={cn(
+                          "px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all",
+                          !useSessionLogin ? "bg-pink-500 text-white shadow-lg shadow-pink-500/20" : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        Password
+                      </button>
+                      <button
+                        onClick={() => setUseSessionLogin(true)}
+                        className={cn(
+                          "px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all",
+                          useSessionLogin ? "bg-pink-500 text-white shadow-lg shadow-pink-500/20" : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        Session ID
+                      </button>
                     </div>
 
-                    {/* Password */}
-                    <div className="space-y-3 text-left">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-4">Account Password</Label>
-                      <div className="relative group">
-                         <div className="absolute -inset-1 bg-gradient-to-tr from-pink-500/30 to-orange-500/30 rounded-[1.5rem] blur-lg opacity-30 group-focus-within:opacity-100 transition-all duration-700" />
-                         <Input
-                           type={showPassword ? "text" : "password"}
-                           value={password}
-                           onChange={(e) => setPassword(e.target.value)}
-                           onKeyDown={(e) => e.key === "Enter" && handleConnect()}
-                           placeholder="••••••••••"
-                           autoComplete="current-password"
-                           disabled={isBusy}
-                           className="h-20 rounded-[1.5rem] bg-muted/60 border-border/50 focus:bg-background focus:ring-pink-500 text-center text-2xl font-black shadow-inner transition-all relative z-0 pr-14"
-                         />
-                         <button
-                           type="button"
-                           onClick={() => setShowPassword(!showPassword)}
-                           className="absolute right-6 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-pink-500 transition-colors z-10"
-                         >
-                           {showPassword ? <EyeOff className="h-6 w-6" /> : <Eye className="h-6 w-6" />}
-                         </button>
+                    {!useSessionLogin ? (
+                      <>
+                        {/* Username */}
+                        <div className="space-y-3 text-left animate-in slide-in-from-left duration-300">
+                          <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-4">Account Username</Label>
+                          <div className="relative group">
+                             <div className="absolute -inset-1 bg-gradient-to-tr from-pink-500/30 to-orange-500/30 rounded-[1.5rem] blur-lg opacity-30 group-focus-within:opacity-100 transition-all duration-700" />
+                             <span className="absolute left-6 top-1/2 -translate-y-1/2 text-pink-500 font-black text-xl opacity-30 group-focus-within:opacity-100 transition-opacity z-10">@</span>
+                             <Input
+                               value={username}
+                               onChange={(e) => setUsername(e.target.value)}
+                               onKeyDown={(e) => e.key === "Enter" && handleConnect()}
+                               placeholder="your.username"
+                               autoComplete="username"
+                               disabled={isBusy}
+                               className="h-20 pl-14 rounded-[1.5rem] bg-muted/60 border-border/50 focus:bg-background focus:ring-pink-500 text-center text-2xl font-black tracking-tight shadow-inner transition-all relative z-0"
+                             />
+                          </div>
+                        </div>
+
+                        {/* Password */}
+                        <div className="space-y-3 text-left animate-in slide-in-from-left duration-300">
+                          <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-4">Account Password</Label>
+                          <div className="relative group">
+                             <div className="absolute -inset-1 bg-gradient-to-tr from-pink-500/30 to-orange-500/30 rounded-[1.5rem] blur-lg opacity-30 group-focus-within:opacity-100 transition-all duration-700" />
+                             <Input
+                               type={showPassword ? "text" : "password"}
+                               value={password}
+                               onChange={(e) => setPassword(e.target.value)}
+                               onKeyDown={(e) => e.key === "Enter" && handleConnect()}
+                               placeholder="••••••••••"
+                               autoComplete="current-password"
+                               disabled={isBusy}
+                               className="h-20 rounded-[1.5rem] bg-muted/60 border-border/50 focus:bg-background focus:ring-pink-500 text-center text-2xl font-black shadow-inner transition-all relative z-0 pr-14"
+                             />
+                             <button
+                               type="button"
+                               onClick={() => setShowPassword(!showPassword)}
+                               className="absolute right-6 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-pink-500 transition-colors z-10"
+                             >
+                               {showPassword ? <EyeOff className="h-6 w-6" /> : <Eye className="h-6 w-6" />}
+                             </button>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="space-y-3 text-left animate-in slide-in-from-right duration-300">
+                        <div className="flex items-center justify-between ml-4">
+                          <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Session ID Cookie</Label>
+                        </div>
+                        <div className="relative group">
+                           <div className="absolute -inset-1 bg-gradient-to-tr from-purple-500/30 to-pink-500/30 rounded-[1.5rem] blur-lg opacity-30 group-focus-within:opacity-100 transition-all duration-700" />
+                           <Input
+                             type="text"
+                             value={sessionId}
+                             onChange={(e) => setSessionId(e.target.value)}
+                             onKeyDown={(e) => e.key === "Enter" && handleConnect()}
+                             placeholder="Paste 'sessionid' cookie value here..."
+                             disabled={isBusy}
+                             className="h-20 rounded-[1.5rem] bg-muted/60 border-border/50 focus:bg-background focus:ring-purple-500 text-center text-lg font-mono tracking-tight shadow-inner transition-all relative z-0 px-6"
+                           />
+                        </div>
+                        <p className="text-[10px] text-muted-foreground/60 text-center pt-2">
+                          Login via Session ID bypasses the password and challenge screens.
+                        </p>
                       </div>
-                    </div>
+                    )}
 
                     {/* 2FA */}
                     {needsVerification && (
@@ -438,7 +517,7 @@ export default function InstagramSettings() {
                     {/* Submit */}
                     <Button
                       onClick={handleConnect}
-                      disabled={isBusy || !username.trim() || !password || serviceDown || loginStep === "done"}
+                      disabled={isBusy || (useSessionLogin ? !sessionId.trim() : (!username.trim() || !password)) || serviceDown || loginStep === "done"}
                       className={cn(
                         "h-20 w-full rounded-[1.5rem] font-black text-white shadow-2xl transition-all active:scale-[0.98] text-lg gap-4 group relative overflow-hidden",
                         loginStep === "done"
