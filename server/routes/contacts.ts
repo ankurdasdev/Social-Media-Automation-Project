@@ -20,6 +20,7 @@ import { runIngestionJob, getIngestionState } from "../jobs/ingestion-job";
 import { generateSearchSQL } from "../services/ai-service";
 import { query, queryOne } from "../db/index";
 import type { ContactsResponse, ContactResponse, ErrorResponse, IngestionStatusResponse } from "@shared/api";
+import { generateOpenAIResponse } from "../services/ai-service";
 
 // ─── GET /api/contacts ────────────────────────────────────────────────────────
 
@@ -260,23 +261,51 @@ export const handleGetAnalyticsStats: RequestHandler = async (req, res) => {
     const emailSent = await queryOne<{ count: string }>("SELECT COUNT(*) FROM contacts WHERE user_id = $1 AND email_completed = 'Yes'", [userId]);
     const igSent = await queryOne<{ count: string }>("SELECT COUNT(*) FROM contacts WHERE user_id = $1 AND instagram_completed = 'Yes'", [userId]);
 
+    const waFailed = await queryOne<{ count: string }>("SELECT COUNT(*) FROM contacts WHERE user_id = $1 AND whatsapp_completed = 'Failed'", [userId]);
+    const emailFailed = await queryOne<{ count: string }>("SELECT COUNT(*) FROM contacts WHERE user_id = $1 AND email_completed = 'Failed'", [userId]);
+    const igFailed = await queryOne<{ count: string }>("SELECT COUNT(*) FROM contacts WHERE user_id = $1 AND instagram_completed = 'Failed'", [userId]);
+
     const recent = await query<any>(
       "SELECT id, name, project, updated_at as date FROM contacts WHERE user_id = $1 ORDER BY updated_at DESC LIMIT 5",
       [userId]
     );
 
-    // Daily stats for the last 14 days
+    // Daily stats for the last 14 days (Heatmap + BarChart)
     const dailyStats = await query<any>(`
       SELECT 
         TO_CHAR(updated_at, 'Mon DD') as date,
+        updated_at::date as real_date,
         COUNT(*) FILTER (WHERE email_completed = 'Yes') as email,
         COUNT(*) FILTER (WHERE whatsapp_completed = 'Yes') as whatsapp,
-        COUNT(*) FILTER (WHERE instagram_completed = 'Yes') as instagram
+        COUNT(*) FILTER (WHERE instagram_completed = 'Yes') as instagram,
+        COUNT(*) FILTER (WHERE email_completed = 'Yes' OR whatsapp_completed = 'Yes' OR instagram_completed = 'Yes') as total_success,
+        COUNT(*) FILTER (WHERE email_completed = 'Failed' OR whatsapp_completed = 'Failed' OR instagram_completed = 'Failed') as total_failed
       FROM contacts 
-      WHERE user_id = $1 AND updated_at >= NOW() - INTERVAL '14 days'
+      WHERE user_id = $1 AND updated_at >= NOW() - INTERVAL '30 days'
       GROUP BY TO_CHAR(updated_at, 'Mon DD'), updated_at::date
       ORDER BY updated_at::date ASC
     `, [userId]);
+
+    // Cohort by Sheet Name
+    const cohorts = await query<any>(`
+      SELECT 
+        COALESCE(sheet_name, 'Unknown') as sheet,
+        COUNT(*) as total,
+        COUNT(*) FILTER (WHERE email_completed = 'Yes' OR whatsapp_completed = 'Yes' OR instagram_completed = 'Yes') as success,
+        COUNT(*) FILTER (WHERE email_completed = 'Failed' OR whatsapp_completed = 'Failed' OR instagram_completed = 'Failed') as failed
+      FROM contacts
+      WHERE user_id = $1
+      GROUP BY sheet_name
+      ORDER BY total DESC
+      LIMIT 10
+    `, [userId]);
+
+    // Funnel Data
+    const funnel = [
+      { step: "Total Uploaded", value: parseInt(totalRes?.count || "0") },
+      { step: "Attempted", value: parseInt(successRes?.count || "0") + parseInt(failedRes?.count || "0") },
+      { step: "Successfully Reached", value: parseInt(successRes?.count || "0") }
+    ];
 
     res.json({
       total: parseInt(totalRes?.count || "0"),
@@ -285,6 +314,9 @@ export const handleGetAnalyticsStats: RequestHandler = async (req, res) => {
       waSent: parseInt(waSent?.count || "0"),
       emailSent: parseInt(emailSent?.count || "0"),
       igSent: parseInt(igSent?.count || "0"),
+      waFailed: parseInt(waFailed?.count || "0"),
+      emailFailed: parseInt(emailFailed?.count || "0"),
+      igFailed: parseInt(igFailed?.count || "0"),
       recent: recent.map(r => ({
         id: r.id,
         name: r.name || "Unknown",
@@ -293,13 +325,64 @@ export const handleGetAnalyticsStats: RequestHandler = async (req, res) => {
       })),
       daily: dailyStats.map(d => ({
         date: d.date,
+        realDate: d.real_date,
         email: parseInt(d.email || "0"),
         whatsapp: parseInt(d.whatsapp || "0"),
-        instagram: parseInt(d.instagram || "0")
-      }))
+        instagram: parseInt(d.instagram || "0"),
+        totalSuccess: parseInt(d.total_success || "0"),
+        totalFailed: parseInt(d.total_failed || "0")
+      })),
+      cohorts: cohorts.map(c => ({
+        sheet: c.sheet,
+        total: parseInt(c.total || "0"),
+        success: parseInt(c.success || "0"),
+        failed: parseInt(c.failed || "0")
+      })),
+      funnel
     });
   } catch (err: any) {
     console.error("[Analytics Stats] Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ─── POST /api/analytics/diagnose-failures ──────────────────────────────────
+
+export const handleAIDiagnoseFailures: RequestHandler = async (req, res) => {
+  const userId = req.body.userId || process.env.DEFAULT_USER_ID;
+  if (!userId) {
+    return res.status(400).json({ error: "userId required" });
+  }
+
+  try {
+    // Fetch recent failure reasons
+    const failures = await query<any>(`
+      SELECT automation_comment, whatsapp_completed, email_completed, instagram_completed 
+      FROM contacts 
+      WHERE user_id = $1 AND (whatsapp_completed = 'Failed' OR email_completed = 'Failed' OR instagram_completed = 'Failed')
+      AND automation_comment IS NOT NULL AND automation_comment != ''
+      LIMIT 50
+    `, [userId]);
+
+    if (failures.length === 0) {
+      return res.json({ diagnosis: "No recent failure logs found with detailed error comments. Ensure your automations are logging errors to the 'automationComment' field." });
+    }
+
+    const failureLog = failures.map(f => {
+      const platform = f.whatsapp_completed === 'Failed' ? 'WhatsApp' : f.email_completed === 'Failed' ? 'Email' : 'Instagram';
+      return `[${platform}] Error: ${f.automation_comment}`;
+    }).join("\\n");
+
+    const prompt = `You are an expert technical support AI for an outreach automation platform. 
+Here are the recent failure logs from the user's outreach attempts:
+${failureLog}
+
+Please provide a concise, bulleted diagnosis summarizing the core reasons for these failures and recommend exactly what the user should fix. Keep it under 150 words.`;
+
+    const diagnosis = await generateOpenAIResponse(prompt);
+    res.json({ diagnosis });
+  } catch (err: any) {
+    console.error("[AI Diagnose] Error:", err);
     res.status(500).json({ error: err.message });
   }
 };
