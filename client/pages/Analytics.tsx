@@ -62,46 +62,33 @@ export default function Analytics() {
     { name: "Failed", value: statsData?.failed || 0, fill: "#ef4444", filter: "failed" },
   ];
 
-  // Helper to determine AI "Next Best Action"
-  const getNextBestAction = () => {
-    if (!statsData) return { text: "Loading...", action: "Wait", link: "/contacts" };
-    const { waSent, igSent, emailSent, waFailed, igFailed, emailFailed, total } = statsData;
-    
-    // Find the platform with the highest success to failure ratio
-    const waRatio = waSent / (waSent + waFailed || 1);
-    const igRatio = igSent / (igSent + igFailed || 1);
-    const emailRatio = emailSent / (emailSent + emailFailed || 1);
-    
-    if (total === 0) {
-      return { 
-        text: "Your contact list is empty. Import your first Excel sheet to get started.", 
-        action: "Import Contacts", 
-        link: "/contacts" 
-      };
+  const [chatMessages, setChatMessages] = useState<{role: string, content: string}[]>([]);
+  const [chatInput, setChatInput] = useState("");
+  
+  const chatMutation = useMutation({
+    mutationFn: async (messages: {role: string, content: string}[]) => {
+      const res = await fetch(`/api/analytics/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, messages }),
+      });
+      if (!res.ok) throw new Error("Failed to send chat");
+      return res.json();
+    },
+    onSuccess: (data) => {
+      setChatMessages(prev => [...prev, { role: "assistant", content: data.response }]);
     }
+  });
 
-    if (igRatio > Math.max(waRatio, emailRatio)) {
-      return { 
-        text: "Instagram has the highest success rate right now. We highly recommend triggering an Instagram automation campaign on pending leads.", 
-        action: "Run Instagram Campaign", 
-        link: "/contacts?platform=instagram" 
-      };
-    } else if (waRatio > emailRatio) {
-      return { 
-        text: "WhatsApp has the highest success rate right now. We highly recommend triggering a WhatsApp campaign.", 
-        action: "Run WhatsApp Campaign", 
-        link: "/contacts?platform=whatsapp" 
-      };
-    } else {
-      return { 
-        text: "Email currently has your best delivery rate. Launch a new email blast to your pending contacts.", 
-        action: "Run Email Campaign", 
-        link: "/contacts?platform=email" 
-      };
-    }
+  const handleSendChat = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+    
+    const newMessages = [...chatMessages, { role: "user", content: chatInput }];
+    setChatMessages(newMessages);
+    setChatInput("");
+    chatMutation.mutate(newMessages);
   };
-
-  const nextAction = getNextBestAction();
 
   if (isLoading) {
     return (
@@ -121,7 +108,7 @@ export default function Analytics() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-2">
             <h1 className="text-4xl font-black tracking-tighter text-foreground sm:text-5xl uppercase">
-              Command <span className="text-primary italic">Center</span>
+              Analytics <span className="text-primary italic">Center</span>
             </h1>
             <p className="text-muted-foreground font-bold tracking-widest uppercase text-[11px]">
               AI-Powered Lead Conversion & Telemetry
@@ -223,28 +210,66 @@ export default function Analytics() {
             </CardContent>
           </Card>
 
-          {/* AI Next Best Action */}
+          {/* AI Data Analyst Chatbot */}
           <Card className="glass-card border-primary/30 shadow-[0_0_30px_-10px_rgba(139,92,246,0.2)] flex flex-col">
             <CardHeader className="p-6 border-b border-primary/10 bg-primary/5">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-xl bg-primary/20 text-primary"><BrainCircuit className="w-5 h-5" /></div>
                 <div>
-                  <CardTitle className="text-lg font-black tracking-tight text-primary">Next Best Action</CardTitle>
-                  <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-primary/70">Predictive Automation Engine</CardDescription>
+                  <CardTitle className="text-lg font-black tracking-tight text-primary">AI Data Analyst</CardTitle>
+                  <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-primary/70">Chat directly with your analytics</CardDescription>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="p-6 flex-1 flex flex-col justify-between gap-6">
-              <p className="text-sm font-medium leading-relaxed text-foreground/80">
-                {nextAction.text}
-              </p>
-              
-              <Button 
-                onClick={() => navigate(nextAction.link)}
-                className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black text-[11px] uppercase tracking-widest shadow-xl shadow-primary/30 gap-2 transition-transform active:scale-95"
-              >
-                <Play className="w-4 h-4 fill-current" /> {nextAction.action}
-              </Button>
+            <CardContent className="p-0 flex-1 flex flex-col h-[280px]">
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {chatMessages.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-center text-muted-foreground opacity-50 space-y-2">
+                    <Bot className="w-8 h-8 mx-auto" />
+                    <p className="text-xs">Ask me anything about your analytics, conversion rates, or failures.</p>
+                  </div>
+                ) : (
+                  chatMessages.map((msg, idx) => (
+                    <div key={idx} className={cn("flex", msg.role === 'user' ? "justify-end" : "justify-start")}>
+                      <div className={cn(
+                        "max-w-[85%] rounded-2xl p-3 text-sm",
+                        msg.role === 'user' 
+                          ? "bg-primary text-primary-foreground rounded-tr-sm" 
+                          : "bg-muted text-foreground rounded-tl-sm"
+                      )}>
+                        {msg.content}
+                      </div>
+                    </div>
+                  ))
+                )}
+                {chatMutation.isPending && (
+                   <div className="flex justify-start">
+                     <div className="bg-muted text-foreground rounded-2xl rounded-tl-sm p-3 text-sm flex gap-1 items-center h-10">
+                       <span className="w-2 h-2 rounded-full bg-foreground/30 animate-bounce" />
+                       <span className="w-2 h-2 rounded-full bg-foreground/30 animate-bounce delay-75" />
+                       <span className="w-2 h-2 rounded-full bg-foreground/30 animate-bounce delay-150" />
+                     </div>
+                   </div>
+                )}
+              </div>
+              <form onSubmit={handleSendChat} className="p-3 border-t border-white/5 bg-black/20 flex gap-2">
+                <input 
+                  type="text"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  placeholder="Ask about your data..."
+                  className="flex-1 bg-background border border-white/10 rounded-xl px-4 text-sm focus:outline-none focus:border-primary/50 text-foreground placeholder:text-muted-foreground/50"
+                  disabled={chatMutation.isPending}
+                />
+                <Button 
+                  type="submit" 
+                  size="icon" 
+                  disabled={!chatInput.trim() || chatMutation.isPending}
+                  className="rounded-xl shrink-0 bg-primary hover:bg-primary/90 text-white"
+                >
+                  <Play className="w-4 h-4 fill-current" />
+                </Button>
+              </form>
             </CardContent>
           </Card>
 
