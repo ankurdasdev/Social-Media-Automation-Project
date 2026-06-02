@@ -299,6 +299,10 @@ export default function Contacts() {
     },
   });
 
+  // Add a helper for random latency to avoid bot detection
+  const randomSleep = (min: number, max: number) => 
+    new Promise(resolve => setTimeout(resolve, Math.floor(Math.random() * (max - min + 1) + min)));
+
   const bulkOutreachMutation = useMutation({
     mutationFn: async (contactIds: string[]) => {
       setSendingProgress({ current: 0, total: contactIds.length, message: "Initializing bulk outreach..." });
@@ -307,7 +311,8 @@ export default function Contacts() {
       let failures = 0;
       let skipped = 0;
       
-      for (const id of contactIds) {
+      for (let i = 0; i < contactIds.length; i++) {
+        const id = contactIds[i];
         const contact = contacts.find(c => c.id === id);
         if (!contact) {
           current++;
@@ -361,13 +366,24 @@ export default function Contacts() {
         } else {
           skipped++;
         }
-        
         current++;
         setSendingProgress({ 
           current, 
           total: contactIds.length, 
           message: `Finished ${contact.name || 'Record'}.` 
         });
+
+        // Add human-like latency between contacts if there are more remaining
+        // Only add latency if we actually sent something (not skipped)
+        if (channels.length > 0 && i < contactIds.length - 1) {
+          const delayMs = Math.floor(Math.random() * 4000) + 3000; // 3 to 7 seconds
+          setSendingProgress({ 
+            current, 
+            total: contactIds.length, 
+            message: `Mimicking human delay (${(delayMs/1000).toFixed(1)}s)...` 
+          });
+          await randomSleep(delayMs, delayMs);
+        }
       }
       
       return { successes, failures, skipped };
