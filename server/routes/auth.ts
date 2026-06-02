@@ -1,6 +1,7 @@
 import { RequestHandler } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import nodemailer from "nodemailer";
 import { query, queryOne } from "../db/index";
 import { logUserAction } from "./admin";
 

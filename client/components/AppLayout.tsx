@@ -23,7 +23,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { getOrCreateUserId, clearAuthToken, getCurrentUser } from "@/lib/utils";
+import { getOrCreateUserId, clearAuthToken, getCurrentUser, getAuthToken } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { WhatsAppStatusResponse } from "@shared/api";
 import {
