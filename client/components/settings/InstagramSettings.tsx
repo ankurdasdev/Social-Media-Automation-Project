@@ -128,6 +128,7 @@ export default function InstagramSettings() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             userId,
+            username: username.trim().toLowerCase().replace(/^@/, ""),
             sessionId: sessionId.trim(),
           }),
         });
@@ -424,26 +425,26 @@ export default function InstagramSettings() {
                       </button>
                     </div>
 
+                    {/* Username (Always Visible) */}
+                    <div className="space-y-3 text-left animate-in slide-in-from-top duration-300">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-4">Account Username</Label>
+                      <div className="relative group">
+                         <div className="absolute -inset-1 bg-gradient-to-tr from-pink-500/30 to-orange-500/30 rounded-[1.5rem] blur-lg opacity-30 group-focus-within:opacity-100 transition-all duration-700" />
+                         <span className="absolute left-6 top-1/2 -translate-y-1/2 text-pink-500 font-black text-xl opacity-30 group-focus-within:opacity-100 transition-opacity z-10">@</span>
+                         <Input
+                           value={username}
+                           onChange={(e) => setUsername(e.target.value)}
+                           onKeyDown={(e) => e.key === "Enter" && handleConnect()}
+                           placeholder="your.username"
+                           autoComplete="username"
+                           disabled={isBusy}
+                           className="h-20 pl-14 rounded-[1.5rem] bg-muted/60 border-border/50 focus:bg-background focus:ring-pink-500 text-center text-2xl font-black tracking-tight shadow-inner transition-all relative z-0"
+                         />
+                      </div>
+                    </div>
+
                     {!useSessionLogin ? (
                       <>
-                        {/* Username */}
-                        <div className="space-y-3 text-left animate-in slide-in-from-left duration-300">
-                          <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-4">Account Username</Label>
-                          <div className="relative group">
-                             <div className="absolute -inset-1 bg-gradient-to-tr from-pink-500/30 to-orange-500/30 rounded-[1.5rem] blur-lg opacity-30 group-focus-within:opacity-100 transition-all duration-700" />
-                             <span className="absolute left-6 top-1/2 -translate-y-1/2 text-pink-500 font-black text-xl opacity-30 group-focus-within:opacity-100 transition-opacity z-10">@</span>
-                             <Input
-                               value={username}
-                               onChange={(e) => setUsername(e.target.value)}
-                               onKeyDown={(e) => e.key === "Enter" && handleConnect()}
-                               placeholder="your.username"
-                               autoComplete="username"
-                               disabled={isBusy}
-                               className="h-20 pl-14 rounded-[1.5rem] bg-muted/60 border-border/50 focus:bg-background focus:ring-pink-500 text-center text-2xl font-black tracking-tight shadow-inner transition-all relative z-0"
-                             />
-                          </div>
-                        </div>
-
                         {/* Password */}
                         <div className="space-y-3 text-left animate-in slide-in-from-left duration-300">
                           <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-4">Account Password</Label>
@@ -517,7 +518,7 @@ export default function InstagramSettings() {
                     {/* Submit */}
                     <Button
                       onClick={handleConnect}
-                      disabled={isBusy || (useSessionLogin ? !sessionId.trim() : (!username.trim() || !password)) || serviceDown || loginStep === "done"}
+                      disabled={isBusy || !username.trim() || (useSessionLogin ? !sessionId.trim() : !password) || serviceDown || loginStep === "done"}
                       className={cn(
                         "h-20 w-full rounded-[1.5rem] font-black text-white shadow-2xl transition-all active:scale-[0.98] text-lg gap-4 group relative overflow-hidden",
                         loginStep === "done"
