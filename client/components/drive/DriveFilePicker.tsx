@@ -137,15 +137,25 @@ export function FilePreviewModal({ file, onClose }: { file: DriveFile; onClose: 
   const isImg = (file.mimeType || "").startsWith("image/");
 
   React.useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
+    const handler = (e: KeyboardEvent) => { 
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        onClose(); 
+      }
+    };
+    document.addEventListener("keydown", handler, true); // Use capture phase
+    return () => document.removeEventListener("keydown", handler, true);
   }, [onClose]);
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[500] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
-      onClick={onClose}
+      className="fixed inset-0 z-[600] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
+      style={{ pointerEvents: "auto" }}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClose();
+      }}
+      onPointerDown={(e) => e.stopPropagation()} // Prevent Radix from seeing outside clicks
     >
       <div
         className="relative w-full max-w-2xl bg-card rounded-3xl overflow-hidden shadow-2xl border border-white/10 animate-in zoom-in-95 duration-200"
