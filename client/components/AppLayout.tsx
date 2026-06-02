@@ -113,6 +113,19 @@ export default function AppLayout({ children }: AppLayoutProps) {
     refetchInterval: 30000,
   });
 
+  const { data: userProfile } = useQuery({
+    queryKey: ["userProfileAdminLayout"],
+    queryFn: async () => {
+      const res = await fetch("/api/auth/me", {
+        headers: { Authorization: `Bearer ${getAuthToken()}` }
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.user;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   const handleLogout = () => {
     clearAuthToken();
     window.location.href = "/login";
@@ -174,6 +187,24 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 </Link>
               );
             })}
+            
+            {userProfile?.is_admin && (
+               <Link
+                 to="/admin"
+                 className={cn(
+                   "flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 group relative mt-4",
+                   location.pathname === "/admin" 
+                     ? "bg-primary text-white shadow-lg shadow-primary/20" 
+                     : "text-primary/70 hover:text-primary hover:bg-primary/10 border border-primary/20"
+                 )}
+               >
+                 <ShieldCheck className="w-5 h-5 transition-transform group-hover:scale-110" />
+                 <span className="font-bold text-sm tracking-tight">System Admin</span>
+                 {location.pathname === "/admin" && (
+                   <div className="absolute right-4 w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
+                 )}
+               </Link>
+            )}
           </nav>
 
           {/* Status Indicators */}
@@ -332,6 +363,18 @@ export default function AppLayout({ children }: AppLayoutProps) {
                          <item.icon className="w-5 h-5" /> {item.label}
                        </Link>
                     ))}
+                    {userProfile?.is_admin && (
+                         <Link
+                         to="/admin"
+                         onClick={() => setMobileMenuOpen(false)}
+                         className={cn(
+                           "flex items-center gap-4 px-6 py-4 rounded-2xl font-black text-sm",
+                           location.pathname === "/admin" ? "bg-primary text-white" : "text-primary hover:bg-primary/10"
+                         )}
+                       >
+                         <ShieldCheck className="w-5 h-5" /> System Admin
+                       </Link>
+                    )}
                 </div>
                 <div className="mt-auto border-t border-border/30 pt-8">
                      <Button onClick={handleLogout} variant="destructive" className="w-full h-14 rounded-2xl font-black gap-2">

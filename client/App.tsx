@@ -22,6 +22,7 @@ import Templates from "./pages/Templates";
 import Analytics from "./pages/Analytics";
 import IntegrationsCenter from "./pages/IntegrationsCenter";
 import Profile from "./pages/Profile";
+import AdminDashboard from "./pages/AdminDashboard";
 
 import NotFound from "./pages/NotFound";
 import { isTokenValid } from "./lib/utils";
@@ -40,6 +41,32 @@ const ProtectedRoute = ({ element }: { element: React.ReactNode }) => {
   if (!isTokenValid()) {
     return <Navigate to="/login" replace />;
   }
+  return <>{element}</>;
+};
+
+import { useQuery } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
+
+// Admin Route — checks if the current user is an admin
+const AdminRoute = ({ element }: { element: React.ReactNode }) => {
+  if (!isTokenValid()) return <Navigate to="/login" replace />;
+
+  const { data: user, isLoading } = useQuery({
+    queryKey: ["userProfileAdminCheck"],
+    queryFn: async () => {
+      const res = await fetch("/api/auth/me", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("casthub_auth_token")}` }
+      });
+      if (!res.ok) throw new Error("Not authorized");
+      const data = await res.json();
+      return data.user;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  if (isLoading) return <div className="h-screen w-screen flex items-center justify-center bg-background"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
+  if (!user || !user.is_admin) return <Navigate to="/dashboard" replace />;
+
   return <>{element}</>;
 };
 
@@ -65,6 +92,7 @@ const App = () => (
             <Route path="/analytics" element={<ProtectedRoute element={<Analytics />} />} />
             <Route path="/integrations" element={<ProtectedRoute element={<IntegrationsCenter />} />} />
             <Route path="/profile" element={<ProtectedRoute element={<Profile />} />} />
+            <Route path="/admin" element={<AdminRoute element={<AdminDashboard />} />} />
 
             {/* Default redirect to dashboard (ProtectedRoute handles auth check) */}
             <Route path="/" element={<Navigate to="/dashboard" replace />} />

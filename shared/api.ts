@@ -166,6 +166,41 @@ export interface UserAIKeywordsResponse {
   keywords: UserAIKeyword[];
 }
 
+// ─── Admin Dashboard ─────────────────────────────────────────────────────────
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  name: string;
+  is_active: boolean;
+  is_admin: boolean;
+  created_at: string;
+  total_contacts: number;
+}
+
+export interface UserLog {
+  id: string;
+  user_id: string;
+  user_email?: string;
+  action: string;
+  status: "success" | "failure";
+  details: any;
+  created_at: string;
+}
+
+export interface ServerAnalytics {
+  server: {
+    cpuUsagePercent: number;
+    memUsagePercent: number;
+    uptime: number;
+  };
+  business: {
+    totalUsers: number;
+    activeUsers: number;
+    todayErrors: number;
+  };
+}
+
 export interface ContactsResponse {
   contacts: Contact[];
   total: number;
