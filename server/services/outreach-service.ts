@@ -54,21 +54,26 @@ function injectVariables(content: string, contact: Contact, channel: "whatsapp" 
   if (!content) return "";
   let result = content;
   
-  // Resolve specific salutations for each channel
-  const salutationWA = 
-    contact.personalizedNameWA === "N" && contact.name ? `${contact.salutationWA || "Hi"} ${contact.name}` :
-    contact.personalizedNameWA === "C" && contact.castingName ? `${contact.salutationWA || "Hi"} ${contact.castingName}` :
-    (contact.salutationWA || "Hi");
+  // Resolve specific salutations for each channel (Base greetings)
+  const baseSalutationWA = contact.salutationWA || "Hi";
+  const baseSalutationGmail = contact.salutationEmail || "Hi";
+  const baseSalutationIG = contact.salutationIG || "Hi";
 
-  const salutationGmail = 
-    contact.personalizedNameGmail === "N" && contact.name ? `${contact.salutationEmail || "Hi"} ${contact.name}` :
-    contact.personalizedNameGmail === "C" && contact.castingName ? `${contact.salutationEmail || "Hi"} ${contact.castingName}` :
-    (contact.salutationEmail || "Hi");
+  // Resolve personalized name based on selection
+  const personalizedWA = 
+    contact.personalizedNameWA === "N" && contact.name ? contact.name :
+    contact.personalizedNameWA === "C" && contact.castingName ? contact.castingName :
+    "Sir/Mam";
 
-  const salutationIG = 
-    contact.personalizedNameIG === "N" && contact.name ? `${contact.salutationIG || "Hi"} ${contact.name}` :
-    contact.personalizedNameIG === "C" && contact.castingName ? `${contact.salutationIG || "Hi"} ${contact.castingName}` :
-    (contact.salutationIG || "Hi");
+  const personalizedGmail = 
+    contact.personalizedNameGmail === "N" && contact.name ? contact.name :
+    contact.personalizedNameGmail === "C" && contact.castingName ? contact.castingName :
+    "Sir/Mam";
+
+  const personalizedIG = 
+    contact.personalizedNameIG === "N" && contact.name ? contact.name :
+    contact.personalizedNameIG === "C" && contact.castingName ? contact.castingName :
+    "Sir/Mam";
   
   const pName = contact.name || "Talent";
   const cName = contact.castingName || "the casting";
@@ -85,11 +90,14 @@ function injectVariables(content: string, contact: Contact, channel: "whatsapp" 
     { name: "whatsapp", value: contact.whatsapp || "" },
     { name: "email", value: contact.email || "" },
     { name: "instaHandle", value: contact.instaHandle || "" },
-    { name: "personalizedWP", value: salutationWA },
-    { name: "personalizedGmail", value: salutationGmail },
-    { name: "personalizedIG", value: salutationIG },
-    // Keeping old salutation logic for backwards compatibility if needed
-    { name: "salutation", value: channel === "whatsapp" ? salutationWA : channel === "email" ? salutationGmail : salutationIG },
+    
+    // The personalized part (Name, Casting Name, or Sir/Mam)
+    { name: "personalizedWP", value: personalizedWA },
+    { name: "personalizedGmail", value: personalizedGmail },
+    { name: "personalizedIG", value: personalizedIG },
+    
+    // The base salutation (Hi, Hey, etc)
+    { name: "salutation", value: channel === "whatsapp" ? baseSalutationWA : channel === "email" ? baseSalutationGmail : baseSalutationIG },
   ];
 
   variables.forEach((v) => {
