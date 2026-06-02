@@ -72,6 +72,14 @@ import {
 import { runIngestionJob } from "./jobs/ingestion-job";
 import { initIngestionSchedules, ingestionRouter } from "./routes/ingestion-schedule";
 import { initDb } from "./db/index";
+import { 
+  requireAdmin,
+  handleGetUsers,
+  handleUpdateUser,
+  handleAdminResetPassword,
+  handleGetAnalytics,
+  handleGetLogs
+} from "./routes/admin";
 
 // Initialize database then restore per-user ingestion schedules
 initDb()
@@ -113,6 +121,13 @@ export function createServer() {
   app.get("/api/auth/keywords", handleGetAIKeywords);
   app.put("/api/auth/keywords", handleUpdateAIKeywords);
   app.delete("/api/auth/delete-account", handleDeleteAccount);
+
+  // ── Admin Dashboard ────────────────────────────────────────────────────────
+  app.get("/api/admin/users", requireAdmin, handleGetUsers);
+  app.patch("/api/admin/users/:id", requireAdmin, handleUpdateUser);
+  app.post("/api/admin/users/:id/reset-password", requireAdmin, handleAdminResetPassword);
+  app.get("/api/admin/analytics", requireAdmin, handleGetAnalytics);
+  app.get("/api/admin/logs", requireAdmin, handleGetLogs);
 
   // ── Source Group Management ────────────────────────────────────────────────
   app.get("/api/groups", handleGetGroups);

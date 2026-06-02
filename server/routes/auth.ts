@@ -1,8 +1,8 @@
 import { RequestHandler } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import nodemailer from "nodemailer";
 import { query, queryOne } from "../db/index";
+import { logUserAction } from "./admin";
 
 const JWT_SECRET = process.env.JWT_SECRET || "casthub_dev_secret_change_in_production";
 const JWT_EXPIRES_IN = "7d";
@@ -42,6 +42,8 @@ export const handleSignup: RequestHandler = async (req, res) => {
     );
 
     const token = signToken({ userId: user.id, email: user.email, name: user.name });
+
+    await logUserAction(user.id, "signup", "success");
 
     res.status(201).json({
       token,
@@ -84,6 +86,8 @@ export const handleLogin: RequestHandler = async (req, res) => {
 
     const token = signToken({ userId: user.id, email: user.email, name: user.name });
 
+    await logUserAction(user.id, "login", "success");
+
     res.json({
       token,
       user: { id: user.id, email: user.email, name: user.name },
@@ -110,8 +114,8 @@ export const handleMe: RequestHandler = async (req, res) => {
       name: string;
     };
 
-    const user = await queryOne<{ id: string; email: string; name: string; gender: string; dob: string }>(
-      "SELECT id, email, name, gender, dob FROM users WHERE id = $1",
+    const user = await queryOne<{ id: string; email: string; name: string; gender: string; dob: string; is_admin: boolean }>(
+      "SELECT id, email, name, gender, dob, is_admin FROM users WHERE id = $1",
       [payload.userId]
     );
 

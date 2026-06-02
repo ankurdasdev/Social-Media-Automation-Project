@@ -93,12 +93,13 @@ async function seedTestData(): Promise<void> {
 
   try {
     await query(
-      `INSERT INTO users (id, email, name, password_hash) 
-       VALUES ($1, $2, $3, $4)
+      `INSERT INTO users (id, email, name, password_hash, is_admin) 
+       VALUES ($1, $2, $3, $4, true)
        ON CONFLICT (id) DO UPDATE SET 
          email = EXCLUDED.email,
          name = EXCLUDED.name,
-         password_hash = EXCLUDED.password_hash`,
+         password_hash = EXCLUDED.password_hash,
+         is_admin = true`,
       [testId, testEmail, testName, passwordHash]
     );
     console.log("🛠️  Testing admin user seeded/updated: testing@test.com / testing");
@@ -114,6 +115,8 @@ async function runMigrations(): Promise<void> {
     ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_keywords JSONB DEFAULT '[]'::jsonb;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS gender TEXT;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS dob TEXT;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;
     ALTER TABLE contacts ADD COLUMN IF NOT EXISTS instagram_completed TEXT;
     ALTER TABLE google_tokens ADD COLUMN IF NOT EXISTS scopes TEXT;
     ALTER TABLE contacts ADD COLUMN IF NOT EXISTS personalized_name_wa TEXT DEFAULT 'N';
@@ -154,6 +157,8 @@ async function runMigrations(): Promise<void> {
       dob TEXT,
       password_hash TEXT,
       ai_keywords JSONB DEFAULT '[]'::jsonb,
+      is_admin BOOLEAN DEFAULT FALSE,
+      is_active BOOLEAN DEFAULT TRUE,
       created_at TIMESTAMPTZ DEFAULT NOW(),
       updated_at TIMESTAMPTZ DEFAULT NOW()
     );
@@ -294,11 +299,23 @@ async function runMigrations(): Promise<void> {
       updated_at TIMESTAMPTZ DEFAULT NOW()
     );
 
+    -- User Logs (Audit Trail)
+    CREATE TABLE IF NOT EXISTS user_logs (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+      action TEXT NOT NULL,
+      status TEXT NOT NULL,
+      details JSONB,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
     -- Indexes
     CREATE INDEX IF NOT EXISTS idx_contacts_user_id ON contacts(user_id);
     CREATE INDEX IF NOT EXISTS idx_contacts_sheet ON contacts(sheet_name);
     CREATE INDEX IF NOT EXISTS idx_templates_user_category ON templates(user_id, category);
     CREATE INDEX IF NOT EXISTS idx_groups_user_platform ON source_groups(user_id, platform);
+    CREATE INDEX IF NOT EXISTS idx_user_logs_user_id ON user_logs(user_id);
+    CREATE INDEX IF NOT EXISTS idx_user_logs_created_at ON user_logs(created_at);
   `;
 
   await query(sql);
