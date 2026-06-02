@@ -76,21 +76,23 @@ function TemplateCard({
   onDelete: (t: Template) => void;
 }) {
   return (
-    <div className="flex items-center justify-between p-3 rounded-xl border border-border bg-card hover:bg-muted/40 transition-colors group">
-      <div className="flex items-center gap-3 min-w-0">
-        <div className="shrink-0 w-8 h-8 rounded-md bg-muted flex items-center justify-center">
+    <div className="flex items-center justify-between p-4 rounded-2xl border border-border/50 bg-card hover:bg-muted/30 transition-all shadow-sm hover:shadow-md group">
+      <div className="flex items-center gap-4 min-w-0 flex-1 pr-4">
+        <div className="shrink-0 w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
           {template.isAttachment ? (
-            <Paperclip className="h-4 w-4 text-muted-foreground" />
+            <Paperclip className="h-5 w-5 text-primary" />
           ) : (
-            <FileText className="h-4 w-4 text-muted-foreground" />
+            <FileText className="h-5 w-5 text-primary" />
           )}
         </div>
-        <div className="min-w-0">
-          <p className="text-sm font-medium truncate text-foreground">{template.name}</p>
+        <div className="min-w-0 flex-1">
+          <p className="text-[15px] font-black truncate text-foreground">{template.name}</p>
           {template.isAttachment ? (
-            <p className="text-[11px] text-muted-foreground">Attachment template</p>
+            <p className="text-[11px] text-muted-foreground/60 font-bold uppercase tracking-widest mt-0.5">Attachment template</p>
           ) : (
-            <p className="text-[11px] text-muted-foreground truncate max-w-[280px]">{template.content}</p>
+            <p className="text-[13px] text-muted-foreground truncate font-medium mt-0.5">
+              {(template.content || "").replace(/<[^>]+>/g, "")}
+            </p>
           )}
         </div>
       </div>
