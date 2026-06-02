@@ -568,7 +568,7 @@ async function handleInstagramOutreach(userId: string, contact: Contact) {
   );
   if (!session) throw new Error("Instagram not connected — please connect in Settings first");
 
-  const handle = (contact.instaHandle || "").replace(/^@/, "");
+  const handle = (contact.instaHandle || "").replace(/^@\s*/, "").trim();
   if (!handle) throw new Error("No Instagram handle found on this contact");
 
   const drive = await getDriveClient(userId);
