@@ -360,84 +360,85 @@ export function DataTableToolbar<TData>({
                </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {/* Original Bulk Actions Dropdown */}
+          {hasSelection && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="default" className="h-12 rounded-full font-black text-[10px] uppercase tracking-widest gap-2 shadow-xl shadow-primary/30 transition-all active:scale-95 shrink-0 px-5 bg-primary hover:bg-primary/90 text-white">
+                  <Zap className="h-4 w-4 fill-current" />
+                  <span className="hidden md:inline">BULK ACTIONS ({selectedRows.length})</span>
+                  <span className="md:hidden">({selectedRows.length})</span>
+                  <ChevronDown className="h-3 w-3 ml-1 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[280px] glass-card border-white/10 p-2 rounded-2xl shadow-2xl z-[100]">
+                <DropdownMenuLabel className="px-3 py-1.5 text-[8px] font-black text-muted-foreground uppercase tracking-widest">Automation</DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-white/5 mx-2 my-1" />
+                <DropdownMenuItem 
+                  onClick={() => {
+                    const ids = selectedRows.map(r => (r.original as any).id);
+                    onTriggerAction?.(ids);
+                  }}
+                  className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-primary cursor-pointer hover:bg-primary/20 rounded-xl"
+                >
+                  <Zap className="mr-2 h-3.5 w-3.5 fill-current" /> Trigger Automation
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator className="bg-white/10 my-2" />
+                
+                <DropdownMenuLabel className="px-3 py-1.5 text-[8px] font-black text-muted-foreground uppercase tracking-widest">Row Formatting (Color)</DropdownMenuLabel>
+                <div className="flex items-center justify-between px-2 py-1">
+                  <DropdownMenuItem asChild onSelect={(e) => { e.preventDefault(); executeBulkAction("color", "yellow"); }}>
+                    <div className="w-6 h-6 rounded-full bg-yellow-400 cursor-pointer hover:ring-2 ring-offset-1 ring-offset-background transition-all" title="Yellow" />
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild onSelect={(e) => { e.preventDefault(); executeBulkAction("color", "green"); }}>
+                    <div className="w-6 h-6 rounded-full bg-emerald-400 cursor-pointer hover:ring-2 ring-offset-1 ring-offset-background transition-all" title="Green" />
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild onSelect={(e) => { e.preventDefault(); executeBulkAction("color", "red"); }}>
+                    <div className="w-6 h-6 rounded-full bg-rose-400 cursor-pointer hover:ring-2 ring-offset-1 ring-offset-background transition-all" title="Red" />
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild onSelect={(e) => { e.preventDefault(); executeBulkAction("color", "blue"); }}>
+                    <div className="w-6 h-6 rounded-full bg-blue-400 cursor-pointer hover:ring-2 ring-offset-1 ring-offset-background transition-all" title="Blue" />
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild onSelect={(e) => { e.preventDefault(); executeBulkAction("color", "transparent"); }}>
+                    <div className="w-6 h-6 rounded-full bg-muted cursor-pointer border border-white/10 hover:ring-2 ring-offset-1 ring-offset-background flex items-center justify-center text-[10px] text-muted-foreground transition-all font-black" title="Clear Color">X</div>
+                  </DropdownMenuItem>
+                </div>
+
+                <DropdownMenuSeparator className="bg-white/10 my-2" />
+
+                <DropdownMenuLabel className="px-3 py-1.5 text-[8px] font-black text-muted-foreground uppercase tracking-widest">Organization</DropdownMenuLabel>
+                {dynamicSheets.length > 0 ? (
+                  <div className="max-h-32 overflow-y-auto">
+                    {dynamicSheets.map((sheet: any) => (
+                      <DropdownMenuItem 
+                        key={sheet}
+                        onSelect={(e) => { e.preventDefault(); executeBulkAction("move", sheet); }} 
+                        className="px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-foreground cursor-pointer hover:bg-muted rounded-xl"
+                      >
+                        Move to "{sheet}"
+                      </DropdownMenuItem>
+                    ))}
+                  </div>
+                ) : (
+                   <div className="px-3 py-2 text-[10px] text-muted-foreground italic">No other sheets</div>
+                )}
+                
+                <DropdownMenuSeparator className="bg-white/10 my-2" />
+                
+                <DropdownMenuItem 
+                  className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-destructive cursor-pointer hover:bg-destructive/20 rounded-xl"
+                  onSelect={(e) => { e.preventDefault(); executeBulkAction("delete"); }}
+                >
+                  <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete Selected
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
 
-      {/* ROW 3: Bulk Actions (Dedicated Section) */}
-      {hasSelection && (
-        <div className="animate-in slide-in-from-top-2 fade-in duration-300 w-full glass-card bg-primary/5 border border-primary/20 rounded-[2rem] p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-xl">
-          <div className="flex items-center gap-4 md:pr-6 md:border-r border-primary/20 w-full md:w-auto shrink-0">
-            <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-black text-lg shadow-inner">
-              {selectedRows.length}
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[14px] font-black uppercase tracking-[0.3em] text-primary leading-tight">Selected</span>
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Contacts</span>
-            </div>
-          </div>
-          
-          <div className="flex flex-col w-full gap-2">
-            <Button
-              onClick={() => { const ids = selectedRows.map(r => (r.original as any).id); onTriggerAction?.(ids); }}
-              className="w-full lg:w-1/3 rounded-full bg-primary hover:bg-primary/90 text-white font-black text-[10px] uppercase tracking-widest h-12 shadow-lg shadow-primary/30 gap-2 transition-transform active:scale-95 self-start"
-            >
-              <Zap className="w-4 h-4 fill-current" /> SEND OUTREACH
-            </Button>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="w-full rounded-full bg-background/50 hover:bg-background border-white/5 h-12 text-[10px] font-bold uppercase gap-2 hover:border-white/20 transition-colors">
-                  <Palette className="w-4 h-4 text-primary" /> COLOR
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="center" className="w-[280px] glass-card border-white/10 p-1 rounded-3xl shadow-2xl z-[100]">
-                <DropdownMenuLabel className="px-4 py-2 text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Set Row Color</DropdownMenuLabel>
-                <div onSelect={(e) => e.preventDefault()} className="outline-none">
-                  <AdvancedColorPicker
-                    color={(selectedRows[0]?.original as any).rowColor || "transparent"}
-                    onChange={(color) => executeBulkAction("color", color)}
-                  />
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="w-full rounded-full bg-background/50 hover:bg-background border-white/5 h-12 text-[10px] font-bold uppercase gap-2 hover:border-white/20 transition-colors">
-                  <Layers className="w-4 h-4 text-primary" /> MOVE
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="center" className="w-[240px] glass-card border-white/10 p-2 rounded-2xl shadow-2xl z-[100]">
-                <DropdownMenuLabel className="px-3 py-1.5 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Select Sheet</DropdownMenuLabel>
-                <DropdownMenuSeparator className="bg-white/5 my-1" />
-                <div className="max-h-48 overflow-y-auto py-1">
-                  {dynamicSheets.length > 0 ? dynamicSheets.map((sheet: any) => (
-                    <DropdownMenuItem key={sheet} onSelect={(e) => { e.preventDefault(); executeBulkAction("move", sheet); }} className="h-10 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest text-muted-foreground focus:text-foreground cursor-pointer">
-                      {sheet}
-                    </DropdownMenuItem>
-                  )) : (
-                    <p className="px-4 py-3 text-[10px] font-bold text-muted-foreground/50 italic text-center">No other sheets found.</p>
-                  )}
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <Button variant="outline" onClick={() => executeBulkAction("reset_automation")} className="w-full rounded-full bg-background/50 hover:bg-background border-white/5 text-blue-500 h-12 text-[10px] font-bold uppercase gap-2 hover:border-white/20 transition-colors">
-              <RefreshCw className="w-4 h-4" /> RESET
-            </Button>
-
-            <Button variant="outline" onClick={() => setIsSmartClearOpen(true)} className="w-full rounded-full bg-background/50 hover:bg-background border-amber-500/20 text-amber-500 h-12 text-[10px] font-bold uppercase gap-2 hover:border-amber-500/50 transition-colors">
-              <Eraser className="w-4 h-4" /> CLEAR
-            </Button>
-
-            <div className="flex justify-end pt-2 w-full">
-              <Button variant="outline" onClick={() => executeBulkAction("delete")} className="rounded-full bg-background/50 hover:bg-destructive/10 border-destructive/20 hover:border-destructive/50 text-destructive h-10 px-6 text-[10px] font-bold uppercase gap-2 transition-colors">
-                <Trash2 className="w-4 h-4" /> DELETE
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Platform filters expand row */}
       {showPlatformFilters && (

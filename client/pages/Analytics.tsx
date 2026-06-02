@@ -26,6 +26,7 @@ import {
 import { Mail, MessageCircle, TrendingUp, AlertCircle, Bot, Filter, Users, Instagram, Zap, CalendarDays, BrainCircuit, Play } from "lucide-react";
 import { cn, getOrCreateUserId } from "@/lib/utils";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import ReactMarkdown from "react-markdown";
 import { useNavigate } from "react-router-dom";
 
 export default function Analytics() {
@@ -237,7 +238,22 @@ export default function Analytics() {
                           ? "bg-primary text-primary-foreground rounded-tr-sm" 
                           : "bg-muted text-foreground rounded-tl-sm"
                       )}>
-                        {msg.content}
+                        {msg.role === 'user' ? (
+                          msg.content
+                        ) : (
+                          <ReactMarkdown
+                            components={{
+                              h3: ({node, ...props}) => <h3 className="text-sm font-black uppercase tracking-widest text-primary mt-3 mb-1" {...props} />,
+                              ul: ({node, ...props}) => <ul className="list-disc pl-4 my-2 space-y-1" {...props} />,
+                              li: ({node, ...props}) => <li className="text-foreground/80 leading-snug" {...props} />,
+                              p: ({node, ...props}) => <p className="mb-2 leading-relaxed" {...props} />,
+                              strong: ({node, ...props}) => <strong className="font-bold text-foreground" {...props} />,
+                              code: ({node, ...props}) => <code className="bg-background/50 px-1 py-0.5 rounded text-primary text-xs" {...props} />
+                            }}
+                          >
+                            {msg.content}
+                          </ReactMarkdown>
+                        )}
                       </div>
                     </div>
                   ))
