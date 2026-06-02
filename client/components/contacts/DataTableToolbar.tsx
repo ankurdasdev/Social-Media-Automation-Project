@@ -376,17 +376,17 @@ export function DataTableToolbar<TData>({
             </div>
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:flex lg:flex-wrap items-center gap-3 w-full">
+          <div className="flex flex-col w-full gap-2">
             <Button
               onClick={() => { const ids = selectedRows.map(r => (r.original as any).id); onTriggerAction?.(ids); }}
-              className="rounded-xl lg:rounded-full bg-primary hover:bg-primary/90 text-white font-black text-[10px] uppercase tracking-widest h-12 px-4 lg:px-6 shadow-lg shadow-primary/30 gap-2 transition-transform active:scale-95 col-span-2 md:col-span-1"
+              className="w-full lg:w-1/3 rounded-full bg-primary hover:bg-primary/90 text-white font-black text-[10px] uppercase tracking-widest h-12 shadow-lg shadow-primary/30 gap-2 transition-transform active:scale-95 self-start"
             >
               <Zap className="w-4 h-4 fill-current" /> SEND OUTREACH
             </Button>
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="rounded-xl lg:rounded-full bg-background/50 hover:bg-background border-primary/20 h-12 px-4 lg:px-5 text-[10px] font-bold uppercase gap-2 hover:border-primary/50 transition-colors w-full">
+                <Button variant="outline" className="w-full rounded-full bg-background/50 hover:bg-background border-white/5 h-12 text-[10px] font-bold uppercase gap-2 hover:border-white/20 transition-colors">
                   <Palette className="w-4 h-4 text-primary" /> COLOR
                 </Button>
               </DropdownMenuTrigger>
@@ -403,7 +403,7 @@ export function DataTableToolbar<TData>({
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="rounded-xl lg:rounded-full bg-background/50 hover:bg-background border-primary/20 h-12 px-4 lg:px-5 text-[10px] font-bold uppercase gap-2 hover:border-primary/50 transition-colors w-full">
+                <Button variant="outline" className="w-full rounded-full bg-background/50 hover:bg-background border-white/5 h-12 text-[10px] font-bold uppercase gap-2 hover:border-white/20 transition-colors">
                   <Layers className="w-4 h-4 text-primary" /> MOVE
                 </Button>
               </DropdownMenuTrigger>
@@ -422,19 +422,19 @@ export function DataTableToolbar<TData>({
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button variant="outline" onClick={() => executeBulkAction("reset_automation")} className="rounded-xl lg:rounded-full bg-background/50 hover:bg-background border-blue-500/20 hover:border-blue-500/50 text-blue-500 h-12 px-4 lg:px-5 text-[10px] font-bold uppercase gap-2 transition-colors w-full">
+            <Button variant="outline" onClick={() => executeBulkAction("reset_automation")} className="w-full rounded-full bg-background/50 hover:bg-background border-white/5 text-blue-500 h-12 text-[10px] font-bold uppercase gap-2 hover:border-white/20 transition-colors">
               <RefreshCw className="w-4 h-4" /> RESET
             </Button>
 
-            <Button variant="outline" onClick={() => setIsSmartClearOpen(true)} className="rounded-xl lg:rounded-full bg-background/50 hover:bg-background border-amber-500/20 hover:border-amber-500/50 text-amber-500 h-12 px-4 lg:px-5 text-[10px] font-bold uppercase gap-2 transition-colors w-full">
+            <Button variant="outline" onClick={() => setIsSmartClearOpen(true)} className="w-full rounded-full bg-background/50 hover:bg-background border-amber-500/20 text-amber-500 h-12 text-[10px] font-bold uppercase gap-2 hover:border-amber-500/50 transition-colors">
               <Eraser className="w-4 h-4" /> CLEAR
             </Button>
 
-            <div className="hidden lg:block flex-1" />
-
-            <Button variant="outline" onClick={() => executeBulkAction("delete")} className="rounded-xl lg:rounded-full bg-background/50 hover:bg-destructive/10 border-destructive/20 hover:border-destructive/50 text-destructive h-12 px-4 lg:px-5 text-[10px] font-bold uppercase gap-2 transition-colors w-full lg:w-auto col-span-2 md:col-span-1">
-              <Trash2 className="w-4 h-4" /> DELETE
-            </Button>
+            <div className="flex justify-end pt-2 w-full">
+              <Button variant="outline" onClick={() => executeBulkAction("delete")} className="rounded-full bg-background/50 hover:bg-destructive/10 border-destructive/20 hover:border-destructive/50 text-destructive h-10 px-6 text-[10px] font-bold uppercase gap-2 transition-colors">
+                <Trash2 className="w-4 h-4" /> DELETE
+              </Button>
+            </div>
           </div>
         </div>
       )}
