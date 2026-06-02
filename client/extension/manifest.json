@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "CastHub Instagram Extractor",
+  "version": "1.0",
+  "description": "Extracts your active Instagram session ID for CastHub automation.",
+  "permissions": [
+    "cookies",
+    "activeTab",
+    "clipboardWrite"
+  ],
+  "host_permissions": [
+    "*://*.instagram.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "CastHub Session Extractor"
+  }
+}
