@@ -197,7 +197,13 @@ export const handleInstagramConnectSession: RequestHandler = async (req, res) =>
   }
 
   // The sessionId IS the session data we need for instagrapi-rest
-  const sessionData = sessionId.trim();
+  // We must decode it because Chrome dev tools copies it URL-encoded (%3A instead of :)
+  let sessionData = sessionId.trim();
+  try {
+    sessionData = decodeURIComponent(sessionData);
+  } catch (e) {
+    // Ignore if not url encoded
+  }
 
   try {
     // Verify the session works by making a simple API call
