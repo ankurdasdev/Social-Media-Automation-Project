@@ -237,16 +237,20 @@ async function handleWhatsAppOutreach(userId: string, contact: Contact) {
 
   // Helper to send a Drive file as WhatsApp media
   const sendDriveFile = async (fileId: string, fileName: string) => {
-    const response = await drive.files.get({ fileId, alt: "media" }, { responseType: "arraybuffer" });
-    const base64 = Buffer.from(response.data as ArrayBuffer).toString("base64");
-    const meta = await drive.files.get({ fileId, fields: "mimeType" });
-    const mimeType = meta.data.mimeType || "application/octet-stream";
-    
-    let mediaType: "image" | "document" = "document";
-    if (mimeType.startsWith("image/")) mediaType = "image";
+    try {
+      const response = await drive.files.get({ fileId, alt: "media" }, { responseType: "arraybuffer" });
+      const base64 = Buffer.from(response.data as ArrayBuffer).toString("base64");
+      const meta = await drive.files.get({ fileId, fields: "mimeType" });
+      const mimeType = meta.data.mimeType || "application/octet-stream";
+      
+      let mediaType: "image" | "document" = "document";
+      if (mimeType.startsWith("image/")) mediaType = "image";
 
-    const cleanName = stripExtension(fileName);
-    await sendWAMedia(instance.instance_name, jid, base64, mediaType, cleanName, fileName);
+      const cleanName = stripExtension(fileName);
+      await sendWAMedia(instance.instance_name, jid, base64, mediaType, cleanName, fileName);
+    } catch (err: any) {
+      console.warn(`[whatsapp] Attachment failed for ${fileName}:`, err.message);
+    }
     await sleep(1500);
   };
 
@@ -561,8 +565,12 @@ async function handleInstagramOutreach(userId: string, contact: Contact) {
     } catch (err: any) {
       console.warn(`[instagram] Direct attachment failed for ${fileName}:`, err.message);
       // Fallback in case Google Drive or photo upload fails
-      const msg = `Attachment: ${stripExtension(fileName)} - https://drive.google.com/uc?export=download&id=${fileId}`;
-      await sendIG([handle], msg, session.session_data);
+      try {
+        const msg = `Attachment: ${stripExtension(fileName)} - https://drive.google.com/uc?export=download&id=${fileId}`;
+        await sendIG([handle], msg, session.session_data);
+      } catch (fallbackErr: any) {
+        console.warn(`[instagram] Fallback text link failed for ${fileName}:`, fallbackErr.message);
+      }
     }
     await sleep(1500);
   };
