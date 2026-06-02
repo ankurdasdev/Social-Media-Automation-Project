@@ -73,3 +73,25 @@ export async function generateSearchSQL(prompt: string, userId: string): Promise
 
   return sql;
 }
+
+export async function generateOpenAIResponse(prompt: string): Promise<string> {
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) {
+    throw new Error("GROQ_API_KEY is not set.");
+  }
+
+  const groq = new OpenAI({
+    apiKey: apiKey,
+    baseURL: "https://api.groq.com/openai/v1",
+  });
+
+  const completion = await groq.chat.completions.create({
+    model: "llama-3.3-70b-versatile",
+    messages: [
+      { role: "user", content: prompt },
+    ],
+    temperature: 0.2,
+  });
+
+  return completion.choices[0].message?.content?.trim() || "No response generated.";
+}
