@@ -541,14 +541,16 @@ export function DataTable<TData, TValue>({
                         if (colId !== header.column.id) handleDragHeader(colId, header.column.id);
                       }}
                       className={cn(
-                        "relative group border-r border-white/5 last:border-r-0",
+                        "group border-r border-white/5 last:border-r-0 backdrop-blur-3xl",
                         isGroupHeader ? "p-0 border-b border-white/5 align-top" : "px-6 text-[10px] font-black uppercase text-muted-foreground tracking-[0.3em] cursor-move active:cursor-grabbing",
-                        header.column.getIsPinned() === "left" && "sticky z-[35] bg-card/90 backdrop-blur-3xl"
+                        isTitleFrozen && "sticky top-0 z-30 bg-background/95 shadow-sm",
+                        header.column.getIsPinned() === "left" && "sticky left-0 z-[35] bg-card/95"
                       )}
                       style={{ 
                         width: header.getSize(), 
                         minWidth: "max-content",
-                        left: header.column.getIsPinned() === "left" ? `${header.column.getStart("left")}px` : undefined
+                        left: header.column.getIsPinned() === "left" ? `${header.column.getStart("left")}px` : undefined,
+                        top: isTitleFrozen ? (headerGroup.depth === 0 ? 0 : 40) : undefined // Ensure sub-headers stick below group headers
                       }}
                     >
                       {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}

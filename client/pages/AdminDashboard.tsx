@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AppLayout from "@/components/AppLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,13 +14,28 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { AdminUser, ServerAnalytics, UserLog } from "@shared/api";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AdminDashboard() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("overview");
 
+  // Pagination & Filtering State
+  const [logsPage, setLogsPage] = useState(1);
+  const [logsPageSize, setLogsPageSize] = useState(50);
+  const [logsSearch, setLogsSearch] = useState("");
+  const [logsStatusFilter, setLogsStatusFilter] = useState("all");
+
+  const [usersPage, setUsersPage] = useState(1);
+  const [usersPageSize, setUsersPageSize] = useState(25);
+  const [usersSearch, setUsersSearch] = useState("");
+
+  const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
+
   // Fetch Analytics
-  const { data: analytics, isLoading: analyticsLoading } = useQuery<ServerAnalytics>({
+  const { data: analytics, isLoading: analyticsLoading, refetch: refetchAnalytics } = useQuery<ServerAnalytics>({
     queryKey: ["adminAnalytics"],
     queryFn: async () => {
       const res = await fetch("/api/admin/analytics", {
@@ -31,6 +46,22 @@ export default function AdminDashboard() {
     },
     refetchInterval: 30000 // Refresh every 30s
   });
+
+  // Keep track of refresh cycle
+  const [countdown, setCountdown] = useState(30);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCountdown((prev) => (prev <= 1 ? 30 : prev - 1));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleManualRefresh = () => {
+    refetchAnalytics();
+    setCountdown(30);
+    setLastRefreshed(new Date());
+  };
 
   // Fetch Users
   const { data: usersData, isLoading: usersLoading } = useQuery<{ users: AdminUser[] }>({
@@ -116,6 +147,23 @@ export default function AdminDashboard() {
     window.URL.revokeObjectURL(url);
   };
 
+  // Filter & Paginate Users locally
+  const filteredUsers = (usersData?.users || []).filter(u => 
+    u.name?.toLowerCase().includes(usersSearch.toLowerCase()) || 
+    u.email.toLowerCase().includes(usersSearch.toLowerCase())
+  );
+  const paginatedUsers = filteredUsers.slice((usersPage - 1) * usersPageSize, usersPage * usersPageSize);
+  const usersTotalPages = Math.ceil(filteredUsers.length / usersPageSize);
+
+  // Filter & Paginate Logs locally
+  const filteredLogs = (logsData?.logs || []).filter(log => {
+    const matchesSearch = log.user_email?.toLowerCase().includes(logsSearch.toLowerCase()) || log.action.toLowerCase().includes(logsSearch.toLowerCase());
+    const matchesStatus = logsStatusFilter === "all" || log.status === logsStatusFilter;
+    return matchesSearch && matchesStatus;
+  });
+  const paginatedLogs = filteredLogs.slice((logsPage - 1) * logsPageSize, logsPage * logsPageSize);
+  const logsTotalPages = Math.ceil(filteredLogs.length / logsPageSize);
+
   return (
     <AppLayout>
       <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
@@ -152,14 +200,25 @@ export default function AdminDashboard() {
               
               {/* Business Stats */}
               <Card className="glass-card border-white/10 md:col-span-3">
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-xl font-black tracking-tight flex items-center gap-2">
                     <Activity className="w-5 h-5 text-primary" /> System Health
                   </CardTitle>
+                  <div className="flex items-center gap-4 text-xs font-bold text-muted-foreground">
+                    <span>Next update in {countdown}s</span>
+                    <Button variant="outline" size="sm" onClick={handleManualRefresh} className="h-8 rounded-xl bg-muted/50 hover:bg-muted font-black border-white/10">
+                      <RefreshCw className={`w-3.5 h-3.5 mr-2 ${analyticsLoading ? 'animate-spin' : ''}`} /> REFRESH NOW
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  {analyticsLoading ? (
-                    <div className="flex justify-center p-8"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+                  {analyticsLoading && !analytics ? (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <Skeleton className="h-[120px] rounded-3xl bg-muted/40" />
+                      <Skeleton className="h-[120px] rounded-3xl bg-muted/40" />
+                      <Skeleton className="h-[120px] rounded-3xl bg-muted/40" />
+                      <Skeleton className="h-[120px] rounded-3xl bg-muted/40" />
+                    </div>
                   ) : analytics ? (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <div className="p-6 rounded-3xl bg-muted/30 border border-white/5 flex flex-col items-center justify-center text-center">
@@ -192,7 +251,7 @@ export default function AdminDashboard() {
                   {analytics ? (
                     <div className="relative w-40 h-40 flex items-center justify-center rounded-full border-[8px] border-muted">
                       <div 
-                        className="absolute inset-0 rounded-full border-[8px] border-primary"
+                        className="absolute inset-0 rounded-full border-[8px] border-primary transition-all duration-1000 ease-out"
                         style={{ clipPath: `polygon(0 100%, 100% 100%, 100% ${100 - analytics.server.memUsagePercent}%, 0 ${100 - analytics.server.memUsagePercent}%)` }}
                       />
                       <div className="text-center">
@@ -200,7 +259,7 @@ export default function AdminDashboard() {
                         <span className="block text-[10px] font-bold text-muted-foreground uppercase mt-1">RAM Used</span>
                       </div>
                     </div>
-                  ) : <Loader2 className="animate-spin text-muted-foreground w-8 h-8" />}
+                  ) : <Skeleton className="w-40 h-40 rounded-full bg-muted/40" />}
                 </CardContent>
               </Card>
 
@@ -210,8 +269,12 @@ export default function AdminDashboard() {
                   <CardTitle className="text-lg font-black tracking-tight">Recent Activity (Live)</CardTitle>
                 </CardHeader>
                 <CardContent className="flex-1 overflow-auto max-h-[250px]">
-                  {logsLoading ? (
-                    <div className="flex justify-center p-8"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+                  {logsLoading && !logsData ? (
+                    <div className="space-y-4">
+                      <Skeleton className="h-14 w-full rounded-2xl bg-muted/40" />
+                      <Skeleton className="h-14 w-full rounded-2xl bg-muted/40" />
+                      <Skeleton className="h-14 w-full rounded-2xl bg-muted/40" />
+                    </div>
                   ) : logsData?.logs ? (
                     <div className="space-y-4">
                       {logsData.logs.slice(0, 10).map((log, i) => (
@@ -243,10 +306,22 @@ export default function AdminDashboard() {
                   </CardTitle>
                   <CardDescription>Activate, deactivate, or manage admin rights.</CardDescription>
                 </div>
+                <div className="flex items-center gap-3 w-[300px]">
+                  <Input 
+                    placeholder="Search by name or email..." 
+                    value={usersSearch}
+                    onChange={(e) => { setUsersSearch(e.target.value); setUsersPage(1); }}
+                    className="h-10 rounded-xl bg-muted/50 border-white/10 font-bold"
+                  />
+                </div>
               </CardHeader>
               <CardContent>
-                {usersLoading ? (
-                  <div className="flex justify-center p-10"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+                {usersLoading && !usersData ? (
+                  <div className="space-y-4">
+                    <Skeleton className="h-16 w-full rounded-xl bg-muted/40" />
+                    <Skeleton className="h-16 w-full rounded-xl bg-muted/40" />
+                    <Skeleton className="h-16 w-full rounded-xl bg-muted/40" />
+                  </div>
                 ) : (
                   <div className="rounded-2xl border border-white/5 overflow-hidden bg-background/50">
                     <table className="w-full text-sm text-left">
@@ -260,7 +335,7 @@ export default function AdminDashboard() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-white/5">
-                        {usersData?.users.map((u) => (
+                        {paginatedUsers.length > 0 ? paginatedUsers.map((u) => (
                           <tr key={u.id} className="hover:bg-muted/20 transition-colors">
                             <td className="px-6 py-4">
                               <div className="font-bold text-foreground">{u.name || "N/A"}</div>
@@ -297,9 +372,23 @@ export default function AdminDashboard() {
                               </Button>
                             </td>
                           </tr>
-                        ))}
+                        )) : (
+                          <tr><td colSpan={5} className="text-center py-10 font-bold text-muted-foreground">No users found.</td></tr>
+                        )}
                       </tbody>
                     </table>
+                  </div>
+                )}
+                
+                {/* Pagination Controls */}
+                {!usersLoading && usersTotalPages > 1 && (
+                  <div className="flex items-center justify-between mt-4">
+                    <span className="text-xs font-bold text-muted-foreground">Showing {paginatedUsers.length} of {filteredUsers.length} users</span>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" disabled={usersPage === 1} onClick={() => setUsersPage(p => p - 1)} className="rounded-lg h-8">Prev</Button>
+                      <span className="flex items-center px-2 text-xs font-bold">Page {usersPage} of {usersTotalPages}</span>
+                      <Button variant="outline" size="sm" disabled={usersPage === usersTotalPages} onClick={() => setUsersPage(p => p + 1)} className="rounded-lg h-8">Next</Button>
+                    </div>
                   </div>
                 )}
               </CardContent>
@@ -316,16 +405,40 @@ export default function AdminDashboard() {
                   </CardTitle>
                   <CardDescription>System-wide logs for troubleshooting and auditing.</CardDescription>
                 </div>
-                <Button 
-                  onClick={exportLogs}
-                  className="rounded-full font-black bg-primary text-primary-foreground hover:bg-primary/90 shadow-xl"
-                >
-                  <Download className="w-4 h-4 mr-2" /> EXPORT CSV
-                </Button>
+                <div className="flex items-center gap-3">
+                  <Input 
+                    placeholder="Search logs..." 
+                    value={logsSearch}
+                    onChange={(e) => { setLogsSearch(e.target.value); setLogsPage(1); }}
+                    className="h-10 w-[200px] rounded-xl bg-muted/50 border-white/10 font-bold"
+                  />
+                  <Select value={logsStatusFilter} onValueChange={(val) => { setLogsStatusFilter(val); setLogsPage(1); }}>
+                    <SelectTrigger className="h-10 w-[140px] rounded-xl bg-muted/50 border-white/10 font-bold">
+                      <SelectValue placeholder="Status Filter" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="success">Success</SelectItem>
+                      <SelectItem value="error">Error</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button 
+                    onClick={exportLogs}
+                    className="h-10 rounded-xl font-black bg-primary text-primary-foreground hover:bg-primary/90 shadow-xl"
+                  >
+                    <Download className="w-4 h-4 mr-2" /> EXPORT CSV
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent className="flex-1 overflow-hidden flex flex-col">
-                {logsLoading ? (
-                  <div className="flex-1 flex justify-center items-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+                {logsLoading && !logsData ? (
+                  <div className="flex-1 space-y-4">
+                    <Skeleton className="h-12 w-full rounded-xl bg-muted/40" />
+                    <Skeleton className="h-12 w-full rounded-xl bg-muted/40" />
+                    <Skeleton className="h-12 w-full rounded-xl bg-muted/40" />
+                    <Skeleton className="h-12 w-full rounded-xl bg-muted/40" />
+                    <Skeleton className="h-12 w-full rounded-xl bg-muted/40" />
+                  </div>
                 ) : (
                   <div className="flex-1 overflow-auto rounded-2xl border border-white/5 bg-background/50 relative">
                     <table className="w-full text-sm text-left">
@@ -339,7 +452,7 @@ export default function AdminDashboard() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-white/5">
-                        {logsData?.logs.map((log) => (
+                        {paginatedLogs.length > 0 ? paginatedLogs.map((log) => (
                           <tr key={log.id} className="hover:bg-muted/20 transition-colors">
                             <td className="px-6 py-4 whitespace-nowrap text-muted-foreground text-xs font-bold">
                               {format(new Date(log.created_at), 'yyyy-MM-dd HH:mm:ss')}
@@ -361,9 +474,35 @@ export default function AdminDashboard() {
                               </div>
                             </td>
                           </tr>
-                        ))}
+                        )) : (
+                          <tr><td colSpan={5} className="text-center py-10 font-bold text-muted-foreground">No logs match your filter.</td></tr>
+                        )}
                       </tbody>
                     </table>
+                  </div>
+                )}
+
+                {/* Logs Pagination Controls */}
+                {!logsLoading && logsTotalPages > 1 && (
+                  <div className="flex items-center justify-between mt-4">
+                    <span className="text-xs font-bold text-muted-foreground">Showing {paginatedLogs.length} of {filteredLogs.length} logs</span>
+                    <div className="flex items-center gap-4">
+                      <Select value={logsPageSize.toString()} onValueChange={(val) => { setLogsPageSize(Number(val)); setLogsPage(1); }}>
+                        <SelectTrigger className="h-8 w-[100px] text-xs font-bold bg-muted/30 border-white/10 rounded-lg">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="25">25 / page</SelectItem>
+                          <SelectItem value="50">50 / page</SelectItem>
+                          <SelectItem value="100">100 / page</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" disabled={logsPage === 1} onClick={() => setLogsPage(p => p - 1)} className="rounded-lg h-8">Prev</Button>
+                        <span className="flex items-center px-2 text-xs font-bold">Page {logsPage} of {logsTotalPages}</span>
+                        <Button variant="outline" size="sm" disabled={logsPage === logsTotalPages} onClick={() => setLogsPage(p => p + 1)} className="rounded-lg h-8">Next</Button>
+                      </div>
+                    </div>
                   </div>
                 )}
               </CardContent>
