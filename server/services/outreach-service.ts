@@ -440,26 +440,22 @@ async function handleEmailOutreach(userId: string, contact: Contact) {
     }
   };
 
-  // 2. Custom Message (Sent First)
-  if (contact.hasCustomMessageEmail && contact.editableMessageGmail) {
-     const subject = contact.editableGmailSubject?.trim() || "";
-     if (!subject) throw new Error("Missing email subject for Custom Message. Please add a subject to the contact row.");
-     await sendEmail(subject, contact.editableMessageGmail, true);
-  }
-
-  // 3. Compose Templates (Gmail composed draft / body + footer sequence)
+  // 2. Compose Email (Custom Message OR Body Template + Footer)
   const templateIds = Array.isArray(contact.templateSelectionGmail) ? contact.templateSelectionGmail : [];
+  const useCustomMessage = !!(contact.hasCustomMessageEmail && contact.editableMessageGmail);
   
-  if (templateIds.length > 0) {
+  if (templateIds.length > 0 || useCustomMessage) {
     // Fetch all selected templates
     const selectedTemplates: any[] = [];
-    for (const tId of templateIds) {
-      const template = await queryOne<any>(
-        "SELECT content, email_subject, is_attachment, drive_file_id, drive_file_name, drive_attachments, email_template_type FROM templates WHERE id = $1 AND user_id = $2",
-        [tId, userId]
-      );
-      if (template) {
-        selectedTemplates.push(template);
+    if (templateIds.length > 0) {
+      for (const tId of templateIds) {
+        const template = await queryOne<any>(
+          "SELECT content, email_subject, is_attachment, drive_file_id, drive_file_name, drive_attachments, email_template_type FROM templates WHERE id = $1 AND user_id = $2",
+          [tId, userId]
+        );
+        if (template) {
+          selectedTemplates.push(template);
+        }
       }
     }
 
@@ -477,7 +473,9 @@ async function handleEmailOutreach(userId: string, contact: Contact) {
 
     let composedBody = "";
 
-    if (bodyTemplate) {
+    if (useCustomMessage) {
+      composedBody = contact.editableMessageGmail;
+    } else if (bodyTemplate) {
       composedBody = injectVariables(bodyTemplate.content || "", contact, "email");
     }
 
@@ -529,7 +527,7 @@ async function handleEmailOutreach(userId: string, contact: Contact) {
       }
     };
 
-    if (bodyTemplate) await processAttachments(bodyTemplate);
+    if (!useCustomMessage && bodyTemplate) await processAttachments(bodyTemplate);
     if (footerTemplate) await processAttachments(footerTemplate);
 
     // Send the composed email (preserving HTML formatting)
