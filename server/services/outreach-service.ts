@@ -484,10 +484,23 @@ async function handleEmailOutreach(userId: string, contact: Contact) {
     if (footerTemplate) {
       const footerContent = injectVariables(footerTemplate.content || "", contact, "email");
       if (composedBody) {
-        composedBody += "\n\n" + footerContent;
+        composedBody += "<br><br>" + footerContent;
       } else {
         composedBody = footerContent;
       }
+    }
+
+    // Normalize HTML formatting for Gmail rendering
+    let finalHtml = composedBody;
+    
+    // If it's a legacy plain-text template (no structural HTML tags), convert newlines
+    if (!/<(?:p|div|br)[^>]*>/i.test(finalHtml)) {
+      finalHtml = finalHtml.replace(/\n/g, "<br>");
+    } else {
+      // Strip bloated default margins from <p> tags by replacing them with 0-margin divs
+      finalHtml = finalHtml.replace(/<p[^>]*>/gi, '<div style="margin: 0; padding: 0;">').replace(/<\/p>/gi, '</div>');
+      // Also remove massive line-heights sometimes carried over from word processors
+      finalHtml = finalHtml.replace(/line-height:\s*[^;"]+;?/gi, '');
     }
 
     // Combine attachments from selected templates + row attachments
@@ -524,7 +537,7 @@ async function handleEmailOutreach(userId: string, contact: Contact) {
       from: `"${contact.name || "CastHub"}" <${from}>`,
       to,
       subject: composedSubject,
-      body: composedBody,
+      body: finalHtml,
       isHtml: true,
       attachments: thisTemplateAttachments,
     });
