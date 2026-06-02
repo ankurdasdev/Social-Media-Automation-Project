@@ -365,28 +365,29 @@ export function DataTableToolbar<TData>({
 
       {/* ROW 3: Bulk Actions (Dedicated Section) */}
       {hasSelection && (
-        <div className="animate-in slide-in-from-top-2 fade-in duration-300 w-full glass-card bg-primary/5 border border-primary/20 rounded-[2rem] p-4 flex flex-col xl:flex-row items-center justify-between gap-4 shadow-xl">
-          <div className="flex items-center gap-4 pr-6 xl:border-r border-primary/20 w-full xl:w-auto shrink-0 justify-center xl:justify-start">
-            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-black text-sm shadow-inner">
+        <div className="animate-in slide-in-from-top-2 fade-in duration-300 w-full glass-card bg-primary/5 border border-primary/20 rounded-[2rem] p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-xl">
+          <div className="flex items-center gap-4 md:pr-6 md:border-r border-primary/20 w-full md:w-auto shrink-0">
+            <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-black text-lg shadow-inner">
               {selectedRows.length}
             </div>
-            <span className="text-[12px] font-black uppercase tracking-[0.3em] text-primary">Selected</span>
+            <div className="flex flex-col">
+              <span className="text-[14px] font-black uppercase tracking-[0.3em] text-primary leading-tight">Selected</span>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Contacts</span>
+            </div>
           </div>
           
-          <div className="flex flex-wrap items-center justify-center xl:justify-start gap-3 w-full">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:flex lg:flex-wrap items-center gap-3 w-full">
             <Button
               onClick={() => { const ids = selectedRows.map(r => (r.original as any).id); onTriggerAction?.(ids); }}
-              className="rounded-full bg-primary hover:bg-primary/90 text-white font-black text-[10px] uppercase tracking-widest h-12 px-6 shadow-lg shadow-primary/30 gap-2 transition-transform active:scale-95"
+              className="rounded-xl lg:rounded-full bg-primary hover:bg-primary/90 text-white font-black text-[10px] uppercase tracking-widest h-12 px-4 lg:px-6 shadow-lg shadow-primary/30 gap-2 transition-transform active:scale-95 col-span-2 md:col-span-1"
             >
               <Zap className="w-4 h-4 fill-current" /> SEND OUTREACH
             </Button>
             
-            <div className="hidden md:block w-px h-8 bg-primary/20 mx-2" />
-
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="rounded-full bg-background/50 hover:bg-background border-primary/20 h-12 px-5 text-[10px] font-bold uppercase gap-2 hover:border-primary/50 transition-colors">
-                  <Palette className="w-4 h-4 text-primary" /> ROW COLOR
+                <Button variant="outline" className="rounded-xl lg:rounded-full bg-background/50 hover:bg-background border-primary/20 h-12 px-4 lg:px-5 text-[10px] font-bold uppercase gap-2 hover:border-primary/50 transition-colors w-full">
+                  <Palette className="w-4 h-4 text-primary" /> COLOR
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="center" className="w-[280px] glass-card border-white/10 p-1 rounded-3xl shadow-2xl z-[100]">
@@ -402,8 +403,8 @@ export function DataTableToolbar<TData>({
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="rounded-full bg-background/50 hover:bg-background border-primary/20 h-12 px-5 text-[10px] font-bold uppercase gap-2 hover:border-primary/50 transition-colors">
-                  <Layers className="w-4 h-4 text-primary" /> MOVE TO SHEET
+                <Button variant="outline" className="rounded-xl lg:rounded-full bg-background/50 hover:bg-background border-primary/20 h-12 px-4 lg:px-5 text-[10px] font-bold uppercase gap-2 hover:border-primary/50 transition-colors w-full">
+                  <Layers className="w-4 h-4 text-primary" /> MOVE
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="center" className="w-[240px] glass-card border-white/10 p-2 rounded-2xl shadow-2xl z-[100]">
@@ -421,17 +422,17 @@ export function DataTableToolbar<TData>({
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button variant="outline" onClick={() => executeBulkAction("reset_automation")} className="rounded-full bg-background/50 hover:bg-background border-blue-500/20 hover:border-blue-500/50 text-blue-500 h-12 px-5 text-[10px] font-bold uppercase gap-2 transition-colors">
-              <RefreshCw className="w-4 h-4" /> RESET AUTOMATION
+            <Button variant="outline" onClick={() => executeBulkAction("reset_automation")} className="rounded-xl lg:rounded-full bg-background/50 hover:bg-background border-blue-500/20 hover:border-blue-500/50 text-blue-500 h-12 px-4 lg:px-5 text-[10px] font-bold uppercase gap-2 transition-colors w-full">
+              <RefreshCw className="w-4 h-4" /> RESET
             </Button>
 
-            <Button variant="outline" onClick={() => setIsSmartClearOpen(true)} className="rounded-full bg-background/50 hover:bg-background border-amber-500/20 hover:border-amber-500/50 text-amber-500 h-12 px-5 text-[10px] font-bold uppercase gap-2 transition-colors">
-              <Eraser className="w-4 h-4" /> SMART CLEAR
+            <Button variant="outline" onClick={() => setIsSmartClearOpen(true)} className="rounded-xl lg:rounded-full bg-background/50 hover:bg-background border-amber-500/20 hover:border-amber-500/50 text-amber-500 h-12 px-4 lg:px-5 text-[10px] font-bold uppercase gap-2 transition-colors w-full">
+              <Eraser className="w-4 h-4" /> CLEAR
             </Button>
 
-            <div className="flex-1" />
+            <div className="hidden lg:block flex-1" />
 
-            <Button variant="outline" onClick={() => executeBulkAction("delete")} className="rounded-full bg-background/50 hover:bg-destructive/10 border-destructive/20 hover:border-destructive/50 text-destructive h-12 px-5 text-[10px] font-bold uppercase gap-2 transition-colors w-full xl:w-auto">
+            <Button variant="outline" onClick={() => executeBulkAction("delete")} className="rounded-xl lg:rounded-full bg-background/50 hover:bg-destructive/10 border-destructive/20 hover:border-destructive/50 text-destructive h-12 px-4 lg:px-5 text-[10px] font-bold uppercase gap-2 transition-colors w-full lg:w-auto col-span-2 md:col-span-1">
               <Trash2 className="w-4 h-4" /> DELETE
             </Button>
           </div>
