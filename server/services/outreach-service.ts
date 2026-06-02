@@ -79,9 +79,7 @@ function injectVariables(content: string, contact: Contact, channel: "whatsapp" 
   const cName = contact.castingName || "the casting";
 
   const variables = [
-    // {{leadName}} is the canonical name — synced with "Lead Name" column header
     { name: "leadName", value: pName },
-    // {{name}} kept for backward compatibility with existing templates
     { name: "name", value: pName },
     { name: "castingName", value: cName },
     { name: "age", value: contact.age || "the age bracket" },
@@ -91,12 +89,10 @@ function injectVariables(content: string, contact: Contact, channel: "whatsapp" 
     { name: "email", value: contact.email || "" },
     { name: "instaHandle", value: contact.instaHandle || "" },
     
-    // The personalized part (Name, Casting Name, or Sir/Mam)
     { name: "personalizedWP", value: personalizedWA },
     { name: "personalizedGmail", value: personalizedGmail },
     { name: "personalizedIG", value: personalizedIG },
     
-    // The base salutation (Hi, Hey, etc)
     { name: "salutation", value: channel === "whatsapp" ? baseSalutationWA : channel === "email" ? baseSalutationGmail : baseSalutationIG },
   ];
 
@@ -320,12 +316,14 @@ async function buildMimeMessage(opts: {
   to: string;
   subject: string;
   body: string;
+  isHtml?: boolean;
   attachments?: { filename: string; content: Buffer; mimeType: string }[];
 }): Promise<string> {
   const boundary = `boundary_casthub_${Date.now()}`;
   const lines: string[] = [];
 
   const isMultipart = opts.attachments && opts.attachments.length > 0;
+  const contentType = opts.isHtml ? 'text/html' : 'text/plain';
 
   lines.push(`From: ${opts.from}`);
   lines.push(`To: ${opts.to}`);
@@ -336,10 +334,13 @@ async function buildMimeMessage(opts: {
     lines.push(`Content-Type: multipart/mixed; boundary="${boundary}"`);
     lines.push(``);
     lines.push(`--${boundary}`);
-    lines.push(`Content-Type: text/plain; charset="UTF-8"`);
-    lines.push(`Content-Transfer-Encoding: quoted-printable`);
+    lines.push(`Content-Type: ${contentType}; charset="UTF-8"`);
+    lines.push(`Content-Transfer-Encoding: base64`);
     lines.push(``);
-    lines.push(opts.body);
+    const b64Body = Buffer.from(opts.body, "utf-8").toString("base64");
+    for (let i = 0; i < b64Body.length; i += 76) {
+      lines.push(b64Body.slice(i, i + 76));
+    }
 
     for (const att of opts.attachments!) {
       lines.push(`--${boundary}`);
@@ -356,9 +357,13 @@ async function buildMimeMessage(opts: {
 
     lines.push(`--${boundary}--`);
   } else {
-    lines.push(`Content-Type: text/plain; charset="UTF-8"`);
+    lines.push(`Content-Type: ${contentType}; charset="UTF-8"`);
+    lines.push(`Content-Transfer-Encoding: base64`);
     lines.push(``);
-    lines.push(opts.body);
+    const b64Body = Buffer.from(opts.body, "utf-8").toString("base64");
+    for (let i = 0; i < b64Body.length; i += 76) {
+      lines.push(b64Body.slice(i, i + 76));
+    }
   }
 
   const raw = lines.join("\r\n");
@@ -408,12 +413,13 @@ async function handleEmailOutreach(userId: string, contact: Contact) {
     }
   }
 
-  const sendEmail = async (subject: string, body: string) => {
+  const sendEmail = async (subject: string, body: string, isHtml: boolean = false) => {
     const raw = await buildMimeMessage({
       from: `"${contact.name || "CastHub"}" <${from}>`,
       to,
       subject,
       body,
+      isHtml,
       attachments: emailAttachments,
     });
     try {
@@ -436,9 +442,9 @@ async function handleEmailOutreach(userId: string, contact: Contact) {
 
   // 2. Custom Message (Sent First)
   if (contact.hasCustomMessageEmail && contact.editableMessageGmail) {
-     const subject = contact.editableGmailSubject || `Casting Outreach: ${contact.project || contact.name || "New Project"}`;
-     const cleanMsg = cleanHtmlForPlainText(contact.editableMessageGmail);
-     await sendEmail(subject, cleanMsg);
+     const subject = contact.editableGmailSubject?.trim() || "";
+     if (!subject) throw new Error("Missing email subject for Custom Message. Please add a subject to the contact row.");
+     await sendEmail(subject, contact.editableMessageGmail, true);
   }
 
   // 3. Compose Templates (Gmail composed draft / body + footer sequence)
@@ -462,15 +468,17 @@ async function handleEmailOutreach(userId: string, contact: Contact) {
     const footerTemplate = selectedTemplates.find(t => t.email_template_type === "footer");
 
     // Compose elements
-    let composedSubject = contact.editableGmailSubject || "";
+    // Priority 1: Contact row subject. Priority 2: Template subject.
+    let composedSubject = contact.editableGmailSubject?.trim() || (bodyTemplate?.email_subject?.trim()) || "";
+    
+    if (!composedSubject) {
+      throw new Error("Missing email subject. Please provide a subject in the Contact record or the Body Template.");
+    }
+
     let composedBody = "";
 
     if (bodyTemplate) {
-      composedSubject = bodyTemplate.email_subject || composedSubject || `Casting Outreach: ${contact.project || contact.name || "New Project"}`;
       composedBody = injectVariables(bodyTemplate.content || "", contact, "email");
-    } else {
-      // If no body template exists, keep subject as default or custom, and main body blank
-      composedSubject = composedSubject || `Casting Outreach: ${contact.project || contact.name || "New Project"}`;
     }
 
     if (footerTemplate) {
@@ -511,13 +519,13 @@ async function handleEmailOutreach(userId: string, contact: Contact) {
     if (bodyTemplate) await processAttachments(bodyTemplate);
     if (footerTemplate) await processAttachments(footerTemplate);
 
-    // Send the composed email!
-    const cleanComposedBody = cleanHtmlForPlainText(composedBody);
+    // Send the composed email (preserving HTML formatting)
     const raw = await buildMimeMessage({
       from: `"${contact.name || "CastHub"}" <${from}>`,
       to,
       subject: composedSubject,
-      body: cleanComposedBody,
+      body: composedBody,
+      isHtml: true,
       attachments: thisTemplateAttachments,
     });
 
