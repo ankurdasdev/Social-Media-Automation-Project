@@ -25,7 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { X, Plus, Search, FileText, Sparkles, Wand2, Loader2, ExternalLink, GripVertical, ZoomIn, HardDrive, Paperclip } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RichTextarea } from "@/components/ui/rich-textarea";
-import { DriveFilePicker } from "../drive/DriveFilePicker";
+import { DriveFilePicker, validateFile } from "../drive/DriveFilePicker";
 import { getOrCreateUserId } from "@/lib/utils";
 import type { Contact, DriveFile } from "@shared/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -524,10 +524,12 @@ function getMimeEmoji(mimeType: string): string {
 
 export function AttachmentCell({
   attachments,
-  onUpdate
+  onUpdate,
+  platform
 }: {
   attachments: DriveFile[],
-  onUpdate: (files: DriveFile[]) => void
+  onUpdate: (files: DriveFile[]) => void,
+  platform?: "whatsapp" | "email" | "instagram"
 }) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [searchTerm, setSearchTerm] = React.useState("");
@@ -590,10 +592,19 @@ export function AttachmentCell({
       )}
 
       {/* Compact chips */}
-      {files.map((file, idx) => (
+      {files.map((file, idx) => {
+        const validation = validateFile(file, platform);
+        const isInvalidFormat = !validation.valid;
+        return (
         <div
           key={file.id}
-          className="flex items-center gap-1.5 pl-2 pr-1.5 py-1 rounded-xl border border-border/50 bg-muted/30 text-[10px] font-bold group/chip max-w-[120px]"
+          className={cn(
+            "flex items-center gap-1.5 pl-2 pr-1.5 py-1 rounded-xl border text-[10px] font-bold group/chip max-w-[120px]",
+            isInvalidFormat 
+              ? "bg-red-500/10 border-red-500/50 text-red-500" 
+              : "bg-muted/30 border-border/50 text-foreground"
+          )}
+          title={isInvalidFormat ? validation.reason : undefined}
         >
           {isImage(file.mimeType) && file.thumbnailLink ? (
             <button
@@ -605,7 +616,7 @@ export function AttachmentCell({
               <img src={file.thumbnailLink} alt="" className="w-4 h-4 rounded object-cover" />
             </button>
           ) : (
-            <FileText className="w-3 h-3 text-blue-500 shrink-0" />
+            <FileText className={cn("w-3 h-3 shrink-0", isInvalidFormat ? "text-red-500" : "text-blue-500")} />
           )}
           <span className="truncate max-w-[60px]">{file.name}</span>
           <X
@@ -613,7 +624,7 @@ export function AttachmentCell({
             onClick={(e) => { e.stopPropagation(); onUpdate(files.filter((_, i) => i !== idx)); }}
           />
         </div>
-      ))}
+      )})}
 
       {/* Open dialog button */}
       <button
@@ -657,40 +668,48 @@ export function AttachmentCell({
                 {(driveData?.files || []).map((file) => {
                   const isSelected = files.some((f) => f.id === file.id);
                   const isImg = isImage(file.mimeType);
+                  const validation = validateFile(file, platform);
+                  const isInvalidFormat = !validation.valid;
                   return (
                     <div
                       key={file.id}
-                      onClick={() => toggleFile(file)}
+                      onClick={() => !isInvalidFormat && toggleFile(file)}
                       className={cn(
                         "flex items-center gap-4 px-4 py-3 rounded-2xl cursor-pointer transition-all group/item",
                         isSelected
                           ? "bg-primary text-white shadow-lg shadow-primary/20 scale-[1.01]"
-                          : "hover:bg-muted/60 hover:translate-x-1"
+                          : isInvalidFormat
+                            ? "bg-red-500/5 opacity-60 cursor-not-allowed"
+                            : "hover:bg-muted/60 hover:translate-x-1"
                       )}
+                      title={isInvalidFormat ? validation.reason : undefined}
                     >
                       <div className="shrink-0 w-9 h-9 relative">
                         {isImg && file.thumbnailLink ? (
                           <div className="relative w-9 h-9">
                             <img src={file.thumbnailLink} alt={file.name} className="w-9 h-9 rounded-lg object-cover border border-white/10" />
-                            <button
-                              type="button"
-                              onClick={(e) => { e.stopPropagation(); setLightboxFile(file); }}
-                              className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg opacity-0 group-hover/item:opacity-100 transition-opacity"
-                            >
-                              <ZoomIn className="w-3 h-3 text-white" />
-                            </button>
+                            {!isInvalidFormat && (
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); setLightboxFile(file); }}
+                                className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg opacity-0 group-hover/item:opacity-100 transition-opacity"
+                              >
+                                <ZoomIn className="w-3 h-3 text-white" />
+                              </button>
+                            )}
                           </div>
                         ) : (
                           <span className="text-2xl block text-center leading-9">{getMimeEmoji(file.mimeType)}</span>
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className={cn("text-sm font-black truncate", isSelected ? "text-white" : "")}>{file.name}</p>
-                        <p className={cn("text-[9px] font-black uppercase tracking-widest", isSelected ? "text-white/60" : "text-muted-foreground/50")}>
-                          {file.mimeType.split("/").pop()}
+                        <p className={cn("text-sm font-black truncate", isSelected ? "text-white" : isInvalidFormat ? "text-red-500" : "")}>{file.name}</p>
+                        <p className={cn("text-[9px] font-black uppercase tracking-widest", isSelected ? "text-white/60" : isInvalidFormat ? "text-red-400" : "text-muted-foreground/50")}>
+                          {isInvalidFormat ? "UNSUPPORTED FORMAT" : file.mimeType.split("/").pop()}
                         </p>
                       </div>
                       {isSelected && <div className="shrink-0 w-6 h-6 rounded-md bg-white/20 flex items-center justify-center"><FileText className="w-3.5 h-3.5 text-white" /></div>}
+                      {isInvalidFormat && <div className="shrink-0 w-6 h-6 rounded-md bg-red-500/10 flex items-center justify-center"><X className="w-3.5 h-3.5 text-red-500" /></div>}
                     </div>
                   );
                 })}

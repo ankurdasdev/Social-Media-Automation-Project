@@ -644,6 +644,7 @@ export const columns: ColumnDef<Contact>[] = [
             <AttachmentCell 
               attachments={row.original.drive_attachments_wa || []} 
               onUpdate={(files) => (table.options.meta as any)?.updateContact?.(row.original.id, { drive_attachments_wa: files })}
+              platform="whatsapp"
             />
           </div>
         ),
@@ -735,6 +736,7 @@ export const columns: ColumnDef<Contact>[] = [
             <AttachmentCell 
               attachments={row.original.drive_attachments_email || []} 
               onUpdate={(files) => (table.options.meta as any)?.updateContact?.(row.original.id, { drive_attachments_email: files })}
+              platform="email"
             />
           </div>
         ),
@@ -812,6 +814,7 @@ export const columns: ColumnDef<Contact>[] = [
             <AttachmentCell 
               attachments={row.original.drive_attachments_ig || []} 
               onUpdate={(files) => (table.options.meta as any)?.updateContact?.(row.original.id, { drive_attachments_ig: files })}
+              platform="instagram"
             />
           </div>
         ),

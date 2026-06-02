@@ -548,7 +548,7 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
                   <span className="text-[11px] font-black uppercase tracking-widest text-emerald-500">3. WA PROTOCOL</span>
                   <div className="flex items-center gap-2">
                     <span className="text-[9px] font-bold text-muted-foreground">DRIVE ATTACHMENTS</span>
-                    <AttachmentCell attachments={form.drive_attachments_wa || []} onUpdate={(val) => set("drive_attachments_wa")(val)} />
+                    <AttachmentCell attachments={form.drive_attachments_wa || []} onUpdate={(val) => set("drive_attachments_wa")(val)} platform="whatsapp" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -598,7 +598,7 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
                   <span className="text-[11px] font-black uppercase tracking-widest text-blue-500">4. GMAIL PROTOCOL</span>
                   <div className="flex items-center gap-2">
                     <span className="text-[9px] font-bold text-muted-foreground">DRIVE ATTACHMENTS</span>
-                    <AttachmentCell attachments={form.drive_attachments_email || []} onUpdate={(val) => set("drive_attachments_email")(val)} />
+                    <AttachmentCell attachments={form.drive_attachments_email || []} onUpdate={(val) => set("drive_attachments_email")(val)} platform="email" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -657,7 +657,7 @@ export function ContactDrawer({ contact, open, onOpenChange }: ContactDrawerProp
                   <span className="text-[11px] font-black uppercase tracking-widest text-pink-500">5. INSTAGRAM PROTOCOL</span>
                   <div className="flex items-center gap-2">
                     <span className="text-[9px] font-bold text-muted-foreground">DRIVE ATTACHMENTS</span>
-                    <AttachmentCell attachments={form.drive_attachments_ig || []} onUpdate={(val) => set("drive_attachments_ig")(val)} />
+                    <AttachmentCell attachments={form.drive_attachments_ig || []} onUpdate={(val) => set("drive_attachments_ig")(val)} platform="instagram" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
