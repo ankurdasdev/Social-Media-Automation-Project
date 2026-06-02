@@ -122,10 +122,10 @@ export async function sendOutreach(req: OutreachRequest) {
   const results: Record<string, { success: boolean; error?: string; result?: any }> = {};
   const contactedDates = Array.isArray(contact.contacted_dates) ? contact.contacted_dates : [];
 
-  // Run in parallel with a 15-second timeout safeguard per channel
+  // Run in parallel with a 60-second timeout safeguard per channel
   const promises = channels.map(async (channel) => {
     const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error("Timeout (stalled)")), 15000)
+      setTimeout(() => reject(new Error("Timeout (stalled)")), 60000)
     );
     const executePromise = (async () => {
       if (channel === "whatsapp") {
