@@ -182,6 +182,14 @@ export async function sendMedia(
   fileName?: string
 ): Promise<any> {
   const url = `${BASE_URL}/message/sendMedia/${instanceName}`;
+  
+  if (fileName) {
+    const ext = fileName.toLowerCase();
+    if (ext.endsWith(".heic") || ext.endsWith(".heif")) {
+      throw new Error("HEIC/HEIF images (iPhone defaults) are not supported by the WhatsApp API. Please convert the file to JPG or PNG.");
+    }
+  }
+
   const body = {
     number,
     media: mediaUrl,
