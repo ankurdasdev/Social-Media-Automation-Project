@@ -406,14 +406,23 @@ export function MultiTemplateSelect({
   const userId = getOrCreateUserId();
   const currentIds = Array.isArray(selectedIds) ? selectedIds : (selectedIds ? [selectedIds] : []);
   
+  // Optimistic UI state
+  const [localIds, setLocalIds] = React.useState<string[]>(currentIds);
+
+  React.useEffect(() => {
+    setLocalIds(currentIds);
+  }, [JSON.stringify(currentIds)]);
+  
   const moveItem = (index: number, direction: 'left' | 'right') => {
     if (direction === 'left' && index > 0) {
-      const newIds = [...currentIds];
+      const newIds = [...localIds];
       [newIds[index - 1], newIds[index]] = [newIds[index], newIds[index - 1]];
+      setLocalIds(newIds);
       onUpdate(newIds);
-    } else if (direction === 'right' && index < currentIds.length - 1) {
-      const newIds = [...currentIds];
+    } else if (direction === 'right' && index < localIds.length - 1) {
+      const newIds = [...localIds];
       [newIds[index], newIds[index + 1]] = [newIds[index + 1], newIds[index]];
+      setLocalIds(newIds);
       onUpdate(newIds);
     }
   };
@@ -429,16 +438,19 @@ export function MultiTemplateSelect({
   });
 
   const handleToggle = (id: string) => {
-    if (currentIds.includes(id)) {
-      onUpdate(currentIds.filter(i => i !== id));
+    let newIds;
+    if (localIds.includes(id)) {
+      newIds = localIds.filter(i => i !== id);
     } else {
-      onUpdate([...currentIds, id]);
+      newIds = [...localIds, id];
     }
+    setLocalIds(newIds);
+    onUpdate(newIds);
   };
 
   return (
     <div className="flex flex-col gap-1 min-w-[120px] max-h-[68px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 p-1 rounded-md border border-transparent hover:border-border/50 transition-all group">
-      {currentIds.map((id, idx) => {
+      {localIds.map((id, idx) => {
         const t = templates.find((tmp: any) => tmp.id === id);
         return (
           <Badge key={id} variant="secondary" className="h-5 px-1 flex shrink-0 items-center gap-1 text-[9px] font-black bg-primary/10 text-primary border-none group/badge whitespace-nowrap">
@@ -452,7 +464,7 @@ export function MultiTemplateSelect({
             {idx + 1}. {t?.name || "..."}
             <button
               onClick={(e) => { e.stopPropagation(); moveItem(idx, 'right'); }}
-              disabled={idx === currentIds.length - 1}
+              disabled={idx === localIds.length - 1}
               className="opacity-0 group-hover/badge:opacity-100 disabled:!opacity-30 hover:text-foreground transition-opacity"
             >
               →
@@ -466,13 +478,13 @@ export function MultiTemplateSelect({
           <Plus className="w-3 h-3" />
         </SelectTrigger>
         <SelectContent>
-            {templates.filter((t: any) => !currentIds.includes(t.id)).map((t: any) => (
+            {templates.filter((t: any) => !localIds.includes(t.id)).map((t: any) => (
                 <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
             ))}
             {templates.length === 0 && <div className="p-2 text-[10px] text-muted-foreground">No templates</div>}
         </SelectContent>
       </Select>
-      {currentIds.length === 0 && <span className="text-[10px] text-muted-foreground/50 px-1 py-0.5">Pick order...</span>}
+      {localIds.length === 0 && <span className="text-[10px] text-muted-foreground/50 px-1 py-0.5">Pick order...</span>}
     </div>
   );
 }
