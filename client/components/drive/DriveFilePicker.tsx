@@ -482,10 +482,10 @@ export function DriveFilePicker({
                       }}
                       title="Preview file"
                       className={cn(
-                        "p-1.5 rounded-lg transition-all opacity-0 group-hover:opacity-100",
+                        "p-1.5 rounded-lg transition-all",
                         isSelected
                           ? "text-white/70 hover:bg-white/20"
-                          : "text-muted-foreground hover:bg-muted hover:text-primary"
+                          : "text-muted-foreground/60 hover:bg-muted hover:text-primary"
                       )}
                     >
                       <Eye className="w-3.5 h-3.5" />
