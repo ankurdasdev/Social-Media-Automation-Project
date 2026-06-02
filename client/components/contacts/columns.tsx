@@ -42,19 +42,25 @@ import { Palette } from "lucide-react";
 
 const GROUP_STORAGE_KEY = "casthub-group-settings";
 
+let cachedGroupSettings: Record<string, { title: string, color: string }> | null = null;
+
 function getGroupSettings(): Record<string, { title: string, color: string }> {
+  if (cachedGroupSettings) return cachedGroupSettings;
   try {
-    return JSON.parse(localStorage.getItem(GROUP_STORAGE_KEY) || "{}");
+    cachedGroupSettings = JSON.parse(localStorage.getItem(GROUP_STORAGE_KEY) || "{}");
+    return cachedGroupSettings!;
   } catch {
-    return {};
+    cachedGroupSettings = {};
+    return cachedGroupSettings;
   }
 }
 
 function setGroupSetting(groupId: string, key: "title" | "color", value: string) {
-  const settings = getGroupSettings();
+  const settings = { ...getGroupSettings() };
   if (!settings[groupId]) settings[groupId] = { title: "", color: "" };
   settings[groupId][key] = value;
   localStorage.setItem(GROUP_STORAGE_KEY, JSON.stringify(settings));
+  cachedGroupSettings = settings;
   // Dispatch custom event to trigger re-renders if necessary
   window.dispatchEvent(new Event("casthub-group-update"));
 }
@@ -145,18 +151,25 @@ export function GroupHeader({ id, defaultTitle, defaultColor }: { id: string; de
 
 const LABEL_STORAGE_KEY = "casthub-column-labels";
 
+let cachedLabels: Record<string, string> | null = null;
+
 function getStoredLabels(): Record<string, string> {
+  if (cachedLabels) return cachedLabels;
   try {
-    return JSON.parse(localStorage.getItem(LABEL_STORAGE_KEY) || "{}");
+    cachedLabels = JSON.parse(localStorage.getItem(LABEL_STORAGE_KEY) || "{}");
+    return cachedLabels!;
   } catch {
-    return {};
+    cachedLabels = {};
+    return cachedLabels;
   }
 }
 
 function setStoredLabel(columnId: string, label: string) {
-  const labels = getStoredLabels();
+  const labels = { ...getStoredLabels() };
   labels[columnId] = label;
   localStorage.setItem(LABEL_STORAGE_KEY, JSON.stringify(labels));
+  cachedLabels = labels;
+  window.dispatchEvent(new Event("casthub-column-labels-update"));
 }
 
 function DataTableColumnHeader({ 
@@ -174,10 +187,18 @@ function DataTableColumnHeader({
   disableRename?: boolean;
   isFollowupFilter?: boolean;
 }) {
-  const storedLabels = getStoredLabels();
   const effectiveId = columnId || column.id;
+  const [storedLabels, setStoredLabelsState] = React.useState(() => getStoredLabels());
   const [isEditingLabel, setIsEditingLabel] = React.useState(false);
   const [labelValue, setLabelValue] = React.useState(storedLabels[effectiveId] || title);
+
+  React.useEffect(() => {
+    const handleUpdate = () => {
+      setStoredLabelsState(getStoredLabels());
+    };
+    window.addEventListener("casthub-column-labels-update", handleUpdate);
+    return () => window.removeEventListener("casthub-column-labels-update", handleUpdate);
+  }, []);
 
   const handleLabelSave = () => {
     if (labelValue.trim()) {

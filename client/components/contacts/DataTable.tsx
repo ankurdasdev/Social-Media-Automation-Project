@@ -64,6 +64,170 @@ interface DataTableProps<TData, TValue> {
   isExternalTransitioning?: boolean;
 }
 
+// ─── Drag Fill State (Decoupled from React State for Performance) ──────
+const dragFillState = {
+  startIdx: null as number | null,
+  hoverIdx: null as number | null,
+  colId: null as string | null,
+  value: null as any,
+};
+
+function updateDragFillHighlights() {
+  document.querySelectorAll('.drag-fill-highlight').forEach(el => el.remove());
+  if (dragFillState.startIdx === null || dragFillState.hoverIdx === null || !dragFillState.colId) return;
+  
+  const min = Math.min(dragFillState.startIdx, dragFillState.hoverIdx);
+  const max = Math.max(dragFillState.startIdx, dragFillState.hoverIdx);
+  
+  for (let i = min; i <= max; i++) {
+    const cellEl = document.getElementById(`cell-${i}-${dragFillState.colId}`);
+    if (cellEl) {
+       const highlight = document.createElement('div');
+       highlight.className = 'drag-fill-highlight absolute inset-0 bg-primary/20 border-2 border-primary border-dashed pointer-events-none z-20 animate-pulse';
+       cellEl.appendChild(highlight);
+    }
+  }
+}
+
+// ─── Memoized Components ───────────────────────────────────────────────
+
+const MemoizedTableCell = React.memo(({
+  cell,
+  rowOriginal,
+  cellId,
+  cColor,
+  rowIndex,
+  colSize,
+  isPinned,
+  isLastPinned,
+  onContextMenu,
+  onDragFillComplete
+}: any) => {
+  return (
+    <TableCell
+      id={`cell-${rowIndex}-${cellId}`}
+      className={cn(
+        "relative py-2 px-6 border-r border-border/10 last:border-r-0",
+        isPinned && "sticky z-[15] bg-background shadow-[2px_0_10px_-3px_rgba(0,0,0,0.3)]",
+        isPinned && isLastPinned && "border-r-[3px] border-r-border/50"
+      )}
+      style={{
+        backgroundColor: cColor ? (cColor.includes("gradient") ? undefined : cColor) : undefined,
+        background: cColor?.includes("gradient") ? cColor : undefined,
+        minWidth: "max-content",
+        left: isPinned ? `${cell.column.getStart("left")}px` : undefined,
+      }}
+      onContextMenu={(e) => {
+        if (['select', 'actions'].includes(cellId)) return;
+        e.preventDefault();
+        onContextMenu(e, rowOriginal, cellId, cColor);
+      }}
+    >
+      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+
+      {/* Excel Drag Fill Handle */}
+      {!['select', 'actions'].includes(cellId) && (
+        <div 
+          draggable
+          onDragStart={(e) => {
+            e.stopPropagation();
+            dragFillState.startIdx = rowIndex;
+            dragFillState.hoverIdx = rowIndex;
+            dragFillState.colId = cellId;
+            dragFillState.value = rowOriginal[cellId];
+            updateDragFillHighlights();
+          }}
+          onDragEnd={() => {
+            onDragFillComplete(
+              dragFillState.startIdx, 
+              dragFillState.hoverIdx, 
+              dragFillState.colId, 
+              dragFillState.value
+            );
+            dragFillState.startIdx = null;
+            dragFillState.hoverIdx = null;
+            dragFillState.colId = null;
+            dragFillState.value = null;
+            updateDragFillHighlights();
+          }}
+          className="absolute bottom-0 right-0 w-2 h-2 bg-primary cursor-crosshair opacity-0 group-hover:opacity-100 hover:scale-150 transition-transform z-10"
+        />
+      )}
+    </TableCell>
+  );
+}, (prev, next) => {
+  if (prev.rowOriginal !== next.rowOriginal) return false;
+  if (prev.cColor !== next.cColor) return false;
+  if (prev.rowIndex !== next.rowIndex) return false;
+  if (prev.colSize !== next.colSize) return false;
+  if (prev.isPinned !== next.isPinned) return false;
+  return true;
+});
+
+const MemoizedTableRow = React.memo(({
+  row,
+  rowOriginal,
+  isSelected,
+  rColor,
+  isCustom,
+  columnsFingerprint,
+  setSelectedContact,
+  onContextMenu,
+  onDragFillComplete
+}: any) => {
+  return (
+    <TableRow
+      data-state={isSelected && "selected"}
+      className={cn(
+        "cursor-pointer border-b border-border/20 hover:bg-muted/30 h-20 group relative border-l-[6px]",
+        row.index % 2 === 0 ? "bg-muted/30" : "bg-transparent",
+        isSelected && "!bg-primary/20 border-l-primary shadow-inner"
+      )}
+      style={{ 
+        backgroundColor: isCustom ? `${rColor}1a` : undefined,
+        background: rColor.includes("gradient") ? rColor : undefined,
+        borderLeftColor: getBorderColor(rColor),
+      }}
+      onClick={() => setSelectedContact(rowOriginal)}
+      onDragOver={(e) => {
+        if (dragFillState.startIdx !== null) {
+          e.preventDefault();
+          if (dragFillState.hoverIdx !== row.index) {
+            dragFillState.hoverIdx = row.index;
+            updateDragFillHighlights();
+          }
+        }
+      }}
+    >
+      {row.getVisibleCells().map((cell: any) => {
+        const cellId = cell.column.id;
+        const cColor = rowOriginal.cellColors?.[cellId];
+        return (
+          <MemoizedTableCell
+            key={cell.id}
+            cell={cell}
+            rowOriginal={rowOriginal}
+            cellId={cellId}
+            cColor={cColor}
+            rowIndex={row.index}
+            colSize={cell.column.getSize()}
+            isPinned={cell.column.getIsPinned() === "left"}
+            isLastPinned={cell.column.getIsLastColumn("left")}
+            onContextMenu={onContextMenu}
+            onDragFillComplete={onDragFillComplete}
+          />
+        );
+      })}
+    </TableRow>
+  );
+}, (prev, next) => {
+  if (prev.rowOriginal !== next.rowOriginal) return false;
+  if (prev.isSelected !== next.isSelected) return false;
+  if (prev.columnsFingerprint !== next.columnsFingerprint) return false;
+  if (prev.row.index !== next.row.index) return false;
+  return true;
+});
+
 export function DataTable<TData, TValue>({
   columns,
   data,
@@ -193,10 +357,6 @@ export function DataTable<TData, TValue>({
   // Drawer state
   const [selectedContact, setSelectedContact] = React.useState<Contact | null>(null);
 
-  // Drag-to-fill state
-  const [dragFillStart, setDragFillStart] = React.useState<{ rowIdx: number, colId: string, value: any } | null>(null);
-  const [dragFillHoverRowIdx, setDragFillHoverRowIdx] = React.useState<number | null>(null);
-
   // Shared context menu state (one floating menu for ALL cells instead of 750 instances)
   const [ctxMenu, setCtxMenu] = React.useState<{ x: number; y: number; contactId: string; cellId: string; currentColor: string; contact: any } | null>(null);
   const ctxMenuRef = React.useRef<HTMLDivElement>(null);
@@ -294,6 +454,28 @@ export function DataTable<TData, TValue>({
     }
   };
 
+  const columnsFingerprint = React.useMemo(() => 
+    table.getVisibleFlatColumns().map(c => `${c.id}:${c.getSize()}`).join(','),
+  [table.getState().columnVisibility, table.getState().columnOrder, table.getState().columnSizing]);
+
+  const handleContextMenu = React.useCallback((e: MouseEvent, contact: any, cellId: string, currentColor: string) => {
+    setCtxMenu({ x: e.clientX, y: e.clientY, contactId: contact.id, cellId, currentColor, contact });
+  }, []);
+
+  const handleDragFillComplete = React.useCallback((startIdx: number | null, hoverIdx: number | null, colId: string | null, value: any) => {
+    if (startIdx !== null && hoverIdx !== null && colId && onUpdateContact) {
+      const min = Math.min(startIdx, hoverIdx);
+      const max = Math.max(startIdx, hoverIdx);
+      const rowsToUpdate = table.getRowModel().rows.slice(min, max + 1);
+      rowsToUpdate.forEach(r => {
+        if (r.index !== startIdx) {
+          const rOrig = r.original as any;
+          onUpdateContact(rOrig.id, { [colId]: value });
+        }
+      });
+    }
+  }, [table, onUpdateContact]);
+
   const content = (
     <div className={cn(
       "transition-all duration-500",
@@ -390,91 +572,18 @@ export function DataTable<TData, TValue>({
                   const isCustom = rColor.startsWith("#") || rColor.includes("gradient");
 
                   return (
-                    <TableRow
+                    <MemoizedTableRow
                       key={row.id}
-                      data-state={row.getIsSelected() && "selected"}
-                      className={cn(
-                        "cursor-pointer border-b border-border/20 hover:bg-muted/30 h-20 group relative border-l-[6px]",
-                        row.index % 2 === 0 ? "bg-muted/30" : "bg-transparent",
-                        row.getIsSelected() && "!bg-primary/20 border-l-primary shadow-inner"
-                      )}
-                      style={{ 
-                        backgroundColor: isCustom ? `${rColor}1a` : undefined,
-                        background: rColor.includes("gradient") ? rColor : undefined,
-                        borderLeftColor: getBorderColor(rColor),
-                      }}
-                      onClick={() => setSelectedContact(rowOriginal)}
-                      onDragOver={(e) => {
-                        if (dragFillStart) {
-                          e.preventDefault();
-                          setDragFillHoverRowIdx(row.index);
-                        }
-                      }}
-                    >
-                      {row.getVisibleCells().map((cell) => {
-                        const cellId = cell.column.id;
-                        const cColor = rowOriginal.cellColors?.[cellId];
-                        return (
-                          <TableCell
-                            key={cell.id}
-                            className={cn(
-                              "relative py-2 px-6 border-r border-border/10 last:border-r-0",
-                              cell.column.getIsPinned() === "left" && "sticky z-[15] bg-background shadow-[2px_0_10px_-3px_rgba(0,0,0,0.3)]",
-                              cell.column.getIsPinned() === "left" && cell.column.getIsLastColumn("left") && "border-r-[3px] border-r-border/50"
-                            )}
-                            style={{
-                              backgroundColor: cColor ? (cColor.includes("gradient") ? undefined : cColor) : undefined,
-                              background: cColor?.includes("gradient") ? cColor : undefined,
-                              minWidth: "max-content",
-                              left: cell.column.getIsPinned() === "left" ? `${cell.column.getStart("left")}px` : undefined,
-                            }}
-                            onContextMenu={(e) => {
-                              if (['select', 'actions'].includes(cellId)) return;
-                              e.preventDefault();
-                              setCtxMenu({ x: e.clientX, y: e.clientY, contactId: rowOriginal.id, cellId, currentColor: cColor || "transparent", contact: rowOriginal });
-                            }}
-                          >
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-
-                            {/* Excel Drag Fill Handle */}
-                            {!['select', 'actions'].includes(cellId) && (
-                              <div 
-                                draggable
-                                onDragStart={(e) => {
-                                  e.stopPropagation();
-                                  const val = (rowOriginal as any)[cellId];
-                                  setDragFillStart({ rowIdx: row.index, colId: cellId, value: val });
-                                }}
-                                onDragEnd={() => {
-                                  if (dragFillStart && dragFillHoverRowIdx !== null && onUpdateContact) {
-                                    const startIdx = Math.min(dragFillStart.rowIdx, dragFillHoverRowIdx);
-                                    const endIdx = Math.max(dragFillStart.rowIdx, dragFillHoverRowIdx);
-                                    const rowsToUpdate = table.getRowModel().rows.slice(startIdx, endIdx + 1);
-                                    rowsToUpdate.forEach(r => {
-                                      if (r.index !== dragFillStart.rowIdx) {
-                                        const rOrig = r.original as any;
-                                        onUpdateContact(rOrig.id, { [dragFillStart.colId]: dragFillStart.value });
-                                      }
-                                    });
-                                  }
-                                  setDragFillStart(null);
-                                  setDragFillHoverRowIdx(null);
-                                }}
-                                className="absolute bottom-0 right-0 w-2 h-2 bg-primary cursor-crosshair opacity-0 group-hover:opacity-100 hover:scale-150 transition-transform z-10"
-                              />
-                            )}
-
-                            {/* Drag Fill Highlight Overlay */}
-                            {dragFillStart?.colId === cellId && 
-                             dragFillHoverRowIdx !== null && 
-                             row.index >= Math.min(dragFillStart.rowIdx, dragFillHoverRowIdx) && 
-                             row.index <= Math.max(dragFillStart.rowIdx, dragFillHoverRowIdx) && (
-                                <div className="absolute inset-0 bg-primary/20 border-2 border-primary border-dashed pointer-events-none z-20 animate-pulse" />
-                             )}
-                          </TableCell>
-                        );
-                      })}
-                    </TableRow>
+                      row={row}
+                      rowOriginal={rowOriginal}
+                      isSelected={row.getIsSelected()}
+                      rColor={rColor}
+                      isCustom={isCustom}
+                      columnsFingerprint={columnsFingerprint}
+                      setSelectedContact={setSelectedContact}
+                      onContextMenu={handleContextMenu}
+                      onDragFillComplete={handleDragFillComplete}
+                    />
                   );
                 })
               ) : (
