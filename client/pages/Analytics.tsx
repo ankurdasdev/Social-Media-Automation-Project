@@ -274,31 +274,92 @@ export default function Analytics() {
         </div>
 
         {platform === 'all' && (
-          <Card className="glass-card border-primary/30 shadow-[0_0_30px_-10px_rgba(139,92,246,0.2)] flex flex-col relative overflow-hidden h-[400px]">
-            <CardHeader className="p-6 border-b border-primary/10 bg-primary/5 flex-shrink-0">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-primary/20 text-primary"><BrainCircuit className="w-5 h-5" /></div>
-                  <div>
-                    <CardTitle className="text-lg font-black tracking-tight text-primary">AI Data Analyst</CardTitle>
-                    <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-primary/70">Chat directly with your analytics</CardDescription>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            {/* AI Failure Autopsy */}
+            <Card className="lg:col-span-2 glass-card border-red-500/30 shadow-[0_0_30px_-10px_rgba(239,68,68,0.2)] flex flex-col">
+              <CardHeader className="p-6 border-b border-red-500/10 bg-red-500/5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-red-500/20 text-red-500"><Bot className="w-5 h-5" /></div>
+                    <div>
+                      <CardTitle className="text-lg font-black tracking-tight text-red-500">AI Failure Autopsy</CardTitle>
+                      <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-red-500/70">Diagnose exactly why outreach is failing</CardDescription>
+                    </div>
+                  </div>
+                  <Button 
+                    onClick={() => aiDiagnoseMutation.mutate()} 
+                    disabled={aiDiagnoseMutation.isPending}
+                    className="bg-red-500 hover:bg-red-600 text-white font-black text-[10px] uppercase tracking-widest rounded-xl h-10 px-6 shadow-lg shadow-red-500/20"
+                  >
+                    {aiDiagnoseMutation.isPending ? "Diagnosing..." : "Run AI Diagnosis"}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6 flex-1 flex flex-col">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="flex-1 p-4 rounded-2xl bg-muted/30 border border-white/5 flex items-center justify-between cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => navigate("/contacts?status=failed&platform=whatsapp")}>
+                    <div className="flex items-center gap-3"><MessageCircle className="w-4 h-4 text-emerald-500" /><span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">WA Failed</span></div>
+                    <span className="text-lg font-black">{statsData?.waFailed || 0}</span>
+                  </div>
+                  <div className="flex-1 p-4 rounded-2xl bg-muted/30 border border-white/5 flex items-center justify-between cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => navigate("/contacts?status=failed&platform=email")}>
+                    <div className="flex items-center gap-3"><Mail className="w-4 h-4 text-blue-500" /><span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Email Failed</span></div>
+                    <span className="text-lg font-black">{statsData?.emailFailed || 0}</span>
+                  </div>
+                  <div className="flex-1 p-4 rounded-2xl bg-muted/30 border border-white/5 flex items-center justify-between cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => navigate("/contacts?status=failed&platform=instagram")}>
+                    <div className="flex items-center gap-3"><Instagram className="w-4 h-4 text-pink-500" /><span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">IG Failed</span></div>
+                    <span className="text-lg font-black">{statsData?.igFailed || 0}</span>
                   </div>
                 </div>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="hover:bg-primary/20 text-primary"
-                  onClick={() => setIsChatExpanded(true)}
-                  title="Expand Chat"
-                >
-                  <Maximize2 className="w-4 h-4" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0 flex-1 flex flex-col min-h-0">
-              {renderChatInterface(false)}
-            </CardContent>
-          </Card>
+
+                <div className="flex-1 bg-[#0a0a0a] rounded-2xl border border-white/10 p-5 font-mono text-sm text-emerald-400 overflow-y-auto relative min-h-[150px]">
+                  {!aiDiagnoseMutation.data && !aiDiagnoseMutation.isPending && (
+                    <div className="absolute inset-0 flex items-center justify-center text-muted-foreground text-xs uppercase tracking-widest">
+                      Awaiting command...
+                    </div>
+                  )}
+                  {aiDiagnoseMutation.isPending && (
+                    <div className="flex items-center gap-2 text-primary">
+                      <span className="w-2 h-4 bg-primary animate-pulse" /> Analyzing server logs...
+                    </div>
+                  )}
+                  {aiDiagnoseMutation.data?.diagnosis && (
+                    <div className="whitespace-pre-wrap leading-relaxed">
+                      <div className="text-muted-foreground text-xs mb-4">{"// AI DIAGNOSIS COMPLETE"}</div>
+                      {aiDiagnoseMutation.data.diagnosis}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* AI Data Analyst Chatbot */}
+            <Card className="glass-card border-primary/30 shadow-[0_0_30px_-10px_rgba(139,92,246,0.2)] flex flex-col relative overflow-hidden">
+              <CardHeader className="p-6 border-b border-primary/10 bg-primary/5 flex-shrink-0">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-primary/20 text-primary"><BrainCircuit className="w-5 h-5" /></div>
+                    <div>
+                      <CardTitle className="text-lg font-black tracking-tight text-primary">AI Data Analyst</CardTitle>
+                      <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-primary/70">Chat directly with your analytics</CardDescription>
+                    </div>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="hover:bg-primary/20 text-primary"
+                    onClick={() => setIsChatExpanded(true)}
+                    title="Expand Chat"
+                  >
+                    <Maximize2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0 flex-1 flex flex-col min-h-0">
+                {renderChatInterface(false)}
+              </CardContent>
+            </Card>
+          </div>
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
