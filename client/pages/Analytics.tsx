@@ -9,6 +9,12 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   BarChart,
   Bar,
   PieChart,
@@ -23,8 +29,8 @@ import {
   Area,
   ComposedChart
 } from "recharts";
-import { Mail, MessageCircle, TrendingUp, AlertCircle, Bot, Filter, Users, Instagram, Zap, CalendarDays, BrainCircuit, Play } from "lucide-react";
-import { cn, getOrCreateUserId } from "@/lib/utils";
+import { Mail, MessageCircle, TrendingUp, AlertCircle, Bot, Filter, Users, Instagram, Zap, CalendarDays, BrainCircuit, Play, Maximize2 } from "lucide-react";
+import { cn, getOrCreateUserId, getCurrentUser } from "@/lib/utils";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
 import { useNavigate } from "react-router-dom";
@@ -63,8 +69,14 @@ export default function Analytics() {
     { name: "Failed", value: statsData?.failed || 0, fill: "#ef4444", filter: "failed" },
   ];
 
-  const [chatMessages, setChatMessages] = useState<{role: string, content: string}[]>([]);
+  const currentUser = getCurrentUser();
+  const userName = currentUser?.name?.split(' ')[0] || "there";
+
+  const [chatMessages, setChatMessages] = useState<{role: string, content: string}[]>([
+    { role: "assistant", content: `Hello ${userName}! I'm your Data Analyst AI. I have full access to your contacts and system logs. How can I help you today?` }
+  ]);
   const [chatInput, setChatInput] = useState("");
+  const [isChatExpanded, setIsChatExpanded] = useState(false);
   
   const chatMutation = useMutation({
     mutationFn: async (messages: {role: string, content: string}[]) => {
@@ -90,6 +102,74 @@ export default function Analytics() {
     setChatInput("");
     chatMutation.mutate(newMessages);
   };
+
+  const renderChatInterface = (expanded: boolean) => (
+    <div className={cn("flex flex-col flex-1", expanded ? "h-[70vh]" : "h-[350px]")}>
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {chatMessages.length === 0 ? (
+          <div className="h-full flex flex-col items-center justify-center text-center text-muted-foreground opacity-50 space-y-2">
+            <Bot className="w-8 h-8 mx-auto" />
+            <p className="text-xs">Ask me anything about your analytics, conversion rates, or failures.</p>
+          </div>
+        ) : (
+          chatMessages.map((msg, idx) => (
+            <div key={idx} className={cn("flex", msg.role === 'user' ? "justify-end" : "justify-start")}>
+              <div className={cn(
+                "max-w-[85%] rounded-2xl p-3 text-sm",
+                msg.role === 'user' 
+                  ? "bg-primary text-primary-foreground rounded-tr-sm" 
+                  : "bg-muted text-foreground rounded-tl-sm"
+              )}>
+                {msg.role === 'user' ? (
+                  msg.content
+                ) : (
+                  <ReactMarkdown
+                    components={{
+                      h3: ({node, ...props}) => <h3 className="text-sm font-black uppercase tracking-widest text-primary mt-3 mb-1" {...props} />,
+                      ul: ({node, ...props}) => <ul className="list-disc pl-4 my-2 space-y-1" {...props} />,
+                      li: ({node, ...props}) => <li className="text-foreground/80 leading-snug" {...props} />,
+                      p: ({node, ...props}) => <p className="mb-2 leading-relaxed" {...props} />,
+                      strong: ({node, ...props}) => <strong className="font-bold text-foreground" {...props} />,
+                      code: ({node, ...props}) => <code className="bg-background/50 px-1 py-0.5 rounded text-primary text-xs" {...props} />
+                    }}
+                  >
+                    {msg.content}
+                  </ReactMarkdown>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+        {chatMutation.isPending && (
+            <div className="flex justify-start">
+              <div className="bg-muted text-foreground rounded-2xl rounded-tl-sm p-3 text-sm flex gap-1 items-center h-10">
+                <span className="w-2 h-2 rounded-full bg-foreground/30 animate-bounce" />
+                <span className="w-2 h-2 rounded-full bg-foreground/30 animate-bounce delay-75" />
+                <span className="w-2 h-2 rounded-full bg-foreground/30 animate-bounce delay-150" />
+              </div>
+            </div>
+        )}
+      </div>
+      <form onSubmit={handleSendChat} className="p-3 border-t border-white/5 bg-black/20 flex gap-2 shrink-0">
+        <input 
+          type="text"
+          value={chatInput}
+          onChange={(e) => setChatInput(e.target.value)}
+          placeholder="Ask about your data..."
+          className="flex-1 bg-background border border-white/10 rounded-xl px-4 text-sm focus:outline-none focus:border-primary/50 text-foreground placeholder:text-muted-foreground/50"
+          disabled={chatMutation.isPending}
+        />
+        <Button 
+          type="submit" 
+          size="icon" 
+          disabled={!chatInput.trim() || chatMutation.isPending}
+          className="rounded-xl shrink-0 bg-primary hover:bg-primary/90 text-white"
+        >
+          <Play className="w-4 h-4 fill-current" />
+        </Button>
+      </form>
+    </div>
+  );
 
   if (isLoading) {
     return (
@@ -212,80 +292,29 @@ export default function Analytics() {
           </Card>
 
           {/* AI Data Analyst Chatbot */}
-          <Card className="glass-card border-primary/30 shadow-[0_0_30px_-10px_rgba(139,92,246,0.2)] flex flex-col">
+          <Card className="glass-card border-primary/30 shadow-[0_0_30px_-10px_rgba(139,92,246,0.2)] flex flex-col relative overflow-hidden">
             <CardHeader className="p-6 border-b border-primary/10 bg-primary/5">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-primary/20 text-primary"><BrainCircuit className="w-5 h-5" /></div>
-                <div>
-                  <CardTitle className="text-lg font-black tracking-tight text-primary">AI Data Analyst</CardTitle>
-                  <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-primary/70">Chat directly with your analytics</CardDescription>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-primary/20 text-primary"><BrainCircuit className="w-5 h-5" /></div>
+                  <div>
+                    <CardTitle className="text-lg font-black tracking-tight text-primary">AI Data Analyst</CardTitle>
+                    <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-primary/70">Chat directly with your analytics</CardDescription>
+                  </div>
                 </div>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="hover:bg-primary/20 text-primary"
+                  onClick={() => setIsChatExpanded(true)}
+                  title="Expand Chat"
+                >
+                  <Maximize2 className="w-4 h-4" />
+                </Button>
               </div>
             </CardHeader>
-            <CardContent className="p-0 flex-1 flex flex-col h-[280px]">
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {chatMessages.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center text-center text-muted-foreground opacity-50 space-y-2">
-                    <Bot className="w-8 h-8 mx-auto" />
-                    <p className="text-xs">Ask me anything about your analytics, conversion rates, or failures.</p>
-                  </div>
-                ) : (
-                  chatMessages.map((msg, idx) => (
-                    <div key={idx} className={cn("flex", msg.role === 'user' ? "justify-end" : "justify-start")}>
-                      <div className={cn(
-                        "max-w-[85%] rounded-2xl p-3 text-sm",
-                        msg.role === 'user' 
-                          ? "bg-primary text-primary-foreground rounded-tr-sm" 
-                          : "bg-muted text-foreground rounded-tl-sm"
-                      )}>
-                        {msg.role === 'user' ? (
-                          msg.content
-                        ) : (
-                          <ReactMarkdown
-                            components={{
-                              h3: ({node, ...props}) => <h3 className="text-sm font-black uppercase tracking-widest text-primary mt-3 mb-1" {...props} />,
-                              ul: ({node, ...props}) => <ul className="list-disc pl-4 my-2 space-y-1" {...props} />,
-                              li: ({node, ...props}) => <li className="text-foreground/80 leading-snug" {...props} />,
-                              p: ({node, ...props}) => <p className="mb-2 leading-relaxed" {...props} />,
-                              strong: ({node, ...props}) => <strong className="font-bold text-foreground" {...props} />,
-                              code: ({node, ...props}) => <code className="bg-background/50 px-1 py-0.5 rounded text-primary text-xs" {...props} />
-                            }}
-                          >
-                            {msg.content}
-                          </ReactMarkdown>
-                        )}
-                      </div>
-                    </div>
-                  ))
-                )}
-                {chatMutation.isPending && (
-                   <div className="flex justify-start">
-                     <div className="bg-muted text-foreground rounded-2xl rounded-tl-sm p-3 text-sm flex gap-1 items-center h-10">
-                       <span className="w-2 h-2 rounded-full bg-foreground/30 animate-bounce" />
-                       <span className="w-2 h-2 rounded-full bg-foreground/30 animate-bounce delay-75" />
-                       <span className="w-2 h-2 rounded-full bg-foreground/30 animate-bounce delay-150" />
-                     </div>
-                   </div>
-                )}
-              </div>
-              <form onSubmit={handleSendChat} className="p-3 border-t border-white/5 bg-black/20 flex gap-2">
-                <input 
-                  type="text"
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  placeholder="Ask about your data..."
-                  className="flex-1 bg-background border border-white/10 rounded-xl px-4 text-sm focus:outline-none focus:border-primary/50 text-foreground placeholder:text-muted-foreground/50"
-                  disabled={chatMutation.isPending}
-                />
-                <Button 
-                  type="submit" 
-                  size="icon" 
-                  disabled={!chatInput.trim() || chatMutation.isPending}
-                  className="rounded-xl shrink-0 bg-primary hover:bg-primary/90 text-white"
-                >
-                  <Play className="w-4 h-4 fill-current" />
-                </Button>
-              </form>
+            <CardContent className="p-0 flex-1 flex flex-col">
+              {renderChatInterface(false)}
             </CardContent>
           </Card>
 
@@ -383,6 +412,19 @@ export default function Analytics() {
           </CardContent>
         </Card>
 
+        <Dialog open={isChatExpanded} onOpenChange={setIsChatExpanded}>
+          <DialogContent className="max-w-3xl w-[90vw] glass-card border-primary/30 p-0 overflow-hidden flex flex-col">
+            <DialogHeader className="p-6 border-b border-primary/10 bg-primary/5 flex-shrink-0">
+              <DialogTitle className="text-lg font-black tracking-tight text-primary flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-primary/20 text-primary"><BrainCircuit className="w-5 h-5" /></div>
+                AI Data Analyst
+              </DialogTitle>
+            </DialogHeader>
+            <div className="flex-1 flex flex-col min-h-0 bg-background/50">
+              {renderChatInterface(true)}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   );

@@ -398,16 +398,25 @@ export const handleAnalyticsChat: RequestHandler = async (req, res) => {
   }
 
   try {
-    // 1. Fetch raw contacts (max 500 to save tokens)
+    // 1. Fetch complete contacts (limit 150 to manage token context size while giving full table data)
     const rawData = await query<any>(`
-      SELECT id, status, project, sheet_name, whatsapp_completed, email_completed, instagram_completed, automation_comment, updated_at
+      SELECT *
       FROM contacts 
       WHERE user_id = $1 
       ORDER BY updated_at DESC 
-      LIMIT 500
+      LIMIT 150
     `, [userId]);
 
-    // 2. Fetch metrics
+    // 2. Fetch recent logs
+    const rawLogs = await query<any>(`
+      SELECT action, status, details, created_at
+      FROM user_logs 
+      WHERE user_id = $1 
+      ORDER BY created_at DESC 
+      LIMIT 100
+    `, [userId]);
+
+    // 3. Fetch metrics
     const stats = await queryOne<{ total: string, failed: string, success: string }>(`
       SELECT 
         COUNT(*) as total,
@@ -416,30 +425,22 @@ export const handleAnalyticsChat: RequestHandler = async (req, res) => {
       FROM contacts WHERE user_id = $1
     `, [userId]);
 
-    // 3. Sanitize data (Strict privacy: NO names, emails, phones, instagram handles fetched above at all)
+    // 4. Construct Full Context
     const contextData = {
       systemMetrics: {
         totalContacts: parseInt(stats?.total || "0"),
         totalFailed: parseInt(stats?.failed || "0"),
         totalSuccess: parseInt(stats?.success || "0")
       },
-      recentContactsSample: rawData.map(r => ({
-        id: r.id,
-        status: r.status,
-        project: r.project,
-        sheet: r.sheet_name,
-        whatsapp: r.whatsapp_completed,
-        email: r.email_completed,
-        instagram: r.instagram_completed,
-        error_log: r.automation_comment || "None",
-        updated: r.updated_at
-      }))
+      recentContacts: rawData,
+      recentLogs: rawLogs
     };
 
     const systemPrompt = `You are a highly capable Data Analyst AI for an outreach automation platform.
 Your goal is to answer the user's questions about their analytics, conversion rates, and automation failures.
-You have access to the sanitized database context below. NEVER mention PII (names, emails, phones) because it is strictly protected and not provided to you.
-Analyze the provided JSON data to answer the user's queries accurately. Keep your answers concise, formatted in markdown, and highly actionable.
+You have access to the complete database context below, including all table details (contacts table and user logs).
+Analyze the provided JSON data to answer the user's queries accurately. You can refer to names or specific fields if they help answer the user's question, but never expose sensitive app-level data like tokens or passwords if they inadvertently appear in logs.
+Keep your answers concise, formatted in markdown, and highly actionable.
 
 DATABASE CONTEXT:
 ${JSON.stringify(contextData)}
