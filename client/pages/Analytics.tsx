@@ -118,7 +118,7 @@ export default function Analytics() {
   };
 
   const renderChatInterface = (expanded: boolean) => (
-    <div className={cn("flex flex-col flex-1", expanded ? "h-[70vh]" : "h-[350px]")}>
+    <div className={cn("flex flex-col min-h-0", expanded ? "h-[70vh] flex-1" : "h-[400px] w-full")}>
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {chatMessages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center text-muted-foreground opacity-50 space-y-2">
@@ -333,34 +333,30 @@ export default function Analytics() {
               </CardContent>
             </Card>
 
-            {/* AI Data Analyst Chatbot (Launcher) */}
-            <Card className="glass-card border-primary/30 shadow-[0_0_30px_-10px_rgba(139,92,246,0.2)] flex flex-col relative overflow-hidden justify-between">
+            {/* AI Data Analyst Chatbot */}
+            <Card className="glass-card border-primary/30 shadow-[0_0_30px_-10px_rgba(139,92,246,0.2)] flex flex-col relative overflow-hidden">
               <CardHeader className="p-6 border-b border-primary/10 bg-primary/5 flex-shrink-0">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-primary/20 text-primary"><BrainCircuit className="w-5 h-5" /></div>
-                  <div>
-                    <CardTitle className="text-lg font-black tracking-tight text-primary">AI Data Analyst</CardTitle>
-                    <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-primary/70">Chat directly with your analytics</CardDescription>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-primary/20 text-primary"><BrainCircuit className="w-5 h-5" /></div>
+                    <div>
+                      <CardTitle className="text-lg font-black tracking-tight text-primary">AI Data Analyst</CardTitle>
+                      <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-primary/70">Chat directly with your analytics</CardDescription>
+                    </div>
                   </div>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="hover:bg-primary/20 text-primary"
+                    onClick={() => setIsChatExpanded(true)}
+                    title="Expand Chat"
+                  >
+                    <Maximize2 className="w-4 h-4" />
+                  </Button>
                 </div>
               </CardHeader>
-              <CardContent className="p-6 flex-1 flex flex-col items-center justify-center text-center space-y-6">
-                <div className="p-4 rounded-full bg-primary/10 border border-primary/20 shadow-xl shadow-primary/5">
-                  <Bot className="w-8 h-8 text-primary" />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-sm font-black text-foreground">Talk to your data</h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed max-w-[250px] mx-auto">
-                    Ask complex questions about your lead velocity, conversion drop-offs, or recent failures.
-                  </p>
-                </div>
-                <Button 
-                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-black tracking-widest text-xs uppercase h-12 rounded-xl shadow-lg shadow-primary/20"
-                  onClick={() => setIsChatExpanded(true)}
-                >
-                  <Maximize2 className="w-4 h-4 mr-2" />
-                  Open Dedicated Chat
-                </Button>
+              <CardContent className="p-0 flex-1 flex flex-col min-h-0">
+                {renderChatInterface(false)}
               </CardContent>
             </Card>
           </div>
