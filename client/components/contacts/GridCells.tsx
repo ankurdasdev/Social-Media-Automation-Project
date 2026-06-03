@@ -585,7 +585,7 @@ export function AttachmentCell({
       {/* Lightbox */}
       {lightboxFile && (
         <InlineLightbox
-          src={lightboxFile.thumbnailLink || lightboxFile.webViewLink || ""}
+          src={lightboxFile.thumbnailLink?.replace(/=s\d+/, "=s1000") || lightboxFile.webContentLink || ""}
           name={lightboxFile.name}
           onClose={() => setLightboxFile(null)}
         />
