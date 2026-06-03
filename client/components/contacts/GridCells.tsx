@@ -25,7 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { X, Plus, Search, FileText, Sparkles, Wand2, Loader2, ExternalLink, GripVertical, ZoomIn, HardDrive, Paperclip, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RichTextarea } from "@/components/ui/rich-textarea";
-import { DriveFilePicker, validateFile } from "../drive/DriveFilePicker";
+import { DriveFilePicker, validateFile, FilePreviewModal } from "../drive/DriveFilePicker";
 import { getOrCreateUserId } from "@/lib/utils";
 import type { Contact, DriveFile } from "@shared/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -493,21 +493,6 @@ export function MultiTemplateSelect({
 }
 
 // ─── Unified Attachment Cell ─────────────────────────────────────────────────
-// ─── Image Lightbox (local) ───────────────────────────────────────────────────
-function InlineLightbox({ src, name, onClose }: { src: string; name: string; onClose: () => void }) {
-  return (
-    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-4xl w-[95vw] bg-black/90 p-0 border-white/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col z-[500]">
-        <div className="flex items-center justify-between px-5 py-3 border-b border-white/10 bg-black/50">
-          <p className="text-sm font-black truncate text-white">{name}</p>
-        </div>
-        <div className="p-4 flex items-center justify-center flex-1 min-h-[60vh] max-h-[80vh]">
-          <img src={src} alt={name} className="max-h-full max-w-full object-contain rounded-xl shadow-lg" />
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 function getMimeEmoji(mimeType: string): string {
   if (mimeType.includes("pdf")) return "📄";
@@ -581,9 +566,8 @@ export function AttachmentCell({
     <div className="flex flex-wrap gap-1 items-center min-w-[100px] group">
       {/* Lightbox */}
       {lightboxFile && (
-        <InlineLightbox
-          src={lightboxFile.thumbnailLink?.replace(/=s\d+/, "=s1000") || lightboxFile.webContentLink || ""}
-          name={lightboxFile.name}
+        <FilePreviewModal
+          file={lightboxFile}
           onClose={() => setLightboxFile(null)}
         />
       )}
