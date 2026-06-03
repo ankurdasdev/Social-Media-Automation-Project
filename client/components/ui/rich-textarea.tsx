@@ -102,16 +102,6 @@ export function RichTextarea({
   const [highlightOpen, setHighlightOpen] = useState(false);
   const charCount = getCharCount(value, platform);
 
-  // ── Sync value → textarea ────────────────────────────────────────────────
-  useEffect(() => {
-    if (!isRich && textareaRef.current) {
-      const plain = stripHtml(value);
-      if (textareaRef.current.value !== plain) {
-        textareaRef.current.value = plain;
-      }
-    }
-  }, [value, isRich]);
-
   // ── Sync value → contentEditable ─────────────────────────────────────────
   useEffect(() => {
     if (isRich && editorRef.current) {
