@@ -278,6 +278,9 @@ export const handleGetAnalyticsStats: RequestHandler = async (req, res) => {
         COUNT(*) FILTER (WHERE email_completed = 'Yes') as email,
         COUNT(*) FILTER (WHERE whatsapp_completed = 'Yes') as whatsapp,
         COUNT(*) FILTER (WHERE instagram_completed = 'Yes') as instagram,
+        COUNT(*) FILTER (WHERE email_completed = 'Failed') as email_failed,
+        COUNT(*) FILTER (WHERE whatsapp_completed = 'Failed') as wa_failed,
+        COUNT(*) FILTER (WHERE instagram_completed = 'Failed') as ig_failed,
         COUNT(*) FILTER (WHERE email_completed = 'Yes' OR whatsapp_completed = 'Yes' OR instagram_completed = 'Yes') as total_success,
         COUNT(*) FILTER (WHERE email_completed = 'Failed' OR whatsapp_completed = 'Failed' OR instagram_completed = 'Failed') as total_failed
       FROM contacts 
@@ -292,12 +295,26 @@ export const handleGetAnalyticsStats: RequestHandler = async (req, res) => {
         COALESCE(sheet_name, 'Unknown') as sheet,
         COUNT(*) as total,
         COUNT(*) FILTER (WHERE email_completed = 'Yes' OR whatsapp_completed = 'Yes' OR instagram_completed = 'Yes') as success,
-        COUNT(*) FILTER (WHERE email_completed = 'Failed' OR whatsapp_completed = 'Failed' OR instagram_completed = 'Failed') as failed
+        COUNT(*) FILTER (WHERE email_completed = 'Failed' OR whatsapp_completed = 'Failed' OR instagram_completed = 'Failed') as failed,
+        COUNT(*) FILTER (WHERE whatsapp_completed = 'Yes') as wa_success,
+        COUNT(*) FILTER (WHERE whatsapp_completed = 'Failed') as wa_failed,
+        COUNT(*) FILTER (WHERE email_completed = 'Yes') as email_success,
+        COUNT(*) FILTER (WHERE email_completed = 'Failed') as email_failed,
+        COUNT(*) FILTER (WHERE instagram_completed = 'Yes') as ig_success,
+        COUNT(*) FILTER (WHERE instagram_completed = 'Failed') as ig_failed
       FROM contacts
       WHERE user_id = $1
       GROUP BY sheet_name
       ORDER BY total DESC
       LIMIT 10
+    `, [userId]);
+
+    // Fetch recent failures across all platforms
+    const recentFailures = await query<any>(`
+      SELECT id, name, project, whatsapp_completed, email_completed, instagram_completed, updated_at as date 
+      FROM contacts 
+      WHERE user_id = $1 AND (whatsapp_completed = 'Failed' OR email_completed = 'Failed' OR instagram_completed = 'Failed') 
+      ORDER BY updated_at DESC LIMIT 50
     `, [userId]);
 
     // Funnel Data
@@ -329,6 +346,9 @@ export const handleGetAnalyticsStats: RequestHandler = async (req, res) => {
         email: parseInt(d.email || "0"),
         whatsapp: parseInt(d.whatsapp || "0"),
         instagram: parseInt(d.instagram || "0"),
+        emailFailed: parseInt(d.email_failed || "0"),
+        waFailed: parseInt(d.wa_failed || "0"),
+        igFailed: parseInt(d.ig_failed || "0"),
         totalSuccess: parseInt(d.total_success || "0"),
         totalFailed: parseInt(d.total_failed || "0")
       })),
@@ -336,7 +356,22 @@ export const handleGetAnalyticsStats: RequestHandler = async (req, res) => {
         sheet: c.sheet,
         total: parseInt(c.total || "0"),
         success: parseInt(c.success || "0"),
-        failed: parseInt(c.failed || "0")
+        failed: parseInt(c.failed || "0"),
+        waSuccess: parseInt(c.wa_success || "0"),
+        waFailed: parseInt(c.wa_failed || "0"),
+        emailSuccess: parseInt(c.email_success || "0"),
+        emailFailed: parseInt(c.email_failed || "0"),
+        igSuccess: parseInt(c.ig_success || "0"),
+        igFailed: parseInt(c.ig_failed || "0")
+      })),
+      recentFailures: recentFailures.map(r => ({
+        id: r.id,
+        name: r.name || "Unknown",
+        project: r.project || "General",
+        whatsapp: r.whatsapp_completed,
+        email: r.email_completed,
+        instagram: r.instagram_completed,
+        date: r.date ? new Date(r.date).toLocaleString() : "Recently"
       })),
       funnel
     });
