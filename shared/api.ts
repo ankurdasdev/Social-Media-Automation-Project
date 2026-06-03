@@ -23,6 +23,8 @@ export interface DriveFile {
   downloadUrl: string;
   thumbnailLink?: string;
   iconLink?: string;
+  customName?: string;
+  caption?: string;
 }
 
 // ─── Source Group Management ─────────────────────────────────────────────────
