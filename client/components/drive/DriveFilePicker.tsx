@@ -148,6 +148,7 @@ export function validateFile(file: DriveFile, platform?: AttachmentPlatform): { 
 
 export function FilePreviewModal({ file, onClose }: { file: DriveFile; onClose: () => void }) {
   const isImg = (file.mimeType || "").startsWith("image/");
+  const [imgError, setImgError] = React.useState(false);
 
   React.useEffect(() => {
     const handler = (e: KeyboardEvent) => { 
@@ -206,10 +207,11 @@ export function FilePreviewModal({ file, onClose }: { file: DriveFile; onClose: 
 
         {/* Preview body */}
         <div className="p-6 bg-black/20 min-h-[280px] flex items-center justify-center">
-          {isImg && (file.thumbnailLink || file.webViewLink) ? (
+          {isImg && (file.thumbnailLink || file.webContentLink) && !imgError ? (
             <img
-              src={file.thumbnailLink || file.webViewLink || ""}
+              src={file.thumbnailLink?.replace(/=s\d+/, "=s1000") || file.webContentLink || ""}
               alt={file.name}
+              onError={() => setImgError(true)}
               className="max-h-[55vh] max-w-full object-contain rounded-2xl shadow-lg border border-white/5"
             />
           ) : (

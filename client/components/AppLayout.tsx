@@ -132,7 +132,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex">
+    <div className="h-screen overflow-hidden bg-background text-foreground flex">
       {/* Dynamic Background Effects */}
       <div className="fixed inset-0 pointer-events-none -z-10">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px] animate-pulse" />
