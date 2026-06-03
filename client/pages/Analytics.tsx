@@ -273,6 +273,34 @@ export default function Analytics() {
           ))}
         </div>
 
+        {platform === 'all' && (
+          <Card className="glass-card border-primary/30 shadow-[0_0_30px_-10px_rgba(139,92,246,0.2)] flex flex-col relative overflow-hidden h-[400px]">
+            <CardHeader className="p-6 border-b border-primary/10 bg-primary/5 flex-shrink-0">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-primary/20 text-primary"><BrainCircuit className="w-5 h-5" /></div>
+                  <div>
+                    <CardTitle className="text-lg font-black tracking-tight text-primary">AI Data Analyst</CardTitle>
+                    <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-primary/70">Chat directly with your analytics</CardDescription>
+                  </div>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="hover:bg-primary/20 text-primary"
+                  onClick={() => setIsChatExpanded(true)}
+                  title="Expand Chat"
+                >
+                  <Maximize2 className="w-4 h-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0 flex-1 flex flex-col min-h-0">
+              {renderChatInterface(false)}
+            </CardContent>
+          </Card>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="glass-card border-white/10 shadow-xl">
             <CardHeader className="p-6">
