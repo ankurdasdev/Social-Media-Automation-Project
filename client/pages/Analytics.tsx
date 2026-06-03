@@ -129,7 +129,7 @@ export default function Analytics() {
           chatMessages.map((msg, idx) => (
             <div key={idx} className={cn("flex", msg.role === 'user' ? "justify-end" : "justify-start")}>
               <div className={cn(
-                "max-w-[85%] rounded-2xl p-3 text-sm",
+                "max-w-[85%] rounded-2xl p-3 text-sm break-words overflow-hidden",
                 msg.role === 'user' 
                   ? "bg-primary text-primary-foreground rounded-tr-sm" 
                   : "bg-muted text-foreground rounded-tl-sm"
@@ -144,7 +144,7 @@ export default function Analytics() {
                       li: ({node, ...props}) => <li className="text-foreground/80 leading-snug" {...props} />,
                       p: ({node, ...props}) => <p className="mb-2 leading-relaxed" {...props} />,
                       strong: ({node, ...props}) => <strong className="font-bold text-foreground" {...props} />,
-                      code: ({node, ...props}) => <code className="bg-background/50 px-1 py-0.5 rounded text-primary text-xs" {...props} />
+                      code: ({node, ...props}) => <code className="bg-background/50 px-1.5 py-0.5 rounded text-primary text-xs break-all whitespace-pre-wrap" {...props} />
                     }}
                   >
                     {msg.content}
@@ -533,7 +533,7 @@ export default function Analytics() {
         </Tabs>
 
         <Dialog open={isChatExpanded} onOpenChange={setIsChatExpanded}>
-          <DialogContent className="max-w-3xl w-[90vw] glass-card border-primary/30 p-0 overflow-hidden flex flex-col">
+          <DialogContent className="max-w-4xl w-[95vw] h-[85vh] glass-card border-primary/30 p-0 overflow-hidden flex flex-col">
             <DialogHeader className="p-6 border-b border-primary/10 bg-primary/5 flex-shrink-0">
               <DialogTitle className="text-lg font-black tracking-tight text-primary flex items-center gap-3">
                 <div className="p-2 rounded-xl bg-primary/20 text-primary"><BrainCircuit className="w-5 h-5" /></div>
