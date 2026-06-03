@@ -142,7 +142,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
       <aside className="hidden md:flex flex-col w-72 h-screen border-r border-border/40 bg-card/30 backdrop-blur-2xl px-6 py-10 relative z-30 overflow-y-auto overflow-x-hidden">
         {/* Sidebar Noise/Texture */}
-        <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')] brightness-100 contrast-150" />
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none brightness-100 contrast-150 bg-black" />
         
         {/* Scrollable Flex Wrapper to support sticky bottom sections without browser clipping on zoom */}
         <div className="flex flex-col min-h-full w-full relative z-10">
