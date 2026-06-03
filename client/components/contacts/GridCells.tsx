@@ -622,45 +622,6 @@ export function AttachmentCell({
             <FileText className={cn("w-3 h-3 shrink-0", isInvalidFormat ? "text-red-500" : "text-blue-500")} />
           )}
           <span className="truncate max-w-[60px]">{file.customName || file.name}</span>
-          
-          <Popover>
-            <PopoverTrigger asChild>
-              <button className="p-0.5 ml-0.5 rounded hover:bg-black/10 transition-colors" title="Edit attachment" onClick={(e) => e.stopPropagation()}>
-                <Pencil className="w-2.5 h-2.5 text-muted-foreground hover:text-foreground" />
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-64 p-3 rounded-xl z-[400] glass-card" align="start" onClick={(e) => e.stopPropagation()}>
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Custom File Name</p>
-                  <Input 
-                    className="h-7 text-xs bg-background" 
-                    value={file.customName || file.name}
-                    onChange={(e) => {
-                      const newFiles = [...files];
-                      newFiles[idx] = { ...file, customName: e.target.value };
-                      onUpdate(newFiles);
-                    }}
-                  />
-                </div>
-                {platform === "whatsapp" && (
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">WhatsApp Caption</p>
-                    <textarea 
-                      className="w-full min-h-[60px] text-xs p-2 rounded-md border border-input bg-background focus:ring-1 focus:ring-primary outline-none"
-                      placeholder="Add a caption..."
-                      value={file.caption || ""}
-                      onChange={(e) => {
-                        const newFiles = [...files];
-                        newFiles[idx] = { ...file, caption: e.target.value };
-                        onUpdate(newFiles);
-                      }}
-                    />
-                  </div>
-                )}
-              </div>
-            </PopoverContent>
-          </Popover>
 
           <X
             className="w-3 h-3 ml-0.5 cursor-pointer hover:text-destructive shrink-0"
@@ -679,15 +640,18 @@ export function AttachmentCell({
 
       {/* Redesigned dialog */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="glass-card border-white/10 rounded-[2rem] p-0 max-w-2xl w-[95vw] max-h-[85vh] overflow-hidden flex flex-col shadow-2xl">
+        <DialogContent 
+          className="glass-card border-white/10 rounded-[2rem] p-0 max-w-2xl w-[95vw] h-[85vh] overflow-hidden flex flex-col shadow-2xl"
+          aria-describedby="drive-attachments-description"
+        >
           <DialogHeader className="px-8 pt-8 pb-4 border-b border-white/5 flex-shrink-0">
             <DialogTitle className="text-2xl font-black tracking-tighter flex items-center gap-3">
               <HardDrive className="h-6 w-6 text-primary" />
               DRIVE ATTACHMENTS
             </DialogTitle>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">
+            <div id="drive-attachments-description" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">
               Search, select, and reorder files from Google Drive
-            </p>
+            </div>
           </DialogHeader>
 
           <div className="flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden">
@@ -794,7 +758,58 @@ export function AttachmentCell({
                       ) : (
                         <span className="text-xs shrink-0">{getMimeEmoji(file.mimeType)}</span>
                       )}
-                      <span className="text-[10px] font-bold truncate flex-1">{file.name}</span>
+                      <span className="text-[10px] font-bold truncate flex-1">{file.customName || file.name}</span>
+                      
+                      {/* PREVIEW BUTTON */}
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setLightboxFile(file); }}
+                        className="opacity-0 group-hover/order:opacity-100 text-muted-foreground hover:text-primary transition-all p-0.5 rounded shrink-0"
+                        title="Preview"
+                      >
+                        <ZoomIn className="w-3.5 h-3.5" />
+                      </button>
+
+                      {/* EDIT BUTTON (PENCIL) */}
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button className="opacity-0 group-hover/order:opacity-100 text-muted-foreground hover:text-foreground transition-all p-0.5 rounded shrink-0" title="Edit details" onClick={(e) => e.stopPropagation()}>
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-64 p-3 rounded-xl z-[400] glass-card" align="end" onClick={(e) => e.stopPropagation()}>
+                          <div className="space-y-3">
+                            <div className="space-y-1">
+                              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Custom File Name</p>
+                              <Input 
+                                className="h-7 text-xs bg-background" 
+                                defaultValue={file.customName || file.name}
+                                onBlur={(e) => {
+                                  const newFiles = [...files];
+                                  newFiles[idx] = { ...file, customName: e.target.value };
+                                  onUpdate(newFiles);
+                                }}
+                              />
+                            </div>
+                            {platform === "whatsapp" && (
+                              <div className="space-y-1">
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">WhatsApp Caption</p>
+                                <textarea 
+                                  className="w-full min-h-[60px] text-xs p-2 rounded-md border border-input bg-background focus:ring-1 focus:ring-primary outline-none"
+                                  placeholder="Add a caption..."
+                                  defaultValue={file.caption || ""}
+                                  onBlur={(e) => {
+                                    const newFiles = [...files];
+                                    newFiles[idx] = { ...file, caption: e.target.value };
+                                    onUpdate(newFiles);
+                                  }}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+
                       <button
                         onClick={() => onUpdate(files.filter((_, i) => i !== idx))}
                         className="opacity-0 group-hover/order:opacity-100 text-muted-foreground hover:text-destructive transition-all p-0.5 rounded shrink-0"

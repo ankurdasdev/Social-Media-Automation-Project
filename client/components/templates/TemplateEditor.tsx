@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { RichTextarea } from "@/components/ui/rich-textarea";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Loader2, AlertTriangle, Info, GripVertical, Sparkles, X as XIcon, Wand2, Eye } from "lucide-react";
+import { Loader2, AlertTriangle, Info, GripVertical, Sparkles, X as XIcon, Wand2, Eye, Pencil } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Template, CreateTemplateRequest, UpdateTemplateRequest } from "@shared/api";
 import { useQueryClient } from "@tanstack/react-query";
@@ -66,6 +66,37 @@ interface TemplateEditorProps {
   defaultCategory: "whatsapp" | "email" | "instagram";
   selectedEmailType?: "body" | "footer";
   forceAttachment?: boolean; // opened from "Attachment Template" button
+}
+
+function AttachmentDetailsEditor({ file, platform, onSave }: { file: DriveFile, platform?: string, onSave: (f: DriveFile) => void }) {
+  const [name, setName] = React.useState(file.customName || file.name);
+  const [caption, setCaption] = React.useState(file.caption || "");
+  
+  return (
+    <div className="space-y-3">
+      <div className="space-y-1">
+        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Custom File Name</p>
+        <Input 
+          className="h-7 text-xs bg-background" 
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onBlur={() => onSave({ ...file, customName: name })}
+        />
+      </div>
+      {platform === "whatsapp" && (
+        <div className="space-y-1">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">WhatsApp Caption</p>
+          <textarea 
+            className="w-full min-h-[60px] text-xs p-2 rounded-md border border-input bg-background focus:ring-1 focus:ring-primary outline-none"
+            placeholder="Add a caption..."
+            value={caption}
+            onChange={(e) => setCaption(e.target.value)}
+            onBlur={() => onSave({ ...file, caption })}
+          />
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -392,9 +423,34 @@ export function TemplateEditor({
                           <Eye className="w-4 h-4" />
                         </button>
 
-                        <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 border-white/10 text-muted-foreground">
+                        <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 border-white/10 text-muted-foreground shrink-0">
                           {idx === 0 ? "First" : idx === driveFiles.length - 1 ? "Last" : `#${idx + 1}`}
                         </Badge>
+
+                        {/* Edit details */}
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button
+                              type="button"
+                              className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-all shrink-0"
+                              title="Edit details"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-64 p-3 rounded-xl z-[400] glass-card" align="end" onClick={(e) => e.stopPropagation()}>
+                            <AttachmentDetailsEditor 
+                              file={file} 
+                              platform={defaultCategory} 
+                              onSave={(updatedFile) => {
+                                const newFiles = [...driveFiles];
+                                newFiles[idx] = updatedFile;
+                                setDriveFiles(newFiles);
+                              }} 
+                            />
+                          </PopoverContent>
+                        </Popover>
 
                         {/* Remove attachment */}
                         <button
