@@ -652,6 +652,7 @@ export const columns: ColumnDef<Contact>[] = [
               value={row.original.editableMessageWP}
               onValueChange={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { editableMessageWP: val })}
               placeholder="Override WP Template..."
+              platform="whatsapp"
             />
           </div>
         ),
@@ -744,6 +745,7 @@ export const columns: ColumnDef<Contact>[] = [
               value={row.original.editableMessageGmail}
               onValueChange={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { editableMessageGmail: val })}
               placeholder="Override Email Body..."
+              platform="email"
             />
           </div>
         ),
@@ -822,6 +824,7 @@ export const columns: ColumnDef<Contact>[] = [
               value={row.original.editableMessageIG}
               onValueChange={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { editableMessageIG: val })}
               placeholder="Override IG Message..."
+              platform="instagram"
             />
           </div>
         ),

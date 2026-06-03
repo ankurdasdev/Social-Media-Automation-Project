@@ -132,12 +132,10 @@ export function RichTextarea({
     }
   }, [charCount, config]);
 
-  // ── Plain-text input handler (WA + IG) ───────────────────────────────────
-  const handlePlainInput = useCallback(
-    (e: React.FormEvent<HTMLTextAreaElement>) => {
-      const raw = (e.currentTarget as HTMLTextAreaElement).value;
+  const handlePlainChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const raw = e.target.value;
       if (platform === "instagram" && raw.length > config.maxChars) {
-        (e.currentTarget as HTMLTextAreaElement).value = raw.slice(0, config.maxChars);
         onChange(raw.slice(0, config.maxChars));
         return;
       }
@@ -154,20 +152,7 @@ export function RichTextarea({
   }, [onChange]);
 
   // ── Strip paste formatting on plain-text ─────────────────────────────────
-  const handlePlainPaste = useCallback(
-    (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
-      e.preventDefault();
-      const text = e.clipboardData.getData("text/plain");
-      const ta = e.currentTarget;
-      const start = ta.selectionStart;
-      const end = ta.selectionEnd;
-      const next = ta.value.slice(0, start) + text + ta.value.slice(end);
-      ta.value = next;
-      ta.selectionStart = ta.selectionEnd = start + text.length;
-      onChange(next);
-    },
-    [onChange]
-  );
+  // (Removed manual paste handler as plain textarea natively strips HTML)
 
   // ── WhatsApp markdown wrap ────────────────────────────────────────────────
   const wrapWaMarkdown = useCallback(
@@ -384,9 +369,8 @@ export function RichTextarea({
             isOverLimit && "text-destructive"
           )}
           placeholder={placeholder}
-          onInput={handlePlainInput}
-          onChange={(e) => onChange(e.target.value)}
-          onPaste={handlePlainPaste}
+          value={stripHtml(value)}
+          onChange={handlePlainChange}
           spellCheck
           autoComplete="off"
           autoCorrect="off"
