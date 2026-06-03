@@ -240,20 +240,23 @@ async function handleWhatsAppOutreach(userId: string, contact: Contact) {
   const drive = await getDriveClient(userId);
 
   // Helper to send a Drive file as WhatsApp media
-  const sendDriveFile = async (fileId: string, fileName: string) => {
+  const sendDriveFile = async (file: DriveFile) => {
     try {
-      const response = await drive.files.get({ fileId, alt: "media" }, { responseType: "arraybuffer" });
+      const response = await drive.files.get({ fileId: file.id, alt: "media" }, { responseType: "arraybuffer" });
       const base64 = Buffer.from(response.data as ArrayBuffer).toString("base64");
-      const meta = await drive.files.get({ fileId, fields: "mimeType" });
+      const meta = await drive.files.get({ fileId: file.id, fields: "mimeType" });
       const mimeType = meta.data.mimeType || "application/octet-stream";
       
       let mediaType: "image" | "document" = "document";
       if (mimeType.startsWith("image/")) mediaType = "image";
 
-      const cleanName = stripExtension(fileName);
-      await sendWAMedia(instance.instance_name, jid, base64, mediaType, cleanName, fileName);
+      const finalName = file.customName || file.name;
+      const cleanName = stripExtension(finalName);
+      const caption = file.caption || cleanName;
+
+      await sendWAMedia(instance.instance_name, jid, base64, mediaType, caption, finalName);
     } catch (err: any) {
-      console.warn(`[whatsapp] Attachment failed for ${fileName}:`, err.message);
+      console.warn(`[whatsapp] Attachment failed for ${file.name}:`, err.message);
     }
     await sleep(1500);
   };
@@ -282,7 +285,7 @@ async function handleWhatsAppOutreach(userId: string, contact: Contact) {
        
        for (const file of attachments) {
          if (file.id) {
-           await sendDriveFile(file.id, file.name);
+           await sendDriveFile(file as DriveFile);
          }
        }
     } else if (template.content) {
@@ -299,7 +302,7 @@ async function handleWhatsAppOutreach(userId: string, contact: Contact) {
     ...(contact.unified_attachments || [])
   ];
   for (const file of rowAttachments) {
-    await sendDriveFile(file.id, file.name);
+    await sendDriveFile(file);
   }
 
   return { success: true };
