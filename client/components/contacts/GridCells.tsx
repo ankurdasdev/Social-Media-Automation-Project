@@ -495,23 +495,17 @@ export function MultiTemplateSelect({
 // ─── Unified Attachment Cell ─────────────────────────────────────────────────
 // ─── Image Lightbox (local) ───────────────────────────────────────────────────
 function InlineLightbox({ src, name, onClose }: { src: string; name: string; onClose: () => void }) {
-  React.useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, [onClose]);
   return (
-    <div className="fixed inset-0 z-[300] bg-black/80 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-200" onClick={onClose}>
-      <div className="relative max-w-2xl w-full bg-card rounded-3xl overflow-hidden shadow-2xl border border-white/10" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-5 py-3 border-b border-white/10">
-          <p className="text-sm font-black truncate">{name}</p>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted transition-colors"><X className="w-4 h-4" /></button>
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-4xl w-[95vw] bg-black/90 p-0 border-white/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col z-[500]">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-white/10 bg-black/50">
+          <p className="text-sm font-black truncate text-white">{name}</p>
         </div>
-        <div className="p-4 bg-black/20 flex items-center justify-center min-h-[260px]">
-          <img src={src} alt={name} className="max-h-[55vh] max-w-full object-contain rounded-xl" />
+        <div className="p-4 flex items-center justify-center flex-1 min-h-[60vh] max-h-[80vh]">
+          <img src={src} alt={name} className="max-h-full max-w-full object-contain rounded-xl shadow-lg" />
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -654,9 +648,9 @@ export function AttachmentCell({
             </div>
           </DialogHeader>
 
-          <div className="flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden">
-            {/* Left: Search & Select */}
-            <div className="flex-1 flex flex-col min-h-0 border-r border-white/5">
+          <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden">
+            {/* Left: Search & Results */}
+            <div className="flex-1 min-h-0 flex flex-col border-r border-white/5">
               {/* Search */}
               <div className="flex items-center gap-3 px-6 py-4 border-b border-white/5">
                 <Search className="h-4 w-4 text-primary shrink-0" />
@@ -731,7 +725,7 @@ export function AttachmentCell({
 
             {/* Right: Selected & Order */}
             {files.length > 0 && (
-              <div className="w-full lg:w-64 flex-shrink-0 flex flex-col border-t lg:border-t-0 border-white/5">
+              <div className="w-full md:w-72 flex-shrink-0 flex flex-col border-t md:border-t-0 md:border-l border-white/5 bg-black/20">
                 <div className="px-5 py-4 border-b border-white/5">
                   <p className="text-[10px] font-black text-primary uppercase tracking-widest">ATTACHMENT ORDER</p>
                   <p className="text-[9px] text-muted-foreground font-bold mt-0.5">Drag to reorder</p>
