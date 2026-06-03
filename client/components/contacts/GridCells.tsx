@@ -245,13 +245,15 @@ export function ConditionalTextareaCell({
   onCheckedChange,
   value,
   onValueChange,
-  placeholder = "Enter custom message..."
+  placeholder = "Enter custom message...",
+  platform
 }: {
   checked: boolean,
   onCheckedChange: (val: boolean) => void,
   value: string,
   onValueChange: (val: string) => void,
-  placeholder?: string
+  placeholder?: string,
+  platform?: "whatsapp" | "email" | "instagram"
 }) {
   const [isEditing, setIsEditing] = React.useState(false);
   const [isAIMode, setIsAIMode] = React.useState(false);
@@ -363,6 +365,7 @@ export function ConditionalTextareaCell({
                        value={localText}
                        onChange={(val) => setLocalText(val)}
                        placeholder={placeholder}
+                       platform={platform}
                      />
                    </div>
                  )}

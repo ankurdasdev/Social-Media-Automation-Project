@@ -19,6 +19,7 @@ export interface DriveFile {
   mimeType: string;
   size?: string;
   webViewLink?: string;
+  webContentLink?: string;
   downloadUrl: string;
   thumbnailLink?: string;
   iconLink?: string;
