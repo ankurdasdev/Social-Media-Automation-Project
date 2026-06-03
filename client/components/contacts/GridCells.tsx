@@ -635,7 +635,7 @@ export function AttachmentCell({
       {/* Redesigned dialog */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent 
-          className="glass-card border-white/10 rounded-[2rem] p-0 max-w-2xl w-[95vw] h-[85vh] overflow-hidden flex flex-col shadow-2xl"
+          className="glass-card border-white/10 rounded-[2rem] p-0 max-w-4xl w-[95vw] h-[85vh] overflow-hidden flex flex-col shadow-2xl"
           aria-describedby="drive-attachments-description"
         >
           <DialogHeader className="px-8 pt-8 pb-4 border-b border-white/5 flex-shrink-0">
@@ -650,7 +650,7 @@ export function AttachmentCell({
 
           <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden">
             {/* Left: Search & Results */}
-            <div className="flex-1 min-h-0 flex flex-col border-r border-white/5">
+            <div className="flex-1 min-w-0 min-h-0 flex flex-col border-r border-white/5">
               {/* Search */}
               <div className="flex items-center gap-3 px-6 py-4 border-b border-white/5">
                 <Search className="h-4 w-4 text-primary shrink-0" />
