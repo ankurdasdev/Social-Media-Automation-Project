@@ -195,7 +195,7 @@ export default function InstagramSettings() {
       title: "Download the Extension Files",
       desc: "Click the Download button below to download the CastHub extension as a ZIP file to your computer.",
       action: (
-        <a href="/api/download/extension" download className="inline-block mt-3">
+        <a href="/casthub-extension.zip" download className="inline-block mt-3">
           <Button
             size="sm"
             className="h-9 px-5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-pink-500/20 hover:opacity-90 gap-2"
