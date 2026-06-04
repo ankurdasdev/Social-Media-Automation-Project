@@ -105,18 +105,7 @@ export function createServer() {
     res.json({ message: ping });
   });
 
-  // ── Extension Download ────────────────────────────────────────────────────
-  app.get("/api/download/extension", (_req, res) => {
-    // Use process.cwd() — always points to project root in both dev and Docker production
-    const zipPath = path.resolve(process.cwd(), "server", "static", "casthub-extension.zip");
-    console.log("[extension-download] Serving ZIP from:", zipPath);
-    res.download(zipPath, "CastHub-Extension.zip", (err) => {
-      if (err) {
-        console.error("[extension-download] Failed to send ZIP:", err);
-        if (!res.headersSent) res.status(500).json({ error: "Failed to download extension. Path: " + zipPath });
-      }
-    });
-  });
+
 
   app.get("/api/system/init-db", async (_req, res) => {
     try {
