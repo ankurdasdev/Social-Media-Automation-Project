@@ -18,6 +18,12 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   CheckCircle2,
   XCircle,
   Loader2,
@@ -36,6 +42,8 @@ import {
   Play,
   Zap,
   CheckCheck,
+  BookOpen,
+  X,
 } from "lucide-react";
 import { getOrCreateUserId, cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -48,6 +56,7 @@ export default function IntegrationsCenter() {
   
   // Google Pre-connection State
   const [googleAccepted, setGoogleAccepted] = React.useState(false);
+  const [googleGuideOpen, setGoogleGuideOpen] = React.useState(false);
   const queryClient = useQueryClient();
   const userId = getOrCreateUserId();
 
@@ -127,6 +136,41 @@ export default function IntegrationsCenter() {
       window.history.replaceState({}, "", "/integrations");
     }
   }, [refetchGoogle, toast]);
+
+  const googleSetupSteps = [
+    {
+      icon: Mail,
+      color: "text-primary",
+      bg: "bg-primary/10 border-primary/20",
+      num: "01",
+      title: "Initiate Connection",
+      desc: "Check the acknowledgment box and click 'Connect Google Workspace'.",
+    },
+    {
+      icon: Globe,
+      color: "text-blue-400",
+      bg: "bg-blue-500/10 border-blue-500/20",
+      num: "02",
+      title: "Select Google Account",
+      desc: "You will be redirected to Google. Select the Gmail/Workspace account you want to connect.",
+    },
+    {
+      icon: ShieldCheck,
+      color: "text-emerald-400",
+      bg: "bg-emerald-500/10 border-emerald-500/20",
+      num: "03",
+      title: "Grant Permissions",
+      desc: "Google hides some permissions by default. You MUST manually check all boxes on the consent screen (especially Gmail and Drive) to allow automation.",
+    },
+    {
+      icon: AlertTriangle,
+      color: "text-amber-400",
+      bg: "bg-amber-500/10 border-amber-500/20",
+      num: "04",
+      title: "Limitations",
+      desc: "Daily Sending Limits: Gmail limits you to ~500 emails/day (Workspace limits are higher). Excessive spam or bounce rates can cause your Google account to be temporarily restricted.",
+    },
+  ];
 
   return (
     <AppLayout>
@@ -334,6 +378,28 @@ export default function IntegrationsCenter() {
                           </p>
                         </div>
 
+                        {/* ── GUIDE BUTTON ── */}
+                        <div className="flex items-center justify-between gap-4 flex-wrap w-full max-w-md mx-auto animate-in fade-in">
+                          <div className="text-left">
+                            <h3 className="text-lg font-black text-foreground uppercase tracking-tight">Connect Workspace</h3>
+                            <p className="text-xs text-muted-foreground/60 mt-0.5">Need help connecting?</p>
+                          </div>
+                          <button
+                            onClick={() => setGoogleGuideOpen(true)}
+                            className={cn(
+                              "relative flex items-center gap-2 px-4 py-2.5 rounded-2xl border font-black text-[10px] uppercase tracking-widest transition-all",
+                              "bg-gradient-to-r from-primary/10 to-blue-500/10 border-primary/30 text-primary",
+                              "hover:from-primary/20 hover:to-blue-500/20 hover:border-primary/50 hover:scale-105",
+                              "animate-pulse shadow-lg shadow-primary/10"
+                            )}
+                          >
+                            <BookOpen className="w-3.5 h-3.5" />
+                            Setup Guide
+                            <span className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-primary rounded-full animate-ping" />
+                            <span className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-primary rounded-full" />
+                          </button>
+                        </div>
+
                         {/* Pre-Connection Warning */}
                         <div className="max-w-md mx-auto w-full space-y-4 text-left p-6 rounded-2xl bg-amber-500/5 border border-amber-500/20">
                           <div className="flex gap-3">
@@ -369,9 +435,66 @@ export default function IntegrationsCenter() {
                         </Button>
                       </div>
                     )}
-                 </div>
+                  </div>
               </div>
             </div>
+
+            {/* ── GOOGLE SETUP GUIDE DIALOG ── */}
+            <Dialog open={googleGuideOpen} onOpenChange={setGoogleGuideOpen}>
+              <DialogContent className="max-w-2xl w-[95vw] p-0 gap-0 glass-card border-white/10 rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                <DialogHeader className="shrink-0 px-6 pt-6 pb-4 border-b border-white/5 bg-background/80 backdrop-blur-xl">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary/10 to-blue-500/10 border border-primary/20 flex items-center justify-center shrink-0">
+                        <BookOpen className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <DialogTitle className="text-base font-black text-foreground uppercase tracking-widest">Google Setup Guide</DialogTitle>
+                        <p className="text-[10px] text-muted-foreground/60 mt-0.5">Follow the steps to connect your Gmail & Drive</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setGoogleGuideOpen(false)}
+                      className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-muted-foreground hover:text-foreground transition-all shrink-0"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </DialogHeader>
+
+                <div className="flex-1 overflow-y-auto min-h-0 px-6 py-5 space-y-3">
+                  {googleSetupSteps.map((step, i) => (
+                    <div key={i} className={cn("flex gap-4 p-4 rounded-2xl border transition-all hover:scale-[1.01]", step.bg)}>
+                      <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border", step.bg)}>
+                        <step.icon className={cn("w-4 h-4", step.color)} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={cn("text-[9px] font-black uppercase tracking-[0.2em]", step.color)}>Step {step.num}</span>
+                        </div>
+                        <p className="text-[11px] font-black text-foreground uppercase tracking-wide leading-tight">{step.title}</p>
+                        <p className="text-[11px] text-muted-foreground/70 leading-relaxed mt-1 break-words">{step.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="shrink-0 px-6 py-4 border-t border-white/5 bg-background/80 backdrop-blur-xl flex items-center justify-between gap-4 flex-wrap">
+                  <p className="text-[10px] text-muted-foreground/40 font-bold uppercase tracking-widest">
+                    Quick 1-minute secure OAuth process
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <Button
+                      size="sm"
+                      onClick={() => setGoogleGuideOpen(false)}
+                      className="h-9 px-5 rounded-xl bg-gradient-to-r from-primary to-blue-500 text-white font-black text-[10px] uppercase tracking-widest gap-2"
+                    >
+                      Got It, Let's Connect!
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </TabsContent>
 
           <TabsContent value="whatsapp" className="animate-in fade-in slide-in-from-bottom-4 duration-300">
