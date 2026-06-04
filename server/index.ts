@@ -21,6 +21,7 @@ import {
   handleGetAnalyticsStats,
   handleAIDiagnoseFailures,
   handleAnalyticsChat,
+  handleParseContactImage,
 } from "./routes/contacts";
 import {
   handleGetTemplates,
@@ -144,6 +145,7 @@ export function createServer() {
   app.put("/api/contacts/:id", handleUpdateContact);
   app.delete("/api/contacts/:id", handleDeleteContact);
   app.post("/api/contacts/ai-search", handleAIContactSearch);
+  app.post("/api/contacts/parse-image", handleParseContactImage);
   app.post("/api/ai/improve-message", handleImproveMessage);
   app.get("/api/analytics/stats", handleGetAnalyticsStats);
   app.post("/api/analytics/diagnose-failures", handleAIDiagnoseFailures);

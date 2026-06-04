@@ -21,6 +21,7 @@ import { generateSearchSQL } from "../services/ai-service";
 import { query, queryOne } from "../db/index";
 import type { ContactsResponse, ContactResponse, ErrorResponse, IngestionStatusResponse } from "@shared/api";
 import { generateOpenAIResponse, generateChatResponse } from "../services/ai-service";
+import { parseCastingImageForMultipleContacts } from "../services/ai-parser";
 
 // ─── GET /api/contacts ────────────────────────────────────────────────────────
 
@@ -110,10 +111,72 @@ export const handleBulkCreateContacts: RequestHandler = async (req, res) => {
       const contact = await createContact(userId, c);
       created.push(contact);
     }
-    res.status(201).json({ contacts: created, total: created.length });
+    res.status(201).json({ contacts: created });
   } catch (err: any) {
     console.error("[handleBulkCreateContacts] Error:", err);
-    res.status(500).json({ error: "Bulk creation failed: " + err.message });
+    res.status(500).json({ error: "Failed to bulk create contacts: " + err.message });
+  }
+};
+
+// ─── POST /api/contacts/parse-image ───────────────────────────────────────────
+
+export const handleParseContactImage: RequestHandler = async (req, res) => {
+  const userId = req.body.userId || process.env.DEFAULT_USER_ID;
+  const { base64Image, mimeType = "image/jpeg" } = req.body;
+
+  if (!userId) {
+    res.status(400).json({ error: "userId is required." });
+    return;
+  }
+  if (!base64Image) {
+    res.status(400).json({ error: "base64Image is required." });
+    return;
+  }
+
+  try {
+    const parsedContacts = await parseCastingImageForMultipleContacts(base64Image, mimeType);
+    
+    if (!parsedContacts || parsedContacts.length === 0) {
+      res.status(200).json({ contacts: [] });
+      return;
+    }
+
+    // Format fields and prepare for bulk insert
+    const contactsToInsert = parsedContacts.map((c) => {
+      let formattedWa = (c.whatsapp || "").replace(/[^0-9+]/g, ""); // Strip spaces/dashes
+      
+      // If it doesn't start with +91 or 91, prepend 91 (if not empty)
+      if (formattedWa) {
+        if (!formattedWa.startsWith("+91") && !formattedWa.startsWith("91")) {
+          // If it starts with + but not +91, assume it's international, but rule says ALWAYS append 91 if 91 is not present
+          formattedWa = formattedWa.startsWith("+") ? "+91" + formattedWa.substring(1) : "91" + formattedWa;
+        }
+      }
+
+      return {
+        name: c.name || "Unknown",
+        castingName: c.castingName || "",
+        whatsapp: formattedWa,
+        email: c.email || "",
+        instaHandle: c.instaHandle || "",
+        actingContext: c.actingContext || "",
+        project: c.project || "",
+        source: "Upload", // Mark source as upload
+        status: "pending",
+        whatsappNeeded: formattedWa ? "Yes" : "No",
+        emailNeeded: c.email ? "Yes" : "No",
+      };
+    });
+
+    const created = [];
+    for (const data of contactsToInsert) {
+      created.push(await createContact(userId, data));
+    }
+
+    res.status(201).json({ contacts: created });
+  } catch (err: any) {
+    console.error("[handleParseContactImage] Error:", err);
+    res.status(500).json({ error: "Failed to parse image and create contacts: " + err.message });
   }
 };
 

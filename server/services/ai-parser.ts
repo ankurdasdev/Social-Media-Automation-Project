@@ -211,3 +211,95 @@ export async function parseMessages(
 
   return results;
 }
+
+// ─── Multiple Contacts Image Parser ──────────────────────────────────────────
+
+export interface ParsedMultipleContact {
+  name: string;
+  castingName: string;
+  whatsapp: string;
+  email: string;
+  instaHandle: string;
+  actingContext: string;
+  project: string;
+}
+
+const MULTIPLE_CONTACTS_PROMPT = `You are an expert data extraction assistant.
+Your job is to read an image of a casting call flyer and extract contact information into a structured JSON array.
+
+You must extract these fields for EACH row:
+- name: string (Lead name, mostly the name of the contact/actor/model sought)
+- castingName: string (Casting Agency Name, the company highlighted everywhere)
+- whatsapp: string (Phone number if present)
+- email: string (Email address if present)
+- instaHandle: string (Instagram handle with @ if present)
+- actingContext: string (Max 2 words, e.g., "Male Role", "Actor Role")
+- project: string (Max 2 words, e.g., "Web Series", "TV Ad", "Movie")
+
+CRITICAL RULES FOR MULTIPLE ROWS:
+- The image may contain MULTIPLE WhatsApp numbers, MULTIPLE email addresses, or MULTIPLE Instagram handles.
+- You must create a SEPARATE row (object) in the array for each distinct number, email, or handle, up to the maximum distinct combinations.
+- NO VALUE SHOULD BE REPEATED ANYWHERE across rows. A specific WhatsApp number, email, or instaHandle must appear in exactly ONE row.
+- If there is 1 WhatsApp and 1 Email, you can put them in the SAME row. If there are 2 WhatsApps and 1 Email, you MUST create 2 rows (e.g. Row 1 has WA#1 and Email#1, Row 2 has WA#2 and empty Email). 
+- If 91 is not present at the beginning of an Indian mobile number, DO NOT add it yourself (the backend will format it), just extract the digits you see.
+- Return ONLY a JSON array of objects. No markdown, no explanation.
+
+Example Output:
+[
+  {
+    "name": "Lead Actor",
+    "castingName": "Mukesh Chhabra Casting",
+    "whatsapp": "9876543210",
+    "email": "casting@agency.com",
+    "instaHandle": "@castingagency",
+    "actingContext": "Lead Role",
+    "project": "Web Series"
+  },
+  {
+    "name": "Lead Actor",
+    "castingName": "Mukesh Chhabra Casting",
+    "whatsapp": "9123456789",
+    "email": "",
+    "instaHandle": "",
+    "actingContext": "Lead Role",
+    "project": "Web Series"
+  }
+]`;
+
+export async function parseCastingImageForMultipleContacts(
+  base64: string,
+  mimetype: string
+): Promise<ParsedMultipleContact[]> {
+  const dataUrl = `data:${mimetype};base64,${base64.slice(0, 300000)}`;
+
+  try {
+    const response = await client.chat.completions.create({
+      model: VISION_MODEL,
+      messages: [
+        { role: "system", content: MULTIPLE_CONTACTS_PROMPT },
+        {
+          role: "user",
+          content: [
+            {
+              type: "image_url",
+              image_url: { url: dataUrl },
+            },
+            { type: "text" as const, text: "Extract all distinct contact details into multiple rows as instructed." },
+          ],
+        },
+      ],
+      temperature: 0.1,
+      max_tokens: 1500,
+    });
+
+    const content = response.choices[0]?.message?.content ?? "";
+    const cleaned = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+    const parsed: ParsedMultipleContact[] = JSON.parse(cleaned);
+    
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    console.error("[ai-parser] Multiple Contacts Vision parse failed:", err);
+    return [];
+  }
+}
+

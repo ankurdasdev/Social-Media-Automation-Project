@@ -1,6 +1,6 @@
 import { useState, useMemo, useTransition } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Loader2, RefreshCw } from "lucide-react";
+import { Plus, Loader2, RefreshCw, Upload, ImageUp } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -141,6 +141,52 @@ export default function Contacts() {
       queryClient.invalidateQueries({ queryKey: ["ingestion-status"] });
     },
   });
+
+  const uploadCastingCallMutation = useMutation({
+    mutationFn: async ({ base64, mimeType }: { base64: string, mimeType: string }) => {
+      const res = await fetch("/api/contacts/parse-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, base64Image: base64, mimeType }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to parse casting call image");
+      }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      const count = data.contacts?.length || 0;
+      toast({
+        title: "CASTING CALL PARSED",
+        description: `Successfully extracted ${count} contact${count === 1 ? '' : 's'} from the image.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["contacts", userId] });
+    },
+    onError: (err: any) => {
+      toast({
+        title: "UPLOAD FAILED",
+        description: err.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleUploadImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Read as base64
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64String = (event.target?.result as string).split(',')[1];
+      uploadCastingCallMutation.mutate({ base64: base64String, mimeType: file.type });
+    };
+    reader.readAsDataURL(file);
+    
+    // Reset input
+    e.target.value = "";
+  };
 
   const addLeadMutation = useMutation({
     mutationFn: async (leadConfig: typeof newLead) => {
@@ -482,20 +528,32 @@ export default function Contacts() {
             </p>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-4">
-            <Button
-              variant="outline"
-              size="lg"
-              className="h-16 border-white/10 bg-background/30 backdrop-blur-xl hover:bg-muted/50 rounded-2xl font-black px-8 shadow-xl transition-all active:scale-[0.98] group"
-              disabled={triggerIngestion.isPending || ingestionStatus?.isRunning}
-              onClick={() => triggerIngestion.mutate()}
-            >
-              {(triggerIngestion.isPending || ingestionStatus?.isRunning) ? (
-                <Loader2 className="mr-3 h-5 w-5 animate-spin text-primary" />
-              ) : (
-                <RefreshCw className="mr-3 h-5 w-5 text-primary group-hover:rotate-180 transition-transform duration-700" />
-              )}
-              IMPORT CONTACTS
-            </Button>
+            <div>
+              <input
+                type="file"
+                accept="image/*"
+                id="casting-call-upload"
+                className="hidden"
+                onChange={handleUploadImage}
+                disabled={uploadCastingCallMutation.isPending}
+              />
+              <Label htmlFor="casting-call-upload">
+                <div
+                  className={cn(
+                    "inline-flex items-center justify-center whitespace-nowrap",
+                    "h-16 border border-white/10 bg-background/30 backdrop-blur-xl hover:bg-muted/50 rounded-2xl font-black px-8 shadow-xl transition-all cursor-pointer group",
+                    uploadCastingCallMutation.isPending ? "opacity-70 cursor-not-allowed" : "active:scale-[0.98]"
+                  )}
+                >
+                  {uploadCastingCallMutation.isPending ? (
+                    <Loader2 className="mr-3 h-5 w-5 animate-spin text-primary" />
+                  ) : (
+                    <Upload className="mr-3 h-5 w-5 text-primary group-hover:-translate-y-1 transition-transform duration-300" />
+                  )}
+                  UPLOAD CASTING CALL
+                </div>
+              </Label>
+            </div>
             <Button id="tutorial-contacts-add" size="lg" onClick={handleOpenAddLead} className="h-16 bg-foreground text-background hover:bg-foreground/90 shadow-2xl shadow-primary/20 rounded-2xl font-black px-10 transition-all hover:-translate-y-1 active:scale-[0.98]">
               <Plus className="mr-3 h-6 w-6" /> ADD CONTACT
             </Button>
