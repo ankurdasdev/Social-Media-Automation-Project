@@ -9,10 +9,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { GripVertical, Plus, Trash2, Settings2, Palette } from "lucide-react";
 import { cn } from "@/lib/utils";
-
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ChevronDown } from "lucide-react";
@@ -162,7 +160,7 @@ export function ColumnManagerDialog({ isOpen, onOpenChange, onSaved }: ColumnMan
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 p-6">
+        <div className="flex-1 overflow-y-auto p-6 min-h-0">
           <div className="space-y-6">
             {groups.map((group, idx) => (
               <div 
@@ -212,7 +210,7 @@ export function ColumnManagerDialog({ isOpen, onOpenChange, onSaved }: ColumnMan
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-[300px] p-0 glass-card border-white/10" align="start">
-                      <ScrollArea className="h-64">
+                      <div className="h-64 overflow-y-auto">
                         <div className="p-2 space-y-1">
                           {ALL_COLUMNS.map(col => {
                             const isSelected = group.columns.includes(col.id);
@@ -240,7 +238,7 @@ export function ColumnManagerDialog({ isOpen, onOpenChange, onSaved }: ColumnMan
                             );
                           })}
                         </div>
-                      </ScrollArea>
+                      </div>
                     </PopoverContent>
                   </Popover>
 
@@ -268,7 +266,7 @@ export function ColumnManagerDialog({ isOpen, onOpenChange, onSaved }: ColumnMan
           <Button onClick={addGroup} variant="outline" className="w-full mt-6 h-12 border-dashed border-white/20 bg-transparent hover:bg-white/5">
             <Plus className="w-4 h-4 mr-2" /> ADD GROUP
           </Button>
-        </ScrollArea>
+        </div>
 
         <DialogFooter className="p-6 bg-muted/30 border-t border-white/5 shrink-0">
           <Button variant="ghost" onClick={() => onOpenChange(false)}>CANCEL</Button>
