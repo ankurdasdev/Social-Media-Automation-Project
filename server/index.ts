@@ -1,6 +1,8 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
 import cron from "node-cron";
 import { handleDemo } from "./routes/demo";
 import {
@@ -101,6 +103,19 @@ export function createServer() {
   app.get("/api/ping", (_req, res) => {
     const ping = process.env.PING_MESSAGE ?? "ping";
     res.json({ message: ping });
+  });
+
+  // ── Extension Download ────────────────────────────────────────────────────
+  app.get("/api/download/extension", (_req, res) => {
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+    const zipPath = path.join(__dirname, "static", "casthub-extension.zip");
+    res.download(zipPath, "CastHub-Extension.zip", (err) => {
+      if (err) {
+        console.error("[extension-download] Failed to send ZIP:", err);
+        if (!res.headersSent) res.status(500).json({ error: "Failed to download extension." });
+      }
+    });
   });
 
   app.get("/api/system/init-db", async (_req, res) => {
