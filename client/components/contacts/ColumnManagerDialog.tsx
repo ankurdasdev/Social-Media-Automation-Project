@@ -212,7 +212,20 @@ export function ColumnManagerDialog({ isOpen, onOpenChange, onSaved }: ColumnMan
                     <PopoverContent className="w-[300px] p-0 glass-card border-white/10" align="start">
                       <div className="h-64 overflow-y-auto">
                         <div className="p-2 space-y-1">
-                          {ALL_COLUMNS.map(col => {
+                          {[...ALL_COLUMNS].sort((a, b) => {
+                            const aSelected = group.columns.includes(a.id);
+                            const bSelected = group.columns.includes(b.id);
+                            if (aSelected && !bSelected) return -1;
+                            if (!aSelected && bSelected) return 1;
+                            
+                            const disabledOptions = getAllAssignedColumns(idx);
+                            const aDisabled = !aSelected && disabledOptions.includes(a.id);
+                            const bDisabled = !bSelected && disabledOptions.includes(b.id);
+                            if (aDisabled && !bDisabled) return 1;
+                            if (!aDisabled && bDisabled) return -1;
+                            
+                            return 0;
+                          }).map(col => {
                             const isSelected = group.columns.includes(col.id);
                             const disabledOptions = getAllAssignedColumns(idx);
                             const isDisabled = !isSelected && disabledOptions.includes(col.id);
