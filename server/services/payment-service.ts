@@ -2,16 +2,27 @@
  * Payment Service — Razorpay SDK wrapper + subscription logic
  */
 import { createRequire } from "module";
-const require = createRequire(import.meta.url);
-const Razorpay = require("razorpay");
 import crypto from "crypto";
 import { query, queryOne } from "../db/index";
 
-// ── Razorpay Instance ────────────────────────────────────────────────────────
-const razorpay = new (Razorpay.default || Razorpay)({
-  key_id: process.env.RAZORPAY_KEY_ID || "",
-  key_secret: process.env.RAZORPAY_KEY_SECRET || "",
-});
+// ── Razorpay Instance (lazy load to allow server to boot even if not installed yet) ──
+let razorpay: any = null;
+function getRazorpay() {
+  if (razorpay) return razorpay;
+  try {
+    const req = createRequire(import.meta.url);
+    const Razorpay = req("razorpay");
+    const RazorpayCtor = Razorpay.default || Razorpay;
+    razorpay = new RazorpayCtor({
+      key_id: process.env.RAZORPAY_KEY_ID || "",
+      key_secret: process.env.RAZORPAY_KEY_SECRET || "",
+    });
+    return razorpay;
+  } catch (e) {
+    console.warn("[payment-service] Razorpay package not found. Run `pnpm install`. Payment features disabled.");
+    return null;
+  }
+}
 
 // ── Plan Definitions ─────────────────────────────────────────────────────────
 export const PLANS = {
@@ -28,7 +39,9 @@ export async function createOrder(
   receipt: string,
   notes?: Record<string, string>
 ) {
-  const order = await razorpay.orders.create({
+  const rzp = getRazorpay();
+  if (!rzp) throw new Error("Payment gateway not available. Please contact support.");
+  const order = await rzp.orders.create({
     amount, // in paisa
     currency,
     receipt,
