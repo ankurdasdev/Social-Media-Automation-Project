@@ -25,7 +25,7 @@ import { type Contact, type ContactsResponse, type IngestionStatusResponse } fro
 import { DataTable } from "@/components/contacts/DataTable";
 import { columns } from "@/components/contacts/columns";
 import { useToast } from "@/hooks/use-toast";
-import { getOrCreateUserId } from "@/lib/utils";
+import { getOrCreateUserId, cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import { RichTextarea } from "@/components/ui/rich-textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
