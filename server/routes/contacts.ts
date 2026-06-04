@@ -134,10 +134,23 @@ export const handleParseContactImage: RequestHandler = async (req, res) => {
   }
 
   try {
-    const parsedContacts = await parseCastingImageForMultipleContacts(base64Image, mimeType);
+    // Fetch user's AI keywords and gender for smart filtering
+    const userRow = await queryOne<{ ai_keywords: string[]; gender: string }>(
+      "SELECT ai_keywords, gender FROM users WHERE id = $1",
+      [userId]
+    );
+    const userKeywords: string[] = userRow?.ai_keywords || [];
+    const userGender: string = userRow?.gender || "";
+
+    const parsedContacts = await parseCastingImageForMultipleContacts(
+      base64Image,
+      mimeType,
+      userKeywords,
+      userGender
+    );
     
     if (!parsedContacts || parsedContacts.length === 0) {
-      res.status(200).json({ contacts: [] });
+      res.status(200).json({ contacts: [], message: "No relevant casting calls found in the image." });
       return;
     }
 
@@ -148,7 +161,6 @@ export const handleParseContactImage: RequestHandler = async (req, res) => {
       // If it doesn't start with +91 or 91, prepend 91 (if not empty)
       if (formattedWa) {
         if (!formattedWa.startsWith("+91") && !formattedWa.startsWith("91")) {
-          // If it starts with + but not +91, assume it's international, but rule says ALWAYS append 91 if 91 is not present
           formattedWa = formattedWa.startsWith("+") ? "+91" + formattedWa.substring(1) : "91" + formattedWa;
         }
       }
@@ -161,6 +173,7 @@ export const handleParseContactImage: RequestHandler = async (req, res) => {
         instaHandle: c.instaHandle || "",
         actingContext: c.actingContext || "",
         project: c.project || "",
+        age: c.age || "",
         source: "manual" as "manual" | "auto-whatsapp" | "auto-instagram", 
         status: "pending",
         whatsappNeeded: formattedWa ? "Yes" : "No",

@@ -222,6 +222,7 @@ export interface ParsedMultipleContact {
   instaHandle: string;
   actingContext: string;
   project: string;
+  age: string;
 }
 
 const MULTIPLE_CONTACTS_PROMPT = `You are an expert data extraction assistant.
@@ -268,15 +269,75 @@ Example Output:
 
 export async function parseCastingImageForMultipleContacts(
   base64: string,
-  mimetype: string
+  mimetype: string,
+  userKeywords: string[] = [],
+  userGender: string = ""
 ): Promise<ParsedMultipleContact[]> {
   const dataUrl = `data:${mimetype};base64,${base64.slice(0, 300000)}`;
+
+  // Build a dynamic profile context for the AI
+  const profileContext = userKeywords.length > 0
+    ? `The user's AI profiling keywords are: ${userKeywords.join(", ")}. ONLY include casting calls relevant to these keywords.`
+    : userGender
+    ? `The user's gender is: ${userGender}. Only include casting calls relevant to this gender.`
+    : `No user profile keywords available. Include all casting calls found.`;
+
+  const dynamicPrompt = `You are an expert data extraction assistant for an Indian actor's outreach app.
+Your job is to read an image of a casting call flyer and extract contact information into a structured JSON array.
+
+USER PROFILE CONTEXT:
+${profileContext}
+
+IMPORTANT: If the image contains MULTIPLE distinct casting calls, only include the ones relevant to the user's profile context above. If a casting call is for the opposite gender (e.g., female-only when user is male), SKIP it entirely.
+
+You must extract these fields for EACH relevant row:
+- name: string (Lead name — name of the casting director, production house, or person posting)
+- castingName: string (Casting Agency Name — the company name highlighted most prominently in the image)
+- whatsapp: string (Phone number if present, just digits and optional +)
+- email: string (Email address if present)
+- instaHandle: string (Instagram handle with @ if present)
+- actingContext: string (MAX 2 WORDS — e.g., "Male Role", "Actor Role", "Female Lead")
+- project: string (MAX 2 WORDS — e.g., "Web Series", "TV Ad", "Movie", "OTT Show")
+- age: string (Age range if mentioned, e.g., "24-28", "18-25" — leave empty string if not mentioned)
+
+CRITICAL RULES FOR MULTIPLE ROWS:
+- The image may contain MULTIPLE WhatsApp numbers, MULTIPLE email addresses, or MULTIPLE Instagram handles.
+- You MUST create a SEPARATE row (object) in the array for each distinct phone number, email, or Instagram handle.
+- NO VALUE SHOULD BE REPEATED ANYWHERE. A specific WhatsApp number, email, or instaHandle must appear in exactly ONE row.
+- Optimization: If there is exactly 1 WhatsApp AND 1 Email for the same casting call, put them in the SAME row.
+- If there are 2 WhatsApp numbers and 1 Email: Row 1 = WA#1 + Email, Row 2 = WA#2 + empty email.
+- Do NOT add country code 91 yourself — just extract the digits as they appear in the image.
+- Return ONLY a valid JSON array of objects. No markdown, no explanation, no extra text.
+
+Example Output:
+[
+  {
+    "name": "Vikram Kapoor",
+    "castingName": "Mukesh Chhabra Casting",
+    "whatsapp": "9876543210",
+    "email": "casting@mcc.com",
+    "instaHandle": "@mccasting",
+    "actingContext": "Lead Role",
+    "project": "Web Series",
+    "age": "24-30"
+  },
+  {
+    "name": "Vikram Kapoor",
+    "castingName": "Mukesh Chhabra Casting",
+    "whatsapp": "9123456789",
+    "email": "",
+    "instaHandle": "",
+    "actingContext": "Lead Role",
+    "project": "Web Series",
+    "age": "24-30"
+  }
+]`;
 
   try {
     const response = await client.chat.completions.create({
       model: VISION_MODEL,
       messages: [
-        { role: "system", content: MULTIPLE_CONTACTS_PROMPT },
+        { role: "system", content: dynamicPrompt },
         {
           role: "user",
           content: [
@@ -284,12 +345,12 @@ export async function parseCastingImageForMultipleContacts(
               type: "image_url",
               image_url: { url: dataUrl },
             },
-            { type: "text" as const, text: "Extract all distinct contact details into multiple rows as instructed." },
+            { type: "text" as const, text: "Extract all relevant contact details into multiple rows as instructed. Return only the JSON array." },
           ],
         },
       ],
       temperature: 0.1,
-      max_tokens: 1500,
+      max_tokens: 2000,
     });
 
     const content = response.choices[0]?.message?.content ?? "";
