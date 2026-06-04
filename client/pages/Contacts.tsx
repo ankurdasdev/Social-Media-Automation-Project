@@ -157,10 +157,18 @@ export default function Contacts() {
     },
     onSuccess: (data) => {
       const count = data.contacts?.length || 0;
-      toast({
-        title: "CASTING CALL PARSED",
-        description: `Successfully extracted ${count} contact${count === 1 ? '' : 's'} from the image.`,
-      });
+      if (count === 0) {
+        toast({
+          title: "NO CONTACTS FOUND",
+          description: data.message || "The AI couldn't find any relevant casting calls in the image. Try a clearer screenshot.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "CASTING CALL PARSED",
+          description: `Successfully extracted ${count} contact${count === 1 ? '' : 's'} from the image.`,
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ["contacts", userId] });
     },
     onError: (err: any) => {
