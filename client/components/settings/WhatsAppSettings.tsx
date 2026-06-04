@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, QrCode, LogOut, CheckCircle2, RefreshCw, MessageSquare, Zap, ShieldCheck, AlertTriangle } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Loader2, QrCode, LogOut, CheckCircle2, RefreshCw, MessageSquare, Zap, ShieldCheck, AlertTriangle, BookOpen, X, ChevronRight, Smartphone } from "lucide-react";
 import { WhatsAppStatusResponse, WhatsAppQRResponse } from "@shared/api";
 import { toast } from "sonner";
 import { getOrCreateUserId, cn } from "@/lib/utils";
@@ -14,6 +20,7 @@ export function WhatsAppSettings() {
   const [connecting, setConnecting] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [syncDone, setSyncDone] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
   const hasSyncedRef = React.useRef(false);
 
   const autoSyncGroups = async (userId: string) => {
@@ -137,6 +144,41 @@ export function WhatsAppSettings() {
 
   const isConnected = status?.isConnected;
   const instance = status?.instance;
+
+  const setupSteps = [
+    {
+      icon: Smartphone,
+      color: "text-emerald-400",
+      bg: "bg-emerald-500/10 border-emerald-500/20",
+      num: "01",
+      title: "Open WhatsApp",
+      desc: "Open WhatsApp on your mobile phone.",
+    },
+    {
+      icon: MessageSquare,
+      color: "text-blue-400",
+      bg: "bg-blue-500/10 border-blue-500/20",
+      num: "02",
+      title: "Go to Linked Devices",
+      desc: "Tap the menu (three dots) or settings on your phone, then select 'Linked Devices'.",
+    },
+    {
+      icon: QrCode,
+      color: "text-purple-400",
+      bg: "bg-purple-500/10 border-purple-500/20",
+      num: "03",
+      title: "Link a Device",
+      desc: "Tap 'Link a Device'. Point your phone to the screen and scan the QR code that is generated after you enter your mobile number here.",
+    },
+    {
+      icon: AlertTriangle,
+      color: "text-amber-400",
+      bg: "bg-amber-500/10 border-amber-500/20",
+      num: "04",
+      title: "Limitations",
+      desc: "Session Limitation: If you log out from your phone or the session expires, you will need to come back and scan a new QR code to reconnect.",
+    },
+  ];
 
   return (
     <div id="tutorial-settings-whatsapp" className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -353,6 +395,28 @@ export function WhatsAppSettings() {
                     </p>
                   </div>
 
+                  {/* ── GUIDE BUTTON ── */}
+                  <div className="flex items-center justify-between gap-4 flex-wrap w-full max-w-md mx-auto animate-in fade-in">
+                    <div className="text-left">
+                      <h3 className="text-lg font-black text-foreground uppercase tracking-tight">Connect Your Account</h3>
+                      <p className="text-xs text-muted-foreground/60 mt-0.5">Need help connecting?</p>
+                    </div>
+                    <button
+                      onClick={() => setGuideOpen(true)}
+                      className={cn(
+                        "relative flex items-center gap-2 px-4 py-2.5 rounded-2xl border font-black text-[10px] uppercase tracking-widest transition-all",
+                        "bg-gradient-to-r from-emerald-500/10 to-blue-500/10 border-emerald-500/30 text-emerald-400",
+                        "hover:from-emerald-500/20 hover:to-blue-500/20 hover:border-emerald-500/50 hover:scale-105",
+                        "animate-pulse shadow-lg shadow-emerald-500/10"
+                      )}
+                    >
+                      <BookOpen className="w-3.5 h-3.5" />
+                      Setup Guide
+                      <span className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-emerald-500 rounded-full animate-ping" />
+                      <span className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-emerald-500 rounded-full" />
+                    </button>
+                  </div>
+
                   {/* Pre-Connection Warning & Steps */}
                   <div className="max-w-md mx-auto w-full space-y-4 text-left p-6 rounded-2xl bg-emerald-500/5 border border-emerald-500/20">
                     <div className="flex gap-3">
@@ -402,6 +466,66 @@ export function WhatsAppSettings() {
            </div>
         </div>
       </div>
+
+      {/* ── SETUP GUIDE DIALOG ── */}
+      <Dialog open={guideOpen} onOpenChange={setGuideOpen}>
+        <DialogContent className="max-w-2xl w-[95vw] p-0 gap-0 glass-card border-white/10 rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+          {/* Fixed Header */}
+          <DialogHeader className="shrink-0 px-6 pt-6 pb-4 border-b border-white/5 bg-background/80 backdrop-blur-xl">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500/10 to-blue-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                  <BookOpen className="w-5 h-5 text-emerald-400" />
+                </div>
+                <div>
+                  <DialogTitle className="text-base font-black text-foreground uppercase tracking-widest">WhatsApp Setup Guide</DialogTitle>
+                  <p className="text-[10px] text-muted-foreground/60 mt-0.5">Follow the steps to connect your WhatsApp seamlessly</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setGuideOpen(false)}
+                className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-muted-foreground hover:text-foreground transition-all shrink-0"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </DialogHeader>
+
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto min-h-0 px-6 py-5 space-y-3">
+            {setupSteps.map((step, i) => (
+              <div key={i} className={cn("flex gap-4 p-4 rounded-2xl border transition-all hover:scale-[1.01]", step.bg)}>
+                <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border", step.bg)}>
+                  <step.icon className={cn("w-4 h-4", step.color)} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={cn("text-[9px] font-black uppercase tracking-[0.2em]", step.color)}>Step {step.num}</span>
+                  </div>
+                  <p className="text-[11px] font-black text-foreground uppercase tracking-wide leading-tight">{step.title}</p>
+                  <p className="text-[11px] text-muted-foreground/70 leading-relaxed mt-1 break-words">{step.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Fixed Footer */}
+          <div className="shrink-0 px-6 py-4 border-t border-white/5 bg-background/80 backdrop-blur-xl flex items-center justify-between gap-4 flex-wrap">
+            <p className="text-[10px] text-muted-foreground/40 font-bold uppercase tracking-widest">
+              It takes less than a minute
+            </p>
+            <div className="flex items-center gap-3">
+              <Button
+                size="sm"
+                onClick={() => setGuideOpen(false)}
+                className="h-9 px-5 rounded-xl bg-gradient-to-r from-emerald-500 to-blue-500 text-white font-black text-[10px] uppercase tracking-widest gap-2"
+              >
+                Got It, Let's Connect!
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
