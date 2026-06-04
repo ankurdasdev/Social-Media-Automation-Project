@@ -161,7 +161,7 @@ export const handleParseContactImage: RequestHandler = async (req, res) => {
         instaHandle: c.instaHandle || "",
         actingContext: c.actingContext || "",
         project: c.project || "",
-        source: "Upload", // Mark source as upload
+        source: "manual" as "manual" | "auto-whatsapp" | "auto-instagram", 
         status: "pending",
         whatsappNeeded: formattedWa ? "Yes" : "No",
         emailNeeded: c.email ? "Yes" : "No",
