@@ -85,6 +85,15 @@ import {
   handleGetAnalytics,
   handleGetLogs
 } from "./routes/admin";
+import {
+  handleGetSubscription,
+  handleCreateOrder,
+  handleVerifyPayment,
+  handleApplyCoupon,
+  handleCancelSubscription,
+  handleGetPaymentHistory,
+  handleWebhook,
+} from "./routes/payments";
 
 // Initialize database then restore per-user ingestion schedules
 initDb()
@@ -135,6 +144,121 @@ export function createServer() {
   app.post("/api/admin/users/:id/reset-password", requireAdmin, handleAdminResetPassword);
   app.get("/api/admin/analytics", requireAdmin, handleGetAnalytics);
   app.get("/api/admin/logs", requireAdmin, handleGetLogs);
+
+  // ── Payments ───────────────────────────────────────────────────────────────
+  app.get("/api/payments/subscription", handleGetSubscription);
+  app.post("/api/payments/create-order", handleCreateOrder);
+  app.post("/api/payments/verify", handleVerifyPayment);
+  app.post("/api/payments/apply-coupon", handleApplyCoupon);
+  app.post("/api/payments/cancel", handleCancelSubscription);
+  app.get("/api/payments/history", handleGetPaymentHistory);
+  app.post("/api/payments/webhook", handleWebhook);
+
+  // ── Admin Payment/Coupon/Settings Routes ────────────────────────────────────
+  app.get("/api/admin/payments", requireAdmin, async (req, res) => {
+    try {
+      const { query: q } = await import("./db/index");
+      const payments = await q(`
+        SELECT p.*, u.name as user_name, u.email as user_email
+        FROM payments p LEFT JOIN users u ON p.user_id = u.id
+        ORDER BY p.created_at DESC LIMIT 500
+      `);
+      res.json({ payments });
+    } catch (err) { res.status(500).json({ error: "Failed to fetch payments" }); }
+  });
+
+  app.get("/api/admin/subscriptions", requireAdmin, async (req, res) => {
+    try {
+      const { query: q } = await import("./db/index");
+      const subs = await q(`
+        SELECT s.*, u.name as user_name, u.email as user_email
+        FROM subscriptions s LEFT JOIN users u ON s.user_id = u.id
+        ORDER BY s.updated_at DESC
+      `);
+      res.json({ subscriptions: subs });
+    } catch (err) { res.status(500).json({ error: "Failed to fetch subscriptions" }); }
+  });
+
+  app.post("/api/admin/coupons", requireAdmin, async (req, res) => {
+    try {
+      const { query: q } = await import("./db/index");
+      const { code, discountPercent, maxUses, validUntil } = req.body;
+      if (!code || !discountPercent) return res.status(400).json({ error: "code and discountPercent required" });
+      await q(
+        `INSERT INTO coupons (code, discount_percent, max_uses, valid_until) VALUES ($1, $2, $3, $4)`,
+        [code.toUpperCase().trim(), discountPercent, maxUses || 0, validUntil || null]
+      );
+      res.json({ success: true });
+    } catch (err: any) {
+      if (err.code === "23505") return res.status(400).json({ error: "Coupon code already exists" });
+      res.status(500).json({ error: "Failed to create coupon" });
+    }
+  });
+
+  app.get("/api/admin/coupons", requireAdmin, async (req, res) => {
+    try {
+      const { query: q } = await import("./db/index");
+      const coupons = await q("SELECT * FROM coupons ORDER BY created_at DESC");
+      res.json({ coupons });
+    } catch (err) { res.status(500).json({ error: "Failed to fetch coupons" }); }
+  });
+
+  app.delete("/api/admin/coupons/:id", requireAdmin, async (req, res) => {
+    try {
+      const { query: q } = await import("./db/index");
+      await q("UPDATE coupons SET is_active = false WHERE id = $1", [req.params.id]);
+      res.json({ success: true });
+    } catch (err) { res.status(500).json({ error: "Failed to deactivate coupon" }); }
+  });
+
+  app.post("/api/admin/users/:id/revoke-trial", requireAdmin, async (req, res) => {
+    try {
+      const { query: q } = await import("./db/index");
+      await q(
+        `UPDATE subscriptions SET status = 'expired', trial_end = NOW(), updated_at = NOW() WHERE user_id = $1`,
+        [req.params.id]
+      );
+      res.json({ success: true, message: "Trial revoked" });
+    } catch (err) { res.status(500).json({ error: "Failed to revoke trial" }); }
+  });
+
+  app.post("/api/admin/users/:id/extend-trial", requireAdmin, async (req, res) => {
+    try {
+      const { query: q } = await import("./db/index");
+      const { days } = req.body;
+      await q(
+        `UPDATE subscriptions SET status = 'trialing', trial_end = NOW() + ($1 || ' days')::interval, updated_at = NOW() WHERE user_id = $2`,
+        [days || 7, req.params.id]
+      );
+      res.json({ success: true, message: `Trial extended by ${days || 7} days` });
+    } catch (err) { res.status(500).json({ error: "Failed to extend trial" }); }
+  });
+
+  app.get("/api/admin/settings", requireAdmin, async (req, res) => {
+    try {
+      const { query: q } = await import("./db/index");
+      const rows = await q("SELECT key, value FROM app_settings");
+      const settings: Record<string, string> = {};
+      rows.forEach((r: any) => { settings[r.key] = r.value; });
+      // Defaults
+      if (!settings.admin_notification_email) settings.admin_notification_email = process.env.ADMIN_NOTIFICATION_EMAIL || "ankmuz007@gmail.com";
+      res.json({ settings });
+    } catch (err) { res.status(500).json({ error: "Failed to fetch settings" }); }
+  });
+
+  app.put("/api/admin/settings", requireAdmin, async (req, res) => {
+    try {
+      const { query: q } = await import("./db/index");
+      const { key, value } = req.body;
+      if (!key || !value) return res.status(400).json({ error: "key and value required" });
+      await q(
+        `INSERT INTO app_settings (key, value, updated_at) VALUES ($1, $2, NOW())
+         ON CONFLICT (key) DO UPDATE SET value = $2, updated_at = NOW()`,
+        [key, value]
+      );
+      res.json({ success: true });
+    } catch (err) { res.status(500).json({ error: "Failed to update settings" }); }
+  });
 
   // ── Source Group Management ────────────────────────────────────────────────
   app.get("/api/groups", handleGetGroups);

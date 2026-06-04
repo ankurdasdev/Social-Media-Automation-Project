@@ -22,8 +22,15 @@ import {
   ShieldCheck,
   Fingerprint,
   AlertTriangle,
-  Trash2
+  Trash2,
+  Crown,
+  CreditCard,
+  Clock,
+  ExternalLink,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { format } from "date-fns";
+import { getOrCreateUserId } from "@/lib/utils";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -45,7 +52,9 @@ import {
 
 export default function Profile() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const user = getCurrentUser();
+  const userId = getOrCreateUserId();
   
   const [name, setName] = useState(user?.name || "");
   const [email, setEmail] = useState(user?.email || "");
@@ -187,6 +196,30 @@ export default function Profile() {
       ...(password ? { password } : {})
     });
   };
+
+  // Fetch subscription status
+  const { data: subStatus } = useQuery<{
+    planType: string; status: string; trialEnd: string | null;
+    currentPeriodEnd: string | null; daysRemaining: number;
+    isActive: boolean; isTrial: boolean; isExpired: boolean;
+  }>({
+    queryKey: ["subscription-status", userId],
+    queryFn: async () => {
+      const res = await fetch(`/api/payments/subscription?userId=${userId}`);
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+  });
+
+  // Fetch payment history
+  const { data: historyData } = useQuery<{ payments: any[] }>({
+    queryKey: ["payment-history", userId],
+    queryFn: async () => {
+      const res = await fetch(`/api/payments/history?userId=${userId}`);
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+  });
 
   return (
     <AppLayout>
@@ -420,6 +453,97 @@ export default function Profile() {
           </div>
         </div>
       </div>
+
+      {/* ── Subscription & Billing Card ────────────────────────────────────── */}
+      <Card className="glass-card border-white/10">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-xl font-black tracking-tight flex items-center gap-2">
+              <Crown className="w-5 h-5 text-pink-500" /> Subscription & Billing
+            </CardTitle>
+            <CardDescription>Your current plan and payment history</CardDescription>
+          </div>
+          <Button
+            onClick={() => navigate("/subscription")}
+            className="h-10 px-5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 text-white font-black text-[10px] uppercase tracking-widest shadow-lg hover:opacity-90 gap-2"
+          >
+            <CreditCard className="w-4 h-4" /> Manage Plan
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Status Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="p-4 rounded-2xl bg-muted/30 border border-white/5 text-center">
+              <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">Plan</p>
+              <p className="text-lg font-black text-foreground capitalize">{subStatus?.planType || "Trial"}</p>
+            </div>
+            <div className={`p-4 rounded-2xl border text-center ${
+              subStatus?.isExpired ? "bg-rose-500/10 border-rose-500/20" :
+              subStatus?.isTrial ? "bg-blue-500/10 border-blue-500/20" : "bg-emerald-500/10 border-emerald-500/20"
+            }`}>
+              <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">Status</p>
+              <Badge className={`border-none font-black uppercase text-xs ${
+                subStatus?.isExpired ? "bg-rose-500/20 text-rose-500" :
+                subStatus?.isTrial ? "bg-blue-500/20 text-blue-500" : "bg-emerald-500/20 text-emerald-500"
+              }`}>
+                {subStatus?.isExpired ? "Expired" : subStatus?.isTrial ? "Trial" : "Active"}
+              </Badge>
+            </div>
+            <div className="p-4 rounded-2xl bg-muted/30 border border-white/5 text-center">
+              <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">Days Left</p>
+              <p className={`text-2xl font-black ${(subStatus?.daysRemaining || 0) <= 2 ? "text-rose-500" : "text-foreground"}`}>
+                {subStatus?.daysRemaining ?? "—"}
+              </p>
+            </div>
+            <div className="p-4 rounded-2xl bg-muted/30 border border-white/5 text-center">
+              <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">Expires</p>
+              <p className="text-xs font-bold text-foreground">
+                {subStatus?.isTrial && subStatus.trialEnd
+                  ? format(new Date(subStatus.trialEnd), "MMM d, yyyy")
+                  : subStatus?.currentPeriodEnd
+                  ? format(new Date(subStatus.currentPeriodEnd), "MMM d, yyyy")
+                  : "—"}
+              </p>
+            </div>
+          </div>
+
+          {/* Payment History */}
+          {historyData?.payments && historyData.payments.length > 0 && (
+            <div className="space-y-3">
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <Clock className="w-3 h-3" /> Recent Payments
+              </h4>
+              <div className="rounded-2xl border border-white/5 overflow-hidden">
+                <table className="w-full text-xs">
+                  <thead className="bg-muted/40 text-[9px] font-black uppercase tracking-widest text-muted-foreground">
+                    <tr>
+                      <th className="px-4 py-2 text-left">Date</th>
+                      <th className="px-4 py-2 text-center">Invoice</th>
+                      <th className="px-4 py-2 text-center">Method</th>
+                      <th className="px-4 py-2 text-right">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {historyData.payments.slice(0, 5).map((p: any) => (
+                      <tr key={p.id} className="hover:bg-muted/20">
+                        <td className="px-4 py-2 text-muted-foreground font-bold">{format(new Date(p.created_at), "MMM d, yyyy")}</td>
+                        <td className="px-4 py-2 text-center font-mono">{p.invoice_number}</td>
+                        <td className="px-4 py-2 text-center"><Badge className="bg-muted/50 border-none text-[9px] uppercase font-bold">{p.method || "—"}</Badge></td>
+                        <td className="px-4 py-2 text-right font-black text-foreground">₹{((p.amount || 0) / 100).toFixed(0)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {historyData.payments.length > 5 && (
+                <button onClick={() => navigate("/subscription")} className="text-[10px] font-black uppercase text-pink-500 hover:text-pink-400 flex items-center gap-1 mt-1">
+                  View all {historyData.payments.length} payments <ExternalLink className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <AlertDialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
         <AlertDialogContent className="glass-card border-rose-500/20 bg-background/95 rounded-[2.5rem] shadow-2xl p-8 max-w-md animate-in zoom-in-95 duration-300 z-[9999]">
