@@ -21,6 +21,7 @@ import {
   Zap,
   Instagram,
   Sparkles,
+  Crown,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getOrCreateUserId, clearAuthToken, getCurrentUser, getAuthToken } from "@/lib/utils";
@@ -36,6 +37,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useTutorial } from "./TutorialProvider";
 import { LayoutTemplate } from "lucide-react";
+import SubscriptionBanner from "./SubscriptionBanner";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -66,6 +68,11 @@ const navItems = [
     label: "Analytics",
     href: "/analytics",
     icon: BarChart3,
+  },
+  {
+    label: "Subscription",
+    href: "/subscription",
+    icon: Crown,
   },
 ];
 
@@ -384,6 +391,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
             </nav>
           </div>
         )}
+
+        {/* Subscription Banner */}
+        <SubscriptionBanner />
 
         {/* Dynamic Content Area */}
         <main className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide">

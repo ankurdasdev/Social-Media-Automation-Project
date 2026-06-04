@@ -23,6 +23,7 @@ import Analytics from "./pages/Analytics";
 import IntegrationsCenter from "./pages/IntegrationsCenter";
 import Profile from "./pages/Profile";
 import AdminDashboard from "./pages/AdminDashboard";
+import Subscription from "./pages/Subscription";
 
 import NotFound from "./pages/NotFound";
 import { isTokenValid } from "./lib/utils";
@@ -92,6 +93,7 @@ const App = () => (
             <Route path="/analytics" element={<ProtectedRoute element={<Analytics />} />} />
             <Route path="/integrations" element={<ProtectedRoute element={<IntegrationsCenter />} />} />
             <Route path="/profile" element={<ProtectedRoute element={<Profile />} />} />
+            <Route path="/subscription" element={<ProtectedRoute element={<Subscription />} />} />
             <Route path="/admin" element={<AdminRoute element={<AdminDashboard />} />} />
 
             {/* Default redirect to dashboard (ProtectedRoute handles auth check) */}

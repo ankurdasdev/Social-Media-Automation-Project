@@ -145,6 +145,7 @@ async function runMigrations(): Promise<void> {
     ALTER TABLE users ADD COLUMN IF NOT EXISTS ingestion_enabled BOOLEAN DEFAULT TRUE;
     ALTER TABLE templates ADD COLUMN IF NOT EXISTS drive_attachments JSONB DEFAULT '[]'::jsonb;
     ALTER TABLE templates ADD COLUMN IF NOT EXISTS email_template_type TEXT DEFAULT 'body';
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS trial_started_at TIMESTAMPTZ;
   `).catch(() => {}); // Ignore if tables don't exist yet — they will be created below
 
   const sql = `
@@ -307,6 +308,61 @@ async function runMigrations(): Promise<void> {
       status TEXT NOT NULL,
       details JSONB,
       created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
+    -- Subscriptions (one per user)
+    CREATE TABLE IF NOT EXISTS subscriptions (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID REFERENCES users(id) ON DELETE CASCADE UNIQUE,
+      plan_type TEXT NOT NULL DEFAULT 'trial',
+      status TEXT NOT NULL DEFAULT 'trialing',
+      razorpay_subscription_id TEXT,
+      razorpay_plan_id TEXT,
+      trial_start TIMESTAMPTZ DEFAULT NOW(),
+      trial_end TIMESTAMPTZ DEFAULT NOW() + INTERVAL '7 days',
+      current_period_start TIMESTAMPTZ,
+      current_period_end TIMESTAMPTZ,
+      cancelled_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
+    -- Payments (history of all transactions)
+    CREATE TABLE IF NOT EXISTS payments (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+      subscription_id UUID REFERENCES subscriptions(id),
+      razorpay_payment_id TEXT UNIQUE,
+      razorpay_order_id TEXT,
+      razorpay_signature TEXT,
+      amount INTEGER NOT NULL,
+      currency TEXT DEFAULT 'INR',
+      status TEXT DEFAULT 'pending',
+      method TEXT,
+      invoice_number TEXT,
+      coupon_code TEXT,
+      discount_amount INTEGER DEFAULT 0,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
+    -- Coupon Codes
+    CREATE TABLE IF NOT EXISTS coupons (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      code TEXT UNIQUE NOT NULL,
+      discount_percent INTEGER NOT NULL,
+      max_uses INTEGER DEFAULT 0,
+      used_count INTEGER DEFAULT 0,
+      valid_from TIMESTAMPTZ DEFAULT NOW(),
+      valid_until TIMESTAMPTZ,
+      is_active BOOLEAN DEFAULT TRUE,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
+    -- App Settings (key-value store for admin email etc.)
+    CREATE TABLE IF NOT EXISTS app_settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated_at TIMESTAMPTZ DEFAULT NOW()
     );
 
     -- Indexes
