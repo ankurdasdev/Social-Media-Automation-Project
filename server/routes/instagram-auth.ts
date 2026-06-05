@@ -290,14 +290,27 @@ export const handleInstagramSyncThreads: RequestHandler = async (req, res) => {
     for (const t of threads) {
       if (!t.id) continue;
       const name = t.thread_title || t.users?.[0]?.username || t.id;
-      await query(
-        `INSERT INTO source_groups (user_id, name, platform, type, url, enabled)
-         VALUES ($1, $2, 'instagram', 'group', $3, true)
-         ON CONFLICT (user_id, name, platform) DO UPDATE SET
-           url = EXCLUDED.url,
-           updated_at = NOW()`,
-        [userId, name, `thread:${t.id}`]
+      const url = `thread:${t.id}`;
+      
+      const existing = await query<{id: string, status: string}>(
+        "SELECT id, status FROM source_groups WHERE user_id = $1 AND (url = $2 OR name = $3) AND platform = 'instagram' ORDER BY created_at DESC LIMIT 1",
+        [userId, url, name]
       );
+
+      if (existing.length > 0) {
+        if (existing[0].status === 'ignored') continue;
+        
+        await query(
+          "UPDATE source_groups SET url = $1, updated_at = NOW() WHERE id = $2",
+          [url, existing[0].id]
+        );
+      } else {
+        await query(
+          `INSERT INTO source_groups (user_id, name, platform, type, url, enabled)
+           VALUES ($1, $2, 'instagram', 'group', $3, true)`,
+          [userId, name, url]
+        );
+      }
       addedCount++;
     }
 

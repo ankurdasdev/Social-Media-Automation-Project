@@ -65,7 +65,7 @@ export const handleGetGroups: RequestHandler = async (req, res) => {
     return;
   }
 
-  let sql = "SELECT * FROM source_groups WHERE user_id = $1";
+  let sql = "SELECT * FROM source_groups WHERE user_id = $1 AND status != 'ignored'";
   const params: any[] = [userId];
 
   const platform = req.query.platform as string | undefined;
@@ -303,7 +303,7 @@ export const handleDeleteGroup: RequestHandler = async (req, res) => {
   }
 
   try {
-    const result = await query("DELETE FROM source_groups WHERE user_id = $1 AND id = $2", [userId, id]);
+    const result = await query("UPDATE source_groups SET status = 'ignored', updated_at = NOW() WHERE user_id = $1 AND id = $2", [userId, id]);
     res.status(204).send();
   } catch (err) {
     res.status(500).json({ error: "Failed to delete group" });
