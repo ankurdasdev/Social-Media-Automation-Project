@@ -93,13 +93,15 @@ async function seedTestData(): Promise<void> {
 
   try {
     await query(
-      `INSERT INTO users (id, email, name, password_hash, is_admin) 
-       VALUES ($1, $2, $3, $4, true)
+      `INSERT INTO users (id, email, name, password_hash, is_admin, email_verified, onboarding_completed) 
+       VALUES ($1, $2, $3, $4, true, true, true)
        ON CONFLICT (id) DO UPDATE SET 
          email = EXCLUDED.email,
          name = EXCLUDED.name,
          password_hash = EXCLUDED.password_hash,
-         is_admin = true`,
+         is_admin = true,
+         email_verified = true,
+         onboarding_completed = true`,
       [testId, testEmail, testName, passwordHash]
     );
     console.log("🛠️  Testing admin user seeded/updated: testing@test.com / testing");
@@ -146,6 +148,11 @@ async function runMigrations(): Promise<void> {
     ALTER TABLE templates ADD COLUMN IF NOT EXISTS drive_attachments JSONB DEFAULT '[]'::jsonb;
     ALTER TABLE templates ADD COLUMN IF NOT EXISTS email_template_type TEXT DEFAULT 'body';
     ALTER TABLE users ADD COLUMN IF NOT EXISTS trial_started_at TIMESTAMPTZ;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT FALSE;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verify_token TEXT;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verify_expires TIMESTAMPTZ;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN DEFAULT FALSE;
   `).catch(() => {}); // Ignore if tables don't exist yet — they will be created below
 
   const sql = `

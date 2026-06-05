@@ -53,14 +53,16 @@ export async function logUserAction(userId: string, action: string, status: "suc
 // ── GET /api/admin/users ───────────────────────────────────────────────────
 export const handleGetUsers: RequestHandler = async (req, res) => {
   try {
-    // Get all users with some basic stats (e.g., total contacts)
     const users = await query(`
       SELECT 
         u.id, 
         u.email, 
-        u.name, 
+        u.name,
+        u.phone,
         u.is_active, 
         u.is_admin, 
+        u.email_verified,
+        u.onboarding_completed,
         u.created_at,
         (SELECT COUNT(*) FROM contacts WHERE user_id = u.id) as total_contacts
       FROM users u
@@ -278,3 +280,68 @@ export const handleGetLogs: RequestHandler = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch logs" });
   }
 };
+
+// ── POST /api/admin/users/:id/resend-verification ─────────────────────────
+export const handleAdminResendVerification: RequestHandler = async (req, res) => {
+  const targetId = req.params.id;
+  try {
+    const user = await queryOne<{ id: string; email: string; name: string; email_verified: boolean }>(
+      "SELECT id, email, name, email_verified FROM users WHERE id = $1",
+      [targetId]
+    );
+    if (!user) return res.status(404).json({ error: "User not found" });
+    if (user.email_verified) return res.status(400).json({ error: "User is already verified" });
+
+    const VERIFY_SECRET = (process.env.JWT_SECRET || "casthub_dev_secret_change_in_production") + "_verify";
+    const verifyToken = require("jsonwebtoken").sign({ email: user.email }, VERIFY_SECRET, { expiresIn: "24h" });
+    const verifyExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await query(
+      "UPDATE users SET email_verify_token = $1, email_verify_expires = $2, updated_at = NOW() WHERE id = $3",
+      [verifyToken, verifyExpires, user.id]
+    );
+
+    // Determine base URL
+    let baseUrl = process.env.APP_URL || `http://localhost:8080`;
+    if (baseUrl.endsWith("/")) baseUrl = baseUrl.slice(0, -1);
+    const verifyLink = `${baseUrl}/verify-email?token=${verifyToken}`;
+
+    let transporter;
+    if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+      transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com", port: 587, secure: false,
+        auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS.replace(/\s+/g, "") },
+        connectionTimeout: 10000,
+      });
+    } else {
+      const testAccount = await nodemailer.createTestAccount();
+      transporter = nodemailer.createTransport({
+        host: "smtp.ethereal.email", port: 587, secure: false,
+        auth: { user: testAccount.user, pass: testAccount.pass },
+      });
+    }
+
+    const info = await transporter.sendMail({
+      from: `"CastHub" <${process.env.SMTP_USER || "noreply@casthub.com"}>`,
+      to: user.email,
+      subject: "Verify your CastHub account ⚡",
+      text: `Hi ${user.name},\n\nYour account verification link:\n\n${verifyLink}\n\nThis link expires in 24 hours.`,
+      html: `<div style="background:#0a0a0f;padding:40px;font-family:Arial;color:#fff;border-radius:16px;">
+        <h2 style="color:#7c3aed;">⚡ CastHub — Email Verification</h2>
+        <p>Hi ${user.name}, please verify your account:</p>
+        <a href="${verifyLink}" style="display:inline-block;padding:14px 28px;background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;border-radius:10px;font-weight:bold;text-decoration:none;margin:16px 0;">Verify Email</a>
+        <p style="color:rgba(255,255,255,0.4);font-size:12px;">Link expires in 24 hours.</p>
+      </div>`,
+    });
+
+    if (!process.env.SMTP_USER) {
+      console.log(`[admin] 📧 Admin resend verification preview: ${nodemailer.getTestMessageUrl(info)}`);
+    }
+
+    res.json({ message: `Verification email sent to ${user.email}` });
+  } catch (err: any) {
+    console.error("[admin] Resend verification error:", err);
+    res.status(500).json({ error: "Failed to resend verification email" });
+  }
+};
+

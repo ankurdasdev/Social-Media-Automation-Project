@@ -485,6 +485,7 @@ export default function AdminDashboard() {
                         <tr>
                           <th className="px-6 py-4">User</th>
                           <th className="px-6 py-4 text-center">Contacts</th>
+                          <th className="px-6 py-4 text-center">Email Status</th>
                           <th className="px-6 py-4 text-center">Status</th>
                           <th className="px-6 py-4 text-center">Admin Access</th>
                           <th className="px-6 py-4 text-right">Actions</th>
@@ -496,8 +497,20 @@ export default function AdminDashboard() {
                             <td className="px-6 py-4">
                               <div className="font-bold text-foreground">{u.name || "N/A"}</div>
                               <div className="text-muted-foreground">{u.email}</div>
+                              {(u as any).phone && <div className="text-xs text-muted-foreground/50">{(u as any).phone}</div>}
                             </td>
                             <td className="px-6 py-4 text-center font-bold">{u.total_contacts}</td>
+                            <td className="px-6 py-4 text-center">
+                              {(u as any).email_verified ? (
+                                <Badge className="bg-emerald-500/20 text-emerald-500">
+                                  <CheckCircle2 className="w-3 h-3 mr-1" /> Verified
+                                </Badge>
+                              ) : (
+                                <Badge className="bg-amber-500/20 text-amber-500">
+                                  <Mail className="w-3 h-3 mr-1" /> Unverified
+                                </Badge>
+                              )}
+                            </td>
                             <td className="px-6 py-4 text-center">
                               <Badge className={u.is_active ? "bg-emerald-500/20 text-emerald-500" : "bg-rose-500/20 text-rose-500"}>
                                 {u.is_active ? "Active" : "Inactive"}
@@ -526,6 +539,23 @@ export default function AdminDashboard() {
                               >
                                 <KeySquare className="w-4 h-4 mr-2" /> Reset Pwd
                               </Button>
+                              {!(u as any).email_verified && (
+                                <Button
+                                  variant="outline" size="sm"
+                                  className="rounded-full h-8 px-4 font-bold bg-amber-500/10 border-amber-500/20 text-amber-500 hover:bg-amber-500/20"
+                                  onClick={async () => {
+                                    const res = await fetch(`/api/admin/users/${u.id}/resend-verification`, {
+                                      method: "POST",
+                                      headers: { Authorization: `Bearer ${getAuthToken()}` },
+                                    });
+                                    const data = await res.json();
+                                    if (res.ok) toast.success(data.message);
+                                    else toast.error(data.error);
+                                  }}
+                                >
+                                  <Mail className="w-4 h-4 mr-2" /> Resend Email
+                                </Button>
+                              )}
                             </td>
                           </tr>
                         )) : (

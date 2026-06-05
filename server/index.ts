@@ -72,7 +72,10 @@ import {
   handleResetPasswordConfirm,
   handleGetAIKeywords,
   handleUpdateAIKeywords,
-  handleDeleteAccount
+  handleDeleteAccount,
+  handleVerifyEmail,
+  handleResendVerification,
+  handleCompleteOnboarding,
 } from "./routes/auth";
 import { runIngestionJob } from "./jobs/ingestion-job";
 import { initIngestionSchedules, ingestionRouter } from "./routes/ingestion-schedule";
@@ -82,6 +85,7 @@ import {
   handleGetUsers,
   handleUpdateUser,
   handleAdminResetPassword,
+  handleAdminResendVerification,
   handleGetAnalytics,
   handleGetLogs
 } from "./routes/admin";
@@ -137,11 +141,15 @@ export function createServer() {
   app.get("/api/auth/keywords", handleGetAIKeywords);
   app.put("/api/auth/keywords", handleUpdateAIKeywords);
   app.delete("/api/auth/delete-account", handleDeleteAccount);
+  app.get("/api/auth/verify-email", handleVerifyEmail);
+  app.post("/api/auth/resend-verification", handleResendVerification);
+  app.post("/api/auth/complete-onboarding", handleCompleteOnboarding);
 
   // ── Admin Dashboard ────────────────────────────────────────────────────────
   app.get("/api/admin/users", requireAdmin, handleGetUsers);
   app.patch("/api/admin/users/:id", requireAdmin, handleUpdateUser);
   app.post("/api/admin/users/:id/reset-password", requireAdmin, handleAdminResetPassword);
+  app.post("/api/admin/users/:id/resend-verification", requireAdmin, handleAdminResendVerification);
   app.get("/api/admin/analytics", requireAdmin, handleGetAnalytics);
   app.get("/api/admin/logs", requireAdmin, handleGetLogs);
 

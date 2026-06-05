@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { setAuthToken } from "@/lib/utils";
-import { AlertCircle, Loader2, KeyRound } from "lucide-react";
+import { AlertCircle, Loader2, KeyRound, Eye, EyeOff, Mail, RefreshCw } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +21,11 @@ export default function Login() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [needsVerification, setNeedsVerification] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState("");
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendSent, setResendSent] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -39,6 +44,7 @@ export default function Login() {
     e.preventDefault();
     setIsLoading(true);
     setError("");
+    setNeedsVerification(false);
 
     try {
       const res = await fetch("/api/auth/login", {
@@ -50,17 +56,34 @@ export default function Login() {
       const data = await res.json();
 
       if (!res.ok) {
+        if (data.needsVerification) {
+          setNeedsVerification(true);
+          setVerificationEmail(data.email || formData.email);
+        }
         setError(data.error || "Login failed. Please try again.");
         return;
       }
 
-      // Store JWT and redirect
       setAuthToken(data.token);
       navigate("/dashboard", { replace: true });
     } catch (err) {
       setError("Network error — please check your connection and try again.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    setResendLoading(true);
+    try {
+      await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: verificationEmail }),
+      });
+      setResendSent(true);
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -87,20 +110,41 @@ export default function Login() {
   return (
     <AuthLayout>
       <form onSubmit={handleSubmit} className="space-y-6">
-        {error && (
-          <div className="flex items-center gap-2 rounded-lg bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive">
-            <AlertCircle className="h-4 w-4 shrink-0" />
-            <span>{error}</span>
+      {error && (
+          <div className="flex flex-col gap-2 rounded-lg bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+              <span>{error}</span>
+            </div>
+            {needsVerification && (
+              <div className="pl-6 space-y-1">
+                {resendSent ? (
+                  <p className="text-emerald-400 text-xs font-medium flex items-center gap-1">
+                    <Mail className="w-3 h-3" /> Verification email sent! Check your inbox.
+                  </p>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleResendVerification}
+                    disabled={resendLoading}
+                    className="text-xs text-primary font-bold hover:underline flex items-center gap-1"
+                  >
+                    {resendLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                    Resend verification email
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         )}
 
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">Email or Phone Number</Label>
           <Input
             id="email"
             name="email"
-            type="email"
-            placeholder="you@example.com"
+            type="text"
+            placeholder="you@example.com or 9876543210"
             value={formData.email}
             onChange={handleChange}
             required
@@ -159,13 +203,20 @@ export default function Login() {
           <Input
             id="password"
             name="password"
-            type="password"
+            type={showPassword ? "text" : "password"}
             placeholder="••••••••"
             value={formData.password}
             onChange={handleChange}
             required
-            className="h-11"
+            className="h-11 pr-11"
           />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
         </div>
 
         <Button
