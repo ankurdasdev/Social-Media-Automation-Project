@@ -367,7 +367,7 @@ export function DriveFilePicker({
       )}
 
       {/* Search bar */}
-      <div className="flex items-center border-b dark:border-white/10 border-border/50 px-4 h-14 bg-muted/40 mt-3 shrink-0">
+      <div className="flex items-center border-b border-border/50 px-4 h-14 bg-muted/20 mt-3 shrink-0">
         <Search className="h-4 w-4 shrink-0 text-primary mr-3" />
         <Input
           value={searchTerm}
@@ -435,7 +435,7 @@ export function DriveFilePicker({
                     <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent pointer-events-none" />
                   )}
 
-                  {/* Thumbnail or icon */}
+                  {/* Thumbnail or icon — always shrink-0 */}
                   <div className="shrink-0 w-9 h-9 relative rounded-xl overflow-hidden bg-muted/40 flex items-center justify-center border dark:border-white/5 border-border/50">
                     {isImg && file.thumbnailLink ? (
                       <img
@@ -451,24 +451,25 @@ export function DriveFilePicker({
                     )}
                   </div>
 
-                  {/* File info */}
-                  <div className="min-w-0 flex-1">
+                  {/* File info — min-w-0 ensures truncate works, flex-1 takes remaining space */}
+                  <div className="min-w-0 flex-1 overflow-hidden">
                     <p className={cn(
-                      "text-[13px] font-black truncate leading-tight",
+                      "text-[13px] font-black leading-tight",
+                      "overflow-hidden text-ellipsis whitespace-nowrap",
                       isSelected ? "text-primary-foreground" : "text-foreground"
                     )}>
                       {file.name}
                     </p>
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className={cn(
-                        "text-[9px] font-black uppercase tracking-[0.2em] px-1.5 py-0.5 rounded-md",
+                        "text-[9px] font-black uppercase tracking-[0.2em] px-1.5 py-0.5 rounded-md shrink-0",
                         isSelected ? "bg-white/20 text-white" : "bg-muted text-muted-foreground"
                       )}>
                         {fileType}
                       </span>
                       {fileSize && (
                         <span className={cn(
-                          "text-[9px] font-bold",
+                          "text-[9px] font-bold shrink-0",
                           isSelected ? "text-primary-foreground/60" : "text-muted-foreground/60"
                         )}>
                           {fileSize}
@@ -477,38 +478,38 @@ export function DriveFilePicker({
                     </div>
                   </div>
 
-                  {/* Actions / Limitations warning badge */}
-                  <div className="shrink-0 flex items-center gap-1.5 relative z-10">
+                  {/* Actions — always pinned to the right, never shrinks */}
+                  <div className="shrink-0 flex items-center gap-1.5 relative z-10 ml-2">
                     {!validation.valid && (
                       <Badge
                         variant="destructive"
                         className="text-[8px] font-black tracking-widest uppercase px-2 py-0.5 bg-red-500/10 text-red-400 border border-red-500/20 shrink-0"
                       >
-                        Ineligible
+                        !
                       </Badge>
                     )}
 
-                    {/* Preview button — works for all files, not just images */}
+                    {/* Preview button — always visible */}
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         setPreviewFile(file);
                       }}
-                      title="Preview file"
+                      title={validation.valid ? "Preview file" : validation.reason}
                       className={cn(
-                        "p-1.5 rounded-lg transition-all",
+                        "shrink-0 p-1.5 rounded-lg transition-colors",
                         isSelected
-                          ? "text-white/70 hover:bg-white/20"
-                          : "text-muted-foreground/60 hover:bg-muted hover:text-primary"
+                          ? "text-white/80 hover:bg-white/20"
+                          : "text-muted-foreground/50 hover:bg-muted hover:text-primary"
                       )}
                     >
                       <Eye className="w-3.5 h-3.5" />
                     </button>
 
                     {isSelected && (
-                      <div className="w-6 h-6 rounded-lg bg-white/20 flex items-center justify-center shadow-inner">
-                        <CheckCircle2 className="text-white w-3.5 h-3.5" />
+                      <div className="shrink-0 w-5 h-5 rounded-md bg-white/20 flex items-center justify-center">
+                        <CheckCircle2 className="text-white w-3 h-3" />
                       </div>
                     )}
                   </div>
@@ -605,9 +606,9 @@ export function DriveFilePicker({
               </Button>
             </DialogTrigger>
             <DialogContent
-              className="w-[min(540px,95vw)] max-h-[85vh] p-0 glass-card dark:bg-[#0e0b1f]/80 bg-background/80 backdrop-blur-2xl rounded-[2rem] border dark:border-white/10 border-border/50 overflow-hidden shadow-2xl animate-in slide-in-from-top-4 duration-300 flex flex-col"
+              className="w-[min(540px,95vw)] max-h-[85vh] p-0 rounded-[2rem] border border-border/50 bg-background overflow-hidden shadow-2xl animate-in slide-in-from-top-4 duration-300 flex flex-col"
             >
-              <DialogHeader className="px-8 pt-8 pb-4 flex-shrink-0 border-b dark:border-white/5 border-border/50 bg-muted/20 relative">
+              <DialogHeader className="px-8 pt-8 pb-4 flex-shrink-0 border-b border-border/50 bg-muted/30 relative">
                 <DialogTitle className="text-2xl font-black tracking-tight flex items-center gap-3">
                   <HardDrive className="h-6 w-6 text-primary shrink-0" />
                   SELECT DRIVE FILES
@@ -619,7 +620,7 @@ export function DriveFilePicker({
               <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
                 {pickerContent}
               </div>
-              <DialogFooter className="px-8 py-5 border-t dark:border-white/5 border-border/50 flex-shrink-0 bg-muted/10">
+              <DialogFooter className="px-8 py-5 border-t border-border/50 flex-shrink-0 bg-muted/10">
                 <Button
                   onClick={() => setOpen(false)}
                   className="h-12 px-8 rounded-xl bg-foreground text-background hover:bg-foreground/90 font-black text-[10px] uppercase tracking-widest shadow-xl transition-all active:scale-95"
