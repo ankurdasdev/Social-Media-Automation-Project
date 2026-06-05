@@ -88,7 +88,7 @@ export default function VerifyEmail() {
               </div>
             </div>
             <div className="space-y-2">
-              <h1 className="text-2xl font-black tracking-tighter text-white">Verifying your email...</h1>
+              <h1 className="text-2xl font-black tracking-tighter text-foreground">Verifying your email...</h1>
               <p className="text-muted-foreground font-medium">Just a moment, we're confirming your account.</p>
             </div>
           </div>
@@ -108,7 +108,7 @@ export default function VerifyEmail() {
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Email Verified</span>
               </div>
-              <h1 className="text-3xl font-black tracking-tighter text-white">You're all set! 🎉</h1>
+              <h1 className="text-3xl font-black tracking-tighter text-foreground">You're all set! 🎉</h1>
               <p className="text-muted-foreground font-medium">
                 Your email has been verified. Taking you to setup your workspace...
               </p>
@@ -130,7 +130,7 @@ export default function VerifyEmail() {
               </div>
             </div>
             <div className="space-y-2">
-              <h1 className="text-2xl font-black tracking-tighter text-white">Link Expired</h1>
+              <h1 className="text-2xl font-black tracking-tighter text-foreground">Link Expired</h1>
               <p className="text-muted-foreground font-medium">{errorMsg}</p>
             </div>
 
@@ -151,7 +151,7 @@ export default function VerifyEmail() {
                     placeholder="you@example.com"
                     value={resendEmail}
                     onChange={(e) => setResendEmail(e.target.value)}
-                    className="h-11 flex-1 rounded-xl bg-white/5 border-white/10 text-white placeholder:text-white/20"
+                    className="h-11 flex-1 rounded-xl dark:border-border/50 bg-black/5 border-border text-foreground placeholder:text-foreground/20"
                   />
                   <Button
                     type="submit"
@@ -176,7 +176,7 @@ export default function VerifyEmail() {
               </div>
             </div>
             <div className="space-y-2">
-              <h1 className="text-2xl font-black tracking-tighter text-white">Verification Failed</h1>
+              <h1 className="text-2xl font-black tracking-tighter text-foreground">Verification Failed</h1>
               <p className="text-muted-foreground font-medium">{errorMsg}</p>
             </div>
             <Link to="/login">

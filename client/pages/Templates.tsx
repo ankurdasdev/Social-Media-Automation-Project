@@ -353,7 +353,7 @@ export default function Templates() {
 
       {/* Template Type Selector Dialog — shown for all platforms */}
       <Dialog open={typeSelectOpen} onOpenChange={setTypeSelectOpen}>
-        <DialogContent className="sm:max-w-[480px] glass-card border-white/10 dark:border-white/5 rounded-[2rem] p-10 shadow-2xl">
+        <DialogContent className="sm:max-w-[480px] glass-card border-border dark:border-border/50 rounded-[2rem] p-10 shadow-2xl">
           <DialogHeader className="space-y-3">
             <DialogTitle className="text-2xl font-black tracking-tight text-center">
               {activeTab === "whatsapp" ? "WHATSAPP" : activeTab === "email" ? "EMAIL" : "INSTAGRAM"} TEMPLATE TYPE
@@ -368,7 +368,7 @@ export default function Templates() {
             {activeTab !== "email" && (
               <button
                 onClick={() => handleSelectType("text")}
-                className="h-24 rounded-2xl flex flex-col items-center justify-center p-4 bg-muted/20 hover:bg-muted/40 border border-white/10 hover:border-white/20 text-foreground gap-1.5 transition-all"
+                className="h-24 rounded-2xl flex flex-col items-center justify-center p-4 bg-muted/20 hover:bg-muted/40 border border-border hover:border-foreground/20 text-foreground gap-1.5 transition-all"
               >
                 <FileText className="h-6 w-6 text-primary" />
                 <span className="text-sm font-black uppercase">
@@ -427,7 +427,7 @@ export default function Templates() {
 
       {/* Rename Dialog */}
       <RenameDialog open={renameOpen} onOpenChange={setRenameOpen}>
-        <RenameDialogContent className="sm:max-w-[420px] glass-card border-white/10 dark:border-white/5 rounded-[2rem] p-10 shadow-2xl">
+        <RenameDialogContent className="sm:max-w-[420px] glass-card border-border dark:border-border/50 rounded-[2rem] p-10 shadow-2xl">
           <RenameDialogHeader>
             <RenameDialogTitle className="text-2xl font-black tracking-tight">Modify Label</RenameDialogTitle>
           </RenameDialogHeader>
@@ -450,7 +450,7 @@ export default function Templates() {
 
       {/* Delete Confirmation */}
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <AlertDialogContent className="glass-card border-white/10 dark:border-white/5 rounded-[2rem] p-10 shadow-2xl">
+        <AlertDialogContent className="glass-card border-border dark:border-border/50 rounded-[2rem] p-10 shadow-2xl">
           <AlertDialogHeader className="space-y-4">
             <div className="w-16 h-16 rounded-3xl bg-destructive/10 flex items-center justify-center mb-2 mx-auto">
                <Trash2 className="w-8 h-8 text-destructive" />
@@ -464,7 +464,7 @@ export default function Templates() {
             <AlertDialogCancel className="h-14 rounded-xl font-bold bg-muted/50 border-none">CANCEL</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
-              className="h-14 rounded-xl font-black bg-destructive text-white hover:bg-destructive/90 shadow-xl shadow-destructive/20 px-8"
+              className="h-14 rounded-xl font-black bg-destructive text-foreground hover:bg-destructive/90 shadow-xl shadow-destructive/20 px-8"
             >
               CONFIRM TERMINATION
             </AlertDialogAction>

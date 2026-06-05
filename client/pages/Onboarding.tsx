@@ -24,7 +24,7 @@ function ProgressBar({ current, total }: { current: number; total: number }) {
           key={i}
           className={cn(
             "h-1.5 flex-1 rounded-full transition-all duration-700",
-            i < current ? "bg-primary" : i === current ? "bg-primary/40" : "bg-white/10"
+            i < current ? "bg-primary" : i === current ? "bg-primary/40" : "dark:bg-white/[0.02] bg-black/5"
           )}
         />
       ))}
@@ -40,12 +40,12 @@ function StatusBadge({ status }: { status: "pending" | "connected" | "skipped" }
     </span>
   );
   if (status === "skipped") return (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-white/40 text-[10px] font-black uppercase tracking-widest">
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full dark:bg-white/5 bg-black/5 border border-border text-foreground/40 text-[10px] font-black uppercase tracking-widest">
       <SkipForward className="w-3 h-3" /> Skipped
     </span>
   );
   return (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-white/40 text-[10px] font-black uppercase tracking-widest">
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full dark:bg-white/5 bg-black/5 border border-border text-foreground/40 text-[10px] font-black uppercase tracking-widest">
       <Circle className="w-3 h-3" /> Not Connected
     </span>
   );
@@ -176,7 +176,7 @@ export default function SetupWizard() {
             <ShieldCheck className="w-3.5 h-3.5 text-primary" />
             <span className="text-[10px] font-black text-primary uppercase tracking-widest">Email Verified Successfully</span>
           </div>
-          <h1 className="text-5xl font-black tracking-tighter text-white">Welcome to<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">CastHub</span></h1>
+          <h1 className="text-5xl font-black tracking-tighter text-foreground">Welcome to<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">CastHub</span></h1>
           <p className="text-muted-foreground font-medium max-w-sm mx-auto leading-relaxed">
             Let's set up your workspace in 3 quick steps so you can start automating your casting outreach right away.
           </p>
@@ -191,7 +191,7 @@ export default function SetupWizard() {
         ].map((item, i) => (
           <div key={i} className={cn("flex flex-col items-center gap-2 p-4 rounded-2xl border", item.bg)}>
             <item.icon className={cn("w-6 h-6", item.color)} />
-            <span className="text-[10px] font-black text-white uppercase tracking-wider">{item.label}</span>
+            <span className="text-[10px] font-black text-foreground uppercase tracking-wider">{item.label}</span>
           </div>
         ))}
       </div>
@@ -199,7 +199,7 @@ export default function SetupWizard() {
       <div className="flex flex-col sm:flex-row gap-3 justify-center">
         <Button
           onClick={handleNext}
-          className="h-14 px-10 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black uppercase tracking-widest gap-2 shadow-xl shadow-primary/20 transition-all active:scale-[0.98]"
+          className="h-14 px-10 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-foreground font-black uppercase tracking-widest gap-2 shadow-xl shadow-primary/20 transition-all active:scale-[0.98]"
         >
           Let's Get Started <ArrowRight className="w-5 h-5" />
         </Button>
@@ -217,7 +217,7 @@ export default function SetupWizard() {
         <div className="mx-auto w-16 h-16 bg-blue-500/10 border border-blue-500/20 rounded-2xl flex items-center justify-center">
           <Mail className="w-8 h-8 text-blue-400" />
         </div>
-        <h2 className="text-3xl font-black tracking-tighter text-white">Connect Google</h2>
+        <h2 className="text-3xl font-black tracking-tighter text-foreground">Connect Google</h2>
         <StatusBadge status={statuses.google} />
         <p className="text-muted-foreground font-medium max-w-sm mx-auto text-sm leading-relaxed">
           Connect your Google account to send personalized Gmail outreach campaigns and store attachments on Google Drive.
@@ -232,7 +232,7 @@ export default function SetupWizard() {
       </div>
 
       {/* How to connect */}
-      <div className="p-5 rounded-2xl bg-white/3 border border-white/5 space-y-3">
+      <div className="p-5 rounded-2xl dark:bg-white/3 bg-black/5 border border-border/50 space-y-3">
         <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">How to connect</p>
         <ol className="space-y-2">
           {[
@@ -256,7 +256,7 @@ export default function SetupWizard() {
       </div>
 
       {/* Limits */}
-      <div className="p-4 rounded-xl bg-white/3 border border-white/5">
+      <div className="p-4 rounded-xl dark:bg-white/3 bg-black/5 border border-border/50">
         <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Limitations</p>
         <p className="text-xs text-muted-foreground font-medium">Gmail allows ~500 emails/day for regular accounts. Excessive bounces or spam reports may temporarily restrict sending. Always use personalized templates.</p>
       </div>
@@ -265,7 +265,7 @@ export default function SetupWizard() {
         {statuses.google !== "connected" && (
           <Button
             onClick={() => { window.open("/api/google/auth", "_blank"); setTimeout(checkGoogle, 5000); }}
-            className="w-full h-13 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black gap-2 transition-all"
+            className="w-full h-13 rounded-2xl bg-blue-600 hover:bg-blue-500 text-foreground font-black gap-2 transition-all"
           >
             <ExternalLink className="w-4 h-4" /> Connect Google Account
           </Button>
@@ -274,7 +274,7 @@ export default function SetupWizard() {
           onClick={checkGoogle}
           variant="outline"
           disabled={checkingGoogle}
-          className="w-full h-11 rounded-xl border-white/10 font-bold gap-2"
+          className="w-full h-11 rounded-xl border-border font-bold gap-2"
         >
           {checkingGoogle ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wifi className="w-4 h-4" />}
           {checkingGoogle ? "Checking..." : "Check Connection Status"}
@@ -290,7 +290,7 @@ export default function SetupWizard() {
         <div className="mx-auto w-16 h-16 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center justify-center">
           <MessageCircle className="w-8 h-8 text-emerald-400" />
         </div>
-        <h2 className="text-3xl font-black tracking-tighter text-white">Connect WhatsApp</h2>
+        <h2 className="text-3xl font-black tracking-tighter text-foreground">Connect WhatsApp</h2>
         <StatusBadge status={statuses.whatsapp} />
         <p className="text-muted-foreground font-medium max-w-sm mx-auto text-sm leading-relaxed">
           Link your WhatsApp by scanning a QR code. Use a dedicated business number for best results.
@@ -303,7 +303,7 @@ export default function SetupWizard() {
         <FeaturePill icon={ShieldCheck} label="Session-based auth" color="bg-purple-500/10 border-purple-500/20 text-purple-400" />
       </div>
 
-      <div className="p-5 rounded-2xl bg-white/3 border border-white/5 space-y-3">
+      <div className="p-5 rounded-2xl dark:bg-white/3 bg-black/5 border border-border/50 space-y-3">
         <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">How to scan QR</p>
         <ol className="space-y-2">
           {[
@@ -329,7 +329,7 @@ export default function SetupWizard() {
       <div className="flex flex-col gap-3">
         <Button
           onClick={() => { window.open("/integrations", "_blank"); setTimeout(checkWhatsApp, 10000); }}
-          className="w-full h-13 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black gap-2 transition-all"
+          className="w-full h-13 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-foreground font-black gap-2 transition-all"
         >
           <ExternalLink className="w-4 h-4" /> Open WhatsApp QR Scanner
         </Button>
@@ -337,7 +337,7 @@ export default function SetupWizard() {
           onClick={checkWhatsApp}
           variant="outline"
           disabled={checkingWA}
-          className="w-full h-11 rounded-xl border-white/10 font-bold gap-2"
+          className="w-full h-11 rounded-xl border-border font-bold gap-2"
         >
           {checkingWA ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wifi className="w-4 h-4" />}
           {checkingWA ? "Checking..." : "Check Connection Status"}
@@ -353,7 +353,7 @@ export default function SetupWizard() {
         <div className="mx-auto w-16 h-16 bg-pink-500/10 border border-pink-500/20 rounded-2xl flex items-center justify-center">
           <Instagram className="w-8 h-8 text-pink-400" />
         </div>
-        <h2 className="text-3xl font-black tracking-tighter text-white">Connect Instagram</h2>
+        <h2 className="text-3xl font-black tracking-tighter text-foreground">Connect Instagram</h2>
         <StatusBadge status={statuses.instagram} />
         <p className="text-muted-foreground font-medium max-w-sm mx-auto text-sm leading-relaxed">
           Connect your Instagram account to send DMs and monitor casting-relevant profiles at scale.
@@ -366,7 +366,7 @@ export default function SetupWizard() {
         <FeaturePill icon={ShieldCheck} label="Session auth" color="bg-purple-500/10 border-purple-500/20 text-purple-400" />
       </div>
 
-      <div className="p-5 rounded-2xl bg-white/3 border border-white/5 space-y-3">
+      <div className="p-5 rounded-2xl dark:bg-white/3 bg-black/5 border border-border/50 space-y-3">
         <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">How to connect</p>
         <ol className="space-y-2">
           {[
@@ -391,7 +391,7 @@ export default function SetupWizard() {
       <div className="flex flex-col gap-3">
         <Button
           onClick={() => { window.open("/integrations", "_blank"); setTimeout(checkInstagram, 10000); }}
-          className="w-full h-13 rounded-2xl bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white font-black gap-2 transition-all"
+          className="w-full h-13 rounded-2xl bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-foreground font-black gap-2 transition-all"
         >
           <ExternalLink className="w-4 h-4" /> Connect Instagram
         </Button>
@@ -399,7 +399,7 @@ export default function SetupWizard() {
           onClick={checkInstagram}
           variant="outline"
           disabled={checkingIG}
-          className="w-full h-11 rounded-xl border-white/10 font-bold gap-2"
+          className="w-full h-11 rounded-xl border-border font-bold gap-2"
         >
           {checkingIG ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wifi className="w-4 h-4" />}
           {checkingIG ? "Checking..." : "Check Connection Status"}
@@ -446,7 +446,7 @@ export default function SetupWizard() {
               <Star key={i} className="w-4 h-4 text-amber-400 fill-current" style={{ animationDelay: `${i * 100}ms` }} />
             ))}
           </div>
-          <h1 className="text-5xl font-black tracking-tighter text-white">
+          <h1 className="text-5xl font-black tracking-tighter text-foreground">
             You're Ready!<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-300">
               Let's Cast! 🎬
@@ -472,11 +472,11 @@ export default function SetupWizard() {
               key={key}
               className={cn(
                 "flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all",
-                statuses[key] === "connected" ? color : "bg-white/3 border-white/5 opacity-40"
+                statuses[key] === "connected" ? color : "dark:bg-white/3 bg-black/5 border-border/50 opacity-40"
               )}
             >
-              <Icon className={cn("w-5 h-5", statuses[key] === "connected" ? "" : "text-white/30")} />
-              <span className="text-[10px] font-black uppercase tracking-wide text-white/70">{label}</span>
+              <Icon className={cn("w-5 h-5", statuses[key] === "connected" ? "" : "text-foreground/30")} />
+              <span className="text-[10px] font-black uppercase tracking-wide text-foreground/70">{label}</span>
               {statuses[key] === "connected" && <CheckCircle2 className="w-3 h-3 text-current" />}
             </div>
           ))}
@@ -490,7 +490,7 @@ export default function SetupWizard() {
             { icon: ShieldCheck, label: "Analytics & tracking", color: "text-blue-400" },
             { icon: Star, label: "Bulk contact management", color: "text-emerald-400" },
           ].map((f, i) => (
-            <div key={i} className="flex items-center gap-2.5 p-3 rounded-xl bg-white/3 border border-white/5">
+            <div key={i} className="flex items-center gap-2.5 p-3 rounded-xl dark:bg-white/3 bg-black/5 border border-border/50">
               <f.icon className={cn("w-4 h-4 shrink-0", f.color)} />
               <span className="text-xs font-bold text-muted-foreground">{f.label}</span>
             </div>
@@ -499,7 +499,7 @@ export default function SetupWizard() {
 
         <Button
           onClick={goToDashboard}
-          className="h-16 px-12 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-base uppercase tracking-widest gap-3 shadow-2xl shadow-primary/30 transition-all active:scale-[0.98]"
+          className="h-16 px-12 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-foreground font-black text-base uppercase tracking-widest gap-3 shadow-2xl shadow-primary/30 transition-all active:scale-[0.98]"
         >
           <Zap className="w-5 h-5 fill-current" /> Enter CastHub Dashboard
         </Button>
@@ -514,12 +514,12 @@ export default function SetupWizard() {
     <div className="min-h-screen bg-[#060610] flex flex-col">
       {/* Top bar */}
       {step > 0 && step < 4 && (
-        <div className="fixed top-0 left-0 right-0 z-50 px-6 py-4 flex items-center justify-between bg-[#060610]/80 backdrop-blur-md border-b border-white/5">
+        <div className="fixed top-0 left-0 right-0 z-50 px-6 py-4 flex items-center justify-between bg-[#060610]/80 backdrop-blur-md border-b border-border/50">
           <div className="flex items-center gap-3">
             <div className="w-7 h-7 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center">
-              <Zap className="w-3.5 h-3.5 text-white fill-current" />
+              <Zap className="w-3.5 h-3.5 text-foreground fill-current" />
             </div>
-            <span className="text-sm font-black tracking-tight text-white">CASTHUB</span>
+            <span className="text-sm font-black tracking-tight text-foreground">CASTHUB</span>
           </div>
           <ProgressBar current={step} total={TOTAL_STEPS} />
           <button
@@ -544,7 +544,7 @@ export default function SetupWizard() {
 
       {/* Bottom nav */}
       {step > 0 && step < 4 && (
-        <div className="fixed bottom-0 left-0 right-0 px-6 py-5 bg-[#060610]/80 backdrop-blur-md border-t border-white/5">
+        <div className="fixed bottom-0 left-0 right-0 px-6 py-5 bg-[#060610]/80 backdrop-blur-md border-t border-border/50">
           <div className="max-w-lg mx-auto flex items-center justify-between gap-4">
             <Button
               variant="ghost"
@@ -566,7 +566,7 @@ export default function SetupWizard() {
               </Button>
               <Button
                 onClick={handleNext}
-                className="h-12 px-6 rounded-xl bg-primary hover:bg-primary/90 text-white font-black gap-2 shadow-lg shadow-primary/20 transition-all active:scale-95"
+                className="h-12 px-6 rounded-xl bg-primary hover:bg-primary/90 text-foreground font-black gap-2 shadow-lg shadow-primary/20 transition-all active:scale-95"
               >
                 {statuses[step === 1 ? "google" : step === 2 ? "whatsapp" : "instagram"] === "connected"
                   ? "Next" : "Next"}

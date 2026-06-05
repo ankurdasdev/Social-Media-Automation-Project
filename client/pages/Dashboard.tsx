@@ -71,7 +71,7 @@ export default function Dashboard() {
     <AppLayout>
       <div className="space-y-16 pb-24 animate-in fade-in duration-1000">
         {/* Welcome Section / Hero Cluster */}
-        <section id="tutorial-dashboard-welcome" className="relative group p-10 md:p-16 rounded-[3rem] overflow-hidden border border-white/10 shadow-2xl bg-card/20 backdrop-blur-3xl">
+        <section id="tutorial-dashboard-welcome" className="relative group p-10 md:p-16 rounded-[3rem] overflow-hidden border border-border shadow-2xl bg-card/20 backdrop-blur-3xl">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/5 to-transparent dark:from-primary/10" />
           
           <div className="relative flex flex-col lg:flex-row items-center gap-16 z-10">
@@ -98,7 +98,7 @@ export default function Dashboard() {
                   </Button>
                 </Link>
                 <Link to="/contacts">
-                  <Button size="lg" variant="outline" className="h-16 px-10 rounded-[1.5rem] bg-background/30 backdrop-blur-md border border-white/10 hover:bg-muted/50 text-sm font-black transition-all hover:-translate-y-1 active:scale-95">
+                  <Button size="lg" variant="outline" className="h-16 px-10 rounded-[1.5rem] bg-background/30 backdrop-blur-md border border-border hover:bg-muted/50 text-sm font-black transition-all hover:-translate-y-1 active:scale-95">
                     VIEW CONTACTS
                   </Button>
                 </Link>
@@ -108,7 +108,7 @@ export default function Dashboard() {
             {/* Visual Element */}
             <div className="hidden xl:block relative w-[380px] h-[380px]">
                <div className="absolute inset-0 bg-primary/20 rounded-[4rem] rotate-12 blur-3xl opacity-30 animate-pulse" />
-               <div className="glass-card relative w-full h-full rounded-[4rem] flex items-center justify-center border-white/20 shadow-[-20px_-20px_60px_-15px_rgba(139,92,246,0.3)]">
+               <div className="glass-card relative w-full h-full rounded-[4rem] flex items-center justify-center border-border shadow-[-20px_-20px_60px_-15px_rgba(139,92,246,0.3)]">
                   <div className="text-center space-y-4">
                      <p className="text-8xl font-black tracking-tighter text-glow translate-y-2">84%</p>
                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Outreach Success</p>
@@ -130,7 +130,7 @@ export default function Dashboard() {
                 key={index} 
                 onClick={stat.onClick}
                 className={cn(
-                  "glass-card border-white/10 dark:border-white/5 hover:border-primary/40 transition-all duration-500 group overflow-hidden rounded-[2.5rem]",
+                  "glass-card border-border dark:border-border/50 hover:border-primary/40 transition-all duration-500 group overflow-hidden rounded-[2.5rem]",
                   stat.onClick && "cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
                 )}
               >
@@ -177,8 +177,8 @@ export default function Dashboard() {
                     { label: "Analytics", desc: "View your performance stats", icon: BarChart3, link: "/analytics", color: "text-orange-500", bg: "bg-orange-500/5" },
                   ].map((nav, i) => (
                     <Link key={i} to={nav.link} className="block group">
-                       <div className="p-6 glass-card rounded-3xl border-white/5 hover:border-white/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-5 shadow-lg">
-                        <div className={cn("p-4 rounded-2xl border border-white/10 group-hover:scale-110 transition-transform duration-500", nav.bg, nav.color)}>
+                       <div className="p-6 glass-card rounded-3xl border-border/50 hover:border-border hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-5 shadow-lg">
+                        <div className={cn("p-4 rounded-2xl border border-border group-hover:scale-110 transition-transform duration-500", nav.bg, nav.color)}>
                           <nav.icon className="w-6 h-6" />
                         </div>
                         <div>
@@ -200,16 +200,16 @@ export default function Dashboard() {
                 </div>
                 <Link to="/contacts" className="text-[10px] font-black text-primary hover:underline tracking-widest uppercase">VIEW ALL</Link>
               </div>
-              <Card className="glass-card border-white/5 rounded-[2.5rem] overflow-hidden shadow-2xl">
+              <Card className="glass-card border-border/50 rounded-[2.5rem] overflow-hidden shadow-2xl">
                 <CardContent className="p-0">
-                  <div className="divide-y divide-white/[0.03]">
+                  <div className="divide-y divide-border/30">
                     {recentContacts.map((contact, index) => (
                       <div
                         key={index}
-                        className="flex items-center justify-between p-7 hover:bg-white/[0.02] transition-colors group"
+                        className="flex items-center justify-between p-7 hover:dark:bg-white/[0.02] hover:bg-black/5 transition-colors group"
                       >
                         <div className="flex items-center gap-5">
-                           <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-muted to-muted/50 border border-white/5 flex items-center justify-center font-black text-xl text-primary shadow-inner group-hover:scale-110 transition-transform duration-500">
+                           <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-muted to-muted/50 border border-border/50 flex items-center justify-center font-black text-xl text-primary shadow-inner group-hover:scale-110 transition-transform duration-500">
                               {contact.name.charAt(0)}
                            </div>
                            <div>
@@ -222,7 +222,7 @@ export default function Dashboard() {
                            </div>
                         </div>
                         <div className="text-right">
-                           <div className="px-4 py-1.5 rounded-xl border border-white/10 bg-muted/20 text-[10px] font-black uppercase tracking-widest text-muted-foreground group-hover:text-foreground transition-colors">
+                           <div className="px-4 py-1.5 rounded-xl border border-border bg-muted/20 text-[10px] font-black uppercase tracking-widest text-muted-foreground group-hover:text-foreground transition-colors">
                             {contact.date}
                            </div>
                         </div>
@@ -248,11 +248,11 @@ export default function Dashboard() {
                 { step: "02", title: "SYNC", desc: "Sync your contacts and monitor their status in real-time.", icon: TrendingUp, color: "from-secondary to-blue-600" },
                 { step: "03", title: "REACH OUT", desc: "Send automated messages to your contacts via WhatsApp or Instagram.", icon: Zap, color: "from-accent to-orange-600" },
               ].map((item, i) => (
-                <div key={i} className="glass-card h-[320px] p-10 rounded-[3rem] relative overflow-hidden group flex flex-col justify-between border-white/5 hover:border-primary/30 transition-all duration-700">
+                <div key={i} className="glass-card h-[320px] p-10 rounded-[3rem] relative overflow-hidden group flex flex-col justify-between border-border/50 hover:border-primary/30 transition-all duration-700">
                    <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${item.color} opacity-0 group-hover:opacity-10 -z-10 group-hover:scale-[2] transition-all duration-1000 blur-2xl`} />
                    
                    <div className="flex items-start justify-between">
-                        <div className="w-16 h-16 rounded-[1.5rem] border border-white/10 glass-card flex items-center justify-center shadow-xl group-hover:rotate-12 transition-transform duration-500">
+                        <div className="w-16 h-16 rounded-[1.5rem] border border-border glass-card flex items-center justify-center shadow-xl group-hover:rotate-12 transition-transform duration-500">
                             <item.icon className="w-8 h-8 text-foreground" />
                         </div>
                         <p className="text-6xl font-black opacity-[0.03] tracking-tighter group-hover:scale-125 transition-transform duration-700">{item.step}</p>
