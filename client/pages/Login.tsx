@@ -4,7 +4,7 @@ import { setAuthToken } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import {
   Loader2, Eye, EyeOff, Mail, RefreshCw, ArrowRight,
-  Zap, ShieldCheck, MessageCircle, Instagram, KeyRound, AlertCircle, Lock, User
+  Zap, ShieldCheck, MessageCircle, Instagram, KeyRound, AlertCircle, Lock, User, Moon, Sun
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter,
@@ -27,6 +27,21 @@ function AnimatedBackground() {
       {/* Noise overlay */}
       <div className="absolute inset-0 opacity-[0.015] bg-[url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%224%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22/%3E%3C/svg%3E')]" />
     </div>
+  );
+}
+
+function ThemeToggle() {
+  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
+  const toggleTheme = () => {
+    const next = !isDark;
+    setIsDark(next);
+    document.documentElement.classList.toggle('dark', next);
+    localStorage.setItem('casthub-theme', next ? 'dark' : 'light');
+  };
+  return (
+    <button onClick={toggleTheme} className="absolute top-6 right-6 z-50 w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all backdrop-blur-md">
+      {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+    </button>
   );
 }
 
@@ -57,9 +72,9 @@ function GlassInput({
         </label>
       )}
       <div className={cn(
-        "relative flex items-center rounded-2xl border transition-all duration-300",
-        focused ? "border-purple-500/60 bg-purple-500/5 shadow-[0_0_0_3px_rgba(139,92,246,0.12)]" : "border-white/[0.08] bg-white/[0.04]",
-        error && "border-rose-500/50 bg-rose-500/5"
+        "relative flex items-center rounded-2xl border transition-all duration-300 backdrop-blur-xl",
+        focused ? "border-purple-500/60 bg-purple-500/10 shadow-[0_0_0_3px_rgba(139,92,246,0.12)]" : "border-white/10 bg-white/5 hover:bg-white/[0.07]",
+        error && "border-rose-500/50 bg-rose-500/10"
       )}>
         {Icon && (
           <div className="pl-4 pr-2 shrink-0">
@@ -172,6 +187,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex">
+      <ThemeToggle />
       <AnimatedBackground />
 
       {/* ── Left Brand Panel ─── */}
