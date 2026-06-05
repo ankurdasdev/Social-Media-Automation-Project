@@ -169,13 +169,17 @@ export default function Signup() {
 
   // ── Signup Form ─────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#060610] flex">
+    <div className="min-h-screen bg-[#060610] flex relative overflow-hidden">
+      {/* Moving Background Effects */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        {/* Animated Orbs */}
+        <div className="absolute top-[-10%] left-[-10%] w-[40vw] h-[40vw] bg-purple-600/20 rounded-full blur-[100px] animate-[spin_30s_linear_infinite] opacity-50 mix-blend-screen" style={{ transformOrigin: 'center center' }} />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[45vw] h-[45vw] bg-blue-600/20 rounded-full blur-[120px] animate-[spin_40s_linear_infinite_reverse] opacity-50 mix-blend-screen" style={{ transformOrigin: 'center center' }} />
+        <div className="absolute top-[20%] right-[30%] w-[30vw] h-[30vw] bg-emerald-500/10 rounded-full blur-[80px] animate-pulse opacity-40" />
+      </div>
+
       {/* Left Panel — Branding */}
-      <div className="hidden lg:flex lg:w-[45%] relative flex-col justify-between p-12 overflow-hidden">
-        {/* Background effects */}
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/30 via-[#060610] to-blue-900/20" />
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-purple-600/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl" />
+      <div className="hidden lg:flex lg:w-[45%] relative z-10 flex-col justify-between p-12">
 
         {/* Logo */}
         <div className="relative z-10 flex items-center gap-3">
@@ -228,8 +232,8 @@ export default function Signup() {
       </div>
 
       {/* Right Panel — Form */}
-      <div className="flex-1 flex flex-col items-center justify-center p-6 lg:p-12 overflow-y-auto">
-        <div className="w-full max-w-md space-y-7 animate-in fade-in slide-in-from-right-4 duration-500">
+      <div className="flex-1 flex flex-col items-center justify-center p-6 lg:p-12 overflow-y-auto relative z-10">
+        <div className="w-full max-w-[480px] space-y-7 animate-in fade-in slide-in-from-right-4 duration-500 bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-8 lg:p-10 shadow-2xl shadow-black/50">
 
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-3 mb-2">
