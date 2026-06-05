@@ -342,7 +342,12 @@ export const columns: ColumnDef<Contact>[] = [
   {
     id: "select",
     header: ({ table }) => (
-      <div className="flex items-center justify-center w-full">
+      <div 
+        className="flex items-center justify-center w-full h-full px-2"
+        onClick={(e) => {
+          e.stopPropagation();
+        }}
+      >
         <Checkbox
           checked={
             table.getIsAllPageRowsSelected()
@@ -358,12 +363,21 @@ export const columns: ColumnDef<Contact>[] = [
       </div>
     ),
     cell: ({ row }) => (
-      <div className="flex items-center justify-center w-full" onClick={(e) => e.stopPropagation()}>
+      <div 
+        className="flex items-center justify-center w-full h-full absolute inset-0 cursor-pointer"
+        onClick={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          row.toggleSelected();
+        }}
+      >
         <Checkbox
           checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          // We let the parent div handle the click to make the target area bigger
+          onCheckedChange={() => {}}
+          onClick={(e) => e.stopPropagation()}
           aria-label="Select row"
-          className="h-4 w-4 border-2 border-slate-400 dark:border-slate-400 bg-white dark:bg-slate-800 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+          className="h-4 w-4 border-2 border-slate-400 dark:border-slate-400 bg-white dark:bg-slate-800 data-[state=checked]:bg-primary data-[state=checked]:border-primary pointer-events-none"
         />
       </div>
     ),
