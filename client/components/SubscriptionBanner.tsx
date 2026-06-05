@@ -19,17 +19,31 @@ interface SubscriptionStatus {
 }
 
 export default function SubscriptionBanner() {
-  const userId = getOrCreateUserId();
   const navigate = useNavigate();
   const [dismissed, setDismissed] = useState(false);
 
-  const { data: status } = useQuery<SubscriptionStatus>({
-    queryKey: ["subscription-status", userId],
+  // Get real authenticated user
+  const { data: user } = useQuery({
+    queryKey: ["userProfile"],
     queryFn: async () => {
-      const res = await fetch(`/api/payments/subscription?userId=${userId}`);
+      const res = await fetch("/api/auth/me", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("casthub_auth_token")}` }
+      });
+      if (!res.ok) throw new Error("Not authorized");
+      const data = await res.json();
+      return data.user;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: status } = useQuery<SubscriptionStatus>({
+    queryKey: ["subscription-status", user?.id],
+    queryFn: async () => {
+      const res = await fetch(`/api/payments/subscription?userId=${user?.id}`);
       if (!res.ok) throw new Error("Failed to fetch");
       return res.json();
     },
+    enabled: !!user?.id,
     refetchInterval: 60000,
     staleTime: 30000,
   });
