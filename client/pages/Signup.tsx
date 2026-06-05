@@ -3,8 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
   AlertCircle, Loader2, Eye, EyeOff, CheckCircle2,
-  Mail, MessageCircle, Instagram, Zap, ArrowRight, ShieldCheck, User, Phone, Lock, Calendar, Users
+  Mail, MessageCircle, Instagram, Zap, ArrowRight, ShieldCheck, User, Phone, Lock, Calendar, Users, Moon, Sun, FileText, Shield
 } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
+} from "@/components/ui/dialog";
+import { TermsContent } from "./TermsOfService";
+import { PrivacyContent } from "./PrivacyPolicy";
 
 // ── Reuse same animated background ──────────────────────────────────────────
 function AnimatedBackground() {
@@ -18,6 +23,21 @@ function AnimatedBackground() {
       <div className="absolute -bottom-40 -right-40 w-[700px] h-[700px] rounded-full bg-indigo-600/15 blur-[160px] animate-pulse" style={{ animationDuration: "7s", animationDelay: "2s" }} />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-violet-500/10 blur-[120px] animate-pulse" style={{ animationDuration: "6s", animationDelay: "1s" }} />
     </div>
+  );
+}
+
+function ThemeToggle() {
+  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
+  const toggleTheme = () => {
+    const next = !isDark;
+    setIsDark(next);
+    document.documentElement.classList.toggle('dark', next);
+    localStorage.setItem('casthub-theme', next ? 'dark' : 'light');
+  };
+  return (
+    <button onClick={toggleTheme} className="absolute top-6 right-6 z-50 w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all backdrop-blur-md">
+      {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+    </button>
   );
 }
 
@@ -36,9 +56,9 @@ function GlassInput({
     <div className="space-y-1.5">
       {label && <label htmlFor={id} className="text-[10px] font-black uppercase tracking-[0.18em] text-white/40 block">{label}</label>}
       <div className={cn(
-        "relative flex items-center rounded-2xl border transition-all duration-300",
-        focused ? "border-purple-500/60 bg-purple-500/5 shadow-[0_0_0_3px_rgba(139,92,246,0.12)]" : "border-white/[0.08] bg-white/[0.04]",
-        error && "border-rose-500/50 bg-rose-500/5",
+        "relative flex items-center rounded-2xl border transition-all duration-300 backdrop-blur-xl",
+        focused ? "border-purple-500/60 bg-purple-500/10 shadow-[0_0_0_3px_rgba(139,92,246,0.12)]" : "border-white/10 bg-white/5 hover:bg-white/[0.07]",
+        error && "border-rose-500/50 bg-rose-500/10",
         disabled && "opacity-50"
       )}>
         {Icon && (
@@ -210,6 +230,7 @@ export default function Signup() {
 
   return (
     <div className="min-h-screen flex">
+      <ThemeToggle />
       <AnimatedBackground />
 
       {/* ── Left Brand Panel ─── */}
@@ -351,8 +372,8 @@ export default function Signup() {
               <div className="space-y-1.5">
                 <label className="text-[10px] font-black uppercase tracking-[0.18em] text-white/40 block">Gender</label>
                 <div className={cn(
-                  "flex items-center rounded-2xl border transition-all duration-300",
-                  "border-white/[0.08] bg-white/[0.04]",
+                  "flex items-center rounded-2xl border transition-all duration-300 backdrop-blur-xl",
+                  "border-white/10 bg-white/5 hover:bg-white/[0.07]",
                   fieldErrors.gender && "border-rose-500/50"
                 )}>
                   <Users className="w-4 h-4 text-white/25 ml-4 mr-2 shrink-0" />
@@ -372,8 +393,8 @@ export default function Signup() {
               <div className="space-y-1.5">
                 <label className="text-[10px] font-black uppercase tracking-[0.18em] text-white/40 block">Date of Birth</label>
                 <div className={cn(
-                  "flex items-center rounded-2xl border transition-all duration-300",
-                  "border-white/[0.08] bg-white/[0.04]",
+                  "flex items-center rounded-2xl border transition-all duration-300 backdrop-blur-xl",
+                  "border-white/10 bg-white/5 hover:bg-white/[0.07]",
                   fieldErrors.dob && "border-rose-500/50"
                 )}>
                   <Calendar className="w-4 h-4 text-white/25 ml-4 mr-2 shrink-0" />
@@ -438,9 +459,39 @@ export default function Signup() {
               </div>
               <p className="text-xs text-white/40 font-medium leading-relaxed select-none">
                 I agree to the{" "}
-                <Link to="/terms" className="text-purple-400 hover:text-purple-300 font-bold" onClick={e => e.stopPropagation()}>Terms of Service</Link>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <button type="button" className="text-purple-400 hover:text-purple-300 font-bold" onClick={e => e.stopPropagation()}>Terms of Service</button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-[#0e0b1f] border border-white/10 rounded-3xl shadow-2xl max-w-3xl max-h-[85vh] overflow-y-auto">
+                    <DialogHeader className="pb-4 sticky top-0 bg-[#0e0b1f] z-10 border-b border-white/10 pt-4 px-2 -mx-2 mb-4">
+                      <DialogTitle className="text-2xl font-black tracking-tight text-white flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                          <FileText className="w-4.5 h-4.5 text-primary" />
+                        </div>
+                        Terms of Service
+                      </DialogTitle>
+                    </DialogHeader>
+                    <TermsContent />
+                  </DialogContent>
+                </Dialog>
                 {" "}and{" "}
-                <Link to="/privacy" className="text-purple-400 hover:text-purple-300 font-bold" onClick={e => e.stopPropagation()}>Privacy Policy</Link>.
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <button type="button" className="text-purple-400 hover:text-purple-300 font-bold" onClick={e => e.stopPropagation()}>Privacy Policy</button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-[#0e0b1f] border border-white/10 rounded-3xl shadow-2xl max-w-3xl max-h-[85vh] overflow-y-auto">
+                    <DialogHeader className="pb-4 sticky top-0 bg-[#0e0b1f] z-10 border-b border-white/10 pt-4 px-2 -mx-2 mb-4">
+                      <DialogTitle className="text-2xl font-black tracking-tight text-white flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                          <Shield className="w-4.5 h-4.5 text-blue-400" />
+                        </div>
+                        Privacy Policy
+                      </DialogTitle>
+                    </DialogHeader>
+                    <PrivacyContent />
+                  </DialogContent>
+                </Dialog>.
                 I understand that CastHub automates outreach and I will use it responsibly.
               </p>
             </div>
