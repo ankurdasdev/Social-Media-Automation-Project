@@ -152,6 +152,9 @@ export const handleSignup: RequestHandler = async (req, res) => {
   if (!name || !email || !password) {
     return res.status(400).json({ error: "name, email, and password are required" });
   }
+  if (email.includes("+")) {
+    return res.status(400).json({ error: "Email addresses with '+' aliases are not allowed" });
+  }
   if (password.length < 8) {
     return res.status(400).json({ error: "Password must be at least 8 characters" });
   }
