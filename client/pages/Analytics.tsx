@@ -164,13 +164,13 @@ export default function Analytics() {
             </div>
         )}
       </div>
-      <form onSubmit={handleSendChat} className="p-3 border-t border-white/5 bg-black/20 flex gap-2 shrink-0">
+      <form onSubmit={handleSendChat} className="p-3 border-t border-border/50 dark:bg-black/20 bg-muted/50 flex gap-2 shrink-0">
         <input 
           type="text"
           value={chatInput}
           onChange={(e) => setChatInput(e.target.value)}
           placeholder="Ask about your data..."
-          className="flex-1 bg-background border border-white/10 rounded-xl px-4 text-sm focus:outline-none focus:border-primary/50 text-foreground placeholder:text-muted-foreground/50"
+          className="flex-1 bg-background border border-border rounded-xl px-4 text-sm focus:outline-none focus:border-primary/50 text-foreground placeholder:text-muted-foreground/50"
           disabled={chatMutation.isPending}
         />
         <Button 
@@ -298,21 +298,21 @@ export default function Analytics() {
               </CardHeader>
               <CardContent className="p-6 flex-1 flex flex-col">
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="flex-1 p-4 rounded-2xl bg-muted/30 border border-white/5 flex items-center justify-between cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => navigate("/contacts?status=failed&platform=whatsapp")}>
+                  <div className="flex-1 p-4 rounded-2xl bg-muted/30 border border-border/50 flex items-center justify-between cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => navigate("/contacts?status=failed&platform=whatsapp")}>
                     <div className="flex items-center gap-3"><MessageCircle className="w-4 h-4 text-emerald-500" /><span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">WA Failed</span></div>
                     <span className="text-lg font-black">{statsData?.waFailed || 0}</span>
                   </div>
-                  <div className="flex-1 p-4 rounded-2xl bg-muted/30 border border-white/5 flex items-center justify-between cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => navigate("/contacts?status=failed&platform=email")}>
+                  <div className="flex-1 p-4 rounded-2xl bg-muted/30 border border-border/50 flex items-center justify-between cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => navigate("/contacts?status=failed&platform=email")}>
                     <div className="flex items-center gap-3"><Mail className="w-4 h-4 text-blue-500" /><span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Email Failed</span></div>
                     <span className="text-lg font-black">{statsData?.emailFailed || 0}</span>
                   </div>
-                  <div className="flex-1 p-4 rounded-2xl bg-muted/30 border border-white/5 flex items-center justify-between cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => navigate("/contacts?status=failed&platform=instagram")}>
+                  <div className="flex-1 p-4 rounded-2xl bg-muted/30 border border-border/50 flex items-center justify-between cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => navigate("/contacts?status=failed&platform=instagram")}>
                     <div className="flex items-center gap-3"><Instagram className="w-4 h-4 text-pink-500" /><span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">IG Failed</span></div>
                     <span className="text-lg font-black">{statsData?.igFailed || 0}</span>
                   </div>
                 </div>
 
-                <div className="flex-1 bg-[#0a0a0a] rounded-2xl border border-white/10 p-5 font-mono text-sm text-emerald-400 overflow-y-auto relative min-h-[150px]">
+                <div className="flex-1 dark:bg-[#0a0a0a] bg-slate-900 rounded-2xl border border-border p-5 font-mono text-sm text-emerald-400 overflow-y-auto relative min-h-[150px]">
                   {!aiDiagnoseMutation.data && !aiDiagnoseMutation.isPending && (
                     <div className="absolute inset-0 flex items-center justify-center text-muted-foreground text-xs uppercase tracking-widest">
                       Awaiting command...
@@ -363,7 +363,7 @@ export default function Analytics() {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="glass-card border-white/10 shadow-xl">
+          <Card className="glass-card border-border shadow-xl">
             <CardHeader className="p-6">
               <CardTitle className="text-lg font-black tracking-tight">Lead Velocity Pipeline</CardTitle>
               <CardDescription className="text-[10px] font-bold uppercase tracking-widest">Identify drop-offs in your funnel</CardDescription>
@@ -386,7 +386,7 @@ export default function Analytics() {
             </CardContent>
           </Card>
 
-          <Card className="glass-card border-white/10 shadow-xl">
+          <Card className="glass-card border-border shadow-xl">
             <CardHeader className="p-6">
               <div className="flex items-center gap-3">
                 <CalendarDays className="w-5 h-5 text-muted-foreground" />
@@ -414,14 +414,14 @@ export default function Analytics() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card className="lg:col-span-2 glass-card border-white/10 shadow-xl flex flex-col">
-            <CardHeader className="p-6 border-b border-white/5">
+          <Card className="lg:col-span-2 glass-card border-border shadow-xl flex flex-col">
+            <CardHeader className="p-6 border-b border-border/50">
               <CardTitle className="text-xl font-black tracking-tight">Smart Cohort Analysis</CardTitle>
               <CardDescription className="text-[10px] font-bold uppercase tracking-widest">A/B Testing across sheets</CardDescription>
             </CardHeader>
             <CardContent className="p-6 flex-1 flex flex-col">
               {coData.length === 0 ? (
-                <div className="flex-1 flex items-center justify-center text-muted-foreground font-black text-xs uppercase tracking-widest border border-dashed border-white/10 rounded-3xl min-h-[200px]">
+                <div className="flex-1 flex items-center justify-center text-muted-foreground font-black text-xs uppercase tracking-widest border border-dashed border-border rounded-3xl min-h-[200px]">
                   No cohort data available yet.
                 </div>
               ) : (
@@ -441,8 +441,8 @@ export default function Analytics() {
             </CardContent>
           </Card>
 
-          <Card className="glass-card border-white/10 shadow-xl flex flex-col">
-            <CardHeader className="p-6 border-b border-white/5 bg-black/20">
+          <Card className="glass-card border-border shadow-xl flex flex-col">
+            <CardHeader className="p-6 border-b border-border/50 dark:bg-black/20 bg-muted/50">
               <CardTitle className="text-lg font-black tracking-tight">Recent Failures</CardTitle>
               <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Click to view diagnostics</CardDescription>
             </CardHeader>
@@ -455,7 +455,7 @@ export default function Analytics() {
                     <div 
                       key={r.id} 
                       onClick={() => setSelectedContactId(r.id)}
-                      className="p-4 flex items-center justify-between hover:bg-white/5 cursor-pointer transition-colors"
+                      className="p-4 flex items-center justify-between hover:dark:bg-white/5 bg-black/5 cursor-pointer transition-colors"
                     >
                       <div className="space-y-1 overflow-hidden pr-2">
                         <p className="text-sm font-bold truncate">{r.name}</p>
@@ -511,7 +511,7 @@ export default function Analytics() {
 
         {/* Dashboard Tabs Area */}
         <Tabs defaultValue="all" className="w-full">
-          <TabsList className="bg-black/40 border border-white/5 p-1 rounded-xl w-full justify-start h-12 overflow-x-auto">
+          <TabsList className="dark:bg-black/40 bg-muted border border-border/50 p-1 rounded-xl w-full justify-start h-12 overflow-x-auto">
             <TabsTrigger value="all" className="rounded-lg font-black uppercase tracking-widest text-[10px] h-full px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Overview</TabsTrigger>
             <TabsTrigger value="whatsapp" className="rounded-lg font-black uppercase tracking-widest text-[10px] h-full px-6 data-[state=active]:bg-emerald-500 data-[state=active]:text-white"><MessageCircle className="w-3 h-3 mr-2" /> WhatsApp</TabsTrigger>
             <TabsTrigger value="email" className="rounded-lg font-black uppercase tracking-widest text-[10px] h-full px-6 data-[state=active]:bg-blue-500 data-[state=active]:text-white"><Mail className="w-3 h-3 mr-2" /> Email</TabsTrigger>

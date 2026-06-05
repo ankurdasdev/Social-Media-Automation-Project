@@ -143,7 +143,7 @@ export function DataTableToolbar<TData>({
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-hide flex-1 min-w-0">
           <Tabs id="tutorial-contacts-sheets" value={activeTab} onValueChange={handleTabChange} className="w-auto shrink-0">
-            <TabsList className="flex h-12 p-1 bg-muted/20 border border-white/5 rounded-2xl backdrop-blur-xl">
+            <TabsList className="flex h-12 p-1 bg-muted/20 border border-border/50 rounded-2xl backdrop-blur-xl">
               <TabsTrigger value="all" className="h-9 px-5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] data-[state=active]:bg-foreground data-[state=active]:text-background transition-all whitespace-nowrap">
                 All Contacts
               </TabsTrigger>
@@ -166,7 +166,7 @@ export function DataTableToolbar<TData>({
           <Button
             variant="ghost"
             size="icon"
-            className="h-12 w-12 rounded-2xl border border-dashed border-white/10 hover:border-primary/50 hover:bg-primary/5 transition-all shrink-0"
+            className="h-12 w-12 rounded-2xl border border-dashed border-border hover:border-primary/50 hover:bg-primary/5 transition-all shrink-0"
             onClick={() => setIsAddSheetOpen(true)}
             title="Add New Sheet"
           >
@@ -190,7 +190,7 @@ export function DataTableToolbar<TData>({
               size="icon"
               onClick={onToggleFullscreen}
               className={cn(
-                "h-12 w-12 rounded-2xl border-white/10 shadow-xl shrink-0 transition-all active:scale-90",
+                "h-12 w-12 rounded-2xl border-border shadow-xl shrink-0 transition-all active:scale-90",
                 isFullscreen ? "bg-primary text-primary-foreground border-primary" : "hover:bg-muted"
               )}
               title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
@@ -199,7 +199,7 @@ export function DataTableToolbar<TData>({
             </Button>
           )}
           {onZoomChange && (
-            <div className="flex items-center gap-1 bg-muted/20 border border-white/5 rounded-2xl p-1 h-12">
+            <div className="flex items-center gap-1 bg-muted/20 border border-border/50 rounded-2xl p-1 h-12">
               <Button
                 variant="ghost"
                 size="icon"
@@ -245,7 +245,7 @@ export function DataTableToolbar<TData>({
               "h-12 w-12 rounded-full border transition-all shrink-0",
               searchMode === "ai"
                 ? "bg-primary/20 border-primary/50 text-primary shadow-lg shadow-primary/20"
-                : "bg-muted/20 border-white/5 text-muted-foreground hover:bg-muted/40"
+                : "bg-muted/20 border-border/50 text-muted-foreground hover:bg-muted/40"
             )}
             title={searchMode === "ai" ? "Switch to Normal Search" : "Switch to AI Search"}
           >
@@ -270,7 +270,7 @@ export function DataTableToolbar<TData>({
                   placeholder="Search Contacts..."
                   value={table.getState().globalFilter ?? ""}
                   onChange={(event) => table.setGlobalFilter(event.target.value)}
-                  className="h-12 pl-11 rounded-full bg-muted/20 border-white/5 focus:bg-background focus:ring-primary focus:border-primary font-bold shadow-inner transition-all text-sm w-full"
+                  className="h-12 pl-11 rounded-full bg-muted/20 border-border/50 focus:bg-background focus:ring-primary focus:border-primary font-bold shadow-inner transition-all text-sm w-full"
                 />
               </>
             )}
@@ -318,7 +318,7 @@ export function DataTableToolbar<TData>({
             size="sm"
             onClick={() => setShowPlatformFilters(!showPlatformFilters)}
             className={cn(
-              "h-12 rounded-full border-white/10 px-5 font-black text-[10px] uppercase tracking-widest gap-2 transition-all shrink-0 shadow-sm",
+              "h-12 rounded-full border-border px-5 font-black text-[10px] uppercase tracking-widest gap-2 transition-all shrink-0 shadow-sm",
               showPlatformFilters ? "bg-foreground text-background border-foreground" : "bg-muted/20 hover:bg-muted/40"
             )}
           >
@@ -332,15 +332,15 @@ export function DataTableToolbar<TData>({
               <Button
                 variant="outline"
                 size="sm"
-                className="h-12 rounded-full border-white/10 px-5 font-black text-[10px] uppercase tracking-widest gap-2 transition-all shrink-0 bg-muted/20 hover:bg-muted/40 shadow-sm"
+                className="h-12 rounded-full border-border px-5 font-black text-[10px] uppercase tracking-widest gap-2 transition-all shrink-0 bg-muted/20 hover:bg-muted/40 shadow-sm"
               >
                 <View className="w-4 h-4 opacity-50" />
                 <span className="hidden md:inline">VIEW OPTIONS</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[280px] glass-card border-white/10 p-2 rounded-2xl shadow-2xl z-[100]">
+            <DropdownMenuContent align="end" className="w-[280px] glass-card border-border p-2 rounded-2xl shadow-2xl z-[100]">
                <DropdownMenuLabel className="px-3 py-1.5 text-[8px] font-black text-muted-foreground uppercase tracking-widest">Display Settings</DropdownMenuLabel>
-               <DropdownMenuSeparator className="bg-white/5 mx-2 my-1" />
+               <DropdownMenuSeparator className="dark:bg-white/5 bg-black/5 mx-2 my-1" />
                <div className="px-3 py-2 flex items-center justify-between">
                   <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Freeze Title</span>
                   <Switch 
@@ -349,7 +349,7 @@ export function DataTableToolbar<TData>({
                      className="scale-75"
                   />
                </div>
-               <DropdownMenuSeparator className="bg-white/10" />
+               <DropdownMenuSeparator className="dark:bg-white/[0.02] bg-black/5" />
               
                <DropdownMenuItem 
                  onClick={() => setIsColumnManagerOpen(true)}
@@ -372,7 +372,7 @@ export function DataTableToolbar<TData>({
                   <ChevronDown className="h-3 w-3 ml-1 opacity-50" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-[320px] glass-card border-white/10 p-3 rounded-[2rem] shadow-2xl z-[100] flex flex-col gap-2 max-h-[80vh] overflow-y-auto scrollbar-thin">
+              <DropdownMenuContent align="end" className="w-[320px] glass-card border-border p-3 rounded-[2rem] shadow-2xl z-[100] flex flex-col gap-2 max-h-[80vh] overflow-y-auto scrollbar-thin">
                 
                 {/* AUTOMATION */}
                 <div className="space-y-1">
@@ -390,7 +390,7 @@ export function DataTableToolbar<TData>({
                   </DropdownMenuItem>
                 </div>
 
-                <DropdownMenuSeparator className="bg-white/5" />
+                <DropdownMenuSeparator className="dark:bg-white/5 bg-black/5" />
 
                 {/* ROW FORMATTING */}
                 <div className="space-y-1">
@@ -405,7 +405,7 @@ export function DataTableToolbar<TData>({
                   </div>
                 </div>
 
-                <DropdownMenuSeparator className="bg-white/5" />
+                <DropdownMenuSeparator className="dark:bg-white/5 bg-black/5" />
 
                 {/* ORGANIZATION */}
                 <div className="space-y-1">
@@ -429,7 +429,7 @@ export function DataTableToolbar<TData>({
                   </div>
                 </div>
 
-                <DropdownMenuSeparator className="bg-white/5" />
+                <DropdownMenuSeparator className="dark:bg-white/5 bg-black/5" />
 
                 {/* DATA MANAGEMENT */}
                 <div className="space-y-1">
@@ -472,16 +472,16 @@ export function DataTableToolbar<TData>({
               <DropdownMenu key={f.id}>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className={cn(
-                    "h-10 rounded-xl border-white/10 px-4 font-black text-[9px] uppercase tracking-widest gap-2 min-w-[100px] transition-all",
+                    "h-10 rounded-xl border-border px-4 font-black text-[9px] uppercase tracking-widest gap-2 min-w-[100px] transition-all",
                     isActive ? "bg-muted/40 border-primary/30" : "bg-muted/20"
                   )}>
                     <f.icon className={cn("w-3 h-3", isActive ? f.color : "opacity-30")} />
                     {currentVal ? (currentVal === "Yes" ? "SENT" : currentVal === "Failed" ? "FAILED" : currentVal === "In Progress" ? "BUSY" : "PENDING") : f.label}
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="glass-card border-white/10 p-2 rounded-2xl z-[100] min-w-[140px]">
+                <DropdownMenuContent className="glass-card border-border p-2 rounded-2xl z-[100] min-w-[140px]">
                   <DropdownMenuLabel className="px-3 py-1.5 text-[8px] font-black text-muted-foreground uppercase tracking-widest">Select {f.label} Status</DropdownMenuLabel>
-                  <DropdownMenuSeparator className="bg-white/5 mx-2" />
+                  <DropdownMenuSeparator className="dark:bg-white/5 bg-black/5 mx-2" />
                   {[
                     { label: "ALL STATUS", val: undefined },
                     { label: "SENT / COMPLETED", val: "Yes" },
@@ -506,7 +506,7 @@ export function DataTableToolbar<TData>({
 
       {/* Dialogs */}
       <Dialog open={isAddSheetOpen} onOpenChange={setIsAddSheetOpen}>
-        <DialogContent className="sm:max-w-[450px] glass-card border-white/10 rounded-[2.5rem] p-0 overflow-hidden shadow-2xl">
+        <DialogContent className="sm:max-w-[450px] glass-card border-border rounded-[2.5rem] p-0 overflow-hidden shadow-2xl">
           <DialogHeader className="p-8 pb-4 bg-muted/30">
             <DialogTitle className="text-3xl font-black tracking-tighter">ADD <span className="text-primary italic">SHEET</span></DialogTitle>
             <DialogDescription className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
@@ -530,7 +530,7 @@ export function DataTableToolbar<TData>({
       </Dialog>
 
       <AlertDialog open={!!deleteSheetConfirm} onOpenChange={(o) => !o && setDeleteSheetConfirm(null)}>
-        <AlertDialogContent className="glass-card border-white/10 rounded-[2.5rem]">
+        <AlertDialogContent className="glass-card border-border rounded-[2.5rem]">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-2xl font-black tracking-tighter uppercase">Delete Sheet?</AlertDialogTitle>
             <AlertDialogDescription className="text-xs font-medium leading-relaxed">
@@ -539,7 +539,7 @@ export function DataTableToolbar<TData>({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-6 gap-3">
-            <AlertDialogCancel className="h-12 rounded-xl border-white/10 font-black text-[10px] uppercase tracking-widest">CANCEL</AlertDialogCancel>
+            <AlertDialogCancel className="h-12 rounded-xl border-border font-black text-[10px] uppercase tracking-widest">CANCEL</AlertDialogCancel>
             <AlertDialogAction
               className="h-12 rounded-xl bg-destructive text-white hover:bg-destructive/90 font-black text-[10px] uppercase tracking-widest shadow-xl shadow-destructive/20"
               onClick={() => {

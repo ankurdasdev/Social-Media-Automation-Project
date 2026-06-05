@@ -237,7 +237,7 @@ export default function Profile() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column: Avatar & Summary */}
           <div className="lg:col-span-1 space-y-6">
-            <Card className="glass-card border-white/10 overflow-hidden relative group">
+            <Card className="glass-card border-border overflow-hidden relative group">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10 opacity-50" />
                 <CardContent className="pt-10 pb-8 flex flex-col items-center relative z-10">
                     <div className="w-32 h-32 rounded-[2.5rem] bg-gradient-to-tr from-primary via-primary/80 to-secondary p-1 shadow-2xl shadow-primary/20 mb-6 group-hover:scale-105 transition-all duration-500">
@@ -265,7 +265,7 @@ export default function Profile() {
           {/* Right Column: Edit Form */}
           <div className="lg:col-span-2">
             <form onSubmit={handleSubmit} className="space-y-8">
-              <Card className="glass-card border-white/10 overflow-hidden">
+              <Card className="glass-card border-border overflow-hidden">
                 <CardHeader className="p-8 pb-4">
                   <CardTitle className="text-2xl font-black tracking-tight">Personal Details</CardTitle>
                   <CardDescription className="text-sm font-medium">Update your name and email address.</CardDescription>
@@ -301,7 +301,7 @@ export default function Profile() {
                         <SelectTrigger className="h-14 rounded-2xl bg-muted/30 border-border/50 focus:ring-primary font-bold shadow-inner text-left">
                           <SelectValue placeholder="Select Gender" />
                         </SelectTrigger>
-                        <SelectContent className="glass-card border-white/10 bg-background/95 rounded-2xl z-[9999]">
+                        <SelectContent className="glass-card border-border bg-background/95 rounded-2xl z-[9999]">
                           <SelectItem value="male" className="font-bold py-3">Male</SelectItem>
                           <SelectItem value="female" className="font-bold py-3">Female</SelectItem>
                           <SelectItem value="other" className="font-bold py-3">Other</SelectItem>
@@ -323,7 +323,7 @@ export default function Profile() {
                 </CardContent>
               </Card>
 
-              <Card className="glass-card border-white/10 overflow-hidden">
+              <Card className="glass-card border-border overflow-hidden">
                 <CardHeader className="p-8 pb-4">
                   <CardTitle className="text-2xl font-black tracking-tight">Security Credentials</CardTitle>
                   <CardDescription className="text-sm font-medium">Change your account password below. Leave blank to keep current.</CardDescription>
@@ -455,7 +455,7 @@ export default function Profile() {
       </div>
 
       {/* ── Subscription & Billing Card ────────────────────────────────────── */}
-      <Card className="glass-card border-white/10">
+      <Card className="glass-card border-border">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle className="text-xl font-black tracking-tight flex items-center gap-2">
@@ -473,7 +473,7 @@ export default function Profile() {
         <CardContent className="space-y-6">
           {/* Status Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="p-4 rounded-2xl bg-muted/30 border border-white/5 text-center">
+            <div className="p-4 rounded-2xl bg-muted/30 border border-border/50 text-center">
               <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">Plan</p>
               <p className="text-lg font-black text-foreground capitalize">{subStatus?.planType || "Trial"}</p>
             </div>
@@ -489,13 +489,13 @@ export default function Profile() {
                 {subStatus?.isExpired ? "Expired" : subStatus?.isTrial ? "Trial" : "Active"}
               </Badge>
             </div>
-            <div className="p-4 rounded-2xl bg-muted/30 border border-white/5 text-center">
+            <div className="p-4 rounded-2xl bg-muted/30 border border-border/50 text-center">
               <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">Days Left</p>
               <p className={`text-2xl font-black ${(subStatus?.daysRemaining || 0) <= 2 ? "text-rose-500" : "text-foreground"}`}>
                 {subStatus?.daysRemaining ?? "—"}
               </p>
             </div>
-            <div className="p-4 rounded-2xl bg-muted/30 border border-white/5 text-center">
+            <div className="p-4 rounded-2xl bg-muted/30 border border-border/50 text-center">
               <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">Expires</p>
               <p className="text-xs font-bold text-foreground">
                 {subStatus?.isTrial && subStatus.trialEnd
@@ -513,7 +513,7 @@ export default function Profile() {
               <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                 <Clock className="w-3 h-3" /> Recent Payments
               </h4>
-              <div className="rounded-2xl border border-white/5 overflow-hidden">
+              <div className="rounded-2xl border border-border/50 overflow-hidden">
                 <table className="w-full text-xs">
                   <thead className="bg-muted/40 text-[9px] font-black uppercase tracking-widest text-muted-foreground">
                     <tr>
@@ -523,7 +523,7 @@ export default function Profile() {
                       <th className="px-4 py-2 text-right">Amount</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5">
+                  <tbody className="divide-y divide-border/50">
                     {historyData.payments.slice(0, 5).map((p: any) => (
                       <tr key={p.id} className="hover:bg-muted/20">
                         <td className="px-4 py-2 text-muted-foreground font-bold">{format(new Date(p.created_at), "MMM d, yyyy")}</td>
@@ -568,7 +568,7 @@ export default function Profile() {
           </div>
 
           <AlertDialogFooter className="gap-3 mt-2">
-            <AlertDialogCancel className="h-12 rounded-xl border-white/10 font-black text-[10px] uppercase tracking-widest">
+            <AlertDialogCancel className="h-12 rounded-xl border-border font-black text-[10px] uppercase tracking-widest">
               CANCEL
             </AlertDialogCancel>
             <Button

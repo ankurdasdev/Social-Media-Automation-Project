@@ -329,7 +329,7 @@ export default function Subscription() {
               >
                 {p.popular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-                    <Badge className="bg-gradient-to-r from-pink-500 to-purple-500 text-white font-black text-[10px] uppercase tracking-widest px-4 py-1 border-none shadow-lg shadow-pink-500/20">
+                    <Badge className="bg-gradient-to-r from-pink-500 to-purple-500 text-foreground font-black text-[10px] uppercase tracking-widest px-4 py-1 border-none shadow-lg shadow-pink-500/20">
                       <Star className="w-3 h-3 mr-1" /> Most Popular
                     </Badge>
                   </div>
@@ -337,7 +337,7 @@ export default function Subscription() {
                 <div className={`h-full rounded-[calc(2rem-1px)] p-8 ${isSelected ? "bg-background/95" : "bg-background/80"}`}>
                   <div className="flex items-center gap-3 mb-6">
                     <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${p.gradient} flex items-center justify-center shadow-lg ${p.shadow}`}>
-                      <Icon className="w-6 h-6 text-white" />
+                      <Icon className="w-6 h-6 text-foreground" />
                     </div>
                     <div>
                       <h3 className="text-xl font-black uppercase tracking-tight text-foreground">{p.name}</h3>
@@ -361,7 +361,7 @@ export default function Subscription() {
 
                   <div className={`h-14 rounded-2xl flex items-center justify-center font-black text-sm uppercase tracking-widest transition-all ${
                     isSelected
-                      ? `bg-gradient-to-r ${p.gradient} text-white shadow-xl ${p.shadow}`
+                      ? `bg-gradient-to-r ${p.gradient} text-foreground shadow-xl ${p.shadow}`
                       : "bg-muted/40 text-muted-foreground border border-border/50"
                   }`}>
                     {isSelected ? "✓ Selected" : "Select Plan"}
@@ -375,7 +375,7 @@ export default function Subscription() {
         {/* Cart / Checkout Section */}
         <div className="max-w-xl mx-auto space-y-6">
           {/* Coupon Code */}
-          <div className="glass-card border-white/10 rounded-[2rem] p-6 space-y-4">
+          <div className="glass-card border-border rounded-[2rem] p-6 space-y-4">
             <div className="flex items-center gap-2 mb-2">
               <Tag className="w-4 h-4 text-purple-500" />
               <h3 className="text-sm font-black uppercase tracking-widest text-foreground">Apply Coupon</h3>
@@ -390,7 +390,7 @@ export default function Subscription() {
                     <p className="text-xs text-muted-foreground">{couponApplied.discountPercent}% off applied</p>
                   </div>
                 </div>
-                <button onClick={removeCoupon} className="p-2 rounded-xl hover:bg-white/5 transition-colors">
+                <button onClick={removeCoupon} className="p-2 rounded-xl hover:bg-muted/50 bg-muted/20 transition-colors">
                   <X className="w-4 h-4 text-muted-foreground" />
                 </button>
               </div>
@@ -405,7 +405,7 @@ export default function Subscription() {
                 <Button
                   onClick={() => couponMutation.mutate()}
                   disabled={!couponCode.trim() || couponMutation.isPending}
-                  className="h-12 px-6 rounded-xl bg-purple-500 text-white font-black text-[10px] uppercase tracking-widest hover:bg-purple-600"
+                  className="h-12 px-6 rounded-xl bg-purple-500 text-foreground font-black text-[10px] uppercase tracking-widest hover:bg-purple-600"
                 >
                   {couponMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
                 </Button>
@@ -414,7 +414,7 @@ export default function Subscription() {
           </div>
 
           {/* Order Summary */}
-          <div className="glass-card border-white/10 rounded-[2rem] p-6 space-y-4">
+          <div className="glass-card border-border rounded-[2rem] p-6 space-y-4">
             <h3 className="text-sm font-black uppercase tracking-widest text-foreground flex items-center gap-2">
               <Receipt className="w-4 h-4 text-pink-500" /> Order Summary
             </h3>
@@ -430,7 +430,7 @@ export default function Subscription() {
                   <span className="text-sm font-bold">-₹{(couponApplied.discountAmount / 100).toFixed(0)}</span>
                 </div>
               )}
-              <div className="border-t border-white/10 pt-3 flex items-center justify-between">
+              <div className="border-t border-border pt-3 flex items-center justify-between">
                 <span className="text-lg font-black text-foreground">Total</span>
                 <span className="text-2xl font-black bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
                   ₹{(finalAmount / 100).toFixed(0)}
@@ -462,7 +462,7 @@ export default function Subscription() {
             <Button
               onClick={handlePay}
               disabled={isProcessing}
-              className="h-16 w-full rounded-[1.5rem] font-black text-white text-lg shadow-2xl transition-all active:scale-[0.98] bg-gradient-to-r from-pink-500 via-purple-500 to-orange-500 hover:opacity-90 shadow-pink-500/20 gap-3"
+              className="h-16 w-full rounded-[1.5rem] font-black text-foreground text-lg shadow-2xl transition-all active:scale-[0.98] bg-gradient-to-r from-pink-500 via-purple-500 to-orange-500 hover:opacity-90 shadow-pink-500/20 gap-3"
             >
               {isProcessing ? (
                 <><Loader2 className="w-5 h-5 animate-spin" /> Processing...</>
@@ -479,11 +479,11 @@ export default function Subscription() {
 
         {/* Payment History */}
         {historyData?.payments && historyData.payments.length > 0 && (
-          <div className="max-w-3xl mx-auto glass-card border-white/10 rounded-[2rem] p-6 space-y-4">
+          <div className="max-w-3xl mx-auto glass-card border-border rounded-[2rem] p-6 space-y-4">
             <h3 className="text-sm font-black uppercase tracking-widest text-foreground flex items-center gap-2">
               <Clock className="w-4 h-4 text-blue-500" /> Payment History
             </h3>
-            <div className="rounded-2xl border border-white/5 overflow-hidden bg-background/50">
+            <div className="rounded-2xl border border-border/50 overflow-hidden bg-background/50">
               <table className="w-full text-sm">
                 <thead className="bg-muted/50 text-xs font-black uppercase tracking-widest text-muted-foreground">
                   <tr>

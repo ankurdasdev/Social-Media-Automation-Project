@@ -549,7 +549,7 @@ export default function Contacts() {
                 <div
                   className={cn(
                     "inline-flex items-center justify-center whitespace-nowrap",
-                    "h-16 border border-white/10 bg-background/30 backdrop-blur-xl hover:bg-muted/50 rounded-2xl font-black px-8 shadow-xl transition-all cursor-pointer group",
+                    "h-16 border border-border bg-background/30 backdrop-blur-xl hover:bg-muted/50 rounded-2xl font-black px-8 shadow-xl transition-all cursor-pointer group",
                     uploadCastingCallMutation.isPending ? "opacity-70 cursor-not-allowed" : "active:scale-[0.98]"
                   )}
                 >
@@ -571,7 +571,7 @@ export default function Contacts() {
         {ingestionStatus?.isRunning && (
           <div className="px-2 sm:px-6">
             <div className="p-4 sm:p-6 rounded-3xl bg-blue-500/5 border border-blue-500/10 flex flex-row items-center justify-between group overflow-hidden relative">
-              <div className="absolute inset-0 bg-blue-500 opacity-[0.02] -z-10 group-hover:scale-x-110 transition-transform duration-1000 origin-left" />
+              <div className="absolute inset-0 dark:bg-white/[0.02] bg-black/5 -z-10 group-hover:scale-x-110 transition-transform duration-1000 origin-left" />
               <div className="flex items-center gap-6 relative z-10">
                  <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shadow-lg">
                     <Loader2 className="h-7 w-7 text-blue-500 animate-spin" />
@@ -625,7 +625,7 @@ export default function Contacts() {
       </div>
 
       <Dialog open={isAddLeadOpen} onOpenChange={setIsAddLeadOpen}>
-        <DialogContent className="sm:max-w-[500px] glass-card border-white/10 dark:border-white/5 rounded-[2.5rem] p-0 overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+        <DialogContent className="sm:max-w-[500px] glass-card border-border dark:border-border/50 rounded-[2.5rem] p-0 overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
           <DialogHeader className="p-8 pb-4 bg-muted/30">
             <DialogTitle className="text-3xl font-black tracking-tighter">ADD NEW <span className="text-primary italic">CONTACT</span></DialogTitle>
             <DialogDescription className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
@@ -835,7 +835,7 @@ export default function Contacts() {
             </Tabs>
           </div>
 
-          <DialogFooter className="p-8 bg-muted/30 border-t border-white/5 gap-4">
+          <DialogFooter className="p-8 bg-muted/30 border-t border-border/50 gap-4">
             <Button variant="ghost" onClick={() => setIsAddLeadOpen(false)} className="h-12 rounded-xl font-black text-[11px] uppercase tracking-widest">CANCEL</Button>
             <Button onClick={submitAddLead} disabled={addLeadMutation.isPending} className="h-12 rounded-xl bg-primary text-white font-black px-8 shadow-xl hover:shadow-primary/30 transition-all flex-1">
               {addLeadMutation.isPending ? <Loader2 className="mr-3 h-5 w-5 animate-spin"/> : <Plus className="mr-3 h-5 w-5" />}
@@ -845,7 +845,7 @@ export default function Contacts() {
         </DialogContent>
       </Dialog>
       {sendingProgress && (
-        <div className="fixed bottom-8 right-8 w-96 glass-card p-6 shadow-2xl border-white/10 dark:border-white/5 animate-in slide-in-from-bottom-10 duration-500 z-[100] rounded-3xl overflow-hidden group">
+        <div className="fixed bottom-8 right-8 w-96 glass-card p-6 shadow-2xl border-border dark:border-border/50 animate-in slide-in-from-bottom-10 duration-500 z-[100] rounded-3xl overflow-hidden group">
           <div className="absolute inset-0 bg-primary/5 opacity-50 group-hover:opacity-100 transition-opacity" />
           <div className="relative space-y-4">
             <div className="flex items-center justify-between">
@@ -858,7 +858,7 @@ export default function Contacts() {
                </p>
             </div>
             
-            <div className="relative h-2.5 w-full bg-muted/50 rounded-full overflow-hidden border border-white/5 shadow-inner">
+            <div className="relative h-2.5 w-full bg-muted/50 rounded-full overflow-hidden border border-border/50 shadow-inner">
                <Progress 
                  value={(sendingProgress.current / sendingProgress.total) * 100} 
                  className="h-full bg-primary transition-all duration-500 ease-out" 
