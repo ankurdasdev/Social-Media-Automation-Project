@@ -108,6 +108,21 @@ export interface SubscriptionStatus {
 }
 
 export async function getSubscriptionStatus(userId: string): Promise<SubscriptionStatus> {
+  // If user is a system admin, they get free permanent premium access
+  const user = await queryOne<{ is_admin: boolean }>("SELECT is_admin FROM users WHERE id = $1", [userId]);
+  if (user?.is_admin) {
+    return {
+      planType: "admin",
+      status: "active",
+      trialEnd: null,
+      currentPeriodEnd: null,
+      daysRemaining: 9999,
+      isActive: true,
+      isTrial: false,
+      isExpired: false,
+    };
+  }
+
   const sub = await ensureSubscription(userId);
 
   if (!sub) {
