@@ -14,7 +14,7 @@ import { toast } from "sonner";
 // ── Floating orb background ─────────────────────────────────────────────────
 function AnimatedBackground() {
   return (
-    <div className="fixed inset-0 -z-10 overflow-hidden bg-[#03020a]">
+    <div className="fixed inset-0 -z-10 overflow-hidden dark:bg-[#03020a] bg-slate-50">
       {/* Grid */}
       <div
         className="absolute inset-0 opacity-[0.025]"
@@ -39,7 +39,7 @@ function ThemeToggle() {
     localStorage.setItem('casthub-theme', next ? 'dark' : 'light');
   };
   return (
-    <button onClick={toggleTheme} className="absolute top-6 right-6 z-50 w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all backdrop-blur-md">
+    <button onClick={toggleTheme} className="absolute top-6 right-6 z-50 w-10 h-10 rounded-full dark:bg-white/5 bg-black/5 border dark:border-white/10 border-border/50 flex items-center justify-center text-foreground/60 hover:text-foreground hover:dark:bg-white/10 bg-black/10 transition-all backdrop-blur-md">
       {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
     </button>
   );
@@ -48,9 +48,9 @@ function ThemeToggle() {
 // ── Stat pill ───────────────────────────────────────────────────────────────
 function StatPill({ value, label }: { value: string; label: string }) {
   return (
-    <div className="flex flex-col items-center px-5 py-3 rounded-2xl bg-white/[0.04] border border-white/[0.07] backdrop-blur-sm">
-      <span className="text-xl font-black text-white">{value}</span>
-      <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-0.5">{label}</span>
+    <div className="flex flex-col items-center px-5 py-3 rounded-2xl dark:bg-muted/10 bg-muted/50 border dark:border-border border-border/50 backdrop-blur-sm">
+      <span className="text-xl font-black text-foreground">{value}</span>
+      <span className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest mt-0.5">{label}</span>
     </div>
   );
 }
@@ -67,18 +67,18 @@ function GlassInput({
   return (
     <div className="space-y-1.5">
       {label && (
-        <label htmlFor={id} className="text-[10px] font-black uppercase tracking-[0.18em] text-white/40 block">
+        <label htmlFor={id} className="text-[10px] font-black uppercase tracking-[0.18em] text-foreground/40 block">
           {label}
         </label>
       )}
       <div className={cn(
         "relative flex items-center rounded-2xl border transition-all duration-300 backdrop-blur-xl",
-        focused ? "border-purple-500/60 bg-purple-500/10 shadow-[0_0_0_3px_rgba(139,92,246,0.12)]" : "border-white/10 bg-white/5 hover:bg-white/[0.07]",
+        focused ? "border-purple-500/60 bg-purple-500/10 shadow-[0_0_0_3px_rgba(139,92,246,0.12)]" : "dark:border-white/10 border-border/50 dark:bg-white/5 bg-black/5 hover:bg-white/[0.07]",
         error && "border-rose-500/50 bg-rose-500/10"
       )}>
         {Icon && (
           <div className="pl-4 pr-2 shrink-0">
-            <Icon className={cn("w-4 h-4 transition-colors", focused ? "text-purple-400" : "text-white/25")} />
+            <Icon className={cn("w-4 h-4 transition-colors", focused ? "text-purple-400" : "text-foreground/25")} />
           </div>
         )}
         <input
@@ -93,14 +93,14 @@ function GlassInput({
           required={required}
           autoFocus={autoFocus}
           className={cn(
-            "flex-1 h-13 py-3.5 bg-transparent text-white placeholder:text-white/20 text-[15px] font-medium outline-none",
+            "flex-1 h-13 py-3.5 bg-transparent text-foreground placeholder:text-foreground/20 text-[15px] font-medium outline-none",
             Icon ? "pl-1" : "pl-4",
             rightEl ? "pr-2" : "pr-4"
           )}
         />
         {rightEl && <div className="pr-3 shrink-0">{rightEl}</div>}
       </div>
-      {hint && !error && <p className="text-[10px] text-white/25 font-medium pl-1">{hint}</p>}
+      {hint && !error && <p className="text-[10px] text-foreground/25 font-medium pl-1">{hint}</p>}
       {error && <p className="text-[11px] text-rose-400 font-bold pl-1">{error}</p>}
     </div>
   );
@@ -198,9 +198,9 @@ export default function Login() {
         {/* Logo */}
         <div className="flex items-center gap-3.5">
           <div className="w-11 h-11 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-[14px] flex items-center justify-center shadow-lg shadow-purple-500/30">
-            <Zap className="w-5.5 h-5.5 text-white fill-current" />
+            <Zap className="w-5.5 h-5.5 text-foreground fill-current" />
           </div>
-          <span className="text-xl font-black tracking-tight text-white">CAST<span className="text-purple-400 italic">HUB</span></span>
+          <span className="text-xl font-black tracking-tight text-foreground">CAST<span className="text-purple-400 italic">HUB</span></span>
         </div>
 
         {/* Hero */}
@@ -210,13 +210,13 @@ export default function Login() {
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               <span className="text-[11px] font-black text-purple-300 uppercase tracking-[0.25em]">Casting Automation Platform</span>
             </div>
-            <h1 className="text-5xl font-black tracking-[-0.03em] text-white leading-[1.08]">
+            <h1 className="text-5xl font-black tracking-[-0.03em] text-foreground leading-[1.08]">
               Reach talent<br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-violet-400 to-indigo-400">
                 at scale.
               </span>
             </h1>
-            <p className="text-white/50 font-medium leading-relaxed text-[15px] max-w-[340px]">
+            <p className="text-foreground/50 font-medium leading-relaxed text-[15px] max-w-[340px]">
               The all-in-one dashboard for casting directors to automate WhatsApp, Gmail & Instagram outreach.
             </p>
           </div>
@@ -240,20 +240,20 @@ export default function Login() {
                 f.color,
                 mounted ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4"
               )} style={{ transitionDelay: `${300 + i * 80}ms` }}>
-                <div className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center shrink-0">
+                <div className="w-9 h-9 rounded-xl dark:bg-white/5 bg-black/5 flex items-center justify-center shrink-0">
                   <f.icon className="w-4 h-4" />
                 </div>
                 <div>
-                  <p className="text-xs font-black text-white uppercase tracking-wide">{f.label}</p>
-                  <p className="text-[11px] text-white/40 font-medium">{f.desc}</p>
+                  <p className="text-xs font-black text-foreground uppercase tracking-wide">{f.label}</p>
+                  <p className="text-[11px] text-foreground/40 font-medium">{f.desc}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        <p className="text-[11px] text-white/20 font-medium">
-          © {new Date().getFullYear()} CastHub — All rights reserved · <Link to="/terms" className="hover:text-white/40 transition-colors">Terms</Link> · <Link to="/privacy" className="hover:text-white/40 transition-colors">Privacy</Link>
+        <p className="text-[11px] text-foreground/20 font-medium">
+          © {new Date().getFullYear()} CastHub — All rights reserved · <Link to="/terms" className="hover:text-foreground/40 transition-colors">Terms</Link> · <Link to="/privacy" className="hover:text-foreground/40 transition-colors">Privacy</Link>
         </p>
       </div>
 
@@ -265,16 +265,16 @@ export default function Login() {
         {/* Mobile logo */}
         <div className="lg:hidden flex items-center gap-3 mb-10">
           <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center">
-            <Zap className="w-5 h-5 text-white fill-current" />
+            <Zap className="w-5 h-5 text-foreground fill-current" />
           </div>
-          <span className="text-xl font-black tracking-tight text-white">CAST<span className="text-purple-400 italic">HUB</span></span>
+          <span className="text-xl font-black tracking-tight text-foreground">CAST<span className="text-purple-400 italic">HUB</span></span>
         </div>
 
         <div className="w-full max-w-[440px] space-y-8">
           {/* Header */}
           <div className="space-y-2">
-            <h2 className="text-4xl font-black tracking-tight text-white">Welcome back</h2>
-            <p className="text-white/40 font-medium text-[15px]">Sign in to your dashboard</p>
+            <h2 className="text-4xl font-black tracking-tight text-foreground">Welcome back</h2>
+            <p className="text-foreground/40 font-medium text-[15px]">Sign in to your dashboard</p>
           </div>
 
           {/* Error Banner */}
@@ -319,7 +319,7 @@ export default function Login() {
                 label="Password" icon={Lock}
                 rightEl={
                   <button type="button" onClick={() => setShowPassword(!showPassword)}
-                    className="text-white/25 hover:text-white/60 transition-colors p-1">
+                    className="text-foreground/25 hover:text-foreground/60 transition-colors p-1">
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 }
@@ -331,16 +331,16 @@ export default function Login() {
                       Forgot password?
                     </button>
                   </DialogTrigger>
-                  <DialogContent className="bg-[#0e0b1f] border border-white/10 rounded-3xl shadow-2xl max-w-[400px]">
+                  <DialogContent className="dark:bg-[#0e0b1f] bg-background border dark:border-white/10 border-border/50 rounded-3xl shadow-2xl max-w-[400px]">
                     <form onSubmit={handleResetPassword}>
                       <DialogHeader className="pb-4">
-                        <DialogTitle className="text-2xl font-black tracking-tight text-white flex items-center gap-2.5">
+                        <DialogTitle className="text-2xl font-black tracking-tight text-foreground flex items-center gap-2.5">
                           <div className="w-9 h-9 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center">
                             <KeyRound className="w-4.5 h-4.5 text-purple-400" />
                           </div>
                           Reset Password
                         </DialogTitle>
-                        <p className="text-sm text-white/40 font-medium pt-1">
+                        <p className="text-sm text-foreground/40 font-medium pt-1">
                           Enter your email and we'll send you a reset link.
                         </p>
                       </DialogHeader>
@@ -354,7 +354,7 @@ export default function Login() {
                       </div>
                       <DialogFooter>
                         <button type="submit" disabled={isResetLoading}
-                          className="w-full h-13 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg shadow-purple-500/20 active:scale-[0.98]">
+                          className="w-full h-13 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-foreground font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg shadow-purple-500/20 active:scale-[0.98]">
                           {isResetLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Send Reset Link"}
                         </button>
                       </DialogFooter>
@@ -366,7 +366,7 @@ export default function Login() {
 
             {/* CTA */}
             <button type="submit" disabled={isLoading}
-              className="w-full h-14 mt-2 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-60 text-white font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all duration-300 shadow-xl shadow-purple-500/25 active:scale-[0.98]">
+              className="w-full h-14 mt-2 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-60 text-foreground font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all duration-300 shadow-xl shadow-purple-500/25 active:scale-[0.98]">
               {isLoading ? (
                 <><Loader2 className="w-4 h-4 animate-spin" /> Signing in...</>
               ) : (
@@ -378,19 +378,19 @@ export default function Login() {
           {/* Divider */}
           <div className="relative flex items-center gap-4">
             <div className="flex-1 h-px bg-white/[0.06]" />
-            <span className="text-[11px] font-black text-white/20 uppercase tracking-widest">New here?</span>
+            <span className="text-[11px] font-black text-foreground/20 uppercase tracking-widest">New here?</span>
             <div className="flex-1 h-px bg-white/[0.06]" />
           </div>
 
           {/* Sign up CTA */}
           <Link to="/signup"
-            className="w-full h-13 rounded-2xl border border-white/[0.08] hover:border-purple-500/40 hover:bg-purple-500/5 text-white/60 hover:text-white font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all duration-300 group">
+            className="w-full h-13 rounded-2xl border border-white/[0.08] hover:border-purple-500/40 hover:bg-purple-500/5 text-foreground/60 hover:text-foreground font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all duration-300 group">
             Create Free Account
             <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
           </Link>
 
           {/* Legal */}
-          <p className="text-center text-[10px] text-white/20 font-medium">
+          <p className="text-center text-[10px] text-foreground/20 font-medium">
             By continuing, you agree to our{" "}
             <Link to="/terms" className="text-purple-400/60 hover:text-purple-400 transition-colors font-bold">Terms</Link>
             {" "}and{" "}

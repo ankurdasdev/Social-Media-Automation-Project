@@ -14,7 +14,7 @@ import { PrivacyContent } from "./PrivacyPolicy";
 // ── Reuse same animated background ──────────────────────────────────────────
 function AnimatedBackground() {
   return (
-    <div className="fixed inset-0 -z-10 overflow-hidden bg-[#03020a]">
+    <div className="fixed inset-0 -z-10 overflow-hidden dark:bg-[#03020a] bg-slate-50">
       <div
         className="absolute inset-0 opacity-[0.025]"
         style={{ backgroundImage: "linear-gradient(rgba(139,92,246,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.6) 1px, transparent 1px)", backgroundSize: "60px 60px" }}
@@ -35,7 +35,7 @@ function ThemeToggle() {
     localStorage.setItem('casthub-theme', next ? 'dark' : 'light');
   };
   return (
-    <button onClick={toggleTheme} className="absolute top-6 right-6 z-50 w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all backdrop-blur-md">
+    <button onClick={toggleTheme} className="absolute top-6 right-6 z-50 w-10 h-10 rounded-full dark:bg-white/5 bg-black/5 border dark:border-white/10 border-border/50 flex items-center justify-center text-foreground/60 hover:text-foreground hover:dark:bg-white/10 bg-black/10 transition-all backdrop-blur-md">
       {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
     </button>
   );
@@ -54,16 +54,16 @@ function GlassInput({
   const [focused, setFocused] = useState(false);
   return (
     <div className="space-y-1.5">
-      {label && <label htmlFor={id} className="text-[10px] font-black uppercase tracking-[0.18em] text-white/40 block">{label}</label>}
+      {label && <label htmlFor={id} className="text-[10px] font-black uppercase tracking-[0.18em] text-foreground/40 block">{label}</label>}
       <div className={cn(
         "relative flex items-center rounded-2xl border transition-all duration-300 backdrop-blur-xl",
-        focused ? "border-purple-500/60 bg-purple-500/10 shadow-[0_0_0_3px_rgba(139,92,246,0.12)]" : "border-white/10 bg-white/5 hover:bg-white/[0.07]",
+        focused ? "border-purple-500/60 bg-purple-500/10 shadow-[0_0_0_3px_rgba(139,92,246,0.12)]" : "dark:border-white/10 border-border/50 dark:bg-white/5 bg-black/5 hover:bg-white/[0.07]",
         error && "border-rose-500/50 bg-rose-500/10",
         disabled && "opacity-50"
       )}>
         {Icon && (
           <div className="pl-4 pr-2 shrink-0">
-            <Icon className={cn("w-4 h-4 transition-colors", focused ? "text-purple-400" : "text-white/25")} />
+            <Icon className={cn("w-4 h-4 transition-colors", focused ? "text-purple-400" : "text-foreground/25")} />
           </div>
         )}
         <input
@@ -71,13 +71,13 @@ function GlassInput({
           onChange={onChange} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
           required={required} autoFocus={autoFocus} disabled={disabled}
           className={cn(
-            "flex-1 h-13 py-3.5 bg-transparent text-white placeholder:text-white/20 text-[15px] font-medium outline-none",
+            "flex-1 h-13 py-3.5 bg-transparent text-foreground placeholder:text-foreground/20 text-[15px] font-medium outline-none",
             Icon ? "pl-1" : "pl-4", rightEl ? "pr-2" : "pr-4"
           )}
         />
         {rightEl && <div className="pr-3 shrink-0">{rightEl}</div>}
       </div>
-      {hint && !error && <p className="text-[10px] text-white/25 font-medium pl-1">{hint}</p>}
+      {hint && !error && <p className="text-[10px] text-foreground/25 font-medium pl-1">{hint}</p>}
       {error && <p className="text-[11px] text-rose-400 font-bold pl-1">{error}</p>}
     </div>
   );
@@ -105,7 +105,7 @@ function PasswordStrength({ password }: { password: string }) {
     <div className="space-y-2 pt-1">
       <div className="flex gap-1.5">
         {[1, 2, 3, 4].map(i => (
-          <div key={i} className={cn("h-1 flex-1 rounded-full transition-all duration-500", s >= i ? configs[s].color : "bg-white/5")} />
+          <div key={i} className={cn("h-1 flex-1 rounded-full transition-all duration-500", s >= i ? configs[s].color : "dark:bg-white/5 bg-black/5")} />
         ))}
       </div>
       <p className={cn("text-[10px] font-black uppercase tracking-widest pl-0.5", textColors[s])}>{configs[s].label}</p>
@@ -199,16 +199,16 @@ export default function Signup() {
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
               <span className="text-[11px] font-black text-emerald-400 uppercase tracking-widest">Account Created</span>
             </div>
-            <h1 className="text-4xl font-black tracking-tight text-white">Check Your Inbox! 📬</h1>
-            <p className="text-white/50 font-medium leading-relaxed">We've sent a verification email to</p>
+            <h1 className="text-4xl font-black tracking-tight text-foreground">Check Your Inbox! 📬</h1>
+            <p className="text-foreground/50 font-medium leading-relaxed">We've sent a verification email to</p>
             <p className="text-purple-400 font-black text-lg">{successEmail}</p>
-            <p className="text-white/40 font-medium text-sm leading-relaxed max-w-sm mx-auto">
+            <p className="text-foreground/40 font-medium text-sm leading-relaxed max-w-sm mx-auto">
               Click the link in the email to activate your account. The link expires in 24 hours.
             </p>
           </div>
-          <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/[0.07] text-left">
-            <p className="text-[10px] font-black uppercase tracking-widest text-white/25 mb-2">Didn't receive it?</p>
-            <p className="text-xs text-white/40">Check your spam folder, or{" "}
+          <div className="p-5 rounded-2xl dark:bg-white/[0.03] bg-black/[0.03] border dark:border-white/[0.07] border-border/50 text-left">
+            <p className="text-[10px] font-black uppercase tracking-widest text-foreground/25 mb-2">Didn't receive it?</p>
+            <p className="text-xs text-foreground/40">Check your spam folder, or{" "}
               <button onClick={async () => {
                 await fetch("/api/auth/resend-verification", {
                   method: "POST", headers: { "Content-Type": "application/json" },
@@ -220,7 +220,7 @@ export default function Signup() {
               </button>
             </p>
           </div>
-          <Link to="/login" className="inline-flex items-center gap-2 text-sm text-white/40 hover:text-white/70 transition-colors font-bold">
+          <Link to="/login" className="inline-flex items-center gap-2 text-sm text-foreground/40 hover:text-foreground/70 transition-colors font-bold">
             Back to Sign In <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
@@ -241,9 +241,9 @@ export default function Signup() {
         {/* Logo */}
         <div className="flex items-center gap-3.5">
           <div className="w-11 h-11 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-[14px] flex items-center justify-center shadow-lg shadow-purple-500/30">
-            <Zap className="w-5.5 h-5.5 text-white fill-current" />
+            <Zap className="w-5.5 h-5.5 text-foreground fill-current" />
           </div>
-          <span className="text-xl font-black tracking-tight text-white">CAST<span className="text-purple-400 italic">HUB</span></span>
+          <span className="text-xl font-black tracking-tight text-foreground">CAST<span className="text-purple-400 italic">HUB</span></span>
         </div>
 
         {/* Hero */}
@@ -253,13 +253,13 @@ export default function Signup() {
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               <span className="text-[11px] font-black text-purple-300 uppercase tracking-[0.25em]">Join the Platform</span>
             </div>
-            <h1 className="text-5xl font-black tracking-[-0.03em] text-white leading-[1.08]">
+            <h1 className="text-5xl font-black tracking-[-0.03em] text-foreground leading-[1.08]">
               Automate your<br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-violet-400 to-indigo-400">
                 casting outreach.
               </span>
             </h1>
-            <p className="text-white/50 font-medium leading-relaxed text-[15px] max-w-[340px]">
+            <p className="text-foreground/50 font-medium leading-relaxed text-[15px] max-w-[340px]">
               Connect with talent across WhatsApp, Gmail, and Instagram — all from one powerful casting dashboard.
             </p>
           </div>
@@ -272,31 +272,31 @@ export default function Signup() {
                 f.bg,
                 mounted ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4"
               )} style={{ transitionDelay: `${400 + i * 80}ms` }}>
-                <div className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center shrink-0">
+                <div className="w-9 h-9 rounded-xl dark:bg-white/5 bg-black/5 flex items-center justify-center shrink-0">
                   <f.icon className={cn("w-4 h-4", f.color)} />
                 </div>
                 <div>
-                  <p className="text-xs font-black text-white uppercase tracking-wide">{f.label}</p>
-                  <p className="text-[11px] text-white/40 font-medium">{f.desc}</p>
+                  <p className="text-xs font-black text-foreground uppercase tracking-wide">{f.label}</p>
+                  <p className="text-[11px] text-foreground/40 font-medium">{f.desc}</p>
                 </div>
               </div>
             ))}
           </div>
 
           {/* Trust */}
-          <div className="flex items-center gap-3 p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+          <div className="flex items-center gap-3 p-4 rounded-2xl dark:bg-white/[0.03] bg-black/[0.03] border border-white/[0.06]">
             <ShieldCheck className="w-5 h-5 text-purple-400 shrink-0" />
-            <p className="text-xs text-white/40 font-medium leading-relaxed">
+            <p className="text-xs text-foreground/40 font-medium leading-relaxed">
               Your data is protected with AES-256 encryption and stored securely in our EU-compliant infrastructure.
             </p>
           </div>
         </div>
 
-        <p className="text-[11px] text-white/20 font-medium">
+        <p className="text-[11px] text-foreground/20 font-medium">
           © {new Date().getFullYear()} CastHub ·{" "}
-          <Link to="/terms" className="hover:text-white/40 transition-colors">Terms</Link>
+          <Link to="/terms" className="hover:text-foreground/40 transition-colors">Terms</Link>
           {" "}·{" "}
-          <Link to="/privacy" className="hover:text-white/40 transition-colors">Privacy</Link>
+          <Link to="/privacy" className="hover:text-foreground/40 transition-colors">Privacy</Link>
         </p>
       </div>
 
@@ -308,16 +308,16 @@ export default function Signup() {
         {/* Mobile logo */}
         <div className="lg:hidden flex items-center gap-3 mb-8 self-start">
           <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center">
-            <Zap className="w-5 h-5 text-white fill-current" />
+            <Zap className="w-5 h-5 text-foreground fill-current" />
           </div>
-          <span className="text-xl font-black tracking-tight text-white">CAST<span className="text-purple-400 italic">HUB</span></span>
+          <span className="text-xl font-black tracking-tight text-foreground">CAST<span className="text-purple-400 italic">HUB</span></span>
         </div>
 
         <div className="w-full max-w-[460px] space-y-7 my-auto">
           {/* Header */}
           <div className="space-y-1.5">
-            <h2 className="text-4xl font-black tracking-tight text-white">Create account</h2>
-            <p className="text-white/40 font-medium text-[15px]">Start your casting automation journey</p>
+            <h2 className="text-4xl font-black tracking-tight text-foreground">Create account</h2>
+            <p className="text-foreground/40 font-medium text-[15px]">Start your casting automation journey</p>
           </div>
 
           {/* Error */}
@@ -347,13 +347,13 @@ export default function Signup() {
 
             {/* Phone */}
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase tracking-[0.18em] text-white/40 block">
-                Phone Number <span className="text-white/20 normal-case tracking-normal font-normal">(optional)</span>
+              <label className="text-[10px] font-black uppercase tracking-[0.18em] text-foreground/40 block">
+                Phone Number <span className="text-foreground/20 normal-case tracking-normal font-normal">(optional)</span>
               </label>
               <div className="flex gap-2.5">
                 <div className="h-13 px-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex items-center gap-2 shrink-0">
                   <span className="text-base">🇮🇳</span>
-                  <span className="text-xs font-black text-white/40">+91</span>
+                  <span className="text-xs font-black text-foreground/40">+91</span>
                 </div>
                 <div className="flex-1">
                   <GlassInput
@@ -370,36 +370,36 @@ export default function Signup() {
             {/* Gender + DOB */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-[0.18em] text-white/40 block">Gender</label>
+                <label className="text-[10px] font-black uppercase tracking-[0.18em] text-foreground/40 block">Gender</label>
                 <div className={cn(
                   "flex items-center rounded-2xl border transition-all duration-300 backdrop-blur-xl",
-                  "border-white/10 bg-white/5 hover:bg-white/[0.07]",
+                  "dark:border-white/10 border-border/50 dark:bg-white/5 bg-black/5 hover:bg-white/[0.07]",
                   fieldErrors.gender && "border-rose-500/50"
                 )}>
-                  <Users className="w-4 h-4 text-white/25 ml-4 mr-2 shrink-0" />
+                  <Users className="w-4 h-4 text-foreground/25 ml-4 mr-2 shrink-0" />
                   <select name="gender" value={formData.gender} onChange={handleChange}
                     className={cn(
                       "flex-1 h-13 py-3.5 pr-4 bg-transparent text-[15px] font-medium outline-none",
-                      !formData.gender ? "text-white/20" : "text-white"
+                      !formData.gender ? "text-foreground/20" : "text-foreground"
                     )}>
-                    <option value="" disabled className="bg-[#0e0b1f] text-white/40">Select</option>
-                    <option value="male" className="bg-[#0e0b1f] text-white">Male</option>
-                    <option value="female" className="bg-[#0e0b1f] text-white">Female</option>
-                    <option value="other" className="bg-[#0e0b1f] text-white">Other</option>
+                    <option value="" disabled className="dark:bg-[#0e0b1f] bg-background text-foreground/40">Select</option>
+                    <option value="male" className="dark:bg-[#0e0b1f] bg-background text-foreground">Male</option>
+                    <option value="female" className="dark:bg-[#0e0b1f] bg-background text-foreground">Female</option>
+                    <option value="other" className="dark:bg-[#0e0b1f] bg-background text-foreground">Other</option>
                   </select>
                 </div>
                 {fieldErrors.gender && <p className="text-[11px] text-rose-400 font-bold pl-1">{fieldErrors.gender}</p>}
               </div>
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-[0.18em] text-white/40 block">Date of Birth</label>
+                <label className="text-[10px] font-black uppercase tracking-[0.18em] text-foreground/40 block">Date of Birth</label>
                 <div className={cn(
                   "flex items-center rounded-2xl border transition-all duration-300 backdrop-blur-xl",
-                  "border-white/10 bg-white/5 hover:bg-white/[0.07]",
+                  "dark:border-white/10 border-border/50 dark:bg-white/5 bg-black/5 hover:bg-white/[0.07]",
                   fieldErrors.dob && "border-rose-500/50"
                 )}>
-                  <Calendar className="w-4 h-4 text-white/25 ml-4 mr-2 shrink-0" />
+                  <Calendar className="w-4 h-4 text-foreground/25 ml-4 mr-2 shrink-0" />
                   <input name="dob" type="date" value={formData.dob} onChange={handleChange}
-                    className="flex-1 h-13 py-3.5 pr-4 bg-transparent text-white text-[15px] font-medium outline-none [color-scheme:dark]" />
+                    className="flex-1 h-13 py-3.5 pr-4 bg-transparent text-foreground text-[15px] font-medium outline-none [color-scheme:dark]" />
                 </div>
                 {fieldErrors.dob && <p className="text-[11px] text-rose-400 font-bold pl-1">{fieldErrors.dob}</p>}
               </div>
@@ -415,7 +415,7 @@ export default function Signup() {
                 icon={Lock} error={fieldErrors.password}
                 rightEl={
                   <button type="button" onClick={() => setShowPassword(!showPassword)}
-                    className="text-white/25 hover:text-white/60 transition-colors p-1">
+                    className="text-foreground/25 hover:text-foreground/60 transition-colors p-1">
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 }
@@ -436,7 +436,7 @@ export default function Signup() {
                     <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                   )}
                   <button type="button" onClick={() => setShowConfirm(!showConfirm)}
-                    className="text-white/25 hover:text-white/60 transition-colors p-1">
+                    className="text-foreground/25 hover:text-foreground/60 transition-colors p-1">
                     {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
@@ -448,24 +448,24 @@ export default function Signup() {
               "flex items-start gap-3.5 p-4 rounded-2xl border transition-all cursor-pointer",
               formData.terms
                 ? "bg-purple-500/8 border-purple-500/25"
-                : "bg-white/[0.03] border-white/[0.07]",
+                : "dark:bg-white/[0.03] bg-black/[0.03] dark:border-white/[0.07] border-border/50",
               fieldErrors.terms && "border-rose-500/40"
             )} onClick={() => setFormData(p => ({ ...p, terms: !p.terms }))}>
               <div className={cn(
                 "w-5 h-5 rounded-[6px] border-2 flex items-center justify-center shrink-0 mt-0.5 transition-all",
                 formData.terms ? "border-purple-500 bg-purple-500" : "border-white/20 bg-transparent"
               )}>
-                {formData.terms && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                {formData.terms && <CheckCircle2 className="w-3.5 h-3.5 text-foreground" />}
               </div>
-              <p className="text-xs text-white/40 font-medium leading-relaxed select-none">
+              <p className="text-xs text-foreground/40 font-medium leading-relaxed select-none">
                 I agree to the{" "}
                 <Dialog>
                   <DialogTrigger asChild>
                     <button type="button" className="text-purple-400 hover:text-purple-300 font-bold" onClick={e => e.stopPropagation()}>Terms of Service</button>
                   </DialogTrigger>
-                  <DialogContent className="bg-[#0e0b1f] border border-white/10 rounded-3xl shadow-2xl max-w-3xl max-h-[85vh] overflow-y-auto">
-                    <DialogHeader className="pb-4 sticky top-0 bg-[#0e0b1f] z-10 border-b border-white/10 pt-4 px-2 -mx-2 mb-4">
-                      <DialogTitle className="text-2xl font-black tracking-tight text-white flex items-center gap-2.5">
+                  <DialogContent className="dark:bg-[#0e0b1f] bg-background border dark:border-white/10 border-border/50 rounded-3xl shadow-2xl max-w-3xl max-h-[85vh] overflow-y-auto">
+                    <DialogHeader className="pb-4 sticky top-0 dark:bg-[#0e0b1f] bg-background z-10 border-b dark:border-white/10 border-border/50 pt-4 px-2 -mx-2 mb-4">
+                      <DialogTitle className="text-2xl font-black tracking-tight text-foreground flex items-center gap-2.5">
                         <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
                           <FileText className="w-4.5 h-4.5 text-primary" />
                         </div>
@@ -480,9 +480,9 @@ export default function Signup() {
                   <DialogTrigger asChild>
                     <button type="button" className="text-purple-400 hover:text-purple-300 font-bold" onClick={e => e.stopPropagation()}>Privacy Policy</button>
                   </DialogTrigger>
-                  <DialogContent className="bg-[#0e0b1f] border border-white/10 rounded-3xl shadow-2xl max-w-3xl max-h-[85vh] overflow-y-auto">
-                    <DialogHeader className="pb-4 sticky top-0 bg-[#0e0b1f] z-10 border-b border-white/10 pt-4 px-2 -mx-2 mb-4">
-                      <DialogTitle className="text-2xl font-black tracking-tight text-white flex items-center gap-2.5">
+                  <DialogContent className="dark:bg-[#0e0b1f] bg-background border dark:border-white/10 border-border/50 rounded-3xl shadow-2xl max-w-3xl max-h-[85vh] overflow-y-auto">
+                    <DialogHeader className="pb-4 sticky top-0 dark:bg-[#0e0b1f] bg-background z-10 border-b dark:border-white/10 border-border/50 pt-4 px-2 -mx-2 mb-4">
+                      <DialogTitle className="text-2xl font-black tracking-tight text-foreground flex items-center gap-2.5">
                         <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
                           <Shield className="w-4.5 h-4.5 text-blue-400" />
                         </div>
@@ -499,7 +499,7 @@ export default function Signup() {
 
             {/* Submit */}
             <button type="submit" disabled={isLoading}
-              className="w-full h-14 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-60 text-white font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all duration-300 shadow-xl shadow-purple-500/25 active:scale-[0.98]">
+              className="w-full h-14 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-60 text-foreground font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all duration-300 shadow-xl shadow-purple-500/25 active:scale-[0.98]">
               {isLoading
                 ? <><Loader2 className="w-4 h-4 animate-spin" /> Creating Account...</>
                 : <><ShieldCheck className="w-4 h-4" /> Create My Account <ArrowRight className="w-4 h-4" /></>
@@ -510,11 +510,11 @@ export default function Signup() {
           {/* Sign in */}
           <div className="relative flex items-center gap-4">
             <div className="flex-1 h-px bg-white/[0.06]" />
-            <span className="text-[11px] font-black text-white/20 uppercase tracking-widest">Already a member?</span>
+            <span className="text-[11px] font-black text-foreground/20 uppercase tracking-widest">Already a member?</span>
             <div className="flex-1 h-px bg-white/[0.06]" />
           </div>
           <Link to="/login"
-            className="w-full h-13 rounded-2xl border border-white/[0.08] hover:border-purple-500/40 hover:bg-purple-500/5 text-white/60 hover:text-white font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all duration-300 group">
+            className="w-full h-13 rounded-2xl border border-white/[0.08] hover:border-purple-500/40 hover:bg-purple-500/5 text-foreground/60 hover:text-foreground font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all duration-300 group">
             Sign In Instead
             <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
           </Link>
