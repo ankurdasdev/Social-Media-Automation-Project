@@ -13,6 +13,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ResetPassword from "./pages/ResetPassword";
 import Onboarding from "./pages/Onboarding";
+import VerifyEmail from "./pages/VerifyEmail";
 
 // App Pages
 import Dashboard from "./pages/Dashboard";
@@ -83,8 +84,10 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
 
             {/* Protected App Routes */}
+            <Route path="/setup" element={<ProtectedRoute element={<Onboarding />} />} />
             <Route path="/onboarding" element={<ProtectedRoute element={<Onboarding />} />} />
             <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} />} />
             <Route path="/controller" element={<ProtectedRoute element={<Controller />} />} />
