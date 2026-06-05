@@ -1,4 +1,4 @@
-import { RequestHandler } from "express";
+ovimport { RequestHandler } from "express";
 import axios from "axios";
 import { WhatsAppStatusResponse, WhatsAppQRResponse } from "@shared/api";
 import { pool } from "../db/index";
@@ -227,13 +227,15 @@ export const handleWhatsAppSyncGroups: RequestHandler = async (req, res) => {
     for (const group of groupsData) {
       if (!group.id || !group.subject) continue;
 
-      // Check if this source name already exists for this user on whatsapp platform
       const existing = await pool.query(
-        "SELECT id, url FROM source_groups WHERE user_id = $1 AND name = $2 AND platform = 'whatsapp'",
-        [userId, group.subject]
+        "SELECT id, url, status FROM source_groups WHERE user_id = $1 AND (url = $2 OR name = $3) AND platform = 'whatsapp' ORDER BY created_at DESC LIMIT 1",
+        [userId, group.id, group.subject]
       );
 
       if (existing.rows.length > 0) {
+        if (existing.rows[0].status === 'ignored') {
+          continue; // Skip ignored groups so they don't reappear
+        }
         // Update URL (JID) if it's missing or changed, and update last_verified_at
         await pool.query(
           "UPDATE source_groups SET url = $1, status = 'connected', last_verified_at = NOW(), updated_at = NOW() WHERE id = $2",
