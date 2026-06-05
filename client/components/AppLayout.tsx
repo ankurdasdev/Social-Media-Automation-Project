@@ -316,10 +316,10 @@ export default function AppLayout({ children }: AppLayoutProps) {
                  variant="outline"
                  size="sm"
                  onClick={() => startTutorial()}
-                 className="h-11 rounded-xl bg-amber-500/10 border-amber-500/20 text-amber-500 hover:text-amber-400 gap-2 hover:bg-amber-500/20 transition-all font-black text-[10px] tracking-widest uppercase shadow-md shadow-amber-500/5 group"
+                 className="h-11 rounded-xl bg-amber-500/10 border-amber-500/20 text-amber-500 hover:text-amber-400 gap-2 hover:bg-amber-500/20 transition-all font-black text-[10px] tracking-widest uppercase shadow-md shadow-amber-500/5 group px-3 md:px-4 shrink-0"
                >
-                 <Sparkles className="w-4 h-4 text-amber-500 group-hover:rotate-45 transition-transform" />
-                 Page Guide
+                 <Sparkles className="w-4 h-4 text-amber-500 group-hover:rotate-45 transition-transform shrink-0" />
+                 <span className="hidden sm:inline">Page Guide</span>
                </Button>
              )}
 
