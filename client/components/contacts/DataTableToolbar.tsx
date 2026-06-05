@@ -361,7 +361,7 @@ export function DataTableToolbar<TData>({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Original Bulk Actions Dropdown */}
+          {/* Advanced Bulk Actions Dropdown */}
           {hasSelection && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -372,67 +372,85 @@ export function DataTableToolbar<TData>({
                   <ChevronDown className="h-3 w-3 ml-1 opacity-50" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-[280px] glass-card border-white/10 p-2 rounded-2xl shadow-2xl z-[100]">
-                <DropdownMenuLabel className="px-3 py-1.5 text-[8px] font-black text-muted-foreground uppercase tracking-widest">Automation</DropdownMenuLabel>
-                <DropdownMenuSeparator className="bg-white/5 mx-2 my-1" />
-                <DropdownMenuItem 
-                  onClick={() => {
-                    const ids = selectedRows.map(r => (r.original as any).id);
-                    onTriggerAction?.(ids);
-                  }}
-                  className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-primary cursor-pointer hover:bg-primary/20 rounded-xl"
-                >
-                  <Zap className="mr-2 h-3.5 w-3.5 fill-current" /> Trigger Automation
-                </DropdownMenuItem>
-
-                <DropdownMenuSeparator className="bg-white/10 my-2" />
+              <DropdownMenuContent align="end" className="w-[320px] glass-card border-white/10 p-3 rounded-[2rem] shadow-2xl z-[100] flex flex-col gap-2 max-h-[80vh] overflow-y-auto scrollbar-thin">
                 
-                <DropdownMenuLabel className="px-3 py-1.5 text-[8px] font-black text-muted-foreground uppercase tracking-widest">Row Formatting (Color)</DropdownMenuLabel>
-                <div className="flex items-center justify-between px-2 py-1">
-                  <DropdownMenuItem asChild onSelect={(e) => { e.preventDefault(); executeBulkAction("color", "yellow"); }}>
-                    <div className="w-6 h-6 rounded-full bg-yellow-400 cursor-pointer hover:ring-2 ring-offset-1 ring-offset-background transition-all" title="Yellow" />
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild onSelect={(e) => { e.preventDefault(); executeBulkAction("color", "green"); }}>
-                    <div className="w-6 h-6 rounded-full bg-emerald-400 cursor-pointer hover:ring-2 ring-offset-1 ring-offset-background transition-all" title="Green" />
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild onSelect={(e) => { e.preventDefault(); executeBulkAction("color", "red"); }}>
-                    <div className="w-6 h-6 rounded-full bg-rose-400 cursor-pointer hover:ring-2 ring-offset-1 ring-offset-background transition-all" title="Red" />
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild onSelect={(e) => { e.preventDefault(); executeBulkAction("color", "blue"); }}>
-                    <div className="w-6 h-6 rounded-full bg-blue-400 cursor-pointer hover:ring-2 ring-offset-1 ring-offset-background transition-all" title="Blue" />
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild onSelect={(e) => { e.preventDefault(); executeBulkAction("color", "transparent"); }}>
-                    <div className="w-6 h-6 rounded-full bg-muted cursor-pointer border border-white/10 hover:ring-2 ring-offset-1 ring-offset-background flex items-center justify-center text-[10px] text-muted-foreground transition-all font-black" title="Clear Color">X</div>
+                {/* AUTOMATION */}
+                <div className="space-y-1">
+                  <DropdownMenuLabel className="px-2 py-1 text-[9px] font-black text-primary uppercase tracking-widest flex items-center gap-2">
+                    <Zap className="w-3 h-3 fill-current" /> Automation
+                  </DropdownMenuLabel>
+                  <DropdownMenuItem 
+                    onClick={() => {
+                      const ids = selectedRows.map(r => (r.original as any).id);
+                      onTriggerAction?.(ids);
+                    }}
+                    className="px-3 py-3 text-[11px] font-black uppercase tracking-widest text-foreground cursor-pointer hover:bg-primary/20 rounded-xl transition-all"
+                  >
+                    Trigger Automation Sequence
                   </DropdownMenuItem>
                 </div>
 
-                <DropdownMenuSeparator className="bg-white/10 my-2" />
+                <DropdownMenuSeparator className="bg-white/5" />
 
-                <DropdownMenuLabel className="px-3 py-1.5 text-[8px] font-black text-muted-foreground uppercase tracking-widest">Organization</DropdownMenuLabel>
-                {dynamicSheets.length > 0 ? (
-                  <div className="max-h-32 overflow-y-auto">
-                    {dynamicSheets.map((sheet: any) => (
-                      <DropdownMenuItem 
-                        key={sheet}
-                        onSelect={(e) => { e.preventDefault(); executeBulkAction("move", sheet); }} 
-                        className="px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-foreground cursor-pointer hover:bg-muted rounded-xl"
-                      >
-                        Move to "{sheet}"
-                      </DropdownMenuItem>
-                    ))}
+                {/* ROW FORMATTING */}
+                <div className="space-y-1">
+                  <DropdownMenuLabel className="px-2 py-1 text-[9px] font-black text-purple-400 uppercase tracking-widest flex items-center gap-2">
+                    <Palette className="w-3 h-3" /> Row Formatting
+                  </DropdownMenuLabel>
+                  <div className="-mx-2 -my-2">
+                    <AdvancedColorPicker 
+                      color="transparent" 
+                      onChange={(c) => executeBulkAction("color", c)} 
+                    />
                   </div>
-                ) : (
-                   <div className="px-3 py-2 text-[10px] text-muted-foreground italic">No other sheets</div>
-                )}
-                
-                <DropdownMenuSeparator className="bg-white/10 my-2" />
-                
-                <DropdownMenuItem 
-                  className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-destructive cursor-pointer hover:bg-destructive/20 rounded-xl"
-                  onSelect={(e) => { e.preventDefault(); executeBulkAction("delete"); }}
-                >
-                  <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete Selected
-                </DropdownMenuItem>
+                </div>
+
+                <DropdownMenuSeparator className="bg-white/5" />
+
+                {/* ORGANIZATION */}
+                <div className="space-y-1">
+                  <DropdownMenuLabel className="px-2 py-1 text-[9px] font-black text-emerald-400 uppercase tracking-widest flex items-center gap-2">
+                    <Layers className="w-3 h-3" /> Organization
+                  </DropdownMenuLabel>
+                  <div className="max-h-[120px] overflow-y-auto px-1 space-y-1 scrollbar-thin">
+                    {dynamicSheets.length > 0 ? (
+                      dynamicSheets.map((sheet: any) => (
+                        <DropdownMenuItem 
+                          key={sheet}
+                          onSelect={(e) => { e.preventDefault(); executeBulkAction("move", sheet); }} 
+                          className="px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-foreground cursor-pointer hover:bg-emerald-500/20 hover:text-emerald-500 rounded-xl transition-all"
+                        >
+                          Move to "{sheet}"
+                        </DropdownMenuItem>
+                      ))
+                    ) : (
+                       <div className="px-3 py-2 text-[10px] text-muted-foreground italic">No other sheets</div>
+                    )}
+                  </div>
+                </div>
+
+                <DropdownMenuSeparator className="bg-white/5" />
+
+                {/* DATA MANAGEMENT */}
+                <div className="space-y-1">
+                  <DropdownMenuLabel className="px-2 py-1 text-[9px] font-black text-amber-400 uppercase tracking-widest flex items-center gap-2">
+                    <Eraser className="w-3 h-3" /> Data Management
+                  </DropdownMenuLabel>
+                  
+                  <DropdownMenuItem 
+                    onSelect={(e) => { e.preventDefault(); setIsSmartClearOpen(true); }}
+                    className="px-3 py-3 text-[11px] font-black uppercase tracking-widest text-amber-500 cursor-pointer hover:bg-amber-500/20 rounded-xl transition-all flex items-center gap-2"
+                  >
+                    <Sparkles className="w-4 h-4" /> Smart Clear...
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem 
+                    className="px-3 py-3 text-[11px] font-black uppercase tracking-widest text-destructive cursor-pointer hover:bg-destructive/20 rounded-xl transition-all flex items-center gap-2"
+                    onSelect={(e) => { e.preventDefault(); executeBulkAction("delete"); }}
+                  >
+                    <Trash2 className="w-4 h-4" /> Delete Selected
+                  </DropdownMenuItem>
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
           )}
