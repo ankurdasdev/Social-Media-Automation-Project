@@ -171,3 +171,29 @@ input:-webkit-autofill:active {
 .dark input:-webkit-autofill:active {
   -webkit-text-fill-color: white;
 }
+
+/* Background Orb Animations */
+@keyframes float-1 {
+  0% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(40vw, 40vh) scale(1.1); }
+  66% { transform: translate(-20vw, 20vh) scale(0.9); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+@keyframes float-2 {
+  0% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-40vw, -40vh) scale(1.2); }
+  66% { transform: translate(20vw, -40vh) scale(0.8); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+@keyframes float-3 {
+  0% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(40vw, -40vh) scale(0.9); }
+  66% { transform: translate(-40vw, 40vh) scale(1.2); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+.animate-float-1 { animation: float-1 25s infinite ease-in-out; }
+.animate-float-2 { animation: float-2 30s infinite ease-in-out; }
+.animate-float-3 { animation: float-3 28s infinite ease-in-out; }
