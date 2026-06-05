@@ -173,7 +173,7 @@ async function verifySourceInternal(
       );
       
       if (!instance) {
-        throw new Error("WhatsApp not connected. Please connect in Settings.");
+        throw new Error("WhatsApp not connected. Please connect in the Integrations Centre.");
       }
       
       const evoUrl = process.env.EVOLUTION_API_URL || "https://evo.casthub.io";
@@ -195,7 +195,7 @@ async function verifySourceInternal(
     } else if (platform === "instagram") {
       const sessionRow = await queryOne("SELECT session_data FROM instagram_sessions WHERE user_id = $1", [userId]);
       if (!sessionRow) {
-         throw new Error("Instagram not connected. Please connect in Settings.");
+         throw new Error("Instagram not connected. Please connect in the Integrations Centre.");
       }
       
       if (type === "account") {
