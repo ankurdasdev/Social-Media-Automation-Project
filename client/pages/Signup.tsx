@@ -14,16 +14,35 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 // ── Reuse same animated background ──────────────────────────────────────────
 function AnimatedBackground() {
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      // Calculate normalized mouse position (-0.5 to 0.5)
+      const x = (e.clientX / window.innerWidth) - 0.5;
+      const y = (e.clientY / window.innerHeight) - 0.5;
+      setMousePos({ x, y });
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
+
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden dark:bg-[#03020a] bg-slate-50">
       <div
         className="absolute inset-0 opacity-[0.025]"
         style={{ backgroundImage: "linear-gradient(rgba(139,92,246,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.6) 1px, transparent 1px)", backgroundSize: "60px 60px" }}
       />
-      {/* Orbs */}
-      <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-purple-600/20 blur-[140px] animate-float-1" />
-      <div className="absolute -bottom-40 -right-40 w-[700px] h-[700px] rounded-full bg-indigo-600/15 blur-[160px] animate-float-2" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-violet-500/10 blur-[120px] animate-float-3" />
+      {/* Orbs with mouse tracking wrappers */}
+      <div className="absolute inset-0 transition-transform duration-1000 ease-out" style={{ transform: `translate(${mousePos.x * 60}px, ${mousePos.y * 60}px)` }}>
+        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-purple-600/20 blur-[140px] animate-float-1" />
+      </div>
+      <div className="absolute inset-0 transition-transform duration-1000 ease-out" style={{ transform: `translate(${mousePos.x * -80}px, ${mousePos.y * -80}px)` }}>
+        <div className="absolute -bottom-40 -right-40 w-[700px] h-[700px] rounded-full bg-indigo-600/15 blur-[160px] animate-float-2" />
+      </div>
+      <div className="absolute inset-0 transition-transform duration-1000 ease-out" style={{ transform: `translate(${mousePos.x * 120}px, ${mousePos.y * 120}px)` }}>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-violet-500/10 blur-[120px] animate-float-3" />
+      </div>
     </div>
   );
 }
@@ -237,7 +256,7 @@ export default function Signup() {
 
       {/* ── Left Brand Panel ─── */}
       <div className={cn(
-        "hidden lg:flex lg:w-[44%] sticky top-0 h-screen flex-col justify-between p-14 transition-all duration-1000",
+        "hidden lg:flex lg:w-[44%] sticky top-0 h-screen overflow-y-auto scrollbar-none flex-col justify-between p-14 transition-all duration-1000",
         mounted ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-8"
       )}>
         {/* Logo */}
