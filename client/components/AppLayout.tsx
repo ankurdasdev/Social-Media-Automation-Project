@@ -400,7 +400,27 @@ export default function AppLayout({ children }: AppLayoutProps) {
             <div className="w-full max-w-[1400px] mx-auto p-4 sm:p-6 lg:p-10 space-y-8 lg:space-y-12 pb-24">
                 {children}
             </div>
-            
+
+            {/* Legal Footer */}
+            <footer className="border-t border-border/20 bg-background/20 backdrop-blur-sm px-6 lg:px-10 py-5 flex flex-wrap items-center justify-between gap-3">
+              <p className="text-[10px] font-bold text-muted-foreground/30 tracking-widest uppercase">
+                © {new Date().getFullYear()} CastHub — Casting Automation Platform
+              </p>
+              <div className="flex items-center gap-5">
+                <Link to="/terms" className="text-[10px] font-bold text-muted-foreground/40 hover:text-muted-foreground transition-colors uppercase tracking-widest">
+                  Terms of Service
+                </Link>
+                <span className="text-muted-foreground/20 text-[10px]">·</span>
+                <Link to="/privacy" className="text-[10px] font-bold text-muted-foreground/40 hover:text-muted-foreground transition-colors uppercase tracking-widest">
+                  Privacy Policy
+                </Link>
+                <span className="text-muted-foreground/20 text-[10px]">·</span>
+                <a href="mailto:support@casthub.in" className="text-[10px] font-bold text-muted-foreground/40 hover:text-muted-foreground transition-colors uppercase tracking-widest">
+                  Contact
+                </a>
+              </div>
+            </footer>
+
             {/* Ambient Lighting Background */}
             <div className="fixed bottom-0 left-0 w-full h-[50vh] bg-gradient-to-t from-background to-transparent pointer-events-none -z-10 opacity-60" />
         </main>
