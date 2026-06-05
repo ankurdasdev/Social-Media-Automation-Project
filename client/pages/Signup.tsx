@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { TermsContent } from "./TermsOfService";
 import { PrivacyContent } from "./PrivacyPolicy";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // ── Reuse same animated background ──────────────────────────────────────────
 function AnimatedBackground() {
@@ -377,16 +378,23 @@ export default function Signup() {
                   fieldErrors.gender && "border-rose-500/50"
                 )}>
                   <Users className="w-4 h-4 text-foreground/25 ml-4 mr-2 shrink-0" />
-                  <select name="gender" value={formData.gender} onChange={handleChange}
-                    className={cn(
-                      "flex-1 h-13 py-3.5 pr-4 bg-transparent text-[15px] font-medium outline-none",
+                  <Select value={formData.gender} onValueChange={(val) => {
+                    setFormData(p => ({ ...p, gender: val }));
+                    if (fieldErrors.gender) setFieldErrors(p => { const n = { ...p }; delete n.gender; return n; });
+                    if (error) setError("");
+                  }}>
+                    <SelectTrigger className={cn(
+                      "flex-1 h-13 py-3.5 pr-4 pl-0 bg-transparent text-[15px] font-medium outline-none border-none shadow-none focus:ring-0 ring-0 focus:ring-offset-0",
                       !formData.gender ? "text-foreground/20" : "text-foreground"
                     )}>
-                    <option value="" disabled className="dark:bg-[#0e0b1f] bg-background text-foreground/40">Select</option>
-                    <option value="male" className="dark:bg-[#0e0b1f] bg-background text-foreground">Male</option>
-                    <option value="female" className="dark:bg-[#0e0b1f] bg-background text-foreground">Female</option>
-                    <option value="other" className="dark:bg-[#0e0b1f] bg-background text-foreground">Other</option>
-                  </select>
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent className="dark:bg-[#0e0b1f] bg-background border dark:border-white/10 border-border/50 rounded-xl overflow-hidden shadow-2xl">
+                      <SelectItem value="male" className="text-foreground focus:bg-foreground/10 cursor-pointer">Male</SelectItem>
+                      <SelectItem value="female" className="text-foreground focus:bg-foreground/10 cursor-pointer">Female</SelectItem>
+                      <SelectItem value="other" className="text-foreground focus:bg-foreground/10 cursor-pointer">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 {fieldErrors.gender && <p className="text-[11px] text-rose-400 font-bold pl-1">{fieldErrors.gender}</p>}
               </div>
