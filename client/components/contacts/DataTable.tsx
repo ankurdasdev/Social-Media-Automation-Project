@@ -179,9 +179,11 @@ const MemoizedTableRow = React.memo(({
     <TableRow
       data-state={isSelected && "selected"}
       className={cn(
-        "cursor-pointer border-b border-border/20 hover:bg-muted/30 h-20 group relative border-l-[6px]",
-        row.index % 2 === 0 ? "bg-muted/30" : "bg-transparent",
-        isSelected && "!bg-primary/20 border-l-primary shadow-inner"
+        "cursor-pointer border-b border-border/20 h-20 group relative border-l-[6px]",
+        "table-row-smooth",
+        "hover:bg-muted/25",
+        row.index % 2 === 0 ? "bg-muted/20" : "bg-transparent",
+        isSelected && "!bg-primary/20 border-l-primary"
       )}
       style={{ 
         backgroundColor: isCustom ? `${rColor}1a` : undefined,
@@ -351,6 +353,16 @@ export function DataTable<TData, TValue>({
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = React.useState(initialGlobalFilter);
   const [isFullscreen, setIsFullscreen] = React.useState(false);
+  const [isFullscreenAnimating, setIsFullscreenAnimating] = React.useState(false);
+
+  // iPhone-principle: respond to toggle INSTANTLY, animate visually
+  const handleToggleFullscreen = React.useCallback(() => {
+    setIsFullscreenAnimating(true);
+    setIsFullscreen(prev => !prev);
+    // Clear animation class after it completes
+    setTimeout(() => setIsFullscreenAnimating(false), 250);
+  }, []);
+
   const [zoomLevel, setZoomLevel] = React.useState(100);
   const [showFilters, setShowFilters] = React.useState(true);
   
@@ -478,8 +490,10 @@ export function DataTable<TData, TValue>({
 
   const content = (
     <div className={cn(
-      "transition-all duration-500",
-      isFullscreen ? "fixed inset-0 z-[40] bg-background p-6 lg:p-10 space-y-6 h-screen flex flex-col overflow-hidden" : "space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-700"
+      isFullscreenAnimating && (isFullscreen ? "fullscreen-enter" : "fullscreen-exit"),
+      isFullscreen
+        ? "fixed inset-0 z-[40] bg-background p-6 lg:p-10 space-y-6 h-screen flex flex-col overflow-hidden"
+        : "space-y-6"
     )}>
       <div className="flex items-center justify-between gap-4">
         <DataTableToolbar 
@@ -495,7 +509,7 @@ export function DataTable<TData, TValue>({
           onClearAISearch={onClearAISearch}
           onAddContact={onAddContact}
           isFullscreen={isFullscreen}
-          onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}
+          onToggleFullscreen={handleToggleFullscreen}
           zoomLevel={zoomLevel}
           onZoomChange={setZoomLevel}
           isTitleFrozen={isTitleFrozen}
@@ -505,11 +519,11 @@ export function DataTable<TData, TValue>({
       </div>
       
       <div id="tutorial-grid" className={cn(
-        "glass-card rounded-[2.5rem] border-white/10 shadow-2xl relative flex flex-col overflow-hidden",
+        "rounded-[2.5rem] border border-border/20 dark:border-white/10 shadow-2xl relative flex flex-col overflow-hidden",
         isFullscreen ? "rounded-none border-none bg-card/50 flex-1 min-h-0" : "h-[450px]"
       )}>
         <div 
-          className="overflow-auto flex-1 scrollbar-thin scrollbar-thumb-white/10 hover:scrollbar-thumb-primary/50 transition-all origin-top-left relative"
+          className="table-scroll smooth-scroll overflow-auto flex-1 scrollbar-thin scrollbar-thumb-white/10 hover:scrollbar-thumb-primary/50 origin-top-left relative"
           style={{ zoom: `${zoomLevel}%` } as React.CSSProperties}
         >
           {isRendering && (
