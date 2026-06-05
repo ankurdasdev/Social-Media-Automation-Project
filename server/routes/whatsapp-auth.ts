@@ -1,4 +1,4 @@
-ovimport { RequestHandler } from "express";
+import { RequestHandler } from "express";
 import axios from "axios";
 import { WhatsAppStatusResponse, WhatsAppQRResponse } from "@shared/api";
 import { pool } from "../db/index";

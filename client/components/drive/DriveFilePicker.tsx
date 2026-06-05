@@ -355,19 +355,19 @@ export function DriveFilePicker({
 
   const pickerContent = (
     <div className={cn(
-      "flex flex-col w-full overflow-hidden",
+      "flex flex-col w-full h-full overflow-hidden",
       inline ? "bg-background/50 border border-white/10 rounded-[2rem]" : "bg-transparent"
     )}>
 
       {/* Platform Limits Banner — shown before search */}
       {platform && (
-        <div className="px-4 pt-4 pb-0">
+        <div className="px-4 pt-4 pb-0 shrink-0">
           <PlatformConstraintsBanner platform={platform} />
         </div>
       )}
 
       {/* Search bar */}
-      <div className="flex items-center border-b border-white/10 px-4 h-14 bg-muted/40 mt-3">
+      <div className="flex items-center border-b border-white/10 px-4 h-14 bg-muted/40 mt-3 shrink-0">
         <Search className="h-4 w-4 shrink-0 text-primary mr-3" />
         <Input
           value={searchTerm}
@@ -410,7 +410,7 @@ export function DriveFilePicker({
           </p>
         </div>
       ) : (
-        <ScrollArea className="max-h-[380px] min-h-[200px]">
+        <ScrollArea className="flex-1 min-h-[200px] w-full" type="scroll">
           <div className="p-3 space-y-1.5">
             {data?.files?.map((file) => {
               const isSelected = selectedFiles.some((f) => f.id === file.id);
@@ -605,7 +605,7 @@ export function DriveFilePicker({
               </Button>
             </DialogTrigger>
             <DialogContent
-              className="w-[min(540px,95vw)] max-h-[85vh] p-0 glass-card rounded-[2rem] border border-white/10 overflow-hidden shadow-2xl animate-in slide-in-from-top-4 duration-300 flex flex-col"
+              className="w-[min(540px,95vw)] max-h-[85vh] p-0 glass-card dark:bg-[#0e0b1f]/80 bg-background/80 backdrop-blur-2xl rounded-[2rem] border border-white/10 overflow-hidden shadow-2xl animate-in slide-in-from-top-4 duration-300 flex flex-col"
             >
               <DialogHeader className="px-8 pt-8 pb-4 flex-shrink-0 border-b border-white/5 bg-muted/20 relative">
                 <DialogTitle className="text-2xl font-black tracking-tight flex items-center gap-3">
@@ -616,7 +616,7 @@ export function DriveFilePicker({
                   Choose files matching platform size and type rules
                 </p>
               </DialogHeader>
-              <div className="flex-1 min-h-0 overflow-y-auto">
+              <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
                 {pickerContent}
               </div>
               <DialogFooter className="px-8 py-5 border-t border-white/5 flex-shrink-0 bg-muted/10">
