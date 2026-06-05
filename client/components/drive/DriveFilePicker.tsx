@@ -39,20 +39,20 @@ export const PLATFORM_RULES: Record<AttachmentPlatform, {
     supported: ["Images", "Video", "Audio", "PDF", "Docs"],
     note: "⚠ HEIC/HEIF images (iPhone defaults) are not supported. Please use JPG/PNG.",
     color: "#25D366",
-    badgeClass: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+    badgeClass: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
   },
   instagram: {
     maxMB: 8,
     supported: ["Images only (JPEG, PNG, GIF)"],
     note: "⚠ Instagram only supports image attachments. Other file types will fail to send.",
     color: "#E1306C",
-    badgeClass: "bg-pink-500/10 text-pink-400 border-pink-500/20",
+    badgeClass: "bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-500/20",
   },
   email: {
     maxMB: 25,
     supported: ["All file types"],
     color: "#4285F4",
-    badgeClass: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+    badgeClass: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
   },
 };
 
@@ -172,11 +172,11 @@ export function FilePreviewModal({ file, onClose }: { file: DriveFile; onClose: 
       onPointerDown={(e) => e.stopPropagation()} // Prevent Radix from seeing outside clicks
     >
       <div
-        className="relative w-full max-w-2xl bg-card rounded-3xl overflow-hidden shadow-2xl border border-white/10 animate-in zoom-in-95 duration-200"
+        className="relative w-full max-w-2xl bg-card rounded-3xl overflow-hidden shadow-2xl border dark:border-white/10 border-border/50 animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center gap-4 px-6 py-4 border-b border-white/10 bg-muted/30">
+        <div className="flex items-center gap-4 px-6 py-4 border-b dark:border-white/10 border-border/50 bg-muted/30">
           <FileIcon mimeType={file.mimeType} className="w-5 h-5 text-primary" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-black truncate">{file.name}</p>
@@ -206,13 +206,13 @@ export function FilePreviewModal({ file, onClose }: { file: DriveFile; onClose: 
         </div>
 
         {/* Preview body */}
-        <div className="p-6 bg-black/20 min-h-[280px] flex items-center justify-center">
+        <div className="p-6 dark:bg-black/20 bg-muted/30 min-h-[280px] flex items-center justify-center">
           {isImg && (file.thumbnailLink || file.webContentLink) && !imgError ? (
             <img
               src={file.thumbnailLink?.replace(/=s\d+/, "=s1000") || file.webContentLink || ""}
               alt={file.name}
               onError={() => setImgError(true)}
-              className="max-h-[55vh] max-w-full object-contain rounded-2xl shadow-lg border border-white/5"
+              className="max-h-[55vh] max-w-full object-contain rounded-2xl shadow-lg border dark:border-white/5 border-border/50"
             />
           ) : (
             <div className="text-center space-y-5">
@@ -263,7 +263,7 @@ export function PlatformConstraintsBanner({ platform }: { platform: AttachmentPl
           Supported: {rule.supported.join(", ")}
         </p>
         {rule.note && (
-          <p className="text-yellow-400 mt-1 leading-relaxed font-black">{rule.note}</p>
+          <p className="text-yellow-600 dark:text-yellow-400 mt-1 leading-relaxed font-black">{rule.note}</p>
         )}
       </div>
     </div>
@@ -356,7 +356,7 @@ export function DriveFilePicker({
   const pickerContent = (
     <div className={cn(
       "flex flex-col w-full h-full overflow-hidden",
-      inline ? "bg-background/50 border border-white/10 rounded-[2rem]" : "bg-transparent"
+      inline ? "bg-background/50 border dark:border-white/10 border-border/50 rounded-[2rem]" : "bg-transparent"
     )}>
 
       {/* Platform Limits Banner — shown before search */}
@@ -367,13 +367,13 @@ export function DriveFilePicker({
       )}
 
       {/* Search bar */}
-      <div className="flex items-center border-b border-white/10 px-4 h-14 bg-muted/40 mt-3 shrink-0">
+      <div className="flex items-center border-b dark:border-white/10 border-border/50 px-4 h-14 bg-muted/40 mt-3 shrink-0">
         <Search className="h-4 w-4 shrink-0 text-primary mr-3" />
         <Input
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Search Drive files..."
-          className="border-0 h-full px-0 shadow-none focus-visible:ring-0 text-sm font-bold bg-transparent placeholder:text-muted-foreground/50 tracking-tight outline-none ring-0"
+          className="border-0 h-full px-0 rounded-none shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-sm font-bold bg-transparent placeholder:text-muted-foreground/50 tracking-tight outline-none ring-0"
         />
         {isLoading && <Loader2 className="h-4 w-4 animate-spin text-primary ml-2 shrink-0" />}
       </div>
@@ -436,7 +436,7 @@ export function DriveFilePicker({
                   )}
 
                   {/* Thumbnail or icon */}
-                  <div className="shrink-0 w-9 h-9 relative rounded-xl overflow-hidden bg-muted/40 flex items-center justify-center border border-white/5">
+                  <div className="shrink-0 w-9 h-9 relative rounded-xl overflow-hidden bg-muted/40 flex items-center justify-center border dark:border-white/5 border-border/50">
                     {isImg && file.thumbnailLink ? (
                       <img
                         src={file.thumbnailLink}
@@ -517,7 +517,7 @@ export function DriveFilePicker({
             })}
           </div>
           {data?.folderName && (
-            <div className="px-6 py-3 bg-muted/20 border-t border-white/5">
+            <div className="px-6 py-3 bg-muted/20 border-t dark:border-white/5 border-border/50">
               <div className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.3em] truncate">
@@ -605,9 +605,9 @@ export function DriveFilePicker({
               </Button>
             </DialogTrigger>
             <DialogContent
-              className="w-[min(540px,95vw)] max-h-[85vh] p-0 glass-card dark:bg-[#0e0b1f]/80 bg-background/80 backdrop-blur-2xl rounded-[2rem] border border-white/10 overflow-hidden shadow-2xl animate-in slide-in-from-top-4 duration-300 flex flex-col"
+              className="w-[min(540px,95vw)] max-h-[85vh] p-0 glass-card dark:bg-[#0e0b1f]/80 bg-background/80 backdrop-blur-2xl rounded-[2rem] border dark:border-white/10 border-border/50 overflow-hidden shadow-2xl animate-in slide-in-from-top-4 duration-300 flex flex-col"
             >
-              <DialogHeader className="px-8 pt-8 pb-4 flex-shrink-0 border-b border-white/5 bg-muted/20 relative">
+              <DialogHeader className="px-8 pt-8 pb-4 flex-shrink-0 border-b dark:border-white/5 border-border/50 bg-muted/20 relative">
                 <DialogTitle className="text-2xl font-black tracking-tight flex items-center gap-3">
                   <HardDrive className="h-6 w-6 text-primary shrink-0" />
                   SELECT DRIVE FILES
@@ -619,7 +619,7 @@ export function DriveFilePicker({
               <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
                 {pickerContent}
               </div>
-              <DialogFooter className="px-8 py-5 border-t border-white/5 flex-shrink-0 bg-muted/10">
+              <DialogFooter className="px-8 py-5 border-t dark:border-white/5 border-border/50 flex-shrink-0 bg-muted/10">
                 <Button
                   onClick={() => setOpen(false)}
                   className="h-12 px-8 rounded-xl bg-foreground text-background hover:bg-foreground/90 font-black text-[10px] uppercase tracking-widest shadow-xl transition-all active:scale-95"
