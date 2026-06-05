@@ -12,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, ChevronDown, Zap, RefreshCw, Plus, Trash2, X, Sparkles, MessageCircle, Mail, Instagram, Maximize2, Minimize2, Filter, Upload, ZoomIn, ZoomOut, View, Eraser, Settings2, Palette, Layers } from "lucide-react";
 import { Contact } from "@shared/api";
@@ -361,98 +362,102 @@ export function DataTableToolbar<TData>({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Advanced Bulk Actions Dropdown */}
+          {/* Floating Bulk Actions Bar */}
           {hasSelection && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="default" className="h-12 rounded-full font-black text-[10px] uppercase tracking-widest gap-2 shadow-xl shadow-primary/30 transition-all active:scale-95 shrink-0 px-5 bg-primary hover:bg-primary/90 text-white">
-                  <Zap className="h-4 w-4 fill-current" />
-                  <span className="hidden md:inline">BULK ACTIONS ({selectedRows.length})</span>
-                  <span className="md:hidden">({selectedRows.length})</span>
-                  <ChevronDown className="h-3 w-3 ml-1 opacity-50" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-[320px] glass-card border-border p-3 rounded-[2rem] shadow-2xl z-[100] flex flex-col gap-2 max-h-[80vh] overflow-y-auto scrollbar-thin">
-                
-                {/* AUTOMATION */}
-                <div className="space-y-1">
-                  <DropdownMenuLabel className="px-2 py-1 text-[9px] font-black text-primary uppercase tracking-widest flex items-center gap-2">
-                    <Zap className="w-3 h-3 fill-current" /> Automation
-                  </DropdownMenuLabel>
-                  <DropdownMenuItem 
-                    onClick={() => {
-                      const ids = selectedRows.map(r => (r.original as any).id);
-                      onTriggerAction?.(ids);
-                    }}
-                    className="px-3 py-3 text-[11px] font-black uppercase tracking-widest text-foreground cursor-pointer hover:bg-primary/20 rounded-xl transition-all"
-                  >
-                    Trigger Automation Sequence
-                  </DropdownMenuItem>
-                </div>
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-bottom-10 fade-in duration-300 pointer-events-auto">
+               <div className="flex items-center gap-1 p-2 bg-background/80 backdrop-blur-xl border border-border/50 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.3)] rounded-full dark:shadow-primary/10">
+                   {/* Selected Count Indicator */}
+                   <div className="flex items-center gap-2 px-4 border-r border-border/50">
+                       <div className="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center text-[11px] font-black shadow-inner shadow-white/20 shrink-0">
+                           {selectedRows.length}
+                       </div>
+                       <span className="text-[10px] font-black uppercase tracking-widest text-foreground hidden sm:inline shrink-0">Selected</span>
+                   </div>
 
-                <DropdownMenuSeparator className="dark:bg-white/5 bg-black/5" />
+                   {/* Automation */}
+                   <Button 
+                     variant="ghost" 
+                     size="sm"
+                     onClick={() => {
+                        const ids = selectedRows.map(r => (r.original as any).id);
+                        onTriggerAction?.(ids);
+                     }}
+                     className="h-9 rounded-full font-black text-[10px] uppercase tracking-widest gap-2 text-foreground hover:bg-primary/20 hover:text-primary transition-all px-4"
+                   >
+                     <Zap className="w-3.5 h-3.5 fill-current shrink-0" />
+                     <span className="hidden md:inline">Trigger</span>
+                   </Button>
 
-                {/* ROW FORMATTING */}
-                <div className="space-y-1">
-                  <DropdownMenuLabel className="px-2 py-1 text-[9px] font-black text-purple-400 uppercase tracking-widest flex items-center gap-2">
-                    <Palette className="w-3 h-3" /> Row Formatting
-                  </DropdownMenuLabel>
-                  <div className="-mx-2 -my-2">
-                    <AdvancedColorPicker 
-                      color="transparent" 
-                      onChange={(c) => executeBulkAction("color", c)} 
-                    />
-                  </div>
-                </div>
+                   {/* Row Formatting (Popover) */}
+                   <Popover>
+                     <PopoverTrigger asChild>
+                       <Button variant="ghost" size="sm" className="h-9 rounded-full font-black text-[10px] uppercase tracking-widest gap-2 text-foreground hover:bg-purple-500/20 hover:text-purple-500 transition-all px-4">
+                         <Palette className="w-3.5 h-3.5 shrink-0" />
+                         <span className="hidden md:inline">Color</span>
+                       </Button>
+                     </PopoverTrigger>
+                     <PopoverContent align="center" side="top" sideOffset={16} className="w-auto p-0 rounded-3xl border-border shadow-2xl glass-card z-[100]">
+                       <AdvancedColorPicker 
+                         color="transparent" 
+                         onChange={(c) => executeBulkAction("color", c)} 
+                       />
+                     </PopoverContent>
+                   </Popover>
 
-                <DropdownMenuSeparator className="dark:bg-white/5 bg-black/5" />
+                   {/* Organization (Popover) */}
+                   <Popover>
+                     <PopoverTrigger asChild>
+                       <Button variant="ghost" size="sm" className="h-9 rounded-full font-black text-[10px] uppercase tracking-widest gap-2 text-foreground hover:bg-emerald-500/20 hover:text-emerald-500 transition-all px-4">
+                         <Layers className="w-3.5 h-3.5 shrink-0" />
+                         <span className="hidden md:inline">Move</span>
+                       </Button>
+                     </PopoverTrigger>
+                     <PopoverContent align="center" side="top" sideOffset={16} className="w-[220px] p-2 rounded-3xl border-border shadow-2xl glass-card z-[100]">
+                        <div className="px-3 py-2 text-[10px] font-black text-emerald-500 uppercase tracking-widest">Move To Sheet</div>
+                        <div className="max-h-[160px] overflow-y-auto px-1 space-y-1 scrollbar-thin">
+                          {dynamicSheets.length > 0 ? (
+                            dynamicSheets.map((sheet: any) => (
+                              <Button 
+                                key={sheet}
+                                variant="ghost"
+                                onClick={() => executeBulkAction("move", sheet)} 
+                                className="w-full justify-start px-3 py-2 text-[11px] font-bold tracking-widest text-foreground hover:bg-emerald-500/20 hover:text-emerald-500 rounded-xl transition-all h-auto"
+                              >
+                                {sheet}
+                              </Button>
+                            ))
+                          ) : (
+                             <div className="px-3 py-2 text-[10px] text-muted-foreground italic">No other sheets</div>
+                          )}
+                        </div>
+                     </PopoverContent>
+                   </Popover>
 
-                {/* ORGANIZATION */}
-                <div className="space-y-1">
-                  <DropdownMenuLabel className="px-2 py-1 text-[9px] font-black text-emerald-400 uppercase tracking-widest flex items-center gap-2">
-                    <Layers className="w-3 h-3" /> Organization
-                  </DropdownMenuLabel>
-                  <div className="max-h-[120px] overflow-y-auto px-1 space-y-1 scrollbar-thin">
-                    {dynamicSheets.length > 0 ? (
-                      dynamicSheets.map((sheet: any) => (
-                        <DropdownMenuItem 
-                          key={sheet}
-                          onSelect={(e) => { e.preventDefault(); executeBulkAction("move", sheet); }} 
-                          className="px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-foreground cursor-pointer hover:bg-emerald-500/20 hover:text-emerald-500 rounded-xl transition-all"
-                        >
-                          Move to "{sheet}"
-                        </DropdownMenuItem>
-                      ))
-                    ) : (
-                       <div className="px-3 py-2 text-[10px] text-muted-foreground italic">No other sheets</div>
-                    )}
-                  </div>
-                </div>
+                   {/* Smart Clear */}
+                   <Button 
+                     variant="ghost" 
+                     size="sm"
+                     onClick={() => setIsSmartClearOpen(true)}
+                     className="h-9 rounded-full font-black text-[10px] uppercase tracking-widest gap-2 text-foreground hover:bg-amber-500/20 hover:text-amber-500 transition-all px-4"
+                   >
+                     <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                     <span className="hidden md:inline">Clear</span>
+                   </Button>
 
-                <DropdownMenuSeparator className="dark:bg-white/5 bg-black/5" />
-
-                {/* DATA MANAGEMENT */}
-                <div className="space-y-1">
-                  <DropdownMenuLabel className="px-2 py-1 text-[9px] font-black text-amber-400 uppercase tracking-widest flex items-center gap-2">
-                    <Eraser className="w-3 h-3" /> Data Management
-                  </DropdownMenuLabel>
-                  
-                  <DropdownMenuItem 
-                    onSelect={(e) => { e.preventDefault(); setIsSmartClearOpen(true); }}
-                    className="px-3 py-3 text-[11px] font-black uppercase tracking-widest text-amber-500 cursor-pointer hover:bg-amber-500/20 rounded-xl transition-all flex items-center gap-2"
-                  >
-                    <Sparkles className="w-4 h-4" /> Smart Clear...
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem 
-                    className="px-3 py-3 text-[11px] font-black uppercase tracking-widest text-destructive cursor-pointer hover:bg-destructive/20 rounded-xl transition-all flex items-center gap-2"
-                    onSelect={(e) => { e.preventDefault(); executeBulkAction("delete"); }}
-                  >
-                    <Trash2 className="w-4 h-4" /> Delete Selected
-                  </DropdownMenuItem>
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                   {/* Delete */}
+                   <div className="pl-1 border-l border-border/50 ml-1">
+                     <Button 
+                       variant="ghost" 
+                       size="icon"
+                       onClick={() => executeBulkAction("delete")}
+                       className="h-9 w-9 rounded-full text-foreground hover:bg-destructive hover:text-destructive-foreground transition-all shrink-0"
+                       title="Delete Selected"
+                     >
+                       <Trash2 className="w-4 h-4 shrink-0" />
+                     </Button>
+                   </div>
+               </div>
+            </div>
           )}
         </div>
       </div>
