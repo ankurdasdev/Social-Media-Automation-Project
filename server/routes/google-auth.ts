@@ -111,7 +111,7 @@ export const handleGoogleCallback: RequestHandler = async (req, res) => {
     console.log(`[google-auth] User ${user!.id} authenticated. Scopes granted: ${tokens.scope || "NONE"}`);
 
     // Redirect back to app with userId
-    res.redirect(`/settings?auth=success&userId=${user!.id}`);
+    res.redirect(`/integrations?auth=success&userId=${user!.id}`);
   } catch (err) {
     console.error("Google OAuth callback error:", err);
     res.redirect("/?auth=error&reason=token_exchange_failed");
