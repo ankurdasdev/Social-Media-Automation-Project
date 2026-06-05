@@ -149,6 +149,12 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [mounted, setMounted] = useState(false);
+  
+  const [isTermsOpen, setIsTermsOpen] = useState(false);
+  const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
+  const [termsScrolled, setTermsScrolled] = useState(false);
+  const [privacyScrolled, setPrivacyScrolled] = useState(false);
+
   const [formData, setFormData] = useState({
     name: "", email: "", phone: "", gender: "", dob: "",
     password: "", confirmPassword: "", terms: false,
@@ -487,12 +493,12 @@ export default function Signup() {
               </div>
               <p className="text-xs text-foreground/40 font-medium leading-relaxed select-none">
                 I agree to the{" "}
-                <Dialog>
+                <Dialog open={isTermsOpen} onOpenChange={setIsTermsOpen}>
                   <DialogTrigger asChild>
-                    <button type="button" className="text-purple-400 hover:text-purple-300 font-bold" onClick={e => e.stopPropagation()}>Terms of Service</button>
+                    <button type="button" className="text-purple-400 hover:text-purple-300 font-bold" onClick={e => { e.stopPropagation(); setTermsScrolled(false); }}>Terms of Service</button>
                   </DialogTrigger>
-                  <DialogContent className="dark:bg-[#0e0b1f] bg-background border dark:border-white/10 border-border/50 rounded-3xl shadow-2xl max-w-3xl max-h-[85vh] overflow-y-auto">
-                    <DialogHeader className="pb-4 sticky top-0 dark:bg-[#0e0b1f] bg-background z-10 border-b dark:border-white/10 border-border/50 pt-4 px-2 -mx-2 mb-4">
+                  <DialogContent hideCloseButton className="dark:bg-[#0e0b1f] bg-background border dark:border-white/10 border-border/50 rounded-3xl shadow-2xl max-w-3xl h-[85vh] p-0 flex flex-col overflow-hidden">
+                    <DialogHeader className="p-6 border-b dark:border-white/10 border-border/50 shrink-0">
                       <DialogTitle className="text-2xl font-black tracking-tight text-foreground flex items-center gap-2.5">
                         <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
                           <FileText className="w-4.5 h-4.5 text-primary" />
@@ -500,16 +506,39 @@ export default function Signup() {
                         Terms of Service
                       </DialogTitle>
                     </DialogHeader>
-                    <TermsContent />
+                    <div 
+                      className="flex-1 overflow-y-auto p-6"
+                      onScroll={(e) => {
+                        const target = e.currentTarget;
+                        if (Math.abs(target.scrollHeight - target.scrollTop - target.clientHeight) < 50) {
+                          setTermsScrolled(true);
+                        }
+                      }}
+                    >
+                      <TermsContent />
+                    </div>
+                    <div className="p-6 border-t dark:border-white/10 border-border/50 bg-muted/20 shrink-0 flex justify-end">
+                      <Button 
+                        type="button" 
+                        disabled={!termsScrolled}
+                        className="h-12 px-8 rounded-xl font-black tracking-widest uppercase transition-all"
+                        onClick={() => {
+                          setFormData(p => ({ ...p, terms: true }));
+                          setIsTermsOpen(false);
+                        }}
+                      >
+                        {termsScrolled ? "I Agree" : "Scroll to bottom to agree"}
+                      </Button>
+                    </div>
                   </DialogContent>
                 </Dialog>
                 {" "}and{" "}
-                <Dialog>
+                <Dialog open={isPrivacyOpen} onOpenChange={setIsPrivacyOpen}>
                   <DialogTrigger asChild>
-                    <button type="button" className="text-purple-400 hover:text-purple-300 font-bold" onClick={e => e.stopPropagation()}>Privacy Policy</button>
+                    <button type="button" className="text-purple-400 hover:text-purple-300 font-bold" onClick={e => { e.stopPropagation(); setPrivacyScrolled(false); }}>Privacy Policy</button>
                   </DialogTrigger>
-                  <DialogContent className="dark:bg-[#0e0b1f] bg-background border dark:border-white/10 border-border/50 rounded-3xl shadow-2xl max-w-3xl max-h-[85vh] overflow-y-auto">
-                    <DialogHeader className="pb-4 sticky top-0 dark:bg-[#0e0b1f] bg-background z-10 border-b dark:border-white/10 border-border/50 pt-4 px-2 -mx-2 mb-4">
+                  <DialogContent hideCloseButton className="dark:bg-[#0e0b1f] bg-background border dark:border-white/10 border-border/50 rounded-3xl shadow-2xl max-w-3xl h-[85vh] p-0 flex flex-col overflow-hidden">
+                    <DialogHeader className="p-6 border-b dark:border-white/10 border-border/50 shrink-0">
                       <DialogTitle className="text-2xl font-black tracking-tight text-foreground flex items-center gap-2.5">
                         <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
                           <Shield className="w-4.5 h-4.5 text-blue-400" />
@@ -517,7 +546,30 @@ export default function Signup() {
                         Privacy Policy
                       </DialogTitle>
                     </DialogHeader>
-                    <PrivacyContent />
+                    <div 
+                      className="flex-1 overflow-y-auto p-6"
+                      onScroll={(e) => {
+                        const target = e.currentTarget;
+                        if (Math.abs(target.scrollHeight - target.scrollTop - target.clientHeight) < 50) {
+                          setPrivacyScrolled(true);
+                        }
+                      }}
+                    >
+                      <PrivacyContent />
+                    </div>
+                    <div className="p-6 border-t dark:border-white/10 border-border/50 bg-muted/20 shrink-0 flex justify-end">
+                      <Button 
+                        type="button" 
+                        disabled={!privacyScrolled}
+                        className="h-12 px-8 rounded-xl font-black tracking-widest uppercase transition-all"
+                        onClick={() => {
+                          setFormData(p => ({ ...p, terms: true }));
+                          setIsPrivacyOpen(false);
+                        }}
+                      >
+                        {privacyScrolled ? "I Agree" : "Scroll to bottom to agree"}
+                      </Button>
+                    </div>
                   </DialogContent>
                 </Dialog>.
                 I understand that CastHub automates outreach and I will use it responsibly.

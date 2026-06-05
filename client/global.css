@@ -6,11 +6,10 @@
 @tailwind utilities;
 
 @layer base {
-  /**
-   * Tailwind CSS theme - Professional SaaS Color Palette
-   * tailwind.config.ts expects the following color variables to be expressed as HSL values.
-   * A different format will require also updating the theme in tailwind.config.ts.
-  */
+  html {
+    scroll-behavior: smooth;
+  }
+  
   :root {
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
