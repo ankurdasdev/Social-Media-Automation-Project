@@ -100,6 +100,7 @@ const MemoizedTableCell = React.memo(({
   colSize,
   isPinned,
   isLastPinned,
+  isSelected,
   onContextMenu,
   onDragFillComplete
 }: any) => {
@@ -161,6 +162,7 @@ const MemoizedTableCell = React.memo(({
   if (prev.rowIndex !== next.rowIndex) return false;
   if (prev.colSize !== next.colSize) return false;
   if (prev.isPinned !== next.isPinned) return false;
+  if (prev.isSelected !== next.isSelected) return false;
   return true;
 });
 
@@ -215,6 +217,7 @@ const MemoizedTableRow = React.memo(({
             colSize={cell.column.getSize()}
             isPinned={cell.column.getIsPinned() === "left"}
             isLastPinned={cell.column.getIsLastColumn("left")}
+            isSelected={isSelected}
             onContextMenu={onContextMenu}
             onDragFillComplete={onDragFillComplete}
           />
