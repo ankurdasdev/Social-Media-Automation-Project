@@ -501,7 +501,7 @@ export default function SetupWizard() {
           <h1 className="text-5xl font-black tracking-tighter text-foreground">
             You're Ready!<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-300">
-              Let's Cast! 🎬
+              Let's Get Cast! 🎬
             </span>
           </h1>
           <p className="text-muted-foreground font-medium max-w-sm mx-auto leading-relaxed">
