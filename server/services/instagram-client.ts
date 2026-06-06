@@ -4,6 +4,7 @@
  * This client handles per-user sessions by storing 'settings' (cookies/session data)
  * in the database and passing them to the instagrapi-rest instance.
  */
+import axios from "axios";
 
 function getBaseUrl() {
   return process.env.INSTAGRAPI_API_URL || "http://46.62.144.244:8000";
@@ -59,20 +60,19 @@ async function igRequest(endpoint: string, sessionData: string, body: any = {}) 
 
   if (isJson) {
     const reqBody = { ...body, settings: JSON.parse(sessionData) };
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "X-API-KEY": API_KEY,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(reqBody),
-    });
-
-    if (!res.ok) {
-      const errorText = await res.text();
-      throw new Error(`instagrapi error (${res.status}): ${errorText}`);
+    try {
+      const res = await axios.post(url, reqBody, {
+        headers: {
+          "X-API-KEY": API_KEY,
+          "Content-Type": "application/json",
+        },
+      });
+      return res.data;
+    } catch (err: any) {
+      const status = err.response?.status || 500;
+      const data = err.response?.data ? JSON.stringify(err.response.data) : err.message;
+      throw new Error(`instagrapi error (${status}): ${data}`);
     }
-    return res.json();
   } else {
     const form = new URLSearchParams();
     form.append("sessionid", sessionData);
@@ -86,20 +86,19 @@ async function igRequest(endpoint: string, sessionData: string, body: any = {}) 
       }
     }
 
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "X-API-KEY": API_KEY,
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: form,
-    });
-
-    if (!res.ok) {
-      const errorText = await res.text();
-      throw new Error(`instagrapi error (${res.status}): ${errorText}`);
+    try {
+      const res = await axios.post(url, form.toString(), {
+        headers: {
+          "X-API-KEY": API_KEY,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      });
+      return res.data;
+    } catch (err: any) {
+      const status = err.response?.status || 500;
+      const data = err.response?.data ? JSON.stringify(err.response.data) : err.message;
+      throw new Error(`instagrapi error (${status}): ${data}`);
     }
-    return res.json();
   }
 }
 
