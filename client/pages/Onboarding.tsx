@@ -328,7 +328,7 @@ export default function SetupWizard() {
 
       <div className="flex flex-col gap-3">
         <Button
-          onClick={() => { window.open("/integrations", "_blank"); setTimeout(checkWhatsApp, 10000); }}
+          onClick={() => { window.open("/integrations?defaultTab=whatsapp", "_blank"); setTimeout(checkWhatsApp, 10000); }}
           className="w-full h-13 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-foreground font-black gap-2 transition-all"
         >
           <ExternalLink className="w-4 h-4" /> Open WhatsApp QR Scanner
@@ -390,7 +390,7 @@ export default function SetupWizard() {
 
       <div className="flex flex-col gap-3">
         <Button
-          onClick={() => { window.open("/integrations", "_blank"); setTimeout(checkInstagram, 10000); }}
+          onClick={() => { window.open("/integrations?defaultTab=instagram", "_blank"); setTimeout(checkInstagram, 10000); }}
           className="w-full h-13 rounded-2xl bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-foreground font-black gap-2 transition-all"
         >
           <ExternalLink className="w-4 h-4" /> Connect Instagram
