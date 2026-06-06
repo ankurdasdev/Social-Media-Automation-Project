@@ -137,8 +137,40 @@ function PasswordStrength({ password }: { password: string }) {
 
 const FEATURES = [
   { icon: MessageCircle, color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20", label: "WhatsApp Automation", desc: "Mass outreach in minutes" },
-  { icon: Mail, color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20", label: "Gmail Campaigns", desc: "Personalised email at scale" },
-  { icon: Instagram, color: "text-pink-400", bg: "bg-pink-500/10 border-pink-500/20", label: "Instagram DMs", desc: "Reach talent on socials" },
+  { icon: FileText, color: "text-purple-400", bg: "bg-purple-500/10 border-purple-500/20", label: "Template Builder", desc: "Craft winning messages" },
+  { icon: ShieldCheck, color: "text-rose-400", bg: "bg-rose-500/10 border-rose-500/20", label: "Anti-Ban Protection", desc: "Safe sending intervals" },
+];
+
+const COUNTRY_CODES = [
+  { code: "IN", dial: "+91", flag: "🇮🇳", name: "India" },
+  { code: "US", dial: "+1", flag: "🇺🇸", name: "United States" },
+  { code: "GB", dial: "+44", flag: "🇬🇧", name: "United Kingdom" },
+  { code: "AE", dial: "+971", flag: "🇦🇪", name: "UAE" },
+  { code: "CA", dial: "+1", flag: "🇨🇦", name: "Canada" },
+  { code: "AU", dial: "+61", flag: "🇦🇺", name: "Australia" },
+  { code: "SG", dial: "+65", flag: "🇸🇬", name: "Singapore" },
+  { code: "FR", dial: "+33", flag: "🇫🇷", name: "France" },
+  { code: "DE", dial: "+49", flag: "🇩🇪", name: "Germany" },
+  { code: "IT", dial: "+39", flag: "🇮🇹", name: "Italy" },
+  { code: "ES", dial: "+34", flag: "🇪🇸", name: "Spain" },
+  { code: "BR", dial: "+55", flag: "🇧🇷", name: "Brazil" },
+  { code: "MX", dial: "+52", flag: "🇲🇽", name: "Mexico" },
+  { code: "ZA", dial: "+27", flag: "🇿🇦", name: "South Africa" },
+  { code: "NG", dial: "+234", flag: "🇳🇬", name: "Nigeria" },
+  { code: "KE", dial: "+254", flag: "🇰🇪", name: "Kenya" },
+  { code: "SA", dial: "+966", flag: "🇸🇦", name: "Saudi Arabia" },
+  { code: "JP", dial: "+81", flag: "🇯🇵", name: "Japan" },
+  { code: "CN", dial: "+86", flag: "🇨🇳", name: "China" },
+  { code: "ID", dial: "+62", flag: "🇮🇩", name: "Indonesia" },
+  { code: "MY", dial: "+60", flag: "🇲🇾", name: "Malaysia" },
+  { code: "PH", dial: "+63", flag: "🇵🇭", name: "Philippines" },
+  { code: "TH", dial: "+66", flag: "🇹🇭", name: "Thailand" },
+  { code: "VN", dial: "+84", flag: "🇻🇳", name: "Vietnam" },
+  { code: "PK", dial: "+92", flag: "🇵🇰", name: "Pakistan" },
+  { code: "BD", dial: "+880", flag: "🇧🇩", name: "Bangladesh" },
+  { code: "EG", dial: "+20", flag: "🇪🇬", name: "Egypt" },
+  { code: "TR", dial: "+90", flag: "🇹🇷", name: "Turkey" },
+  { code: "RU", dial: "+7", flag: "🇷🇺", name: "Russia" },
 ];
 
 export default function Signup() {
@@ -157,7 +189,7 @@ export default function Signup() {
   const [privacyScrolled, setPrivacyScrolled] = useState(false);
 
   const [formData, setFormData] = useState({
-    name: "", email: "", phone: "", gender: "", dob: "",
+    name: "", email: "", phone: "", dialCode: "+91", gender: "", dob: "",
     password: "", confirmPassword: "", terms: false,
   });
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -198,7 +230,7 @@ export default function Signup() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: formData.name.trim(), email: formData.email.trim(),
-          phone: formData.phone.trim() || undefined,
+          phone: formData.phone.trim() ? `${formData.dialCode}${formData.phone.trim()}` : undefined,
           gender: formData.gender, dob: formData.dob, password: formData.password,
         }),
       });
@@ -379,9 +411,25 @@ export default function Signup() {
                 Phone Number <span className="text-foreground/20 normal-case tracking-normal font-normal">(optional)</span>
               </label>
               <div className="flex gap-2.5">
-                <div className="h-13 px-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex items-center gap-2 shrink-0">
-                  <span className="text-base">🇮🇳</span>
-                  <span className="text-xs font-black text-foreground/40">+91</span>
+                <div className="h-13 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex items-center shrink-0 w-[110px]">
+                  <Select value={formData.dialCode} onValueChange={(val) => setFormData(p => ({ ...p, dialCode: val }))}>
+                    <SelectTrigger className="h-full w-full border-0 focus:ring-0 px-3 bg-transparent hover:bg-white/[0.02] transition-colors rounded-2xl">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base">{COUNTRY_CODES.find(c => c.dial === formData.dialCode)?.flag || "🌐"}</span>
+                        <span className="text-xs font-black text-foreground/70">{formData.dialCode}</span>
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent className="dark:bg-[#0e0b1f] bg-background max-h-[300px]">
+                      {COUNTRY_CODES.map(country => (
+                        <SelectItem key={country.code} value={country.dial} className="cursor-pointer">
+                          <div className="flex items-center gap-2">
+                            <span>{country.flag}</span>
+                            <span className="text-xs font-medium">{country.name} ({country.dial})</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="flex-1">
                   <GlassInput
@@ -523,7 +571,8 @@ export default function Signup() {
                         type="button" 
                         disabled={!termsScrolled}
                         className="h-12 px-8 rounded-xl font-black tracking-widest uppercase transition-all"
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setFormData(p => ({ ...p, terms: true }));
                           setIsTermsOpen(false);
                         }}
@@ -563,7 +612,8 @@ export default function Signup() {
                         type="button" 
                         disabled={!privacyScrolled}
                         className="h-12 px-8 rounded-xl font-black tracking-widest uppercase transition-all"
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setFormData(p => ({ ...p, terms: true }));
                           setIsPrivacyOpen(false);
                         }}
