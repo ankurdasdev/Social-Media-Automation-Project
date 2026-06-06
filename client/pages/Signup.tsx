@@ -11,6 +11,7 @@ import {
 import { TermsContent } from "./TermsOfService";
 import { PrivacyContent } from "./PrivacyPolicy";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 // ── Reuse same animated background ──────────────────────────────────────────
 function AnimatedBackground() {
