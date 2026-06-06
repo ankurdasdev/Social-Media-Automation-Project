@@ -316,8 +316,9 @@ export const handleInstagramSyncThreads: RequestHandler = async (req, res) => {
 
     res.json({ message: `Synced ${addedCount} Instagram threads`, count: addedCount });
   } catch (err: any) {
-    console.error("[instagram] Sync threads error:", err.message);
-    res.status(500).json({ error: `Failed to sync Instagram threads: ${err.message}` });
+    console.error("[instagram] Sync threads error:", err.message, err.cause);
+    const causeMsg = err.cause ? (err.cause.message || String(err.cause)) : "";
+    res.status(500).json({ error: `Failed to sync Instagram threads: ${err.message} ${causeMsg}`.trim() });
   }
 };
 
