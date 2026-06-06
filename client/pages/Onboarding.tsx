@@ -87,7 +87,7 @@ export default function SetupWizard() {
   const checkGoogle = async () => {
     setCheckingGoogle(true);
     try {
-      const res = await fetch("/api/google/status", {
+      const res = await fetch(`/api/auth/google/status?userId=${userId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("casthub_auth_token")}` },
       });
       const data = await res.json();
@@ -99,7 +99,7 @@ export default function SetupWizard() {
   const checkWhatsApp = async () => {
     setCheckingWA(true);
     try {
-      const res = await fetch("/api/whatsapp/status", {
+      const res = await fetch(`/api/whatsapp/status?userId=${userId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("casthub_auth_token")}` },
       });
       const data = await res.json();
@@ -111,7 +111,7 @@ export default function SetupWizard() {
   const checkInstagram = async () => {
     setCheckingIG(true);
     try {
-      const res = await fetch("/api/instagram/status", {
+      const res = await fetch(`/api/instagram/status?userId=${userId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("casthub_auth_token")}` },
       });
       const data = await res.json();
@@ -232,7 +232,7 @@ export default function SetupWizard() {
       </div>
 
       {/* How to connect */}
-      <div className="p-5 rounded-2xl dark:bg-white/3 bg-black/5 border border-border/50 space-y-3">
+      <div className="p-5 rounded-2xl dark:bg-white/[0.03] bg-black/5 border border-border/50 space-y-3">
         <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">How to connect</p>
         <ol className="space-y-2">
           {[
@@ -256,7 +256,7 @@ export default function SetupWizard() {
       </div>
 
       {/* Limits */}
-      <div className="p-4 rounded-xl dark:bg-white/3 bg-black/5 border border-border/50">
+      <div className="p-4 rounded-xl dark:bg-white/[0.03] bg-black/5 border border-border/50">
         <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Limitations</p>
         <p className="text-xs text-muted-foreground font-medium">Gmail allows ~500 emails/day for regular accounts. Excessive bounces or spam reports may temporarily restrict sending. Always use personalized templates.</p>
       </div>
@@ -264,7 +264,7 @@ export default function SetupWizard() {
       <div className="flex flex-col gap-3">
         {statuses.google !== "connected" && (
           <Button
-            onClick={() => { window.open("/api/google/auth", "_blank"); setTimeout(checkGoogle, 5000); }}
+            onClick={() => { window.open(`/api/auth/google?userId=${userId}`, "_blank"); setTimeout(checkGoogle, 5000); }}
             className="w-full h-13 rounded-2xl bg-blue-600 hover:bg-blue-500 text-foreground font-black gap-2 transition-all"
           >
             <ExternalLink className="w-4 h-4" /> Connect Google Account
@@ -303,7 +303,7 @@ export default function SetupWizard() {
         <FeaturePill icon={ShieldCheck} label="Session-based auth" color="bg-purple-500/10 border-purple-500/20 text-purple-400" />
       </div>
 
-      <div className="p-5 rounded-2xl dark:bg-white/3 bg-black/5 border border-border/50 space-y-3">
+      <div className="p-5 rounded-2xl dark:bg-white/[0.03] bg-black/5 border border-border/50 space-y-3">
         <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">How to scan QR</p>
         <ol className="space-y-2">
           {[
@@ -366,7 +366,7 @@ export default function SetupWizard() {
         <FeaturePill icon={ShieldCheck} label="Session auth" color="bg-purple-500/10 border-purple-500/20 text-purple-400" />
       </div>
 
-      <div className="p-5 rounded-2xl dark:bg-white/3 bg-black/5 border border-border/50 space-y-3">
+      <div className="p-5 rounded-2xl dark:bg-white/[0.03] bg-black/5 border border-border/50 space-y-3">
         <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">How to connect</p>
         <ol className="space-y-2">
           {[
@@ -472,7 +472,7 @@ export default function SetupWizard() {
               key={key}
               className={cn(
                 "flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all",
-                statuses[key] === "connected" ? color : "dark:bg-white/3 bg-black/5 border-border/50 opacity-40"
+                statuses[key] === "connected" ? color : "dark:bg-white/[0.03] bg-black/5 border-border/50 opacity-40"
               )}
             >
               <Icon className={cn("w-5 h-5", statuses[key] === "connected" ? "" : "text-foreground/30")} />
@@ -490,7 +490,7 @@ export default function SetupWizard() {
             { icon: ShieldCheck, label: "Analytics & tracking", color: "text-blue-400" },
             { icon: Star, label: "Bulk contact management", color: "text-emerald-400" },
           ].map((f, i) => (
-            <div key={i} className="flex items-center gap-2.5 p-3 rounded-xl dark:bg-white/3 bg-black/5 border border-border/50">
+            <div key={i} className="flex items-center gap-2.5 p-3 rounded-xl dark:bg-white/[0.03] bg-black/5 border border-border/50">
               <f.icon className={cn("w-4 h-4 shrink-0", f.color)} />
               <span className="text-xs font-bold text-muted-foreground">{f.label}</span>
             </div>
@@ -532,8 +532,8 @@ export default function SetupWizard() {
       )}
 
       {/* Main content */}
-      <div className="flex-1 flex items-center justify-center p-6 pt-24">
-        <div className="w-full max-w-lg">
+      <div className="flex-1 overflow-y-auto px-6 pt-24 pb-32 flex flex-col items-center">
+        <div className="w-full max-w-lg my-auto min-h-max py-8">
           {step === 0 && <WelcomeSplash />}
           {step === 1 && <GoogleStep />}
           {step === 2 && <WhatsAppStep />}
