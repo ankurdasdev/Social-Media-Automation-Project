@@ -2,10 +2,13 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { WhatsAppSettings } from "@/components/settings/WhatsAppSettings";
+import InstagramSettings from "@/components/settings/InstagramSettings";
 import {
   Mail, MessageCircle, Instagram, Zap, ArrowRight, ArrowLeft,
   CheckCircle2, Circle, SkipForward, ShieldCheck, ExternalLink,
-  Wifi, WifiOff, Loader2, Trophy, Sparkles, Star
+  Wifi, WifiOff, Loader2, Trophy, Sparkles, Star, Sun, Moon
 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -51,13 +54,60 @@ function StatusBadge({ status }: { status: "pending" | "connected" | "skipped" }
   );
 }
 
-// ── Feature Pill ──────────────────────────────────────────────────────────────
 function FeaturePill({ icon: Icon, label, color }: { icon: any; label: string; color: string }) {
   return (
     <div className={cn("flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-bold", color)}>
       <Icon className="w-3.5 h-3.5" />
       {label}
     </div>
+  );
+}
+
+// ── Animated Background & Theme Toggle ──────────────────────────────────────────
+function AnimatedBackground() {
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const x = (e.clientX / window.innerWidth) - 0.5;
+      const y = (e.clientY / window.innerHeight) - 0.5;
+      setMousePos({ x, y });
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
+
+  return (
+    <div className="fixed inset-0 -z-10 overflow-hidden dark:bg-[#03020a] bg-slate-50">
+      <div
+        className="absolute inset-0 opacity-[0.025]"
+        style={{ backgroundImage: "linear-gradient(rgba(139,92,246,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.6) 1px, transparent 1px)", backgroundSize: "60px 60px" }}
+      />
+      <div className="absolute inset-0 transition-transform duration-1000 ease-out" style={{ transform: `translate(${mousePos.x * 60}px, ${mousePos.y * 60}px)` }}>
+        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-purple-600/20 blur-[140px] animate-float-1" />
+      </div>
+      <div className="absolute inset-0 transition-transform duration-1000 ease-out" style={{ transform: `translate(${mousePos.x * -80}px, ${mousePos.y * -80}px)` }}>
+        <div className="absolute -bottom-40 -right-40 w-[700px] h-[700px] rounded-full bg-indigo-600/15 blur-[160px] animate-float-2" />
+      </div>
+      <div className="absolute inset-0 transition-transform duration-1000 ease-out" style={{ transform: `translate(${mousePos.x * 120}px, ${mousePos.y * 120}px)` }}>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-violet-500/10 blur-[120px] animate-float-3" />
+      </div>
+    </div>
+  );
+}
+
+function ThemeToggle() {
+  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
+  const toggleTheme = () => {
+    const next = !isDark;
+    setIsDark(next);
+    document.documentElement.classList.toggle('dark', next);
+    localStorage.setItem('casthub-theme', next ? 'dark' : 'light');
+  };
+  return (
+    <button onClick={toggleTheme} className="absolute top-4 right-6 z-50 w-10 h-10 rounded-full dark:bg-white/5 bg-black/5 border dark:border-white/10 border-border/50 flex items-center justify-center text-foreground/60 hover:text-foreground hover:dark:bg-white/10 hover:bg-black/10 transition-all backdrop-blur-md">
+      {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+    </button>
   );
 }
 
@@ -74,6 +124,8 @@ export default function SetupWizard() {
   const [checkingWA, setCheckingWA] = useState(false);
   const [checkingIG, setCheckingIG] = useState(false);
   const [confetti, setConfetti] = useState(false);
+  const [showWADialog, setShowWADialog] = useState(false);
+  const [showIGDialog, setShowIGDialog] = useState(false);
 
   const userId = (() => {
     try {
@@ -328,10 +380,10 @@ export default function SetupWizard() {
 
       <div className="flex flex-col gap-3">
         <Button
-          onClick={() => { window.open("/integrations?defaultTab=whatsapp", "_blank"); setTimeout(checkWhatsApp, 10000); }}
+          onClick={() => setShowWADialog(true)}
           className="w-full h-13 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-foreground font-black gap-2 transition-all"
         >
-          <ExternalLink className="w-4 h-4" /> Open WhatsApp QR Scanner
+          <MessageCircle className="w-4 h-4" /> Open WhatsApp QR Scanner
         </Button>
         <Button
           onClick={checkWhatsApp}
@@ -390,10 +442,10 @@ export default function SetupWizard() {
 
       <div className="flex flex-col gap-3">
         <Button
-          onClick={() => { window.open("/integrations?defaultTab=instagram", "_blank"); setTimeout(checkInstagram, 10000); }}
+          onClick={() => setShowIGDialog(true)}
           className="w-full h-13 rounded-2xl bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-foreground font-black gap-2 transition-all"
         >
-          <ExternalLink className="w-4 h-4" /> Connect Instagram
+          <Instagram className="w-4 h-4" /> Connect Instagram
         </Button>
         <Button
           onClick={checkInstagram}
@@ -511,10 +563,12 @@ export default function SetupWizard() {
   const TOTAL_STEPS = 4;
 
   return (
-    <div className="min-h-screen bg-[#060610] flex flex-col">
+    <div className="min-h-screen flex flex-col relative text-foreground">
+      <AnimatedBackground />
+      <ThemeToggle />
       {/* Top bar */}
       {step > 0 && step < 4 && (
-        <div className="fixed top-0 left-0 right-0 z-50 px-6 py-4 flex items-center justify-between bg-[#060610]/80 backdrop-blur-md border-b border-border/50">
+        <div className="fixed top-0 left-0 right-0 z-50 px-6 py-4 flex items-center justify-between bg-background/80 backdrop-blur-md border-b border-border/50">
           <div className="flex items-center gap-3">
             <div className="w-7 h-7 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center">
               <Zap className="w-3.5 h-3.5 text-foreground fill-current" />
@@ -544,7 +598,7 @@ export default function SetupWizard() {
 
       {/* Bottom nav */}
       {step > 0 && step < 4 && (
-        <div className="fixed bottom-0 left-0 right-0 px-6 py-5 bg-[#060610]/80 backdrop-blur-md border-t border-border/50">
+        <div className="fixed bottom-0 left-0 right-0 px-6 py-5 bg-background/80 backdrop-blur-md border-t border-border/50">
           <div className="max-w-lg mx-auto flex items-center justify-between gap-4">
             <Button
               variant="ghost"
@@ -576,6 +630,24 @@ export default function SetupWizard() {
           </div>
         </div>
       )}
+
+      {/* WhatsApp Dialog */}
+      <Dialog open={showWADialog} onOpenChange={setShowWADialog}>
+        <DialogContent className="max-w-4xl p-0 overflow-hidden bg-transparent border-none shadow-none">
+          <div className="bg-background rounded-[2rem] overflow-hidden max-h-[85vh] overflow-y-auto">
+            <WhatsAppSettings />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Instagram Dialog */}
+      <Dialog open={showIGDialog} onOpenChange={setShowIGDialog}>
+        <DialogContent className="max-w-4xl p-0 overflow-hidden bg-transparent border-none shadow-none">
+          <div className="bg-background rounded-[2rem] overflow-hidden max-h-[85vh] overflow-y-auto">
+            <InstagramSettings />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
