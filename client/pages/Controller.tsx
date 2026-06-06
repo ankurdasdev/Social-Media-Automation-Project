@@ -231,6 +231,22 @@ export default function Controller() {
   const toggleMutation = useMutation({
     mutationFn: ({ id, enabled }: { id: string; enabled: boolean }) =>
       updateGroup(id, { enabled, userId: getOrCreateUserId() }),
+    onMutate: async ({ id, enabled }) => {
+      await queryClient.cancelQueries({ queryKey: ["groups"] });
+      const previousGroups = queryClient.getQueryData<SourceGroup[]>(["groups"]);
+      if (previousGroups) {
+        queryClient.setQueryData<SourceGroup[]>(["groups"], (old) => {
+          if (!old) return old;
+          return old.map(g => g.id === id ? { ...g, enabled } : g);
+        });
+      }
+      return { previousGroups };
+    },
+    onError: (err, variables, context: any) => {
+      if (context?.previousGroups) {
+        queryClient.setQueryData(["groups"], context.previousGroups);
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["groups"] });
     },
@@ -240,16 +256,34 @@ export default function Controller() {
     mutationFn: async ({ action, ids }: { action: "enable" | "disable" | "delete"; ids: string[] }) => {
       const userId = getOrCreateUserId();
       await Promise.all(
-        ids.map((id) =>
-          action === "delete"
-            ? fetch(`/api/groups/${id}?userId=${userId}`, { method: "DELETE" })
-            : fetch(`/api/groups/${id}`, {
+        ids.map(async (id) => {
+          const res = action === "delete"
+            ? await fetch(`/api/groups/${id}?userId=${userId}`, { method: "DELETE" })
+            : await fetch(`/api/groups/${id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ enabled: action === "enable", userId }),
-              })
-        )
+              });
+          if (!res.ok) throw new Error("Action failed");
+        })
       );
+    },
+    onMutate: async ({ action, ids }) => {
+      await queryClient.cancelQueries({ queryKey: ["groups"] });
+      const previousGroups = queryClient.getQueryData<SourceGroup[]>(["groups"]);
+      if (previousGroups) {
+        queryClient.setQueryData<SourceGroup[]>(["groups"], (old) => {
+          if (!old) return old;
+          return old.map(g => {
+            if (ids.includes(g.id)) {
+              if (action === "enable") return { ...g, enabled: true };
+              if (action === "disable") return { ...g, enabled: false };
+            }
+            return g;
+          });
+        });
+      }
+      return { previousGroups };
     },
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ["groups"] });
@@ -259,7 +293,10 @@ export default function Controller() {
         description: `${vars.ids.length} sources updated successfully.`,
       });
     },
-    onError: () => {
+    onError: (err, vars, context: any) => {
+      if (context?.previousGroups) {
+        queryClient.setQueryData(["groups"], context.previousGroups);
+      }
       toast({ title: "Bulk Action Failed", variant: "destructive", description: "Some operations could not complete." });
     },
   });

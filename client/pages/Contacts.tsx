@@ -297,18 +297,20 @@ export default function Contacts() {
 
   const bulkActionMutation = useMutation({
     mutationFn: async ({ action, ids, payload }: { action: string, ids: string[], payload?: any }) => {
-      const promises = ids.map((id) => {
+      const promises = ids.map(async (id) => {
         if (action === "delete") {
-          return fetch(`/api/contacts/${id}?userId=${userId}`, { method: "DELETE" });
+          const res = await fetch(`/api/contacts/${id}?userId=${userId}`, { method: "DELETE" });
+          if (!res.ok) throw new Error("Delete failed");
         } else if (action === "color" || action === "move") {
           const body = action === "color" ? { rowColor: payload, userId } : { sheetName: payload, userId };
-          return fetch(`/api/contacts/${id}`, {
+          const res = await fetch(`/api/contacts/${id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body),
           });
+          if (!res.ok) throw new Error("Update failed");
         } else if (action === "reset_automation") {
-          return fetch(`/api/contacts/${id}`, {
+          const res = await fetch(`/api/contacts/${id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -318,11 +320,10 @@ export default function Contacts() {
               status: "pending"
             }),
           });
+          if (!res.ok) throw new Error("Reset failed");
         } else if (action === "smart_clear" && Array.isArray(payload)) {
-          // payload is the array of fields to clear
           const body: Record<string, any> = { userId };
           payload.forEach((field) => {
-            // Checkboxes (booleans)
             if (["whatsappRun", "emailRun", "instagramRun"].includes(field)) {
               body[field] = false;
             } else if (field === "salutation") {
@@ -330,18 +331,67 @@ export default function Contacts() {
               body["salutationEmail"] = "Hi";
               body["salutationIG"] = "Hi";
             } else {
-              // Text fields
               body[field] = "";
             }
           });
-          return fetch(`/api/contacts/${id}`, {
+          const res = await fetch(`/api/contacts/${id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body),
           });
+          if (!res.ok) throw new Error("Smart clear failed");
         }
       });
       await Promise.all(promises);
+    },
+    onMutate: async ({ action, ids, payload }) => {
+      await queryClient.cancelQueries({ queryKey: ["contacts", userId] });
+      const previousContacts = queryClient.getQueryData<Contact[]>(["contacts", userId]);
+
+      if (previousContacts) {
+        queryClient.setQueryData<Contact[]>(["contacts", userId], (old) => {
+          if (!old) return old;
+          return old.map(contact => {
+            if (ids.includes(contact.id)) {
+              if (action === "color") return { ...contact, rowColor: payload };
+              if (action === "move") return { ...contact, sheetName: payload };
+              if (action === "reset_automation") return { 
+                ...contact, 
+                whatsappRun: false, emailRun: false, instagramRun: false,
+                whatsappCompleted: "No", emailCompleted: "No", instagramCompleted: "No",
+                status: "pending"
+              };
+              if (action === "smart_clear" && Array.isArray(payload)) {
+                let updated = { ...contact };
+                payload.forEach((field) => {
+                  if (["whatsappRun", "emailRun", "instagramRun"].includes(field)) {
+                    (updated as any)[field] = false;
+                  } else if (field === "salutation") {
+                    updated.salutationWA = "Hi";
+                    updated.salutationEmail = "Hi";
+                    updated.salutationIG = "Hi";
+                  } else {
+                    (updated as any)[field] = "";
+                  }
+                });
+                return updated;
+              }
+            }
+            return contact;
+          });
+        });
+      }
+      return { previousContacts };
+    },
+    onError: (err: any, variables, context: any) => {
+      if (context?.previousContacts) {
+        queryClient.setQueryData(["contacts", userId], context.previousContacts);
+      }
+      toast({
+        variant: "destructive",
+        title: "BULK ACTION FAILED",
+        description: err.message,
+      });
     },
     onSuccess: (_, variables) => {
       toast({
@@ -600,6 +650,12 @@ export default function Contacts() {
               onTriggerAction={handleBulkTrigger}
               onBulkAction={(action, ids, payload) => bulkActionMutation.mutate({ action, ids, payload })}
               onUpdateContact={(id, data) => {
+                // Optimistic update
+                queryClient.setQueryData<Contact[]>(["contacts", userId], (old) => {
+                  if (!old) return old;
+                  return old.map(c => c.id === id ? { ...c, ...data } : c);
+                });
+                
                 fetch(`/api/contacts/${id}?userId=${userId}`, {
                   method: "PUT",
                   headers: { "Content-Type": "application/json" },
