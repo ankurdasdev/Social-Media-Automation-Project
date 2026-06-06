@@ -3,7 +3,7 @@ import { Zap, Shield, FileText, Mail } from "lucide-react";
 
 export function PrivacyContent() {
   return (
-    <div className="prose prose-invert max-w-none space-y-10 text-muted-foreground leading-relaxed">
+    <div className="prose dark:prose-invert max-w-none space-y-10 text-muted-foreground leading-relaxed">
       <section className="space-y-3">
         <h2 className="text-xl font-black text-foreground">1. Introduction</h2>
         <p>CastHub ("we", "our", or "us") is committed to protecting your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your data when you use our platform. By using CastHub, you consent to the practices described in this policy.</p>
@@ -108,7 +108,7 @@ export function PrivacyContent() {
 
 export default function PrivacyPolicy() {
   return (
-    <div className="min-h-screen bg-[#060610] text-foreground">
+    <div className="min-h-screen dark:bg-[#060610] bg-background text-foreground">
       {/* Ambient bg */}
       <div className="fixed inset-0 pointer-events-none -z-10">
         <div className="absolute top-0 right-0 w-[50vw] h-[50vw] bg-indigo-600/10 rounded-full blur-[150px]" />

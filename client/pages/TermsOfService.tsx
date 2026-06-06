@@ -3,7 +3,7 @@ import { Zap, Shield, FileText, Mail, ExternalLink } from "lucide-react";
 
 export function TermsContent() {
   return (
-    <div className="prose prose-invert max-w-none space-y-10 text-muted-foreground leading-relaxed">
+    <div className="prose dark:prose-invert max-w-none space-y-10 text-muted-foreground leading-relaxed">
       <section className="space-y-3">
         <h2 className="text-xl font-black text-foreground">1. Acceptance of Terms</h2>
         <p>By accessing or using CastHub ("the Platform", "we", "our", or "us"), you agree to be bound by these Terms of Service. If you do not agree to all the terms and conditions, you must not access or use the Platform. These terms apply to all users, visitors, and others who access or use the service.</p>
@@ -90,7 +90,7 @@ export function TermsContent() {
 
 export default function TermsOfService() {
   return (
-    <div className="min-h-screen bg-[#060610] text-foreground">
+    <div className="min-h-screen dark:bg-[#060610] bg-background text-foreground">
       {/* Ambient bg */}
       <div className="fixed inset-0 pointer-events-none -z-10">
         <div className="absolute top-0 left-0 w-[50vw] h-[50vw] bg-purple-600/10 rounded-full blur-[150px]" />
