@@ -695,7 +695,6 @@ export function DataTable<TData, TValue>({
                     cellColors: { ...ctxMenu.contact.cellColors, [ctxMenu.cellId]: color === "transparent" ? "" : color }
                   });
                 }
-                setCtxMenu(null);
               }}
             />
           </div>
