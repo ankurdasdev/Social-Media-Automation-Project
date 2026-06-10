@@ -230,6 +230,8 @@ const MemoizedTableRow = React.memo(({
   if (prev.isSelected !== next.isSelected) return false;
   if (prev.columnsFingerprint !== next.columnsFingerprint) return false;
   if (prev.row.index !== next.row.index) return false;
+  if (prev.rColor !== next.rColor) return false;
+  if (prev.isCustom !== next.isCustom) return false;
   return true;
 });
 
