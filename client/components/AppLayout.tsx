@@ -22,6 +22,7 @@ import {
   Instagram,
   Sparkles,
   Crown,
+  HelpCircle,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getOrCreateUserId, clearAuthToken, getCurrentUser, getAuthToken } from "@/lib/utils";
@@ -73,6 +74,11 @@ const navItems = [
     label: "Subscription",
     href: "/subscription",
     icon: Crown,
+  },
+  {
+    label: "Help & Support",
+    href: "/help",
+    icon: HelpCircle,
   },
 ];
 
@@ -415,9 +421,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
                   Privacy Policy
                 </Link>
                 <span className="text-muted-foreground/20 text-[10px]">·</span>
-                <a href="mailto:support@casthub.in" className="text-[10px] font-bold text-muted-foreground/40 hover:text-muted-foreground transition-colors uppercase tracking-widest">
+                <Link to="/help" className="text-[10px] font-bold text-muted-foreground/40 hover:text-muted-foreground transition-colors uppercase tracking-widest">
                   Contact
-                </a>
+                </Link>
               </div>
             </footer>
 

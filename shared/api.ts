@@ -342,3 +342,50 @@ export interface InstagramLoginResponse {
     method?: string;
   };
 }
+
+// ─── Help & Support ─────────────────────────────────────────────────────────
+
+export interface HelpAskRequest {
+  query: string;
+  userId: string;
+}
+
+export interface HelpAskResponse {
+  answer: string;
+}
+
+export const HELP_CATEGORIES = [
+  "Payment & Billing",
+  "Subscription & Plans",
+  "UI/UX Experience",
+  "WhatsApp Integration",
+  "Instagram Integration",
+  "Google Drive & Email",
+  "Contact Management",
+  "Template Builder",
+  "AI Features",
+  "Bug Report",
+  "Feature Request",
+  "Account & Security",
+  "Other",
+] as const;
+
+export type HelpCategory = (typeof HELP_CATEGORIES)[number];
+
+export interface ContactFormPayload {
+  name: string;
+  email: string;
+  category: HelpCategory;
+  message: string;
+}
+
+export interface ContactFormResponse {
+  success: boolean;
+  preview?: string;
+}
+
+export interface FeedbackPayload {
+  rating: number;
+  context: "ai_chat" | "contact_form";
+  comment?: string;
+}

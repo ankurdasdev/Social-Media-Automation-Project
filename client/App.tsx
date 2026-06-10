@@ -27,6 +27,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import Subscription from "./pages/Subscription";
 import TermsOfService from "./pages/TermsOfService";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import Help from "./pages/Help";
 
 import NotFound from "./pages/NotFound";
 import { isTokenValid } from "./lib/utils";
@@ -104,6 +105,7 @@ const App = () => (
             <Route path="/profile" element={<ProtectedRoute element={<Profile />} />} />
             <Route path="/subscription" element={<ProtectedRoute element={<Subscription />} />} />
             <Route path="/admin" element={<AdminRoute element={<AdminDashboard />} />} />
+            <Route path="/help" element={<ProtectedRoute element={<Help />} />} />
 
             {/* Default redirect to dashboard (ProtectedRoute handles auth check) */}
             <Route path="/" element={<Navigate to="/dashboard" replace />} />

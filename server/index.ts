@@ -63,6 +63,7 @@ import {
 import { handleSendOutreach } from "./routes/outreach";
 import { handleGetSalutations, handleAddSalutation } from "./routes/salutations";
 import { handleImproveMessage } from "./routes/ai-routes";
+import { handleAskHelp, handleContactForm, handleFeedback } from "./routes/help";
 import { 
   handleSignup, 
   handleLogin, 
@@ -326,6 +327,11 @@ export function createServer() {
   app.post("/api/instagram/send-message", handleInstagramSendMessage);
 
  
+  // ── Help & Support ──────────────────────────────────────────────────────────
+  app.post("/api/help/ask", handleAskHelp);
+  app.post("/api/help/contact", handleContactForm);
+  app.post("/api/help/feedback", handleFeedback);
+
   // ── Outreach ───────────────────────────────────────────────────────────────
   app.post("/api/outreach/send", handleSendOutreach);
 
