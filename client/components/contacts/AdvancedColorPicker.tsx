@@ -39,20 +39,25 @@ const GRADIENTS = [
 export function AdvancedColorPicker({ color, onChange }: AdvancedColorPickerProps) {
   const [hex, setHex] = React.useState(color.startsWith("#") ? color : "#ffffff");
   const [isExpanded, setIsExpanded] = React.useState(false);
+  const [dirty, setDirty] = React.useState(false);
 
   React.useEffect(() => {
-    if (color.startsWith("#")) setHex(color);
+    if (color.startsWith("#")) {
+      setHex(color);
+      setDirty(false);
+    }
   }, [color]);
 
   // Debounce the onChange to prevent massive API flooding when dragging the native color picker
   React.useEffect(() => {
-    if (hex !== color && /^#[0-9A-F]{6}$/i.test(hex)) {
+    if (dirty && hex !== color && /^#[0-9A-F]{6}$/i.test(hex)) {
       const timer = setTimeout(() => {
         onChange(hex);
+        setDirty(false);
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [hex, color, onChange]);
+  }, [hex, color, dirty, onChange]);
 
   return (
     <div className="p-4 space-y-4 w-full max-w-[280px] max-h-[450px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 animate-in fade-in zoom-in-95 duration-200">
@@ -119,7 +124,7 @@ export function AdvancedColorPicker({ color, onChange }: AdvancedColorPickerProp
                     value={hex} 
                     onChange={(e) => {
                       setHex(e.target.value);
-                      // onChange is handled by the debounce effect above
+                      setDirty(true);
                     }}
                     className="absolute inset-0 w-[200%] h-[200%] -translate-x-1/4 -translate-y-1/4 cursor-pointer"
                   />
@@ -132,7 +137,7 @@ export function AdvancedColorPicker({ color, onChange }: AdvancedColorPickerProp
                    value={hex} 
                    onChange={(e) => {
                      setHex(e.target.value);
-                     // onChange is handled by the debounce effect above
+                     setDirty(true);
                    }}
                    className="h-10 rounded-xl bg-background/50 border-white/5 font-mono text-xs font-black uppercase tracking-wider"
                  />
