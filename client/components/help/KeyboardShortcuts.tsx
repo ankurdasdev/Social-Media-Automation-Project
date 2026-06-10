@@ -2,16 +2,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Keyboard } from "lucide-react";
 
 const SHORTCUTS = [
-  { keys: ["Ctrl", "K"], description: "Global search", section: "Navigation" },
-  { keys: ["Ctrl", "N"], description: "Add new contact", section: "Navigation" },
+  { keys: ["Ctrl", "B"], description: "Toggle sidebar menu", section: "Navigation" },
   { keys: ["Esc"], description: "Close dialogs / popups", section: "Navigation" },
-  { keys: ["F11"], description: "Toggle fullscreen table", section: "Contacts Table" },
-  { keys: ["Ctrl", "A"], description: "Select all visible rows", section: "Contacts Table" },
-  { keys: ["Delete"], description: "Delete selected contacts", section: "Contacts Table" },
-  { keys: ["Enter"], description: "Open contact detail drawer", section: "Contacts Table" },
-  { keys: ["↑", "↓"], description: "Navigate between rows", section: "Contacts Table" },
-  { keys: ["Ctrl", "Z"], description: "Undo last action", section: "General" },
-  { keys: ["Ctrl", "S"], description: "Save current changes", section: "General" },
+  { keys: ["Ctrl", "F"], description: "Find text on page", section: "General" },
+  { keys: ["F11"], description: "Toggle browser fullscreen", section: "General" },
+  { keys: ["Ctrl", "+", "-"], description: "Zoom in / out", section: "General" },
+  { keys: ["Ctrl", "P"], description: "Print current page", section: "General" },
 ];
 
 function KbdKey({ children }: { children: string }) {
