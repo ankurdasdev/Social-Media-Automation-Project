@@ -67,16 +67,33 @@ async function generateAnswer(question: string): Promise<string> {
 
     // General
     "what is casthub": "🤖 CastHub is a casting automation platform that helps casting directors manage contacts and send personalized outreach messages via WhatsApp, Email, and Instagram — all from one dashboard.",
+
+    // Conversational
+    "hello": "🤖 Hello there! I'm the CastHub Assistant. How can I help you today?",
+    "hi": "🤖 Hi! How can I assist you with CastHub today?",
+    "hey": "🤖 Hey! What can I help you with?",
+    "how are you": "🤖 I'm just a bunch of code, but I'm doing great! How can I help you with your casting automation today?",
+    "who are you": "🤖 I'm the CastHub AI Assistant, designed to help you navigate and use the platform efficiently.",
+    "who made you": "🤖 I was created by the team behind CastHub to provide you with instant support and answers.",
+    "thanks": "🤖 You're welcome! Let me know if you need anything else.",
+    "thank you": "🤖 Happy to help! Feel free to ask if you have more questions.",
   };
 
   // Try exact match first
   for (const [key, answer] of Object.entries(answers)) {
-    if (q.includes(key) || key.includes(q)) {
+    if (q === key || q === key + "?" || q === key + "!") {
       return answer;
+    }
+    // Also catch exact matches within sentences for conversational ones
+    if (["hello", "hi", "hey", "thanks", "thank you"].includes(key) && q.includes(key)) {
+        return answer;
     }
   }
 
   // Try keyword matching
+  if (q.includes("how are you")) return answers["how are you"];
+  if (q.includes("who are you") || q.includes("who is this")) return answers["who are you"];
+  if (q.includes("who made") || q.includes("who created")) return answers["who made you"];
   if (q.includes("contact") && (q.includes("add") || q.includes("create") || q.includes("new"))) return answers["how do i add a contact"];
   if (q.includes("import") || q.includes("excel") || q.includes("upload")) return answers["how to import contacts"];
   if (q.includes("color") || q.includes("row")) return answers["how to color rows"];
