@@ -44,6 +44,16 @@ export function AdvancedColorPicker({ color, onChange }: AdvancedColorPickerProp
     if (color.startsWith("#")) setHex(color);
   }, [color]);
 
+  // Debounce the onChange to prevent massive API flooding when dragging the native color picker
+  React.useEffect(() => {
+    if (hex !== color && /^#[0-9A-F]{6}$/i.test(hex)) {
+      const timer = setTimeout(() => {
+        onChange(hex);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [hex, color, onChange]);
+
   return (
     <div className="p-4 space-y-4 w-full max-w-[280px] max-h-[450px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 animate-in fade-in zoom-in-95 duration-200">
       {/* Standard Colors */}
@@ -108,9 +118,8 @@ export function AdvancedColorPicker({ color, onChange }: AdvancedColorPickerProp
                     type="color" 
                     value={hex} 
                     onChange={(e) => {
-                      const val = e.target.value;
-                      setHex(val);
-                      onChange(val);
+                      setHex(e.target.value);
+                      // onChange is handled by the debounce effect above
                     }}
                     className="absolute inset-0 w-[200%] h-[200%] -translate-x-1/4 -translate-y-1/4 cursor-pointer"
                   />
@@ -122,9 +131,8 @@ export function AdvancedColorPicker({ color, onChange }: AdvancedColorPickerProp
                  <Input 
                    value={hex} 
                    onChange={(e) => {
-                     const val = e.target.value;
-                     setHex(val);
-                     if (/^#[0-9A-F]{6}$/i.test(val)) onChange(val);
+                     setHex(e.target.value);
+                     // onChange is handled by the debounce effect above
                    }}
                    className="h-10 rounded-xl bg-background/50 border-white/5 font-mono text-xs font-black uppercase tracking-wider"
                  />
