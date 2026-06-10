@@ -134,7 +134,11 @@ export function DataTableToolbar<TData>({
     if (!onBulkAction) return;
     const ids = selectedRows.map(r => (r.original as any).id);
     onBulkAction(action, ids, payload);
-    table.toggleAllPageRowsSelected(false);
+    
+    // Don't unselect rows when picking a color so they can tweak custom colors live
+    if (action !== "color") {
+      table.toggleAllPageRowsSelected(false);
+    }
   };
 
   return (
