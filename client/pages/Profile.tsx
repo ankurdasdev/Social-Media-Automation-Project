@@ -27,7 +27,10 @@ import {
   CreditCard,
   Clock,
   ExternalLink,
+  Instagram,
+  MapPin,
 } from "lucide-react";
+import { LocationPicker } from "@/components/ui/LocationPicker";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { getOrCreateUserId } from "@/lib/utils";
@@ -60,6 +63,8 @@ export default function Profile() {
   const [email, setEmail] = useState(user?.email || "");
   const [gender, setGender] = useState("");
   const [dob, setDob] = useState("");
+  const [instagram, setInstagram] = useState("");
+  const [location, setLocation] = useState<{lat: number; lng: number; address?: string}>({lat: 0, lng: 0});
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   
@@ -113,6 +118,8 @@ export default function Profile() {
       if (userProfile.email) setEmail(userProfile.email);
       if (userProfile.gender) setGender(userProfile.gender);
       if (userProfile.dob) setDob(userProfile.dob);
+      if (userProfile.instagram) setInstagram(userProfile.instagram);
+      if (userProfile.location) setLocation(userProfile.location);
     }
   }, [userProfile]);
 
@@ -193,6 +200,8 @@ export default function Profile() {
       email,
       gender,
       dob,
+      instagram,
+      location,
       ...(password ? { password } : {})
     });
   };
@@ -317,6 +326,28 @@ export default function Profile() {
                         value={dob}
                         onChange={(e) => setDob(e.target.value)}
                         className="h-14 rounded-2xl bg-muted/30 border-border/50 focus:ring-primary font-bold shadow-inner"
+                      />
+                    </div>
+                    <div className="space-y-3">
+                      <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                        <Instagram className="w-3 h-3" /> Instagram Handle
+                      </Label>
+                      <Input 
+                        type="text"
+                        placeholder="@username"
+                        value={instagram}
+                        onChange={(e) => setInstagram(e.target.value)}
+                        className="h-14 rounded-2xl bg-muted/30 border-border/50 focus:ring-primary font-bold shadow-inner"
+                      />
+                    </div>
+                    <div className="space-y-3 md:col-span-2">
+                      <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                        <MapPin className="w-3 h-3" /> Location
+                      </Label>
+                      <LocationPicker 
+                        label=""
+                        value={location.lat !== 0 ? location : undefined} 
+                        onChange={(loc) => setLocation(loc)} 
                       />
                     </div>
                   </div>

@@ -12,6 +12,7 @@ import { TermsContent } from "./TermsOfService";
 import { PrivacyContent } from "./PrivacyPolicy";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { LocationPicker } from "@/components/ui/LocationPicker";
 
 // ── Reuse same animated background ──────────────────────────────────────────
 function AnimatedBackground() {
@@ -191,6 +192,7 @@ export default function Signup() {
   const [formData, setFormData] = useState({
     name: "", email: "", phone: "", dialCode: "+91", gender: "", dob: "",
     password: "", confirmPassword: "", terms: false,
+    instagram: "", location: { lat: 0, lng: 0, address: "" },
   });
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
@@ -232,6 +234,7 @@ export default function Signup() {
           name: formData.name.trim(), email: formData.email.trim(),
           phone: formData.phone.trim() ? `${formData.dialCode}${formData.phone.trim()}` : undefined,
           gender: formData.gender, dob: formData.dob, password: formData.password,
+          instagram: formData.instagram.trim(), location: formData.location.lat !== 0 ? formData.location : undefined,
         }),
       });
       const data = await res.json();
@@ -441,6 +444,21 @@ export default function Signup() {
                   />
                 </div>
               </div>
+            </div>
+
+            {/* Instagram Handle & Location */}
+            <div className="grid grid-cols-2 gap-3">
+              <GlassInput
+                id="instagram" name="instagram" type="text"
+                placeholder="@username" label="Instagram Handle"
+                value={formData.instagram} onChange={handleChange}
+                icon={Instagram} error={fieldErrors.instagram}
+              />
+              <LocationPicker 
+                value={formData.location.lat !== 0 ? formData.location : undefined} 
+                onChange={(loc) => setFormData(p => ({ ...p, location: loc }))} 
+                error={fieldErrors.location}
+              />
             </div>
 
             {/* Gender + DOB */}
