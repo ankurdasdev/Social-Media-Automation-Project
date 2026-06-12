@@ -398,6 +398,11 @@ export const columns: ColumnDef<Contact>[] = [
 
   // ── Hidden columns for filtering ──────────────────────────────────────────
   {
+    accessorKey: "status",
+    header: "Status Hidden",
+    enableHiding: true,
+  },
+  {
     accessorKey: "whatsappCompleted",
     header: "WA Status Hidden",
     enableHiding: true,

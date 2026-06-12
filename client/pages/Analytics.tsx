@@ -252,12 +252,12 @@ export default function Analytics() {
       <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 mt-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
-            { label: platform === 'all' ? "Total Uploaded" : "Total Attempted", value: platform === 'all' ? statsData?.total || 0 : tTotal, icon: Users, color: "text-blue-500", bg: "bg-blue-500/10", border: "border-blue-500/20" },
-            { label: "Successfully Reached", value: tSuccess, icon: TrendingUp, color: "text-emerald-500", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
-            { label: "Total Failed", value: tFailed, icon: AlertCircle, color: "text-red-500", bg: "bg-red-500/10", border: "border-red-500/20" },
+            { label: platform === 'all' ? "Total Uploaded" : "Total Attempted", value: platform === 'all' ? statsData?.total || 0 : tTotal, icon: Users, color: "text-blue-500", bg: "bg-blue-500/10", border: "border-blue-500/20", onClick: () => navigate(platform === 'all' ? '/contacts' : `/contacts?platform=${platform}`) },
+            { label: "Successfully Reached", value: tSuccess, icon: TrendingUp, color: "text-emerald-500", bg: "bg-emerald-500/10", border: "border-emerald-500/20", onClick: () => navigate(`/contacts?status=sent${platform !== 'all' ? `&platform=${platform}` : ''}`) },
+            { label: "Total Failed", value: tFailed, icon: AlertCircle, color: "text-red-500", bg: "bg-red-500/10", border: "border-red-500/20", onClick: () => navigate(`/contacts?status=failed${platform !== 'all' ? `&platform=${platform}` : ''}`) },
             { label: "Conversion Rate", value: conversionRate, icon: Zap, color: "text-amber-500", bg: "bg-amber-500/10", border: "border-amber-500/20" }
           ].map((stat, i) => (
-            <Card key={i} className={cn("glass-card overflow-hidden", stat.border)}>
+            <Card key={i} className={cn("glass-card overflow-hidden", stat.border, stat.onClick && "cursor-pointer hover:bg-white/5 transition-colors")} onClick={stat.onClick}>
               <CardContent className="p-6">
                 <div className="flex items-start justify-between">
                   <div className="space-y-3">
@@ -375,7 +375,17 @@ export default function Analytics() {
                     <XAxis type="number" hide />
                     <YAxis dataKey="step" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: "bold", fill: "rgba(255,255,255,0.7)" }} width={140} />
                     <Tooltip cursor={{ fill: "rgba(255,255,255,0.05)" }} contentStyle={{ backgroundColor: "rgba(15, 23, 42, 0.9)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px" }} itemStyle={{ fontWeight: "black" }} />
-                    <Bar dataKey="value" fill="#8b5cf6" radius={[0, 8, 8, 0]} barSize={40}>
+                    <Bar 
+                      dataKey="value" 
+                      fill="#8b5cf6" 
+                      radius={[0, 8, 8, 0]} 
+                      barSize={40}
+                      onClick={(data) => {
+                        if (data.step === "Attempted") navigate(platform === 'all' ? '/contacts' : `/contacts?platform=${platform}`);
+                        if (data.step === "Successfully Reached") navigate(`/contacts?status=sent${platform !== 'all' ? `&platform=${platform}` : ''}`);
+                      }}
+                      cursor="pointer"
+                    >
                       {fData.map((entry: any, index: number) => (
                         <Cell key={`cell-${index}`} fill={['#3b82f6', '#8b5cf6', '#22c55e'][index % 3]} />
                       ))}
@@ -404,8 +414,8 @@ export default function Analytics() {
                     <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: "rgba(255,255,255,0.3)" }} dy={10} />
                     <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: "rgba(255,255,255,0.3)" }} />
                     <Tooltip contentStyle={{ backgroundColor: "rgba(15, 23, 42, 0.9)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px" }} itemStyle={{ fontSize: "11px", fontWeight: "bold" }} />
-                    <Area type="monotone" dataKey={sKey} name="Successful" fill="#22c55e" stroke="#22c55e" fillOpacity={0.2} strokeWidth={2} />
-                    <Bar dataKey={fKey} name="Failed" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={10} />
+                    <Area type="monotone" dataKey={sKey} name="Successful" fill="#22c55e" stroke="#22c55e" fillOpacity={0.2} strokeWidth={2} activeDot={{ onClick: () => navigate(`/contacts?status=sent${platform !== 'all' ? `&platform=${platform}` : ''}`), cursor: 'pointer' }} />
+                    <Bar dataKey={fKey} name="Failed" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={10} onClick={() => navigate(`/contacts?status=failed${platform !== 'all' ? `&platform=${platform}` : ''}`)} cursor="pointer" />
                   </ComposedChart>
                 </ResponsiveContainer>
               </div>
@@ -432,8 +442,8 @@ export default function Analytics() {
                       <XAxis dataKey="sheet" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: "bold", fill: "rgba(255,255,255,0.5)" }} dy={10} />
                       <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "rgba(255,255,255,0.3)" }} />
                       <Tooltip cursor={{ fill: "rgba(255,255,255,0.02)" }} contentStyle={{ backgroundColor: "rgba(15, 23, 42, 0.9)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "16px" }} />
-                      <Bar dataKey={coSKey} name="Success" stackId="a" fill="#22c55e" radius={[0, 0, 4, 4]} barSize={40} />
-                      <Bar dataKey={coFKey} name="Failed" stackId="a" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey={coSKey} name="Success" stackId="a" fill="#22c55e" radius={[0, 0, 4, 4]} barSize={40} onClick={() => navigate(`/contacts?status=sent${platform !== 'all' ? `&platform=${platform}` : ''}`)} cursor="pointer" />
+                      <Bar dataKey={coFKey} name="Failed" stackId="a" fill="#ef4444" radius={[4, 4, 0, 0]} onClick={() => navigate(`/contacts?status=failed${platform !== 'all' ? `&platform=${platform}` : ''}`)} cursor="pointer" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
