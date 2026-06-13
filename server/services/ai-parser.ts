@@ -288,25 +288,24 @@ Your job is to read an image of a casting call flyer and extract contact informa
 USER PROFILE CONTEXT:
 ${profileContext}
 
-IMPORTANT: If the image contains MULTIPLE distinct casting calls, only include the ones relevant to the user's profile context above. If a casting call is for the opposite gender (e.g., female-only when user is male), SKIP it entirely.
+IMPORTANT: If the image contains casting calls, include them. If a user profile context is provided above, try to match it. However, do NOT skip a casting call unless it explicitly conflicts with the user's gender (e.g. female-only when user is male). If no profile is provided, include everything.
 
-You must extract these fields for EACH relevant row:
-- name: string (Lead name — name of the casting director, production house, or person posting)
+You must extract these fields for EACH contact found:
+- name: string (Lead name — name of the casting director, production house, or person posting. E.g. "PosterMyWall Ent")
 - castingName: string (Casting Agency Name — the company name highlighted most prominently in the image)
-- whatsapp: string (Phone number if present, just digits and optional +)
-- email: string (Email address if present)
-- instaHandle: string (Instagram handle with @ if present)
-- actingContext: string (MAX 2 WORDS — e.g., "Male Role", "Actor Role", "Female Lead")
-- project: string (MAX 2 WORDS — e.g., "Web Series", "TV Ad", "Movie", "OTT Show")
-- age: string (Age range if mentioned, e.g., "24-28", "18-25" — leave empty string if not mentioned)
+- whatsapp: string (Phone number if present, just digits and optional +. If none, empty string)
+- email: string (Email address if present. If none, empty string)
+- instaHandle: string (Instagram handle with @ if present. If none, empty string)
+- actingContext: string (MAX 2 WORDS — e.g., "Male Role", "Actor Role", "Male Models")
+- project: string (MAX 2 WORDS — e.g., "Web Series", "TV Ad", "Movie", "Movie Creation")
+- age: string (Age range if mentioned, e.g., "24-28", "22-25YRS" — leave empty string if not mentioned)
 
-CRITICAL RULES FOR MULTIPLE ROWS:
-- The image may contain MULTIPLE WhatsApp numbers, MULTIPLE email addresses, or MULTIPLE Instagram handles.
-- You MUST create a SEPARATE row (object) in the array for each distinct phone number, email, or Instagram handle.
-- NO VALUE SHOULD BE REPEATED ANYWHERE. A specific WhatsApp number, email, or instaHandle must appear in exactly ONE row.
+CRITICAL RULES:
+- The image may contain only ONE contact method, which is perfectly fine.
+- If there are MULTIPLE distinct phone numbers, emails, or Instagram handles, you MUST create a SEPARATE row (object) in the array for each distinct phone number, email, or Instagram handle.
 - Optimization: If there is exactly 1 WhatsApp AND 1 Email for the same casting call, put them in the SAME row.
 - If there are 2 WhatsApp numbers and 1 Email: Row 1 = WA#1 + Email, Row 2 = WA#2 + empty email.
-- Do NOT add country code 91 yourself — just extract the digits as they appear in the image.
+- Do NOT add country code 91 yourself if it's not in the image. Extract the digits as they appear in the image.
 - Return ONLY a valid JSON array of objects. No markdown, no explanation, no extra text.
 
 Example Output:
