@@ -313,7 +313,10 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
       {isActive && activeSteps.length > 0 && createPortal(
         <div className="fixed inset-0 z-[9999] pointer-events-none">
           {/* Backdrop with a hole cut out */}
-          <div className="absolute inset-0 bg-black/60 pointer-events-auto transition-opacity duration-300" />
+          <div 
+            className="absolute inset-0 bg-black/60 pointer-events-auto transition-opacity duration-300 cursor-pointer" 
+            onClick={handleClose}
+          />
 
           {/* Highlighted Target */}
           {targetRect && (
@@ -374,15 +377,28 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Positioning helpers
+// Positioning helpers with viewport clamping
 function getTooltipTop(rect: DOMRect, placement: string) {
-  if (placement === "bottom") return rect.bottom + 20;
-  if (placement === "top") return rect.top - 200; // rough height estimate
-  return rect.top; // left/right align top
+  let top = rect.top;
+  if (placement === "bottom") top = rect.bottom + 20;
+  if (placement === "top") top = rect.top - 200; // rough height estimate
+  
+  // Clamp to viewport
+  const maxTop = window.innerHeight - 250; // approximate tooltip height
+  return Math.min(Math.max(20, top), maxTop);
 }
 
 function getTooltipLeft(rect: DOMRect, placement: string) {
-  if (placement === "right") return rect.right + 20;
-  if (placement === "left") return rect.left - 340; // width + gap
-  return rect.left; // top/bottom align left
+  let left = rect.left;
+  if (placement === "right") left = rect.right + 20;
+  if (placement === "left") left = rect.left - 340; // width + gap
+  
+  // Align center horizontally if it's top/bottom placement
+  if (placement === "top" || placement === "bottom") {
+    left = rect.left + (rect.width / 2) - 160; // 160 is half of 320px width
+  }
+  
+  // Clamp to viewport
+  const maxLeft = window.innerWidth - 340; // width + padding
+  return Math.min(Math.max(20, left), maxLeft);
 }
