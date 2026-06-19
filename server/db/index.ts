@@ -145,6 +145,7 @@ async function runMigrations(): Promise<void> {
     ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS last_scraped TIMESTAMPTZ;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS ingestion_schedule_time TEXT DEFAULT '02:00';
     ALTER TABLE users ADD COLUMN IF NOT EXISTS ingestion_enabled BOOLEAN DEFAULT TRUE;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS scan_duration_hours INTEGER DEFAULT 24;
     ALTER TABLE templates ADD COLUMN IF NOT EXISTS drive_attachments JSONB DEFAULT '[]'::jsonb;
     ALTER TABLE templates ADD COLUMN IF NOT EXISTS email_template_type TEXT DEFAULT 'body';
     ALTER TABLE users ADD COLUMN IF NOT EXISTS trial_started_at TIMESTAMPTZ;

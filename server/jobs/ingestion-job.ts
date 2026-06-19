@@ -23,15 +23,15 @@ export function getIngestionState() {
   return { isRunning, lastRun: lastRunResult };
 }
 
-// ─── 24-Hour Window ───────────────────────────────────────────────────────────
+// ─── Configurable Scan Window ────────────────────────────────────────────────
 
-function get24hAgoTimestamp(): number {
-  return Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
+function getSinceTimestamp(sinceHours: number): number {
+  return Math.floor((Date.now() - sinceHours * 60 * 60 * 1000) / 1000);
 }
 
 // ─── Main Job ─────────────────────────────────────────────────────────────────
 
-export async function runIngestionJob(): Promise<IngestionRunResult> {
+export async function runIngestionJob(sinceHours: number = 24): Promise<IngestionRunResult> {
   if (isRunning) {
     console.log("[ingestion] Job already in progress. Skipping.");
     return lastRunResult || {
@@ -60,7 +60,8 @@ export async function runIngestionJob(): Promise<IngestionRunResult> {
   let contactsSkipped = 0;
 
   try {
-    const since = get24hAgoTimestamp();
+    const since = getSinceTimestamp(sinceHours);
+    console.log(`[ingestion] Scanning messages from the last ${sinceHours}h (since ${new Date(since * 1000).toISOString()})...`);
 
     // 1. Get all users who have enabled source groups
     const activeUsers = await query("SELECT DISTINCT user_id FROM source_groups WHERE enabled = TRUE");

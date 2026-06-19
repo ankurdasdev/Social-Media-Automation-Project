@@ -580,7 +580,7 @@ export default function Signup() {
                         if (Math.abs(target.scrollHeight - target.scrollTop - target.clientHeight) < 50) {
                           setTermsScrolled(true);
                         }
-                      }}
+                    }}
                     >
                       <TermsContent />
                     </div>
