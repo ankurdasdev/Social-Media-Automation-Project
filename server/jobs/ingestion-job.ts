@@ -11,7 +11,12 @@ import {
   getGroupMessages as getIGGroupMessages,
   getThreads as getIGThreads,
 } from "../services/instagram-client";
-import { parseMessages, RawMessage } from "../services/ai-parser";
+import {
+  parseMessages,
+  parseCastingImageForMultipleContacts,
+  RawMessage,
+  ParsedMultipleContact,
+} from "../services/ai-parser";
 import type { IngestionRunResult } from "@shared/api";
 
 // ─── State ────────────────────────────────────────────────────────────────────
@@ -61,10 +66,14 @@ export async function runIngestionJob(sinceHours: number = 24): Promise<Ingestio
 
   try {
     const since = getSinceTimestamp(sinceHours);
-    console.log(`[ingestion] Scanning messages from the last ${sinceHours}h (since ${new Date(since * 1000).toISOString()})...`);
+    console.log(
+      `[ingestion] Scanning messages from the last ${sinceHours}h (since ${new Date(since * 1000).toISOString()})...`
+    );
 
     // 1. Get all users who have enabled source groups
-    const activeUsers = await query("SELECT DISTINCT user_id FROM source_groups WHERE enabled = TRUE");
+    const activeUsers = await query(
+      "SELECT DISTINCT user_id FROM source_groups WHERE enabled = TRUE"
+    );
     console.log(`[ingestion] Processing ${activeUsers.length} users...`);
 
     for (const { user_id: userId } of activeUsers) {
@@ -86,98 +95,156 @@ export async function runIngestionJob(sinceHours: number = 24): Promise<Ingestio
           "SELECT * FROM source_groups WHERE user_id = $1 AND enabled = TRUE",
           [userId]
         );
-        const userRow = await queryOne<{ ai_keywords: any[] }>(
-          "SELECT ai_keywords FROM users WHERE id = $1",
+        const userRow = await queryOne<{ ai_keywords: any[]; gender: string }>(
+          "SELECT ai_keywords, gender FROM users WHERE id = $1",
           [userId]
         );
+
+        // Keywords are SOFT preferences — passed to AI as guidance, not hard filters
         const activeKeywords: string[] = (userRow?.ai_keywords || [])
           .filter((k: any) => k.active)
           .map((k: any) => k.word.toLowerCase());
 
+        const userGender: string = userRow?.gender || "";
+
         console.log(
-          `[ingestion] User ${userId}: ${groups.length} groups, ${activeKeywords.length} keywords`
+          `[ingestion] User ${userId}: ${groups.length} groups, ${activeKeywords.length} keywords (soft)`
         );
 
-        const userMessages: RawMessage[] = [];
+        // Separate text messages from image messages
+        const userTextMessages: RawMessage[] = [];
+        const userImageMessages: Array<{
+          base64: string;
+          mimetype: string;
+          caption: string;
+          source: "whatsapp" | "instagram";
+        }> = [];
 
+        // ── Pre-fetch IG threads ──
         let igThreadsMap: Record<string, any> = {};
         if (igSession?.session_data) {
           try {
-            console.log(`[ingestion] Pre-fetching IG threads for user ${userId} to check activity timestamps...`);
+            console.log(
+              `[ingestion] Pre-fetching IG threads for user ${userId}...`
+            );
             const igThreads = await getIGThreads(igSession.session_data, 100);
             for (const t of igThreads || []) {
-               igThreadsMap[t.id] = t;
+              igThreadsMap[t.id] = t;
             }
           } catch (err: any) {
-             console.error(`[ingestion] Failed to pre-fetch IG threads:`, err.message);
+            console.error(`[ingestion] Failed to pre-fetch IG threads:`, err.message);
           }
         }
 
         for (const grp of groups) {
           try {
-            // ── WhatsApp Groups ─────────────────────────────────────────────
+            // ── WhatsApp Groups ──────────────────────────────────────────────
             if (grp.platform === "whatsapp") {
-              if (!waInstance) { errors.push(`User ${userId}: No WA instance for group ${grp.name}`); continue; }
+              if (!waInstance) {
+                errors.push(`User ${userId}: No WA instance for group ${grp.name}`);
+                continue;
+              }
 
               const jidMatch = grp.url?.match(/jid:([^,\s]+)/);
               const groupJid = jidMatch ? jidMatch[1] : null;
-              if (!groupJid) { errors.push(`User ${userId}: No JID for group ${grp.name}`); continue; }
+              if (!groupJid) {
+                errors.push(`User ${userId}: No JID for group ${grp.name}`);
+                continue;
+              }
 
-              const rawMsgs = await getWAMessages(waInstance.instance_name, groupJid, since);
+              let rawMsgs: any[] = [];
+              try {
+                rawMsgs = await getWAMessages(
+                  waInstance.instance_name,
+                  groupJid,
+                  since
+                );
+              } catch (e: any) {
+                errors.push(
+                  `User ${userId} - WA group "${grp.name}": ${e.message}`
+                );
+                continue;
+              }
+
               messagesScanned += rawMsgs.length;
               sourcesProcessed++;
-
-              console.log(`[ingestion] Group "${grp.name}": ${rawMsgs.length} messages`);
+              console.log(
+                `[ingestion] WA Group "${grp.name}": ${rawMsgs.length} messages`
+              );
 
               for (const m of rawMsgs) {
                 const msgType = m.messageType;
 
                 // ── Text Messages ──
-                if (msgType === "conversation" || msgType === "extendedTextMessage") {
+                if (
+                  msgType === "conversation" ||
+                  msgType === "extendedTextMessage"
+                ) {
                   const text = extractMessageText(m);
                   if (text.trim().length >= 20) {
-                    userMessages.push({ text, source: "whatsapp" });
+                    userTextMessages.push({ text, source: "whatsapp" });
                   }
                 }
                 // ── Image Messages (casting flyers) ──
                 else if (msgType === "imageMessage") {
                   const caption = m.message?.imageMessage?.caption || "";
 
-                  // Quick keyword check on caption before expensive image download
-                  const captionLower = caption.toLowerCase();
-                  const captionMatchesKeyword =
-                    activeKeywords.length === 0 ||
-                    activeKeywords.some((kw) => captionLower.includes(kw));
-
-                  // If caption is long enough and doesn't match any keyword, skip image
-                  if (caption.length > 30 && !captionMatchesKeyword) continue;
-
-                  // Download image for vision analysis
-                  const mediaData = await getMessageBase64(waInstance.instance_name, m);
-                  if (mediaData) {
-                    userMessages.push({
-                      imageBase64: mediaData.base64,
-                      imageMimetype: mediaData.mimetype,
-                      imageCaption: caption,
-                      source: "whatsapp",
-                    });
+                  // Download image — always attempt, never block on keywords
+                  try {
+                    const mediaData = await getMessageBase64(
+                      waInstance.instance_name,
+                      m
+                    );
+                    if (mediaData) {
+                      userImageMessages.push({
+                        base64: mediaData.base64,
+                        mimetype: mediaData.mimetype,
+                        caption,
+                        source: "whatsapp",
+                      });
+                    }
+                  } catch (imgErr: any) {
+                    console.warn(
+                      `[ingestion] Could not download image in "${grp.name}":`,
+                      imgErr.message
+                    );
                   }
                 }
               }
             }
 
-            // ── Instagram Groups / Hashtags ─────────────────────────────────
+            // ── Instagram Groups / Hashtags ──────────────────────────────────
             else if (grp.platform === "instagram") {
-              if (!igSession?.session_data) { errors.push(`User ${userId}: No IG session for group ${grp.name}`); continue; }
+              if (!igSession?.session_data) {
+                errors.push(
+                  `User ${userId}: No IG session for group ${grp.name}`
+                );
+                continue;
+              }
               const session = igSession.session_data;
               sourcesProcessed++;
 
               if (grp.type === "hashtag") {
-                const posts = await getHashtagPosts(grp.name.replace("#", ""), since, session);
+                let posts: any[] = [];
+                try {
+                  posts = await getHashtagPosts(
+                    grp.name.replace("#", ""),
+                    since,
+                    session
+                  );
+                } catch (e: any) {
+                  errors.push(
+                    `User ${userId} - IG hashtag "${grp.name}": ${e.message}`
+                  );
+                  continue;
+                }
                 messagesScanned += posts.length;
                 for (const p of posts) {
                   if (p.caption_text?.trim().length >= 20) {
-                    userMessages.push({ text: p.caption_text, source: "instagram" });
+                    userTextMessages.push({
+                      text: p.caption_text,
+                      source: "instagram",
+                    });
                   }
                 }
               } else if (grp.type === "group") {
@@ -185,50 +252,89 @@ export async function runIngestionJob(sinceHours: number = 24): Promise<Ingestio
                 if (threadMatch) {
                   const threadId = threadMatch[1];
                   const thread = igThreadsMap[threadId];
-                  
-                  // Check activity timestamp to avoid rate limits
+
                   let shouldFetch = true;
                   if (thread) {
-                    // Instagram timestamps can be numeric epoch or ISO string depending on instagrapi format
                     let lastActivityAt = 0;
                     if (thread.last_activity_at) {
-                      lastActivityAt = new Date(thread.last_activity_at).getTime();
+                      lastActivityAt = new Date(
+                        thread.last_activity_at
+                      ).getTime();
                     } else if (thread.last_permanent_item?.timestamp) {
-                      // Some items use microseconds timestamp
-                      lastActivityAt = Number(thread.last_permanent_item.timestamp) / 1000;
+                      lastActivityAt =
+                        Number(thread.last_permanent_item.timestamp) / 1000;
                     }
 
-                    const lastScrapedAt = grp.last_scraped ? new Date(grp.last_scraped).getTime() : 0;
+                    const lastScrapedAt = grp.last_scraped
+                      ? new Date(grp.last_scraped).getTime()
+                      : 0;
                     if (lastActivityAt && lastActivityAt <= lastScrapedAt) {
-                      console.log(`[ingestion] Skipping IG group "${grp.name}" - no new activity since last scrape.`);
+                      console.log(
+                        `[ingestion] Skipping IG group "${grp.name}" - no new activity since last scrape.`
+                      );
                       shouldFetch = false;
                     }
                   }
 
                   if (shouldFetch) {
-                    console.log(`[ingestion] Fetching messages for IG group "${grp.name}"... (sleeping to avoid rate-limits)`);
-                    // Sleep 10-20 seconds to avoid ban
-                    const sleepMs = Math.floor(Math.random() * 10000) + 10000;
-                    await new Promise(r => setTimeout(r, sleepMs));
+                    console.log(
+                      `[ingestion] Fetching messages for IG group "${grp.name}"... (sleeping to avoid rate-limits)`
+                    );
+                    const sleepMs =
+                      Math.floor(Math.random() * 10000) + 10000;
+                    await new Promise((r) => setTimeout(r, sleepMs));
 
-                    const msgs = await getIGGroupMessages(threadId, since, session);
+                    let msgs: any[] = [];
+                    try {
+                      msgs = await getIGGroupMessages(
+                        threadId,
+                        since,
+                        session
+                      );
+                    } catch (e: any) {
+                      errors.push(
+                        `User ${userId} - IG group "${grp.name}": ${e.message}`
+                      );
+                      continue;
+                    }
+
                     messagesScanned += msgs.length;
                     for (const m of msgs) {
                       if (m.text?.trim().length >= 20) {
-                        userMessages.push({ text: m.text, source: "instagram" });
+                        userTextMessages.push({
+                          text: m.text,
+                          source: "instagram",
+                        });
                       }
                     }
-                    
-                    // Update last_scraped
-                    await query("UPDATE source_groups SET last_scraped = NOW() WHERE id = $1", [grp.id]);
+
+                    await query(
+                      "UPDATE source_groups SET last_scraped = NOW() WHERE id = $1",
+                      [grp.id]
+                    );
                   }
                 }
               } else {
-                const posts = await getAccountPosts(grp.name.replace("@", ""), since, session);
+                let posts: any[] = [];
+                try {
+                  posts = await getAccountPosts(
+                    grp.name.replace("@", ""),
+                    since,
+                    session
+                  );
+                } catch (e: any) {
+                  errors.push(
+                    `User ${userId} - IG account "${grp.name}": ${e.message}`
+                  );
+                  continue;
+                }
                 messagesScanned += posts.length;
                 for (const p of posts) {
                   if (p.caption_text?.trim().length >= 20) {
-                    userMessages.push({ text: p.caption_text, source: "instagram" });
+                    userTextMessages.push({
+                      text: p.caption_text,
+                      source: "instagram",
+                    });
                   }
                 }
               }
@@ -238,24 +344,23 @@ export async function runIngestionJob(sinceHours: number = 24): Promise<Ingestio
           }
         }
 
-        // 4. Batch AI Parsing (text + vision, with keywords)
-        console.log(`[ingestion] User ${userId}: Sending ${userMessages.length} messages to AI...`);
-        if (userMessages.length > 0) {
-          const parsed = await parseMessages(userMessages, activeKeywords);
+        // ── 4a. Batch AI Parsing — Text Messages ──────────────────────────────
+        console.log(
+          `[ingestion] User ${userId}: Sending ${userTextMessages.length} text messages to AI...`
+        );
+        if (userTextMessages.length > 0) {
+          const parsed = await parseMessages(userTextMessages, activeKeywords);
           castingCallsFound += parsed.length;
-          console.log(`[ingestion] User ${userId}: ${parsed.length} casting calls identified`);
+          console.log(
+            `[ingestion] User ${userId}: ${parsed.length} casting calls from text`
+          );
 
-          // 5. Upsert Contacts
           for (const p of parsed) {
-            const source = p.originalText?.startsWith("[image]")
-              ? "auto-whatsapp"
-              : userMessages.find(
-                  (m) =>
-                    m.text === p.originalText ||
-                    m.imageCaption === p.originalText
-                )?.source === "instagram"
-              ? "auto-instagram"
-              : "auto-whatsapp";
+            const source =
+              userTextMessages.find((m) => m.text === p.originalText)
+                ?.source === "instagram"
+                ? "auto-instagram"
+                : "auto-whatsapp";
 
             const result = await upsertContact(
               userId,
@@ -276,6 +381,64 @@ export async function runIngestionJob(sinceHours: number = 24): Promise<Ingestio
             if (result.action === "created") contactsCreated++;
             else if (result.action === "updated") contactsUpdated++;
             else contactsSkipped++;
+          }
+        }
+
+        // ── 4b. Batch AI Parsing — Images (multi-contact vision path) ─────────
+        console.log(
+          `[ingestion] User ${userId}: Processing ${userImageMessages.length} images with multi-contact vision...`
+        );
+        for (const img of userImageMessages) {
+          try {
+            const contacts: ParsedMultipleContact[] =
+              await parseCastingImageForMultipleContacts(
+                img.base64,
+                img.mimetype,
+                activeKeywords,
+                userGender
+              );
+
+            console.log(
+              `[ingestion] Image → ${contacts.length} contact(s) extracted`
+            );
+            castingCallsFound += contacts.length;
+
+            for (const c of contacts) {
+              // Skip rows with no useful contact info at all
+              if (!c.whatsapp && !c.email && !c.instaHandle && !c.name) {
+                continue;
+              }
+
+              const source =
+                img.source === "instagram" ? "auto-instagram" : "auto-whatsapp";
+
+              const result = await upsertContact(
+                userId,
+                {
+                  name: c.name,
+                  castingName: c.castingName,
+                  project: c.project || "Casting Data",
+                  age: c.age,
+                  actingContext: c.actingContext,
+                  whatsapp: c.whatsapp,
+                  email: c.email,
+                  instaHandle: c.instaHandle,
+                  notes: img.caption || undefined,
+                },
+                source as any
+              );
+
+              if (result.action === "created") contactsCreated++;
+              else if (result.action === "updated") contactsUpdated++;
+              else contactsSkipped++;
+            }
+
+            // Throttle between image API calls
+            await new Promise((r) => setTimeout(r, 500));
+          } catch (imgErr: any) {
+            errors.push(
+              `User ${userId} - Image parse error: ${imgErr.message}`
+            );
           }
         }
       } catch (e: any) {
