@@ -28,3 +28,4 @@ dist-ssr
 .env.production
 *.production
 !.env.example
+venv/
