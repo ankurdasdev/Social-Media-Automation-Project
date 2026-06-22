@@ -655,6 +655,7 @@ export const columns: ColumnDef<Contact>[] = [
             <MultiTemplateSelect 
               selectedIds={row.original.templateSelectionWP || []} 
               onUpdate={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { templateSelectionWP: val })}
+              category="whatsapp"
             />
           </div>
         ),
@@ -748,6 +749,7 @@ export const columns: ColumnDef<Contact>[] = [
             <MultiTemplateSelect 
               selectedIds={row.original.templateSelectionGmail || []} 
               onUpdate={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { templateSelectionGmail: val })}
+              category="email"
             />
           </div>
         ),
@@ -827,6 +829,7 @@ export const columns: ColumnDef<Contact>[] = [
             <MultiTemplateSelect 
               selectedIds={row.original.templateSelectionIG || []} 
               onUpdate={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { templateSelectionIG: val })}
+              category="instagram"
             />
           </div>
         ),

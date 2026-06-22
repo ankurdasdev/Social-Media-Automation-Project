@@ -401,10 +401,12 @@ export function ConditionalTextareaCell({
 // ─── Multi-Template Ordered Select ───────────────────────────────────────────
 export function MultiTemplateSelect({
   selectedIds,
-  onUpdate
+  onUpdate,
+  category
 }: {
   selectedIds: string | string[],
-  onUpdate: (ids: string[]) => void
+  onUpdate: (ids: string[]) => void,
+  category?: "whatsapp" | "email" | "instagram"
 }) {
   const userId = getOrCreateUserId();
   const currentIds = Array.isArray(selectedIds) ? selectedIds : (selectedIds ? [selectedIds] : []);
@@ -481,10 +483,14 @@ export function MultiTemplateSelect({
           <Plus className="w-3 h-3" />
         </SelectTrigger>
         <SelectContent>
-            {templates.filter((t: any) => !localIds.includes(t.id)).map((t: any) => (
+            {templates
+              .filter((t: any) => (!category || t.category === category) && !localIds.includes(t.id))
+              .map((t: any) => (
                 <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
             ))}
-            {templates.length === 0 && <div className="p-2 text-[10px] text-muted-foreground">No templates</div>}
+            {templates.filter((t: any) => (!category || t.category === category) && !localIds.includes(t.id)).length === 0 && (
+              <div className="p-2 text-[10px] text-muted-foreground">No available templates</div>
+            )}
         </SelectContent>
       </Select>
       {localIds.length === 0 && <span className="text-[10px] text-muted-foreground/50 px-1 py-0.5">Pick order...</span>}
