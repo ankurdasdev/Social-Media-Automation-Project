@@ -1,8 +1,15 @@
-import { execFile } from "child_process";
-import path from "path";
+/**
+ * Instagram Client via instagrapi-rest Hosted on VPS
+ * 
+ * This client handles per-user sessions by storing 'settings' (cookies/session data)
+ * in the database and passing them to the instagrapi-rest instance.
+ */
+import axios from "axios";
 
-const SCRIPT_PATH = path.join(process.cwd(), "server", "services", "ig_bridge.py");
-const PYTHON_CMD = path.join(process.cwd(), "venv", "bin", "python3");
+function getBaseUrl() {
+  return process.env.INSTAGRAPI_API_URL || "http://46.62.144.244:8000";
+}
+const API_KEY = process.env.INSTAGRAPI_API_KEY || "";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -33,77 +40,145 @@ export interface IGMessage {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-async function runIgBridge(command: string, sessionData: string, ...args: string[]): Promise<any> {
-  // If sessionData is actually a JSON string (e.g. from an old login), we should extract the sessionid
-  let actualSessionId = sessionData;
+function headers() {
+  return {
+    "X-API-KEY": API_KEY,
+    "Content-Type": "application/json",
+  };
+}
+
+async function igRequest(endpoint: string, sessionData: string, body: any = {}) {
+  const url = `${getBaseUrl()}${endpoint}`;
+  
+  let isJson = false;
   try {
-    const parsed = JSON.parse(sessionData);
-    if (parsed.authorization_data && parsed.authorization_data.sessionid) {
-      actualSessionId = parsed.authorization_data.sessionid;
-    }
+    JSON.parse(sessionData);
+    isJson = true;
   } catch (e) {
-    // Keep it as raw string if it's already a sessionid
+    // Not json
   }
 
-  // Remove url encoding if present
-  try {
-    actualSessionId = decodeURIComponent(actualSessionId);
-  } catch (e) {}
-
-  return new Promise((resolve, reject) => {
-    execFile(PYTHON_CMD, [SCRIPT_PATH, command, actualSessionId, ...args], { maxBuffer: 1024 * 1024 * 10 }, (error, stdout, stderr) => {
-      if (error) {
-        console.error("[ig_bridge stderr]:", stderr);
-        return reject(new Error(`IG Bridge Error: ${error.message}`));
-      }
-      try {
-        const result = JSON.parse(stdout);
-        if (result.error) {
-          reject(new Error(result.error));
+  if (isJson) {
+    const reqBody = { ...body, settings: JSON.parse(sessionData) };
+    try {
+      const res = await axios.post(url, reqBody, {
+        headers: {
+          "X-API-KEY": API_KEY,
+          "Content-Type": "application/json",
+        },
+      });
+      return res.data;
+    } catch (err: any) {
+      const status = err.response?.status || 500;
+      const data = err.response?.data ? JSON.stringify(err.response.data) : err.message;
+      throw new Error(`instagrapi error (${status}): ${data}`);
+    }
+  } else {
+    const form = new URLSearchParams();
+    form.append("sessionid", sessionData);
+    for (const key in body) {
+      if (body[key] !== undefined && body[key] !== null) {
+        if (typeof body[key] === "object") {
+          form.append(key, JSON.stringify(body[key]));
         } else {
-          resolve(result);
+          form.append(key, body[key].toString());
         }
-      } catch (e) {
-        console.error("[ig_bridge decode error]:", stdout);
-        reject(new Error("Failed to parse IG bridge output"));
       }
-    });
-  });
+    }
+
+    try {
+      const res = await axios.post(url, form.toString(), {
+        headers: {
+          "X-API-KEY": API_KEY,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      });
+      return res.data;
+    } catch (err: any) {
+      const status = err.response?.status || 500;
+      const data = err.response?.data ? JSON.stringify(err.response.data) : err.message;
+      throw new Error(`instagrapi error (${status}): ${data}`);
+    }
+  }
 }
 
 // ─── API Calls ────────────────────────────────────────────────────────────────
 
+/**
+ * Login and get session settings.
+ */
 export async function login(username: string, password?: string, verificationCode?: string) {
-  // Unsupported via bridge for now, rely on sessionid
-  return { success: false, error: "Not supported in local bridge mode. Please use Connect via Session Cookie." };
+  const form = new URLSearchParams();
+  form.append("username", username);
+  if (password) form.append("password", password);
+  if (verificationCode) form.append("verification_code", verificationCode);
+
+  try {
+    const res = await fetch(`${getBaseUrl()}/auth/login`, {
+      method: "POST",
+      headers: {
+        "X-API-KEY": API_KEY,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: form,
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      return { success: false, error: errorText };
+    }
+
+    const json = await res.json();
+    return { success: true, session: json };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
 }
 
+/**
+ * Fetch recent posts from a public/private account.
+ */
 export async function getAccountPosts(
   username: string,
   sinceTimestamp: number,
   sessionData: string
 ): Promise<IGPost[]> {
-  // Mocked or unimplemented via bridge for now
-  return [];
+  try {
+    const res = await igRequest("/user/medias", sessionData, { username, amount: 20 });
+    return res as IGPost[];
+  } catch (err: any) {
+    console.error("[igClient] getAccountPosts error:", err.message);
+    return [];
+  }
 }
 
+/**
+ * Fetch recent posts for a hashtag.
+ */
 export async function getHashtagPosts(
   hashtag: string,
   sinceTimestamp: number,
   sessionData: string
 ): Promise<IGPost[]> {
-  return [];
-}
-
-export async function getThreads(sessionData: string, amount: number = 50) {
   try {
-    return await runIgBridge("getThreads", sessionData, amount.toString());
-  } catch (e: any) {
-    console.error("[igClient] getThreads error:", e.message);
+    const res = await igRequest("/hashtag/medias/top", sessionData, { name: hashtag, amount: 20 });
+    return res as IGPost[];
+  } catch (err: any) {
+    console.error("[igClient] getHashtagPosts error:", err.message);
     return [];
   }
 }
 
+/**
+ * Fetch threads.
+ */
+export async function getThreads(sessionData: string, amount: number = 50) {
+  return await igRequest("/direct/threads", sessionData, { amount });
+}
+
+/**
+ * Fetch messages from a DM group thread.
+ */
 export async function getGroupMessages(
   threadId: string,
   sinceTimestamp: number,
@@ -116,13 +191,17 @@ export async function getGroupMessages(
   }
 
   try {
-    return await runIgBridge("getGroupMessages", sessionData, threadId, "20");
+    const res = await igRequest("/direct/messages", sessionData, { thread_id: threadId, amount: 20 });
+    return res as IGMessage[];
   } catch (err: any) {
     console.error("[igClient] getGroupMessages error:", err.message);
     return [];
   }
 }
 
+/**
+ * Send a DM to a user by their username (resolves to PK first).
+ */
 export async function sendDirectMessage(
   usernames: string[],
   text: string,
@@ -133,13 +212,18 @@ export async function sendDirectMessage(
   }
 
   try {
-    return await runIgBridge("sendDirectMessage", sessionData, JSON.stringify(usernames), text);
+    // Often /direct/send takes usernames as a comma-separated list
+    const res = await igRequest("/direct/send", sessionData, { usernames: usernames.join(","), text });
+    return res;
   } catch (err: any) {
     console.error("[igClient] sendDirectMessage error:", err.message);
     throw err;
   }
 }
 
+/**
+ * Send a photo DM to users.
+ */
 export async function sendDirectPhoto(
   usernames: string[],
   fileBuffer: Buffer,
@@ -151,21 +235,37 @@ export async function sendDirectPhoto(
   }
 
   try {
-    import("fs").then(fs => {
-      const tempPath = path.join(process.cwd(), "uploads", fileName);
-      fs.writeFileSync(tempPath, fileBuffer);
-      runIgBridge("sendDirectPhoto", sessionData, JSON.stringify(usernames), tempPath)
-        .catch(console.error)
-        .finally(() => fs.unlinkSync(tempPath));
+    const url = `${getBaseUrl()}/direct/photo`;
+    const formData = new FormData();
+    formData.append("sessionid", sessionData);
+    formData.append("usernames", usernames.join(","));
+    
+    const blob = new Blob([new Uint8Array(fileBuffer)]);
+    formData.append("file", blob, fileName);
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "X-API-KEY": API_KEY,
+      },
+      body: formData,
     });
-    // Fire and forget since instagrapi file send might be slow
-    return { success: true };
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`instagrapi error (${res.status}): ${errorText}`);
+    }
+    return res.json();
   } catch (err: any) {
     console.error("[igClient] sendDirectPhoto error:", err.message);
     throw err;
   }
 }
 
+/** Simple connectivity check */
 export async function isReachable(): Promise<boolean> {
+  // Always return true to prevent false offline states and socket exhaustion
+  // Real errors will be caught during actual API calls
   return true;
 }
+
