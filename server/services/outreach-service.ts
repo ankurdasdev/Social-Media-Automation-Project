@@ -463,11 +463,14 @@ async function handleEmailOutreach(userId: string, contact: Contact) {
     }
 
     // Find first Body template and first Footer template
-    const bodyTemplate = selectedTemplates.find(t => t.email_template_type === "body");
-    const footerTemplate = selectedTemplates.find(t => t.email_template_type === "footer");
+    // Attachment templates are handled separately as file attachments
+    const bodyTemplate = selectedTemplates.find(t => t.email_template_type === "body" && !t.is_attachment);
+    const footerTemplate = selectedTemplates.find(t => t.email_template_type === "footer" && !t.is_attachment);
+    // All attachment templates
+    const attachmentTemplates = selectedTemplates.filter(t => t.is_attachment);
 
     // Compose elements
-    // Priority 1: Contact row subject. Priority 2: Template subject.
+    // Priority 1: Contact row subject. Priority 2: Body template subject.
     let composedSubject = contact.editableGmailSubject?.trim() || (bodyTemplate?.email_subject?.trim()) || "";
     
     if (!composedSubject) {
@@ -507,31 +510,38 @@ async function handleEmailOutreach(userId: string, contact: Contact) {
     // Combine attachments from selected templates + row attachments
     const thisTemplateAttachments = [...emailAttachments]; // Start with row attachments
 
-    const processAttachments = async (template: any) => {
-      if (template.is_attachment) {
-        const attachments = template.drive_attachments || (template.drive_file_id ? [{
-          id: template.drive_file_id,
-          name: template.drive_file_name || "",
-        }] : []);
-        
-        for (const file of attachments) {
-          try {
-            const response = await drive.files.get({ fileId: file.id, alt: "media" }, { responseType: "arraybuffer" });
-            const meta = await drive.files.get({ fileId: file.id, fields: "mimeType" });
-            thisTemplateAttachments.push({
-              filename: file.name,
-              content: Buffer.from(response.data as ArrayBuffer),
-              mimeType: meta.data.mimeType || "application/octet-stream",
-            });
-          } catch (attachErr: any) {
-            console.warn(`[outreach] Combined Email attachment failed for ${file.name}:`, attachErr.message);
-          }
+    // Helper: download a Drive file and add to attachment list
+    const downloadAndAddAttachment = async (template: any) => {
+      const attachments = template.drive_attachments || (template.drive_file_id ? [{
+        id: template.drive_file_id,
+        name: template.drive_file_name || "",
+      }] : []);
+      
+      for (const file of attachments) {
+        if (!file.id) continue;
+        try {
+          const response = await drive.files.get({ fileId: file.id, alt: "media" }, { responseType: "arraybuffer" });
+          const meta = await drive.files.get({ fileId: file.id, fields: "mimeType,name" });
+          const fileName = file.customName || file.name || meta.data.name || "attachment";
+          thisTemplateAttachments.push({
+            filename: fileName,
+            content: Buffer.from(response.data as ArrayBuffer),
+            mimeType: meta.data.mimeType || "application/octet-stream",
+          });
+        } catch (attachErr: any) {
+          console.warn(`[outreach] Email attachment template download failed for ${file.name}:`, attachErr.message);
         }
       }
     };
 
-    if (!useCustomMessage && bodyTemplate) await processAttachments(bodyTemplate);
-    if (footerTemplate) await processAttachments(footerTemplate);
+    // Process body template attachments (if it has any drive files embedded)
+    if (!useCustomMessage && bodyTemplate) await downloadAndAddAttachment(bodyTemplate);
+    // Process footer template attachments
+    if (footerTemplate) await downloadAndAddAttachment(footerTemplate);
+    // *** FIX: Process all attachment-type templates ***
+    for (const attTemplate of attachmentTemplates) {
+      await downloadAndAddAttachment(attTemplate);
+    }
 
     // Send the composed email (preserving HTML formatting)
     const raw = await buildMimeMessage({

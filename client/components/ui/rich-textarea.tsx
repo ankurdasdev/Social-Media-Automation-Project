@@ -141,8 +141,110 @@ export function RichTextarea({
     }
   }, [onChange]);
 
-  // ── Strip paste formatting on plain-text ─────────────────────────────────
-  // (Removed manual paste handler as plain textarea natively strips HTML)
+  // ── Email: Strip external formatting on paste, preserve only text structure ──
+  const handleRichPaste = useCallback((e: React.ClipboardEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const clipboardData = e.clipboardData;
+    if (!clipboardData) return;
+
+    // Try to get HTML first for structure (links, line breaks), then plain text
+    let pastedHtml = clipboardData.getData('text/html');
+    let pastedText = clipboardData.getData('text/plain');
+
+    let finalHtml: string;
+
+    if (pastedHtml) {
+      // Parse and strip all formatting: fonts, colors, sizes, classes, styles
+      // but preserve structural elements: <br>, <p>, <a>, <b>, <i>, <u>, <strong>, <em>
+      const tmp = document.createElement('div');
+      tmp.innerHTML = pastedHtml;
+
+      // Remove all style attributes and classes
+      tmp.querySelectorAll('*').forEach((el) => {
+        el.removeAttribute('style');
+        el.removeAttribute('class');
+        el.removeAttribute('id');
+        el.removeAttribute('bgcolor');
+        el.removeAttribute('color');
+        el.removeAttribute('face');
+        el.removeAttribute('size');
+      });
+
+      // Remove span tags (they only carry styling), unwrap content
+      tmp.querySelectorAll('span').forEach((span) => {
+        const parent = span.parentNode;
+        if (parent) {
+          while (span.firstChild) parent.insertBefore(span.firstChild, span);
+          parent.removeChild(span);
+        }
+      });
+
+      // Replace div/section/article with p for consistency
+      tmp.querySelectorAll('div, section, article, header, footer').forEach((el) => {
+        const p = document.createElement('p');
+        while (el.firstChild) p.appendChild(el.firstChild);
+        el.parentNode?.replaceChild(p, el);
+      });
+
+      // Remove all tags except allowed ones
+      const ALLOWED_TAGS = new Set(['b', 'strong', 'i', 'em', 'u', 'a', 'br', 'p', 'ul', 'ol', 'li']);
+      tmp.querySelectorAll('*').forEach((el) => {
+        if (!ALLOWED_TAGS.has(el.tagName.toLowerCase())) {
+          const parent = el.parentNode;
+          if (parent) {
+            while (el.firstChild) parent.insertBefore(el.firstChild, el);
+            parent.removeChild(el);
+          }
+        }
+      });
+
+      finalHtml = tmp.innerHTML;
+    } else {
+      // Plain text — convert newlines to <br>
+      finalHtml = pastedText
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\n/g, '<br>');
+    }
+
+    // Insert at cursor position
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      range.deleteContents();
+      const fragment = range.createContextualFragment(finalHtml);
+      range.insertNode(fragment);
+      // Move cursor to end of inserted content
+      range.collapse(false);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    } else if (editorRef.current) {
+      editorRef.current.innerHTML += finalHtml;
+    }
+
+    if (editorRef.current) {
+      onChange(editorRef.current.innerHTML);
+    }
+  }, [onChange]);
+
+  // ── Plain-text: strip any HTML that may be pasted ────────────────────────
+  const handlePlainPaste = useCallback((e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    e.preventDefault();
+    const text = e.clipboardData?.getData('text/plain') || '';
+    const ta = e.currentTarget;
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    const current = ta.value;
+    const next = current.slice(0, start) + text + current.slice(end);
+    // Cap for instagram
+    const capped = platform === 'instagram' ? next.slice(0, config.maxChars) : next;
+    onChange(capped);
+    // Restore cursor
+    setTimeout(() => {
+      ta.selectionStart = ta.selectionEnd = start + text.length;
+    }, 0);
+  }, [onChange, platform, config.maxChars]);
 
   // ── WhatsApp markdown wrap ────────────────────────────────────────────────
   const wrapWaMarkdown = useCallback(
@@ -345,10 +447,12 @@ export function RichTextarea({
         <div
           ref={editorRef}
           className="flex-1 p-4 outline-none min-h-[180px] overflow-y-auto text-sm leading-relaxed"
+          style={{ fontFamily: 'inherit', fontSize: '14px', lineHeight: '1.6', color: 'inherit' }}
           contentEditable
           suppressContentEditableWarning
           onInput={handleRichInput}
           onBlur={handleRichInput}
+          onPaste={handleRichPaste}
           data-placeholder={placeholder}
         />
       ) : (
@@ -361,6 +465,7 @@ export function RichTextarea({
           placeholder={placeholder}
           value={stripHtml(value)}
           onChange={handlePlainChange}
+          onPaste={handlePlainPaste}
           spellCheck
           autoComplete="off"
           autoCorrect="off"

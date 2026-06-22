@@ -96,23 +96,50 @@ export async function createContact(userId: string, data: Partial<Contact>): Pro
       user_id, name, casting_name, whatsapp, email, insta_handle, acting_context, project, age,
       sheet_name, status, automation_trigger, row_color, source,
       unified_attachments, drive_attachments_wa, drive_attachments_email, drive_attachments_ig,
-      whatsapp_run, email_run, instagram_run, notes
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
+      whatsapp_run, email_run, instagram_run, notes,
+      salutation_wa, salutation_email, salutation_ig,
+      personalized_name_wa, personalized_name_gmail, personalized_name_ig,
+      template_selection_wp, template_selection_gmail, template_selection_ig,
+      has_custom_message_wa, editable_message_wp,
+      has_custom_message_email, editable_message_gmail, editable_gmail_subject,
+      has_custom_message_ig, editable_message_ig
+    ) VALUES (
+      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14,
+      $15, $16, $17, $18, $19, $20, $21, $22,
+      $23, $24, $25,
+      $26, $27, $28,
+      $29, $30, $31,
+      $32, $33,
+      $34, $35, $36,
+      $37, $38
+    )
     RETURNING *
   `;
   const ua = data.unified_attachments || [];
   const uaStr = JSON.stringify(ua);
-  // Auto-flag based on presence of contact details
-  const whatsappRun = data.whatsapp ? true : false;
-  const emailRun = data.email ? true : false;
-  const instagramRun = data.instaHandle ? true : false;
+  // Auto-flag based on presence of contact details (allow override from data)
+  const whatsappRun = data.whatsappRun !== undefined ? data.whatsappRun : (data.whatsapp ? true : false);
+  const emailRun = data.emailRun !== undefined ? data.emailRun : (data.email ? true : false);
+  const instagramRun = data.instagramRun !== undefined ? data.instagramRun : (data.instaHandle ? true : false);
+
+  // Serialize array fields
+  const templateWP = Array.isArray(data.templateSelectionWP) ? JSON.stringify(data.templateSelectionWP) : (data.templateSelectionWP || JSON.stringify([]));
+  const templateGmail = Array.isArray(data.templateSelectionGmail) ? JSON.stringify(data.templateSelectionGmail) : (data.templateSelectionGmail || JSON.stringify([]));
+  const templateIG = Array.isArray(data.templateSelectionIG) ? JSON.stringify(data.templateSelectionIG) : (data.templateSelectionIG || JSON.stringify([]));
 
   const values = [
     userId, data.name, data.castingName, data.whatsapp, data.email, data.instaHandle,
     data.actingContext, data.project || "Casting Data", data.age, data.sheetName || "",
     data.status || "pending", data.automationTrigger || false, data.rowColor, data.source || "manual",
     uaStr, uaStr, uaStr, uaStr,
-    whatsappRun, emailRun, instagramRun, data.notes || ""
+    whatsappRun, emailRun, instagramRun, data.notes || "",
+    // WhatsApp/Gmail/IG specific fields
+    data.salutationWA || "Hi", data.salutationEmail || "Hi", data.salutationIG || "Hi",
+    data.personalizedNameWA || "N", data.personalizedNameGmail || "N", data.personalizedNameIG || "N",
+    templateWP, templateGmail, templateIG,
+    data.hasCustomMessageWA || false, data.editableMessageWP || "",
+    data.hasCustomMessageEmail || false, data.editableMessageGmail || "", data.editableGmailSubject || "",
+    data.hasCustomMessageIG || false, data.editableMessageIG || "",
   ];
   const row = await queryOne(sql, values);
   return mapRowToContact(row);

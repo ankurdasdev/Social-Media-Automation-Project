@@ -232,6 +232,11 @@ export function TemplateEditor({
       toast({ title: "Error", description: "Please select at least one file from Google Drive.", variant: "destructive" });
       return;
     }
+    // Issue 4 fix: Subject is mandatory for email body templates
+    if (!isAttachment && defaultCategory === "email" && emailTemplateType === "body" && !emailSubject.trim()) {
+      toast({ title: "Subject Required", description: "A subject line is required for email body templates.", variant: "destructive" });
+      return;
+    }
     setIsSaving(true);
     try {
       const userId = getOrCreateUserId();
@@ -337,13 +342,24 @@ export function TemplateEditor({
           {/* Email Subject */}
           {defaultCategory === "email" && emailTemplateType === "body" && !isAttachment && (
             <div className="space-y-3 animate-in fade-in duration-300">
-              <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Email Subject</Label>
+              <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1">
+                Email Subject
+                <span className="text-red-500 text-sm leading-none">*</span>
+                <span className="text-[9px] font-medium normal-case tracking-normal text-muted-foreground/60 ml-1">(required)</span>
+              </Label>
               <Input
                 value={emailSubject}
                 onChange={(e) => setEmailSubject(e.target.value)}
                 placeholder="e.g. Casting Call Opportunity"
-                className="h-14 rounded-2xl bg-muted/30 border-border/50 focus:ring-primary font-medium shadow-inner"
+                className={cn(
+                  "h-14 rounded-2xl bg-muted/30 border-border/50 focus:ring-primary font-medium shadow-inner",
+                  !emailSubject.trim() && "border-red-500/50 focus:ring-red-500"
+                )}
+                required
               />
+              {!emailSubject.trim() && (
+                <p className="text-[10px] text-red-500 font-bold">⚠ Subject is required for body templates — it will be used as the email subject line.</p>
+              )}
             </div>
           )}
 
