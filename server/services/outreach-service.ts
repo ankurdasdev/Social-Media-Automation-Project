@@ -506,17 +506,28 @@ async function handleEmailOutreach(userId: string, contact: Contact) {
     const attachmentTemplates = selectedTemplates.filter(t => t.is_attachment);
 
     // Compose elements
-    // Priority 1: Contact row subject. Priority 2: Body template subject.
-    let composedSubject = contact.editableGmailSubject?.trim() || (bodyTemplate?.email_subject?.trim()) || "";
+    // Priority 1: Contact row subject. Priority 2: Body template subject (only if custom message is NOT used).
+    let composedSubject = contact.editableGmailSubject?.trim() || "";
+    
+    // If we are NOT using a custom message, we can fallback to the body template subject.
+    if (!useCustomMessage && !composedSubject && bodyTemplate) {
+      composedSubject = bodyTemplate.email_subject?.trim() || "";
+    }
     
     if (!composedSubject) {
-      throw new Error("Missing email subject. Please provide a subject in the Contact record or the Body Template.");
+      if (useCustomMessage) {
+        // Provide a fallback subject if they used a custom message but forgot a subject, 
+        // to prevent the email from completely failing.
+        composedSubject = "Outreach";
+      } else {
+        throw new Error("Missing email subject. Please provide a subject in the Contact record or the Body Template.");
+      }
     }
 
     let composedBody = "";
 
     if (useCustomMessage) {
-      composedBody = contact.editableMessageGmail;
+      composedBody = injectVariables(contact.editableMessageGmail, contact, "email");
     } else if (bodyTemplate) {
       composedBody = injectVariables(bodyTemplate.content || "", contact, "email");
     }
