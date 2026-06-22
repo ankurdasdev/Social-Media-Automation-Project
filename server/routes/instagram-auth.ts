@@ -206,34 +206,22 @@ export const handleInstagramConnectSession: RequestHandler = async (req, res) =>
   }
 
   try {
-    // Verify the session works by making a simple API call
-    const BASE_URL = process.env.INSTAGRAPI_API_URL || "http://localhost:8000";
-    const API_KEY = process.env.INSTAGRAPI_API_KEY || "";
-
-    const form = new URLSearchParams();
-    form.append("sessionid", sessionData);
-    
     let verifiedUsername = username.toLowerCase().trim();
     
-    // Try to verify the session by fetching account info
+    // Try to verify the session using local python bridge
     try {
-      const verifyRes = await fetch(`${BASE_URL}/account/info`, {
-        method: "POST",
-        headers: {
-          "X-API-KEY": API_KEY,
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: form,
-      });
-
-      if (verifyRes.ok) {
-        const info = await verifyRes.json();
-        if (info?.username) verifiedUsername = info.username;
+      const { execFileSync } = require("child_process");
+      const path = require("path");
+      const SCRIPT_PATH = path.join(process.cwd(), "server", "services", "ig_bridge.py");
+      const PYTHON_CMD = path.join(process.cwd(), "venv", "bin", "python3");
+      
+      const verifyOutput = execFileSync(PYTHON_CMD, [SCRIPT_PATH, "verifySession", sessionData]).toString();
+      const verifyRes = JSON.parse(verifyOutput);
+      if (verifyRes.success && verifyRes.username) {
+        verifiedUsername = verifyRes.username;
         console.log(`[instagram] Session verified for @${verifiedUsername}`);
-      } else {
-        const errText = await verifyRes.text();
-        console.warn(`[instagram] Session verify returned ${verifyRes.status}: ${errText}`);
-        // We still proceed — the session might work for DMs even if account/info fails
+      } else if (verifyRes.error) {
+        console.warn(`[instagram] Session verify returned error: ${verifyRes.error}`);
       }
     } catch (verifyErr: any) {
       console.warn("[instagram] Session verification request failed (non-fatal):", verifyErr.message);
