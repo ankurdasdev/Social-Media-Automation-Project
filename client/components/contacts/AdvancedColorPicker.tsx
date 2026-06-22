@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { Check, X, Pipette } from "lucide-react";
 
 interface AdvancedColorPickerProps {
-  color: string;
+  color?: string;
   onChange: (color: string) => void;
 }
 
@@ -36,28 +36,29 @@ const GRADIENTS = [
   { name: "Candy", value: "linear-gradient(to right, #d397fa, #8364e8)" },
 ];
 
-export function AdvancedColorPicker({ color, onChange }: AdvancedColorPickerProps) {
-  const [hex, setHex] = React.useState(color.startsWith("#") ? color : "#ffffff");
+export function AdvancedColorPicker({ color = "transparent", onChange }: AdvancedColorPickerProps) {
+  const safeColor = color || "transparent";
+  const [hex, setHex] = React.useState(safeColor.startsWith("#") ? safeColor : "#ffffff");
   const [isExpanded, setIsExpanded] = React.useState(false);
   const [dirty, setDirty] = React.useState(false);
 
   React.useEffect(() => {
-    if (color.startsWith("#")) {
-      setHex(color);
+    if (safeColor.startsWith("#")) {
+      setHex(safeColor);
       setDirty(false);
     }
-  }, [color]);
+  }, [safeColor]);
 
   // Debounce the onChange to prevent massive API flooding when dragging the native color picker
   React.useEffect(() => {
-    if (dirty && hex !== color && /^#[0-9A-F]{6}$/i.test(hex)) {
+    if (dirty && hex !== safeColor && /^#[0-9A-F]{6}$/i.test(hex)) {
       const timer = setTimeout(() => {
         onChange(hex);
         setDirty(false);
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [hex, color, dirty, onChange]);
+  }, [hex, safeColor, dirty, onChange]);
 
   return (
     <div className="p-4 space-y-4 w-full max-w-[280px] max-h-[450px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 animate-in fade-in zoom-in-95 duration-200">
@@ -71,12 +72,12 @@ export function AdvancedColorPicker({ color, onChange }: AdvancedColorPickerProp
               onClick={() => onChange(c.value)}
               className={cn(
                 "w-9 h-9 rounded-xl border-2 transition-all hover:scale-110 active:scale-95 flex items-center justify-center shadow-lg",
-                color === c.value ? "border-primary shadow-primary/20" : "border-white/10"
+                safeColor === c.value ? "border-primary shadow-primary/20" : "border-white/10"
               )}
               style={{ backgroundColor: c.value }}
               title={c.name}
             >
-              {color === c.value && <Check className="w-4 h-4 text-white drop-shadow-md" />}
+              {safeColor === c.value && <Check className="w-4 h-4 text-white drop-shadow-md" />}
             </button>
           ))}
           <button
@@ -104,11 +105,11 @@ export function AdvancedColorPicker({ color, onChange }: AdvancedColorPickerProp
                   onClick={() => onChange(c.value)}
                   className={cn(
                     "w-8 h-8 rounded-lg border transition-all hover:scale-110 active:scale-95 flex items-center justify-center",
-                    color === c.value ? "border-primary shadow-lg" : "border-white/10"
+                    safeColor === c.value ? "border-primary shadow-lg" : "border-white/10"
                   )}
                   style={{ backgroundColor: c.value }}
                 >
-                  {color === c.value && <Check className="w-3.5 h-3.5 text-white drop-shadow-md" />}
+                  {safeColor === c.value && <Check className="w-3.5 h-3.5 text-white drop-shadow-md" />}
                 </button>
               ))}
             </div>
@@ -155,11 +156,11 @@ export function AdvancedColorPicker({ color, onChange }: AdvancedColorPickerProp
                   onClick={() => onChange(g.value)}
                   className={cn(
                     "h-10 rounded-xl border-2 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center overflow-hidden relative",
-                    color === g.value ? "border-primary shadow-lg shadow-primary/10" : "border-white/10"
+                    safeColor === g.value ? "border-primary shadow-lg shadow-primary/10" : "border-white/10"
                   )}
                   style={{ background: g.value }}
                 >
-                  {color === g.value && <Check className="w-4 h-4 text-white drop-shadow-md z-10" />}
+                  {safeColor === g.value && <Check className="w-4 h-4 text-white drop-shadow-md z-10" />}
                 </button>
               ))}
             </div>
