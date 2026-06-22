@@ -171,15 +171,17 @@ export async function sendMessage(
 }
 
 /**
- * Send a media message (image/document) via URL.
+ * Send a media message (image/document/video/audio) via base64.
+ * Accepts the mimeType so Evolution API can correctly classify and deliver the file.
  */
 export async function sendMedia(
   instanceName: string,
   number: string,
-  mediaUrl: string,
+  mediaBase64: string,
   mediaType: "image" | "video" | "audio" | "document" = "image",
   caption?: string,
-  fileName?: string
+  fileName?: string,
+  mimeType?: string
 ): Promise<any> {
   const url = `${BASE_URL}/message/sendMedia/${instanceName}`;
   
@@ -190,10 +192,18 @@ export async function sendMedia(
     }
   }
 
-  const body = {
+  // Build the media value — Evolution API works best with a data-URI for base64
+  const resolvedMime = mimeType || (mediaType === "image" ? "image/jpeg" : mediaType === "video" ? "video/mp4" : "application/octet-stream");
+  // Prefix with data-URI only if not already prefixed
+  const mediaValue = mediaBase64.startsWith("data:")
+    ? mediaBase64
+    : `data:${resolvedMime};base64,${mediaBase64}`;
+
+  const body: Record<string, any> = {
     number,
-    media: mediaUrl,
+    media: mediaValue,
     mediatype: mediaType,
+    mimetype: resolvedMime,
     caption,
     fileName,
   };

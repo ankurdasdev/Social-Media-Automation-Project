@@ -271,20 +271,29 @@ async function handleWhatsAppOutreach(userId: string, contact: Contact) {
       const meta = await drive.files.get({ fileId: file.id, fields: "mimeType" });
       const mimeType = meta.data.mimeType || "application/octet-stream";
       
-      let mediaType: "image" | "document" = "document";
+      // Determine the correct WA media type for HD delivery:
+      // - image/* → "image" (already HD)
+      // - video/* → "video" with mimetype set — triggers WA native HD video player
+      // - audio/* → "audio"
+      // - everything else → "document" (original quality, no compression)
+      let mediaType: "image" | "video" | "audio" | "document" = "document";
       if (mimeType.startsWith("image/")) mediaType = "image";
+      else if (mimeType.startsWith("video/")) mediaType = "video";
+      else if (mimeType.startsWith("audio/")) mediaType = "audio";
 
       // Preserve the original extension when a custom name is used
       const finalName = ensureExtension(file.customName, file.name);
       const cleanName = stripExtension(finalName);
       const caption = file.caption || cleanName;
 
-      await sendWAMedia(instance.instance_name, jid, base64, mediaType, caption, finalName);
+      // Pass mimeType so Evolution API correctly classifies and sends the media
+      await sendWAMedia(instance.instance_name, jid, base64, mediaType, caption, finalName, mimeType);
     } catch (err: any) {
       console.warn(`[whatsapp] Attachment failed for ${file.name}:`, err.message);
     }
     await sleep(1500);
   };
+
 
   // 1. Custom Message (Sent First)
   if (contact.hasCustomMessageWA && contact.editableMessageWP) {
