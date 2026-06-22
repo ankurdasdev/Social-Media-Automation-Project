@@ -192,12 +192,13 @@ export async function sendMedia(
     }
   }
 
-  // Build the media value — Evolution API works best with a data-URI for base64
   const resolvedMime = mimeType || (mediaType === "image" ? "image/jpeg" : mediaType === "video" ? "video/mp4" : "application/octet-stream");
-  // Prefix with data-URI only if not already prefixed
-  const mediaValue = mediaBase64.startsWith("data:")
-    ? mediaBase64
-    : `data:${resolvedMime};base64,${mediaBase64}`;
+  
+  // Evolution API's class validator strictly checks if the string is pure base64 or URL.
+  // Data URIs (e.g. data:image/jpeg;base64,...) will fail the isBase64 check and throw "Owned media must be a url or base64".
+  const mediaValue = mediaBase64.includes("base64,") 
+    ? mediaBase64.split("base64,")[1] 
+    : mediaBase64;
 
   const body: Record<string, any> = {
     number,
