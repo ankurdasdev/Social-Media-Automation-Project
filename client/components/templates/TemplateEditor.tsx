@@ -71,17 +71,40 @@ interface TemplateEditorProps {
 function AttachmentDetailsEditor({ file, platform, onSave }: { file: DriveFile, platform?: string, onSave: (f: DriveFile) => void }) {
   const [name, setName] = React.useState(file.customName || file.name);
   const [caption, setCaption] = React.useState(file.caption || "");
+
+  // Extract extension from the original Drive file name for the preview
+  const origExt = React.useMemo(() => {
+    const match = file.name?.match(/\.[^/.]+$/);
+    return match ? match[0] : "";
+  }, [file.name]);
+
+  // Preview what the final sent filename will look like
+  const previewName = React.useMemo(() => {
+    const trimmed = name.trim();
+    if (!trimmed) return file.name;
+    if (origExt && !trimmed.toLowerCase().endsWith(origExt.toLowerCase())) {
+      return trimmed + origExt;
+    }
+    return trimmed;
+  }, [name, origExt, file.name]);
   
   return (
     <div className="space-y-3">
       <div className="space-y-1">
         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Custom File Name</p>
+        <p className="text-[9px] text-muted-foreground/60 font-medium">Extension is preserved automatically — just enter a display name</p>
         <Input 
           className="h-7 text-xs bg-background" 
           value={name}
           onChange={(e) => setName(e.target.value)}
           onBlur={() => onSave({ ...file, customName: name })}
+          placeholder="e.g. Introduction Video"
         />
+        {name.trim() && (
+          <p className="text-[9px] text-emerald-500 font-bold mt-0.5">
+            ✓ Will be sent as: <span className="font-black">{previewName}</span>
+          </p>
+        )}
       </div>
       {platform === "whatsapp" && (
         <div className="space-y-1">
@@ -98,6 +121,7 @@ function AttachmentDetailsEditor({ file, platform, onSave }: { file: DriveFile, 
     </div>
   );
 }
+
 
 // ─── Component ────────────────────────────────────────────────────────────────
 

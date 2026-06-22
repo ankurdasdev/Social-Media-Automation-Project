@@ -22,6 +22,30 @@ function stripExtension(filename: string): string {
   return filename.replace(/\.[^/.]+$/, "");
 }
 
+/** Extract the file extension including the dot, e.g. ".mp4" */
+function getExtension(filename: string): string {
+  if (!filename) return "";
+  const match = filename.match(/\.[^/.]+$/);
+  return match ? match[0] : "";
+}
+
+/**
+ * Ensures a custom name retains the original file's extension.
+ * If the custom name already ends with the correct extension (case-insensitive), it's returned as-is.
+ * Otherwise, the original extension is appended.
+ * Falls back to the original filename if customName is empty.
+ */
+function ensureExtension(customName: string | undefined, originalName: string): string {
+  const base = customName?.trim();
+  if (!base) return originalName;
+  const origExt = getExtension(originalName).toLowerCase();
+  if (!origExt) return base; // original had no extension, nothing to preserve
+  // Check if customName already ends with the original extension
+  if (base.toLowerCase().endsWith(origExt)) return base;
+  // Append original extension
+  return base + origExt;
+}
+
 function cleanHtmlForPlainText(content: string): string {
   if (!content) return "";
   let text = content;
@@ -250,7 +274,8 @@ async function handleWhatsAppOutreach(userId: string, contact: Contact) {
       let mediaType: "image" | "document" = "document";
       if (mimeType.startsWith("image/")) mediaType = "image";
 
-      const finalName = file.customName || file.name;
+      // Preserve the original extension when a custom name is used
+      const finalName = ensureExtension(file.customName, file.name);
       const cleanName = stripExtension(finalName);
       const caption = file.caption || cleanName;
 
@@ -406,8 +431,10 @@ async function handleEmailOutreach(userId: string, contact: Contact) {
     try {
       const response = await drive.files.get({ fileId: file.id, alt: "media" }, { responseType: "arraybuffer" });
       const meta = await drive.files.get({ fileId: file.id, fields: "mimeType" });
+      // Preserve original extension when a custom name is used
+      const fileName = ensureExtension(file.customName, file.name);
       emailAttachments.push({
-        filename: file.name,
+        filename: fileName,
         content: Buffer.from(response.data as ArrayBuffer),
         mimeType: meta.data.mimeType || "application/octet-stream",
       });
@@ -522,7 +549,9 @@ async function handleEmailOutreach(userId: string, contact: Contact) {
         try {
           const response = await drive.files.get({ fileId: file.id, alt: "media" }, { responseType: "arraybuffer" });
           const meta = await drive.files.get({ fileId: file.id, fields: "mimeType,name" });
-          const fileName = file.customName || file.name || meta.data.name || "attachment";
+          // Preserve original extension when a custom name is used
+          const originalName = file.name || meta.data.name || "attachment";
+          const fileName = ensureExtension(file.customName, originalName);
           thisTemplateAttachments.push({
             filename: fileName,
             content: Buffer.from(response.data as ArrayBuffer),
