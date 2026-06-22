@@ -692,7 +692,7 @@ export function DataTable<TData, TValue>({
               onChange={(color) => {
                 if (onUpdateContact) {
                   onUpdateContact(ctxMenu.contactId, {
-                    cellColors: { ...ctxMenu.contact.cellColors, [ctxMenu.cellId]: color === "transparent" ? "" : color }
+                    cellColors: { ...(ctxMenu.contact.cellColors || {}), [ctxMenu.cellId]: color === "transparent" ? "" : color }
                   });
                 }
               }}

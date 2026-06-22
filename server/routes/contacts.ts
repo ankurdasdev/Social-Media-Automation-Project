@@ -213,6 +213,92 @@ export const handleUpdateContact: RequestHandler = async (req, res) => {
   res.json(response);
 };
 
+// ─── PUT /api/contacts/bulk ───────────────────────────────────────────────────
+
+export const handleBulkContactsAction: RequestHandler = async (req, res) => {
+  const userId = (req.query.userId || req.body.userId || process.env.DEFAULT_USER_ID) as string;
+  const { ids, action, payload } = req.body;
+
+  if (!userId || !Array.isArray(ids) || ids.length === 0) {
+    res.status(400).json({ error: "userId and an array of ids are required." });
+    return;
+  }
+
+  try {
+    for (const id of ids) {
+      if (action === "color") {
+        await updateContact(userId, id, { rowColor: payload });
+      } else if (action === "move") {
+        await updateContact(userId, id, { sheetName: payload });
+      }
+      // If action is something else, we could handle it here.
+    }
+    res.json({ success: true });
+  } catch (err: any) {
+    console.error("[handleBulkContactsAction] Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ─── POST /api/contacts/bulk/clear ────────────────────────────────────────────
+
+export const handleBulkClearContacts: RequestHandler = async (req, res) => {
+  const userId = (req.query.userId || req.body.userId || process.env.DEFAULT_USER_ID) as string;
+  const { ids, fields } = req.body;
+
+  if (!userId || !Array.isArray(ids) || ids.length === 0 || !Array.isArray(fields)) {
+    res.status(400).json({ error: "userId, array of ids, and array of fields are required." });
+    return;
+  }
+
+  try {
+    const updatePayload: Partial<Contact> = {};
+    for (const f of fields) {
+      if (["templateSelectionWP", "templateSelectionGmail", "templateSelectionIG", "drive_attachments_wa", "drive_attachments_email", "drive_attachments_ig"].includes(f)) {
+         updatePayload[f as keyof Contact] = [] as any;
+      } else if (f === "cellColors") {
+         updatePayload[f as keyof Contact] = {} as any;
+      } else if (f === "rowColor") {
+         updatePayload[f as keyof Contact] = "transparent" as any;
+      } else if (["hasCustomMessageWA", "hasCustomMessageEmail", "hasCustomMessageIG"].includes(f)) {
+         updatePayload[f as keyof Contact] = false as any;
+      } else {
+         updatePayload[f as keyof Contact] = "" as any;
+      }
+    }
+    
+    for (const id of ids) {
+      await updateContact(userId, id, updatePayload);
+    }
+    res.json({ success: true });
+  } catch (err: any) {
+    console.error("[handleBulkClearContacts] Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ─── DELETE /api/contacts/bulk ────────────────────────────────────────────────
+
+export const handleBulkDeleteContacts: RequestHandler = async (req, res) => {
+  const userId = ((req.query.userId as string) || (req.body.userId as string) || process.env.DEFAULT_USER_ID) as string;
+  const { ids } = req.body;
+
+  if (!userId || !Array.isArray(ids) || ids.length === 0) {
+    res.status(400).json({ error: "userId and an array of ids are required." });
+    return;
+  }
+
+  try {
+    for (const id of ids) {
+      await deleteContact(userId, id);
+    }
+    res.status(204).send();
+  } catch (err: any) {
+    console.error("[handleBulkDeleteContacts] Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
 // ─── DELETE /api/contacts/:id ─────────────────────────────────────────────────
 
 export const handleDeleteContact: RequestHandler = async (req, res) => {

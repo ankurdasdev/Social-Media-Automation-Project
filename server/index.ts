@@ -15,6 +15,9 @@ import {
   handleGetContacts,
   handleCreateContact,
   handleBulkCreateContacts,
+  handleBulkContactsAction,
+  handleBulkClearContacts,
+  handleBulkDeleteContacts,
   handleUpdateContact,
   handleDeleteContact,
   handleTriggerIngestion,
@@ -279,6 +282,9 @@ export function createServer() {
   app.get("/api/contacts", handleGetContacts);
   app.post("/api/contacts", handleCreateContact);
   app.post("/api/contacts/bulk", handleBulkCreateContacts);
+  app.put("/api/contacts/bulk", handleBulkContactsAction);
+  app.post("/api/contacts/bulk/clear", handleBulkClearContacts);
+  app.delete("/api/contacts/bulk", handleBulkDeleteContacts);
   app.put("/api/contacts/:id", handleUpdateContact);
   app.delete("/api/contacts/:id", handleDeleteContact);
   app.post("/api/contacts/ai-search", handleAIContactSearch);
