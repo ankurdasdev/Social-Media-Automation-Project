@@ -185,10 +185,11 @@ const MemoizedTableRow = React.memo(({
         "table-row-smooth",
         "hover:bg-muted/25",
         row.index % 2 === 0 ? "bg-muted/20" : "bg-transparent",
-        isSelected && "!bg-primary/20 border-l-primary"
+        isSelected && "!bg-primary/20 border-l-primary",
+        isCustom && "text-white dark:text-white" // Force text color to white for solid background readability
       )}
       style={{ 
-        backgroundColor: isCustom ? `${rColor}1a` : undefined,
+        backgroundColor: isCustom ? rColor : undefined,
         background: rColor.includes("gradient") ? rColor : undefined,
         borderLeftColor: getBorderColor(rColor),
       }}
