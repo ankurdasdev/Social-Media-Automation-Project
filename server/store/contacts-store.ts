@@ -4,6 +4,15 @@ import type { Contact } from "@shared/api";
 /**
  * Helper to safely parse strings to string array if they are valid JSON arrays.
  */
+function safelyParseJSON(val: string | null): any {
+  if (!val) return null;
+  try {
+    return JSON.parse(val);
+  } catch {
+    return val;
+  }
+}
+
 function safelyParseStringArray(val: string | null): string[] | string {
   if (!val) return [];
   try {
@@ -35,7 +44,7 @@ function mapRowToContact(row: any): Contact {
     status: row.status || "pending",
     automationTrigger: row.automation_trigger || false,
     rowColor: row.row_color,
-    cellColors: typeof row.cell_colors === 'string' ? safelyParseStringArray(row.cell_colors) : (row.cell_colors || {}),
+    cellColors: typeof row.cell_colors === 'string' ? safelyParseJSON(row.cell_colors) : (row.cell_colors || {}),
     whatsappRun: row.whatsapp_run || false,
     emailRun: row.email_run || false,
     instagramRun: row.instagram_run || false,
@@ -299,7 +308,7 @@ export async function upsertContact(
 
   if (existing) {
     // Build safe update — only fill in missing project/age/actingContext
-    const setClause: string[] = ["row_color = 'yellow'", "updated_at = NOW()"];
+    const setClause: string[] = ["updated_at = NOW()"];
     const updateVals: any[] = [];
 
     if (data.project && !existing.project) {
