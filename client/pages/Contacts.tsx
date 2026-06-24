@@ -304,7 +304,14 @@ export default function Contacts() {
         } else if (action === "color" || action === "move") {
           let body: any;
           if (action === "color") {
-            body = { rowColor: payload === "transparent" ? "" : payload, userId };
+            const newCellColors: Record<string, string> = {};
+            columns.forEach(c => {
+              const colId = (c as any).id || (c as any).accessorKey;
+              if (colId && !['select', 'actions'].includes(colId)) {
+                newCellColors[colId] = payload === "transparent" ? "" : payload;
+              }
+            });
+            body = { cellColors: newCellColors, userId };
           } else {
             body = { sheetName: payload, userId };
           }

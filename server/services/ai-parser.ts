@@ -56,7 +56,7 @@ export interface ParsedMultipleContact {
 const SYSTEM_PROMPT = `You are an expert assistant that extracts casting call information from WhatsApp and Instagram messages for an Indian actor's outreach app.
 
 Your job is to read a message and return a JSON object with these exact fields:
-- isCastingCall: boolean — true ONLY if this is a genuine casting call, audition announcement, or talent requirement
+- isCastingCall: boolean — true ONLY if this is a genuine casting call, audition announcement, or talent requirement. Be generous. If it looks like a requirement, mark true.
 - name: string — name of the casting director, production house, or person/brand posting
 - castingName: string — the role or casting title being sought (e.g. "Female Model", "Actor - Lead Role")
 - project: string — type or name of project (e.g. "Web Series", "TVC", "Ad Campaign", "Film", "OTT Show")
@@ -68,10 +68,11 @@ Your job is to read a message and return a JSON object with these exact fields:
 - notes: string — brief notes of location, shoot dates, payment, deadlines (max 150 chars)
 
 Rules:
-- If the message is NOT a casting call (general chatter, spam, event promotions, news, personal messages), return isCastingCall: false with all other fields as ""
-- Return ONLY valid JSON, no markdown code blocks, no explanation
-- Keep all text fields concise (max 100 chars each except notes)
-- For Indian content: Bollywood, OTT, regional films, TVC, brand shoots are common contexts`;
+- The AI profiling keywords are preferences ONLY. They are not mandatory. Do not skip casting calls just because keywords don't match.
+- If the message is completely irrelevant (spam, news, personal chatter), return isCastingCall: false with all other fields as "".
+- Return ONLY valid JSON, no markdown code blocks, no explanation.
+- Keep all text fields concise (max 100 chars each except notes).
+- For Indian content: Bollywood, OTT, regional films, TVC, brand shoots are common contexts.`;
 
 // ─── Text Message Parser ──────────────────────────────────────────────────────
 
@@ -82,13 +83,7 @@ export async function parseMessage(
 ): Promise<ParsedContact | null> {
   if (!rawText || rawText.trim().length < 20) return null;
 
-  // Keywords are a soft preference only — skip ONLY if keywords given AND text
-  // is very short AND has zero keyword hits (avoids wasting tokens on obvious non-matches)
-  if (keywords.length > 0 && rawText.length < 80) {
-    const lower = rawText.toLowerCase();
-    const hasKeyword = keywords.some((kw) => lower.includes(kw.toLowerCase()));
-    if (!hasKeyword) return null;
-  }
+  // We removed the hard-filter for short messages to ensure we don't miss anything.
 
   const keywordHint =
     keywords.length > 0
@@ -188,17 +183,17 @@ export async function parseCastingImageForMultipleContacts(
   // Build soft profile context — always prefer to include rather than exclude
   let profileContext: string;
   if (userKeywords.length > 0) {
-    profileContext = `The user's preferred casting keywords are: ${userKeywords.join(", ")}. These are preferences — do NOT skip a casting call unless it very clearly conflicts with them. When in doubt, include it.`;
+    profileContext = `The user's preferred casting keywords are: ${userKeywords.join(", ")}. These are PREFERENCES ONLY. They are NOT mandatory. You must STILL EXTRACT the contact information even if it does not match the keywords. Never exclude a valid casting call.`;
   } else if (userGender) {
-    profileContext = `The user's gender is: ${userGender}. Prefer casting calls relevant to this gender, but include all others too.`;
+    profileContext = `The user's gender is: ${userGender}. Prefer casting calls relevant to this gender, but you MUST include all others too.`;
   } else {
     profileContext = `No profile keywords available. Include ALL casting calls and talent requirements found in the image.`;
   }
 
   const dynamicPrompt = `You are an expert data extraction assistant for an Indian actor's outreach app.
-Your job is to read an image (which may be a casting call flyer, WhatsApp forward, or talent requirement post) and extract ALL contact information into a structured JSON array.
+Your job is to read an image (which may be a casting call flyer, WhatsApp forward, or talent requirement post) and extract contact information into a structured JSON array. The image may contain one single contact OR multiple contacts. It is completely generic.
 
-USER PROFILE CONTEXT (soft guidance only — do NOT skip casting calls based on this):
+USER PROFILE CONTEXT:
 ${profileContext}
 
 Extract these fields for EACH contact found in the image:
@@ -211,8 +206,8 @@ Extract these fields for EACH contact found in the image:
 - project: string — MAX 2 WORDS, e.g. "Web Series", "TV Ad", "Movie", "OTT Show"
 - age: string — age range if mentioned (e.g. "24-28", "22-30 yrs"), else ""
 
-CRITICAL RULES FOR MULTIPLE CONTACTS:
-- The image may contain ONE or MULTIPLE contact methods — both are fine.
+CRITICAL RULES:
+- The image may contain ONE contact or MULTIPLE contacts — process it generically and return all of them.
 - If there are MULTIPLE distinct phone numbers, emails, or Instagram handles, create a SEPARATE row for each distinct contact method.
 - If 1 WhatsApp + 1 Email belong to the same casting: put them in ONE row.
 - If 2 WhatsApps + 1 Email: Row 1 = WA#1 + Email, Row 2 = WA#2 + empty email.

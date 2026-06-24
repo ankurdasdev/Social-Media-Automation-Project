@@ -112,49 +112,56 @@ async function seedTestData(): Promise<void> {
 
 async function runMigrations(): Promise<void> {
   // Add new columns safely to existing tables first
-  await query(`
-     ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT;
-    ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_keywords JSONB DEFAULT '[]'::jsonb;
-    ALTER TABLE users ADD COLUMN IF NOT EXISTS gender TEXT;
-    ALTER TABLE users ADD COLUMN IF NOT EXISTS dob TEXT;
-    ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE;
-    ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;
-    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS instagram_completed TEXT;
-    ALTER TABLE google_tokens ADD COLUMN IF NOT EXISTS scopes TEXT;
-    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS personalized_name_wa TEXT DEFAULT 'N';
-    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS personalized_name_gmail TEXT DEFAULT 'N';
-    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS personalized_name_ig TEXT DEFAULT 'N';
-    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS has_custom_message_wa BOOLEAN DEFAULT FALSE;
-    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS has_custom_message_email BOOLEAN DEFAULT FALSE;
-    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS has_custom_message_ig BOOLEAN DEFAULT FALSE;
-    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS unified_attachments JSONB DEFAULT '[]'::jsonb;
-    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS row_color TEXT;
-    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS cell_colors JSONB DEFAULT '{}'::jsonb;
-    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS whatsapp_completed TEXT DEFAULT 'No';
-    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS email_completed TEXT DEFAULT 'No';
-    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS notes TEXT;
-    ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS url TEXT;
-    ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS platform TEXT NOT NULL DEFAULT 'whatsapp';
-    ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS description TEXT;
-    ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS enabled BOOLEAN DEFAULT TRUE;
-    ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS is_manual BOOLEAN DEFAULT FALSE;
-    ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS last_verified_at TIMESTAMPTZ;
-    ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending';
-    ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS status_message TEXT;
-    ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS member_count INTEGER;
-    ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS last_scraped TIMESTAMPTZ;
-    ALTER TABLE users ADD COLUMN IF NOT EXISTS ingestion_schedule_time TEXT DEFAULT '02:00';
-    ALTER TABLE users ADD COLUMN IF NOT EXISTS ingestion_enabled BOOLEAN DEFAULT TRUE;
-    ALTER TABLE users ADD COLUMN IF NOT EXISTS scan_duration_hours INTEGER DEFAULT 24;
-    ALTER TABLE templates ADD COLUMN IF NOT EXISTS drive_attachments JSONB DEFAULT '[]'::jsonb;
-    ALTER TABLE templates ADD COLUMN IF NOT EXISTS email_template_type TEXT DEFAULT 'body';
-    ALTER TABLE users ADD COLUMN IF NOT EXISTS trial_started_at TIMESTAMPTZ;
-    ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT;
-    ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT FALSE;
-    ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verify_token TEXT;
-    ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verify_expires TIMESTAMPTZ;
-    ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN DEFAULT FALSE;
-  `).catch(() => {}); // Ignore if tables don't exist yet — they will be created below
+  // Add new columns safely to existing tables first.
+  // We execute each ALTER TABLE statement individually so that a failure in one
+  // (e.g. if the table doesn't exist yet) does not abort the entire batch.
+  const alterStatements = [
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT;`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_keywords JSONB DEFAULT '[]'::jsonb;`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS gender TEXT;`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS dob TEXT;`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE;`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;`,
+    `ALTER TABLE contacts ADD COLUMN IF NOT EXISTS instagram_completed TEXT;`,
+    `ALTER TABLE google_tokens ADD COLUMN IF NOT EXISTS scopes TEXT;`,
+    `ALTER TABLE contacts ADD COLUMN IF NOT EXISTS personalized_name_wa TEXT DEFAULT 'N';`,
+    `ALTER TABLE contacts ADD COLUMN IF NOT EXISTS personalized_name_gmail TEXT DEFAULT 'N';`,
+    `ALTER TABLE contacts ADD COLUMN IF NOT EXISTS personalized_name_ig TEXT DEFAULT 'N';`,
+    `ALTER TABLE contacts ADD COLUMN IF NOT EXISTS has_custom_message_wa BOOLEAN DEFAULT FALSE;`,
+    `ALTER TABLE contacts ADD COLUMN IF NOT EXISTS has_custom_message_email BOOLEAN DEFAULT FALSE;`,
+    `ALTER TABLE contacts ADD COLUMN IF NOT EXISTS has_custom_message_ig BOOLEAN DEFAULT FALSE;`,
+    `ALTER TABLE contacts ADD COLUMN IF NOT EXISTS unified_attachments JSONB DEFAULT '[]'::jsonb;`,
+    `ALTER TABLE contacts ADD COLUMN IF NOT EXISTS row_color TEXT;`,
+    `ALTER TABLE contacts ADD COLUMN IF NOT EXISTS cell_colors JSONB DEFAULT '{}'::jsonb;`,
+    `ALTER TABLE contacts ADD COLUMN IF NOT EXISTS whatsapp_completed TEXT DEFAULT 'No';`,
+    `ALTER TABLE contacts ADD COLUMN IF NOT EXISTS email_completed TEXT DEFAULT 'No';`,
+    `ALTER TABLE contacts ADD COLUMN IF NOT EXISTS notes TEXT;`,
+    `ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS url TEXT;`,
+    `ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS platform TEXT NOT NULL DEFAULT 'whatsapp';`,
+    `ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS description TEXT;`,
+    `ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS enabled BOOLEAN DEFAULT TRUE;`,
+    `ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS is_manual BOOLEAN DEFAULT FALSE;`,
+    `ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS last_verified_at TIMESTAMPTZ;`,
+    `ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending';`,
+    `ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS status_message TEXT;`,
+    `ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS member_count INTEGER;`,
+    `ALTER TABLE source_groups ADD COLUMN IF NOT EXISTS last_scraped TIMESTAMPTZ;`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS ingestion_schedule_time TEXT DEFAULT '02:00';`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS ingestion_enabled BOOLEAN DEFAULT TRUE;`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS scan_duration_hours INTEGER DEFAULT 24;`,
+    `ALTER TABLE templates ADD COLUMN IF NOT EXISTS drive_attachments JSONB DEFAULT '[]'::jsonb;`,
+    `ALTER TABLE templates ADD COLUMN IF NOT EXISTS email_template_type TEXT DEFAULT 'body';`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS trial_started_at TIMESTAMPTZ;`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT;`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT FALSE;`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verify_token TEXT;`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verify_expires TIMESTAMPTZ;`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN DEFAULT FALSE;`
+  ];
+
+  for (const statement of alterStatements) {
+    await query(statement).catch(() => {});
+  }
 
   const sql = `
     -- Users table (for multi-user support)
