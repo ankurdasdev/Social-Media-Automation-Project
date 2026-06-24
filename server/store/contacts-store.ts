@@ -225,6 +225,13 @@ export async function updateContact(userId: string, id: string, data: Partial<Co
   const fields = Object.keys(data).filter(k => k !== 'id' && k !== 'user_id' && fieldMap[k]);
   if (fields.length === 0) return getContactById(userId, id);
 
+  if (fields.includes("cellColors")) {
+    const existing = await getContactById(userId, id);
+    if (existing && typeof data.cellColors === 'object') {
+      data.cellColors = { ...(existing.cellColors || {}), ...(data.cellColors as any) };
+    }
+  }
+
   const setClause = fields.map((f, i) => {
     const col = fieldMap[f];
     // JSONB fields need explicit cast

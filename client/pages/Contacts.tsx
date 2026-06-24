@@ -381,6 +381,39 @@ export default function Contacts() {
           });
         });
       }
+
+      setAiSearchResults((prev) => {
+        if (!prev) return prev;
+        return prev.map(contact => {
+          if (ids.includes(contact.id)) {
+            if (action === "color") return { ...contact, rowColor: payload };
+            if (action === "move") return { ...contact, sheetName: payload };
+            if (action === "reset_automation") return { 
+              ...contact, 
+              whatsappRun: false, emailRun: false, instagramRun: false,
+              whatsappCompleted: "No", emailCompleted: "No", instagramCompleted: "No",
+              status: "pending"
+            };
+            if (action === "smart_clear" && Array.isArray(payload)) {
+              let updated = { ...contact };
+              payload.forEach((field) => {
+                if (["whatsappRun", "emailRun", "instagramRun"].includes(field)) {
+                  (updated as any)[field] = false;
+                } else if (field === "salutation") {
+                  updated.salutationWA = "Hi";
+                  updated.salutationEmail = "Hi";
+                  updated.salutationIG = "Hi";
+                } else {
+                  (updated as any)[field] = "";
+                }
+              });
+              return updated;
+            }
+          }
+          return contact;
+        });
+      });
+
       return { previousContacts };
     },
     onError: (err: any, variables, context: any) => {
@@ -653,7 +686,29 @@ export default function Contacts() {
                 // Optimistic update
                 queryClient.setQueryData<Contact[]>(["contacts", userId], (old) => {
                   if (!old) return old;
-                  return old.map(c => c.id === id ? { ...c, ...data } : c);
+                  return old.map(c => {
+                    if (c.id === id) {
+                      const updated = { ...c, ...data };
+                      if (data.cellColors) {
+                        updated.cellColors = { ...(c.cellColors || {}), ...(data.cellColors as any) };
+                      }
+                      return updated;
+                    }
+                    return c;
+                  });
+                });
+                setAiSearchResults((prev) => {
+                  if (!prev) return prev;
+                  return prev.map(c => {
+                    if (c.id === id) {
+                      const updated = { ...c, ...data };
+                      if (data.cellColors) {
+                        updated.cellColors = { ...(c.cellColors || {}), ...(data.cellColors as any) };
+                      }
+                      return updated;
+                    }
+                    return c;
+                  });
                 });
                 
                 fetch(`/api/contacts/${id}?userId=${userId}`, {
