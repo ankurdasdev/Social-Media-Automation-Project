@@ -304,14 +304,7 @@ export default function Contacts() {
         } else if (action === "color" || action === "move") {
           let body: any;
           if (action === "color") {
-            const newCellColors: Record<string, string> = {};
-            columns.forEach(c => {
-              const colId = (c as any).id || (c as any).accessorKey;
-              if (colId && !['select', 'actions'].includes(colId)) {
-                newCellColors[colId] = payload === "transparent" ? "" : payload;
-              }
-            });
-            body = { cellColors: newCellColors, userId };
+            body = { rowColor: payload === "transparent" ? "" : payload, userId };
           } else {
             body = { sheetName: payload, userId };
           }
@@ -366,14 +359,7 @@ export default function Contacts() {
           return old.map(contact => {
             if (ids.includes(contact.id)) {
               if (action === "color") {
-                const newCellColors: Record<string, string> = { ...(contact.cellColors || {}) };
-                columns.forEach(c => {
-                  const colId = (c as any).id || (c as any).accessorKey;
-                  if (colId && !['select', 'actions'].includes(colId)) {
-                    newCellColors[colId] = payload === "transparent" ? "" : payload;
-                  }
-                });
-                return { ...contact, cellColors: newCellColors };
+                return { ...contact, rowColor: payload === "transparent" ? "" : payload };
               }
               if (action === "move") return { ...contact, sheetName: payload };
               if (action === "reset_automation") return { 
@@ -408,14 +394,7 @@ export default function Contacts() {
         return prev.map(contact => {
           if (ids.includes(contact.id)) {
             if (action === "color") {
-              const newCellColors: Record<string, string> = { ...(contact.cellColors || {}) };
-              columns.forEach(c => {
-                const colId = (c as any).id || (c as any).accessorKey;
-                if (colId && !['select', 'actions'].includes(colId)) {
-                  newCellColors[colId] = payload === "transparent" ? "" : payload;
-                }
-              });
-              return { ...contact, cellColors: newCellColors };
+              return { ...contact, rowColor: payload === "transparent" ? "" : payload };
             }
             if (action === "move") return { ...contact, sheetName: payload };
             if (action === "reset_automation") return { 
