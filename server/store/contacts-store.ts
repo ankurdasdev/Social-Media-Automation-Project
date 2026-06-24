@@ -221,21 +221,16 @@ export async function updateContact(userId: string, id: string, data: Partial<Co
   if (Array.isArray(data.templateSelectionGmail)) data.templateSelectionGmail = JSON.stringify(data.templateSelectionGmail);
   if (Array.isArray(data.templateSelectionIG)) data.templateSelectionIG = JSON.stringify(data.templateSelectionIG);
 
-  // Only include fields we have an explicit mapping for (ignore frontend-only fields)
   const fields = Object.keys(data).filter(k => k !== 'id' && k !== 'user_id' && fieldMap[k]);
   if (fields.length === 0) return getContactById(userId, id);
-
-  if (fields.includes("cellColors")) {
-    const existing = await getContactById(userId, id);
-    if (existing && typeof data.cellColors === 'object') {
-      data.cellColors = { ...(existing.cellColors || {}), ...(data.cellColors as any) };
-    }
-  }
 
   const setClause = fields.map((f, i) => {
     const col = fieldMap[f];
     // JSONB fields need explicit cast
     const isJsonb = ["drive_attachments_wa", "drive_attachments_email", "drive_attachments_ig", "unified_attachments", "contacted_dates", "contact_links", "cell_colors"].includes(col);
+    if (col === "cell_colors") {
+      return `${col} = COALESCE(${col}, '{}'::jsonb) || $${i + 3}::jsonb`;
+    }
     return `${col} = $${i + 3}${isJsonb ? "::jsonb" : ""}`;
   }).join(", ");
 

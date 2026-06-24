@@ -382,7 +382,7 @@ export default function Contacts() {
         });
       }
 
-      setAiSearchResults((prev) => {
+      setAISearchResults((prev) => {
         if (!prev) return prev;
         return prev.map(contact => {
           if (ids.includes(contact.id)) {
@@ -697,7 +697,7 @@ export default function Contacts() {
                     return c;
                   });
                 });
-                setAiSearchResults((prev) => {
+                setAISearchResults((prev) => {
                   if (!prev) return prev;
                   return prev.map(c => {
                     if (c.id === id) {
