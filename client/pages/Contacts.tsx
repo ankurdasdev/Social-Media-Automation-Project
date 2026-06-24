@@ -302,7 +302,19 @@ export default function Contacts() {
           const res = await fetch(`/api/contacts/${id}?userId=${userId}`, { method: "DELETE" });
           if (!res.ok) throw new Error("Delete failed");
         } else if (action === "color" || action === "move") {
-          const body = action === "color" ? { rowColor: payload, userId } : { sheetName: payload, userId };
+          let body: any;
+          if (action === "color") {
+            const newCellColors: Record<string, string> = {};
+            columns.forEach(c => {
+              const colId = (c as any).id || (c as any).accessorKey;
+              if (colId && !['select', 'actions'].includes(colId)) {
+                newCellColors[colId] = payload === "transparent" ? "" : payload;
+              }
+            });
+            body = { cellColors: newCellColors, userId };
+          } else {
+            body = { sheetName: payload, userId };
+          }
           const res = await fetch(`/api/contacts/${id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -353,7 +365,16 @@ export default function Contacts() {
           if (!old) return old;
           return old.map(contact => {
             if (ids.includes(contact.id)) {
-              if (action === "color") return { ...contact, rowColor: payload };
+              if (action === "color") {
+                const newCellColors: Record<string, string> = { ...(contact.cellColors || {}) };
+                columns.forEach(c => {
+                  const colId = (c as any).id || (c as any).accessorKey;
+                  if (colId && !['select', 'actions'].includes(colId)) {
+                    newCellColors[colId] = payload === "transparent" ? "" : payload;
+                  }
+                });
+                return { ...contact, cellColors: newCellColors };
+              }
               if (action === "move") return { ...contact, sheetName: payload };
               if (action === "reset_automation") return { 
                 ...contact, 
@@ -386,7 +407,16 @@ export default function Contacts() {
         if (!prev) return prev;
         return prev.map(contact => {
           if (ids.includes(contact.id)) {
-            if (action === "color") return { ...contact, rowColor: payload };
+            if (action === "color") {
+              const newCellColors: Record<string, string> = { ...(contact.cellColors || {}) };
+              columns.forEach(c => {
+                const colId = (c as any).id || (c as any).accessorKey;
+                if (colId && !['select', 'actions'].includes(colId)) {
+                  newCellColors[colId] = payload === "transparent" ? "" : payload;
+                }
+              });
+              return { ...contact, cellColors: newCellColors };
+            }
             if (action === "move") return { ...contact, sheetName: payload };
             if (action === "reset_automation") return { 
               ...contact, 
