@@ -101,6 +101,8 @@ const MemoizedTableCell = React.memo(({
   isPinned,
   isLastPinned,
   isSelected,
+  rColor,
+  isCustom,
   onContextMenu,
   onDragFillComplete
 }: any) => {
@@ -109,12 +111,17 @@ const MemoizedTableCell = React.memo(({
       id={`cell-${rowIndex}-${cellId}`}
       className={cn(
         "relative py-2 px-6 border-r border-border/10 last:border-r-0",
-        isPinned && "sticky z-[15] bg-background shadow-[2px_0_10px_-3px_rgba(0,0,0,0.3)]",
+        isPinned && "sticky z-[15] shadow-[2px_0_10px_-3px_rgba(0,0,0,0.3)]",
+        isPinned && !isCustom && !cColor && "bg-background",
         isPinned && isLastPinned && "border-r-[3px] border-r-border/50"
       )}
       style={{
-        backgroundColor: cColor ? (cColor.includes("gradient") ? undefined : cColor) : undefined,
-        background: cColor?.includes("gradient") ? cColor : undefined,
+        backgroundColor: cColor 
+          ? (cColor.includes("gradient") ? undefined : cColor) 
+          : (isPinned && isCustom && !rColor.includes("gradient") ? rColor : undefined),
+        background: cColor?.includes("gradient") 
+          ? cColor 
+          : (isPinned && isCustom && rColor.includes("gradient") ? rColor : undefined),
         minWidth: "max-content",
         left: isPinned ? `${cell.column.getStart("left")}px` : undefined,
       }}
@@ -185,7 +192,9 @@ const MemoizedTableRow = React.memo(({
         "table-row-smooth",
         "hover:bg-muted/25",
         row.index % 2 === 0 ? "bg-muted/20" : "bg-transparent",
-        isSelected && "!bg-primary/20 border-l-primary",
+        isSelected && !isCustom && "!bg-primary/20",
+        isSelected && isCustom && "brightness-110 shadow-inner",
+        isSelected && "border-l-primary",
         isCustom && "text-white dark:text-white" // Force text color to white for solid background readability
       )}
       style={{ 
@@ -219,6 +228,8 @@ const MemoizedTableRow = React.memo(({
             isPinned={cell.column.getIsPinned() === "left"}
             isLastPinned={cell.column.getIsLastColumn("left")}
             isSelected={isSelected}
+            rColor={rColor}
+            isCustom={isCustom}
             onContextMenu={onContextMenu}
             onDragFillComplete={onDragFillComplete}
           />
