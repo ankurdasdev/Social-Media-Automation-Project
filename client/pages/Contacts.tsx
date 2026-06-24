@@ -304,7 +304,11 @@ export default function Contacts() {
         } else if (action === "color" || action === "move") {
           let body: any;
           if (action === "color") {
-            body = { rowColor: payload === "transparent" ? "" : payload, userId };
+            body = { 
+              rowColor: payload === "transparent" ? "" : payload, 
+              cellColors: null, 
+              userId 
+            };
           } else {
             body = { sheetName: payload, userId };
           }
@@ -359,7 +363,11 @@ export default function Contacts() {
           return old.map(contact => {
             if (ids.includes(contact.id)) {
               if (action === "color") {
-                return { ...contact, rowColor: payload === "transparent" ? "" : payload };
+                return { 
+                  ...contact, 
+                  rowColor: payload === "transparent" ? "" : payload,
+                  cellColors: {}
+                };
               }
               if (action === "move") return { ...contact, sheetName: payload };
               if (action === "reset_automation") return { 
@@ -394,7 +402,11 @@ export default function Contacts() {
         return prev.map(contact => {
           if (ids.includes(contact.id)) {
             if (action === "color") {
-              return { ...contact, rowColor: payload === "transparent" ? "" : payload };
+              return { 
+                ...contact, 
+                rowColor: payload === "transparent" ? "" : payload,
+                cellColors: {} 
+              };
             }
             if (action === "move") return { ...contact, sheetName: payload };
             if (action === "reset_automation") return { 
