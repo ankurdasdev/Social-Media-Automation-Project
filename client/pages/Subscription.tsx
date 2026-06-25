@@ -281,14 +281,14 @@ export default function Subscription() {
       <div className="max-w-6xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
         {/* Header */}
         <div className="text-center space-y-4">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-pink-500/10 border border-pink-500/20">
-            <Sparkles className="w-4 h-4 text-pink-500 animate-pulse" />
-            <span className="text-[10px] font-black text-pink-500 uppercase tracking-[0.3em]">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
+            <Crown className="w-4 h-4 text-primary" />
+            <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">
               {subStatus?.isTrial ? `${subStatus.daysRemaining} Days Left in Trial` : subStatus?.isActive ? "Active Subscription" : "Choose Your Plan"}
             </span>
           </div>
           <h1 className="text-5xl md:text-6xl font-black tracking-tighter text-foreground">
-            Unlock <span className="bg-gradient-to-r from-pink-500 via-purple-500 to-orange-500 bg-clip-text text-transparent">CastHub Pro</span>
+            CastHub <span className="text-primary">Pro</span>
           </h1>
           <p className="text-muted-foreground font-medium max-w-lg mx-auto text-lg">
             Supercharge your casting outreach with automation, AI, and multi-platform messaging.

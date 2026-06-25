@@ -17,7 +17,7 @@ const VISION_MODEL = process.env.OPENROUTER_VISION_MODEL ?? "google/gemini-flash
 
 const client = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
-  apiKey: process.env.OPENROUTER_API_KEY ?? "",
+  apiKey: process.env.OPENROUTER_API_KEY || "dummy_key_to_prevent_startup_crash",
   defaultHeaders: {
     "HTTP-Referer": process.env.APP_URL ?? "http://localhost:8080",
     "X-Title": "CastHub Ingestion",

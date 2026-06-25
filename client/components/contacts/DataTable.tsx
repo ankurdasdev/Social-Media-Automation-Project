@@ -12,6 +12,17 @@ import {
 } from "@tanstack/react-table";
 import { createPortal } from "react-dom";
 
+class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error: any}> {
+  constructor(props: any) { super(props); this.state = { hasError: false, error: null }; }
+  static getDerivedStateFromError(error: any) { return { hasError: true, error }; }
+  componentDidCatch(error: any) { console.error("Caught by ErrorBoundary:", error); }
+  render() { 
+    if (this.state.hasError) return <div className="p-4 bg-red-500 text-white text-xs">{String(this.state.error)}</div>; 
+    return this.props.children; 
+  }
+}
+
+
 // ─── Module-level helpers (never recreated during render) ─────────────────────
 function getBorderColor(rColor: string): string {
   if (rColor === "yellow") return "#f59e0b";
@@ -706,16 +717,18 @@ export function DataTable<TData, TValue>({
         >
           <div className="px-4 py-2 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-1">Set Cell Color</div>
           <div className="outline-none">
-            <AdvancedColorPicker
-              color={ctxMenu.currentColor}
-              onChange={(color) => {
-                if (onUpdateContact) {
-                  onUpdateContact(ctxMenu.contactId, {
-                    cellColors: { [ctxMenu.cellId]: color === "transparent" ? "" : color }
-                  });
-                }
-              }}
-            />
+            <ErrorBoundary>
+              <AdvancedColorPicker
+                color={ctxMenu.currentColor}
+                onChange={(color) => {
+                  if (onUpdateContact) {
+                    onUpdateContact(ctxMenu.contactId, {
+                      cellColors: { [ctxMenu.cellId]: color === "transparent" ? "" : color }
+                    });
+                  }
+                }}
+              />
+            </ErrorBoundary>
           </div>
         </div>,
         document.body

@@ -503,17 +503,21 @@ export default function Analytics() {
         
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="space-y-2">
-            <h1 className="text-4xl font-black tracking-tighter text-foreground sm:text-5xl uppercase">
-              Analytics <span className="text-primary italic">Center</span>
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-black tracking-widest uppercase text-primary">
+              <BrainCircuit className="w-3 h-3" />
+              AI-Powered Analytics
+            </div>
+            <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground uppercase">
+              Analytics
             </h1>
-            <p className="text-muted-foreground font-bold tracking-widest uppercase text-[11px]">
-              AI-Powered Lead Conversion & Telemetry
+            <p className="text-muted-foreground text-sm font-medium">
+              Track your outreach performance across all channels.
             </p>
           </div>
           <Button 
             onClick={() => navigate("/contacts")}
-            className="h-12 px-6 rounded-2xl bg-foreground text-background hover:bg-foreground/90 font-black shadow-xl"
+            className="h-12 px-6 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black text-[10px] uppercase tracking-widest shadow-xl shadow-primary/20"
           >
             <Filter className="w-4 h-4 mr-2" /> GO TO CONTACTS
           </Button>
@@ -521,11 +525,11 @@ export default function Analytics() {
 
         {/* Dashboard Tabs Area */}
         <Tabs defaultValue="all" className="w-full">
-          <TabsList className="dark:bg-black/40 bg-muted border border-border/50 p-1 rounded-xl w-full justify-start h-12 overflow-x-auto">
-            <TabsTrigger value="all" className="rounded-lg font-black uppercase tracking-widest text-[10px] h-full px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Overview</TabsTrigger>
-            <TabsTrigger value="whatsapp" className="rounded-lg font-black uppercase tracking-widest text-[10px] h-full px-6 data-[state=active]:bg-emerald-500 data-[state=active]:text-white"><MessageCircle className="w-3 h-3 mr-2" /> WhatsApp</TabsTrigger>
-            <TabsTrigger value="email" className="rounded-lg font-black uppercase tracking-widest text-[10px] h-full px-6 data-[state=active]:bg-blue-500 data-[state=active]:text-white"><Mail className="w-3 h-3 mr-2" /> Email</TabsTrigger>
-            <TabsTrigger value="instagram" className="rounded-lg font-black uppercase tracking-widest text-[10px] h-full px-6 data-[state=active]:bg-pink-500 data-[state=active]:text-white"><Instagram className="w-3 h-3 mr-2" /> Instagram</TabsTrigger>
+          <TabsList className="bg-muted/50 border border-border/50 p-1.5 h-14 rounded-2xl w-full md:w-auto overflow-x-auto justify-start">
+            <TabsTrigger value="all" className="data-[state=active]:bg-background data-[state=active]:shadow-lg rounded-xl gap-2 h-11 px-6 font-bold transition-all text-[11px] uppercase tracking-wide">Overview</TabsTrigger>
+            <TabsTrigger value="whatsapp" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl gap-2 h-11 px-6 font-bold transition-all text-[11px] uppercase tracking-wide"><MessageCircle className="w-3.5 h-3.5" /> WhatsApp</TabsTrigger>
+            <TabsTrigger value="email" className="data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl gap-2 h-11 px-6 font-bold transition-all text-[11px] uppercase tracking-wide"><Mail className="w-3.5 h-3.5" /> Email</TabsTrigger>
+            <TabsTrigger value="instagram" className="data-[state=active]:bg-pink-500 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl gap-2 h-11 px-6 font-bold transition-all text-[11px] uppercase tracking-wide"><Instagram className="w-3.5 h-3.5" /> Instagram</TabsTrigger>
           </TabsList>
 
           <TabsContent value="all" className="mt-0 outline-none">

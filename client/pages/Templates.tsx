@@ -284,16 +284,20 @@ export default function Templates() {
   return (
     <AppLayout>
       <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-[calc(100vh-8rem)]">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-          <div className="space-y-1">
-            <h1 className="text-4xl font-black tracking-tighter text-foreground sm:text-5xl">
-              Template <span className="text-primary italic">Library</span>
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-black tracking-widest uppercase text-primary">
+              <FileText className="w-3 h-3" />
+              Template Library
+            </div>
+            <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground uppercase">
+              Templates
             </h1>
-            <p className="text-muted-foreground font-medium uppercase tracking-widest text-[10px]">
-              Architect and manage cross-platform outreach templates.
+            <p className="text-muted-foreground text-sm font-medium">
+              Create and manage message templates for all your outreach channels.
             </p>
           </div>
-          <Button onClick={handleCreateNew} className="h-12 px-6 rounded-xl font-black bg-foreground text-background hover:bg-foreground/90 gap-2 shadow-xl transition-all active:scale-95 shrink-0">
+          <Button onClick={handleCreateNew} className="h-14 px-8 rounded-[1.5rem] font-black bg-primary hover:bg-primary/90 text-white gap-2 shadow-xl shadow-primary/20 transition-all active:scale-95 shrink-0 text-[11px] uppercase tracking-widest">
             <Plus className="h-5 w-5" /> NEW TEMPLATE
           </Button>
         </div>

@@ -278,7 +278,7 @@ async function handleWhatsAppOutreach(userId: string, contact: Contact) {
       // - everything else → "document" (original quality, no compression)
       let mediaType: "image" | "video" | "audio" | "document" = "document";
       if (mimeType.startsWith("image/")) mediaType = "image";
-      else if (mimeType.startsWith("video/")) mediaType = "video";
+      else if (mimeType.startsWith("video/")) mediaType = "document"; // Force document to preserve HD quality
       else if (mimeType.startsWith("audio/")) mediaType = "audio";
 
       // Preserve the original extension when a custom name is used
@@ -481,7 +481,7 @@ async function handleEmailOutreach(userId: string, contact: Contact) {
 
   // 2. Compose Email (Custom Message OR Body Template + Footer)
   const templateIds = Array.isArray(contact.templateSelectionGmail) ? contact.templateSelectionGmail : [];
-  const useCustomMessage = !!(contact.hasCustomMessageEmail && contact.editableMessageGmail);
+  const useCustomMessage = !!contact.editableMessageGmail?.trim();
   
   if (templateIds.length > 0 || useCustomMessage) {
     // Fetch all selected templates

@@ -438,11 +438,15 @@ export default function Controller() {
       <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
         {/* Header */}
         <div id="tutorial-controller-welcome" className="flex flex-col gap-6">
-          <div className="space-y-2">
-            <h1 className="text-4xl font-black tracking-tighter text-foreground sm:text-5xl">
-              Source <span className="text-primary italic">Manager</span>
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-black tracking-widest uppercase text-primary">
+              <Radio className="w-3 h-3" />
+              Source Manager
+            </div>
+            <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground uppercase">
+              Controller
             </h1>
-            <p className="text-muted-foreground font-medium max-w-lg">
+            <p className="text-muted-foreground text-sm font-medium">
               Manage your message sources from WhatsApp and Instagram.
             </p>
           </div>
@@ -493,7 +497,7 @@ export default function Controller() {
             <Button 
                 id="tutorial-controller-add"
                 onClick={openAddDialog} 
-                className="h-12 px-6 rounded-xl font-black bg-foreground text-background hover:bg-foreground/90 gap-2 shadow-xl transition-all active:scale-95"
+                className="h-12 px-6 rounded-[1.5rem] font-black bg-primary hover:bg-primary/90 text-white gap-2 shadow-xl shadow-primary/20 transition-all active:scale-95"
             >
               <Plus className="w-5 h-5" />
               ADD NEW SOURCE

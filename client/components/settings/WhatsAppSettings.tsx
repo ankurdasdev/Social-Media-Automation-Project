@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Loader2, QrCode, LogOut, CheckCircle2, RefreshCw, MessageSquare, Zap, ShieldCheck, AlertTriangle, BookOpen, X, ChevronRight, Smartphone } from "lucide-react";
+import { Loader2, QrCode, LogOut, CheckCircle2, RefreshCw, MessageSquare, Zap, ShieldCheck, AlertTriangle, BookOpen, X, Smartphone, Users, BarChart3, LayoutDashboard } from "lucide-react";
 import { WhatsAppStatusResponse, WhatsAppQRResponse } from "@shared/api";
 import { toast } from "sonner";
 import { getOrCreateUserId, cn } from "@/lib/utils";
@@ -21,6 +23,7 @@ export function WhatsAppSettings() {
   const [syncing, setSyncing] = useState(false);
   const [syncDone, setSyncDone] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
+  const [warningAccepted, setWarningAccepted] = useState(false);
   const hasSyncedRef = React.useRef(false);
 
   const autoSyncGroups = async (userId: string) => {
@@ -33,7 +36,6 @@ export function WhatsAppSettings() {
         body: JSON.stringify({ userId }),
       });
       setSyncDone(true);
-      toast.success("WhatsApp groups synced successfully!");
     } catch (err) {
       toast.error("Group sync failed. You can retry from the dashboard.");
     } finally {
@@ -50,7 +52,6 @@ export function WhatsAppSettings() {
       if (data.isConnected) {
         setQrCode(null);
         setConnecting(false);
-        // Auto-sync groups exactly once when connection is first detected
         if (!hasSyncedRef.current) {
           hasSyncedRef.current = true;
           autoSyncGroups(userId);
@@ -114,6 +115,7 @@ export function WhatsAppSettings() {
       setQrCode(null);
       hasSyncedRef.current = false;
       setSyncDone(false);
+      setWarningAccepted(false);
       toast.success("WhatsApp disconnected.");
     } catch (err) {
       toast.error("Failed to disconnect.");
@@ -145,72 +147,68 @@ export function WhatsAppSettings() {
   const isConnected = status?.isConnected;
   const instance = status?.instance;
 
+  // ── What You Will/Did Unlock cards ────────────────────────────────────────
+  const unlockCards = [
+    {
+      icon: MessageSquare,
+      color: "text-emerald-400",
+      bg: "bg-emerald-500/10 border-emerald-500/20",
+      title: "Send Personalised WhatsApp Campaigns",
+      sub: "No More Repetition With Your Templates, All Messages With A Click Of One Button",
+    },
+    {
+      icon: Users,
+      color: "text-blue-400",
+      bg: "bg-blue-500/10 border-blue-500/20",
+      title: "Reach Hundreds Of Contacts",
+      sub: "Automated Mass WhatsApp Outreach",
+    },
+    {
+      icon: LayoutDashboard,
+      color: "text-purple-400",
+      bg: "bg-purple-500/10 border-purple-500/20",
+      title: "Manage Messages From One Dashboard",
+      sub: "Simple. Quick. Efficient. Effective. Increase Your Chances.",
+    },
+    {
+      icon: BarChart3,
+      color: "text-orange-400",
+      bg: "bg-orange-500/10 border-orange-500/20",
+      title: "Track Campaign Performance",
+      sub: "So You Can Decide What To Do Next",
+    },
+  ];
+
+  // ── Setup Guide Steps ──────────────────────────────────────────────────────
   const setupSteps = [
     {
       icon: Smartphone,
       color: "text-emerald-400",
       bg: "bg-emerald-500/10 border-emerald-500/20",
       num: "01",
-      title: "Open WhatsApp",
-      desc: "Open WhatsApp on your mobile phone.",
+      title: "Generate QR Code",
+      desc: "Enter your WhatsApp number and generate QR code.",
     },
     {
       icon: MessageSquare,
       color: "text-blue-400",
       bg: "bg-blue-500/10 border-blue-500/20",
       num: "02",
-      title: "Go to Linked Devices",
-      desc: "Tap the menu (three dots) or settings on your phone, then select 'Linked Devices'.",
+      title: "Scan Using WhatsApp",
+      desc: "Open WhatsApp. Tap the menu (three dots) or settings on your phone. Select \"Linked Devices\".",
     },
     {
       icon: QrCode,
       color: "text-purple-400",
       bg: "bg-purple-500/10 border-purple-500/20",
       num: "03",
-      title: "Link a Device",
-      desc: "Tap 'Link a Device'. Point your phone to the screen and scan the QR code that is generated after you enter your mobile number here.",
-    },
-    {
-      icon: AlertTriangle,
-      color: "text-amber-400",
-      bg: "bg-amber-500/10 border-amber-500/20",
-      num: "04",
-      title: "Limitations",
-      desc: "Session Limitation: If you log out from your phone or the session expires, you will need to come back and scan a new QR code to reconnect.",
+      title: "Link A Device and Return To CastHub",
+      desc: "Tap \"Link A Device\". Scan the QR code generated. Your WhatsApp account will be connected automatically.",
     },
   ];
 
   return (
     <div id="tutorial-settings-whatsapp" className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* Top Banner - Sync Progress */}
-      {isConnected && (syncing || syncDone) && (
-        <div className={cn(
-          "flex items-center justify-between px-6 py-3 rounded-2xl border backdrop-blur-md transition-all duration-500 animate-in slide-in-from-top",
-          syncing ? "bg-emerald-500/10 border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]" : "bg-blue-500/10 border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.1)]"
-        )}>
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              {syncing ? (
-                <div className="h-5 w-5 rounded-full border-2 border-emerald-500/20 border-t-emerald-500 animate-spin" />
-              ) : (
-                <CheckCircle2 className="h-5 w-5 text-blue-500" />
-              )}
-            </div>
-            <div className="flex items-center gap-3">
-              <p className={cn(
-                "text-[10px] font-black uppercase tracking-[0.2em]",
-                syncing ? "text-emerald-500" : "text-blue-500"
-              )}>
-                {syncing ? "WHATSAPP SYNC IN PROGRESS" : "SYNC COMPLETED"}
-              </p>
-              <span className="hidden md:block w-1 h-1 rounded-full bg-white/20" />
-              <p className="hidden md:block text-[9px] font-bold text-muted-foreground/60 uppercase tracking-widest">
-                {syncing ? "Fetching all your WhatsApp groups — this takes just a moment..." : "All groups have been successfully synchronized to your dashboard."}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
 
       <div className="relative overflow-hidden glass-card border-white/10 rounded-[2.5rem] shadow-2xl bg-background/60">
         {/* Decorative ambient lighting */}
@@ -218,268 +216,247 @@ export function WhatsAppSettings() {
         <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-primary/5 rounded-full blur-[100px] -z-10" />
 
         <div className="flex flex-col lg:flex-row min-h-[600px] overflow-hidden">
-           {/* Left Section - Identity & Status */}
-           <div className="p-8 md:p-12 lg:w-[45%] shrink-0 flex flex-col border-b lg:border-b-0 lg:border-r border-white/5 relative">
-              <div className="mb-12">
-                 <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-lg shadow-emerald-500/5 group hover:scale-110 transition-transform duration-500">
-                    <MessageSquare className="h-8 w-8 text-emerald-500" />
-                 </div>
+          {/* ── Left Section ── */}
+          <div className="p-8 md:p-12 lg:w-[45%] shrink-0 flex flex-col border-b lg:border-b-0 lg:border-r border-white/5 relative">
+            <div className="mb-10">
+              <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-lg shadow-emerald-500/5 group hover:scale-110 transition-transform duration-500">
+                {/* WhatsApp SVG logo */}
+                <svg viewBox="0 0 32 32" className="h-8 w-8" fill="none">
+                  <circle cx="16" cy="16" r="16" fill="#25D366"/>
+                  <path d="M23.6 8.4A10.9 10.9 0 0 0 16 5.5C10.2 5.5 5.5 10.2 5.5 16c0 1.9.5 3.7 1.4 5.3L5.5 26.5l5.4-1.4a10.9 10.9 0 0 0 5.1 1.3c5.8 0 10.5-4.7 10.5-10.5 0-2.8-1.1-5.4-3-7.5zm-7.6 16.1a9 9 0 0 1-4.6-1.3l-.3-.2-3.2.8.9-3.1-.2-.3a9 9 0 0 1-1.4-4.9c0-5 4-9 9-9a9 9 0 0 1 6.3 2.6A9 9 0 0 1 25 16a9 9 0 0 1-9 8.5zm5-6.7c-.3-.1-1.6-.8-1.9-.9-.3-.1-.5-.1-.7.1-.2.3-.8.9-.9 1.1-.2.2-.3.2-.6.1a7.3 7.3 0 0 1-2.1-1.3 7.8 7.8 0 0 1-1.5-1.8c-.2-.3 0-.5.1-.6l.5-.5.3-.5.1-.5-.9-2.2c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4a3.6 3.6 0 0 0-1.1 2.6c0 1.5 1.1 3 1.3 3.2.1.2 2.2 3.4 5.4 4.7.8.3 1.4.5 1.8.6.8.2 1.5.2 2 .1.6-.1 1.9-.8 2.2-1.5.3-.7.3-1.3.2-1.5-.1-.1-.3-.2-.6-.3z" fill="#fff"/>
+                </svg>
+              </div>
+            </div>
+
+            <div className="flex-1 space-y-8 relative">
+              <div className="flex flex-col gap-3">
+                <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground uppercase leading-none">
+                  CONNECT<br/>
+                  <span className="text-emerald-500 drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]">WHATSAPP</span>
+                </h2>
+                <p className="text-muted-foreground/70 text-sm font-medium leading-relaxed max-w-sm">
+                  Send personalised WhatsApp campaigns at scale.
+                </p>
+
+                {isConnected && (
+                  <div className="mt-2 px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 w-fit flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    <span className="text-[11px] font-black text-emerald-500 uppercase tracking-[0.1em]">CONNECTED</span>
+                  </div>
+                )}
               </div>
 
-              <div className="flex-1 space-y-10 relative">
-               <div className="flex flex-col gap-2">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 w-fit">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em]">Live Connection</span>
-                  </div>
-                  
-                  <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground uppercase leading-none whitespace-nowrap">
-                    WHATSAPP<br/>
-                    <span className="text-emerald-500 drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]">CONNECTION</span>
-                  </h2>
-
-                  {isConnected && (
-                    <div className="mt-4 px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 w-fit flex items-center gap-2">
-                       <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                       <span className="text-[11px] font-black text-emerald-500 uppercase tracking-[0.1em]">SYSTEM ACTIVE</span>
-                    </div>
-                  )}
-               </div>
-
-               <p className="text-muted-foreground/60 text-base font-medium leading-relaxed max-w-sm pt-4">
-                  Connect your WhatsApp account to enable automated messaging and lead management. Scale your outreach with our automated system.
-               </p>
-
-               <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 pt-8">
-                  <div className="flex flex-col gap-3 group p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-emerald-500/20 transition-all">
-                     <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                        <MessageSquare className="h-5 w-5 text-emerald-500" />
-                     </div>
-                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-foreground">Messaging Status</p>
-                        <p className="text-xs text-muted-foreground font-bold mt-1">Ready for Dispatch</p>
-                     </div>
-                  </div>
-                  <div className="flex flex-col gap-3 group p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-blue-500/20 transition-all">
-                     <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                        <ShieldCheck className="h-5 w-5 text-blue-500" />
-                     </div>
-                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-foreground">Security Layer</p>
-                        <p className="text-xs text-muted-foreground font-bold mt-1">AES-256 Encrypted</p>
-                     </div>
-                  </div>
-               </div>
-            </div>
-         </div>
-
-         {/* Right Section - Interaction Area */}
-            <div className="p-8 md:p-10 flex-1 flex flex-col justify-center relative bg-muted/20 backdrop-blur-sm overflow-hidden">
-               {isConnected ? (
-                 <div className="space-y-8 animate-in zoom-in-95 duration-700 max-w-2xl mx-auto w-full">
-                   <div className="relative group">
-                      {/* Cyber Card Background */}
-                      <div className="absolute -inset-0.5 bg-gradient-to-br from-emerald-500/20 to-transparent rounded-[3rem] blur-2xl opacity-30 group-hover:opacity-60 transition duration-1000" />
-                      
-                      <div className="relative p-8 md:p-12 rounded-[3.5rem] bg-muted/80 border border-border/50 overflow-hidden">
-                         {/* Status Grid Overlay */}
-                         <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[radial-gradient(circle_at_2px_2px,#fff_1px,transparent_0)] bg-[size:32px_32px]" />
-                         
-                         <div className="flex flex-col gap-10 relative z-10">
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 w-full min-w-0">
-                               <div className="flex items-center gap-4 min-w-0">
-                                  <div className="w-16 h-16 rounded-2.5xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.1)] shrink-0">
-                                     <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center">
-                                        <CheckCircle2 className="h-4 w-4 text-black" strokeWidth={3} />
-                                     </div>
-                                  </div>
-                                  <div className="min-w-0">
-                                     <p className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em] whitespace-nowrap truncate">Protocol :: Online</p>
-                                     <h4 className="text-xl md:text-2xl font-black text-foreground tracking-tighter uppercase leading-none whitespace-nowrap truncate">AUTHENTICATED</h4>
-                                  </div>
-                               </div>
-                               
-                               <Button
-                                  variant="ghost"
-                                  onClick={handleDisconnect}
-                                  className="h-12 px-6 rounded-xl bg-rose-500/5 border border-rose-500/10 hover:bg-rose-500/10 hover:border-rose-500/20 hover:text-rose-500 text-rose-500/60 font-black text-[10px] uppercase tracking-widest transition-all group shrink-0"
-                               >
-                                  <LogOut className="h-4 w-4 mr-2 shrink-0" /> <span className="whitespace-nowrap">DISCONNECT</span>
-                               </Button>
-                            </div>
-
-                            <div className="space-y-4 p-8 rounded-[2.5rem] bg-white/[0.02] border border-white/5">
-                               <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest text-center">Active Mobile Instance</p>
-                               <div className="text-xl sm:text-2xl md:text-4xl font-black tracking-tight text-center text-foreground py-2 break-all max-w-full px-2">
-                                  {instance?.instanceName.split('_')[1] || '916200469935'}
-                               </div>
-                               <div className="h-px w-12 bg-emerald-500/20 mx-auto" />
-                               <p className="text-[10px] font-black text-emerald-500/40 uppercase tracking-widest text-center truncate max-w-full px-2">
-                                  ID: {instance?.instanceName || 'W_916200469935'}
-                               </p>
-                            </div>
-                         </div>
+              {/* Unlock cards */}
+              <div className="space-y-3 pt-2">
+                <p className="text-[10px] font-black text-muted-foreground/50 uppercase tracking-[0.25em]">
+                  {isConnected ? "What You Unlocked" : "What You Will Unlock"}
+                </p>
+                <div className="space-y-2">
+                  {unlockCards.map((card, i) => (
+                    <div key={i} className={cn("flex items-start gap-3 p-3 rounded-2xl border transition-all", card.bg)}>
+                      <div className={cn("w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5", card.bg)}>
+                        <card.icon className={cn("w-4 h-4", card.color)} />
                       </div>
-                   </div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-black text-foreground uppercase tracking-wide leading-tight">{card.title}</p>
+                        <p className="text-[10px] text-muted-foreground/60 mt-0.5 leading-snug">{card.sub}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-xl mx-auto w-full">
-                     <div className="p-6 rounded-3xl bg-muted/40 border border-border/50 flex items-center justify-between group cursor-default">
-                        <div className="space-y-1">
-                           <p className="text-[9px] font-black text-emerald-500/50 uppercase tracking-widest">MESSAGE PROTOCOL</p>
-                           <p className="text-xs font-black text-foreground">Multi-Session V2.0</p>
-                        </div>
-                        <Zap className="h-4 w-4 text-emerald-500/20 group-hover:text-emerald-500 transition-colors" />
-                     </div>
-                     <div className="p-6 rounded-3xl bg-muted/40 border border-border/50 flex items-center justify-between group cursor-default">
-                        <div className="space-y-1">
-                           <p className="text-[9px] font-black text-blue-500/50 uppercase tracking-widest">CONNECTION STATUS</p>
-                           <p className="text-xs font-black text-foreground">Health State :: Optimal</p>
-                        </div>
-                        <ShieldCheck className="h-4 w-4 text-blue-500/20 group-hover:text-blue-500 transition-colors" />
-                     </div>
+          {/* ── Right Section ── */}
+          <div className="p-8 md:p-10 flex-1 flex flex-col justify-center relative bg-muted/20 backdrop-blur-sm overflow-hidden">
+            {isConnected ? (
+              /* ── Connected State ── */
+              <div className="space-y-6 animate-in zoom-in-95 duration-700 max-w-xl mx-auto w-full">
+                <div className="relative group">
+                  <div className="absolute -inset-0.5 bg-gradient-to-br from-emerald-500/20 to-transparent rounded-[3rem] blur-2xl opacity-30 group-hover:opacity-60 transition duration-1000" />
+
+                  <div className="relative p-8 md:p-10 rounded-[3rem] bg-muted/80 border border-border/50 overflow-hidden space-y-8">
+                    <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[radial-gradient(circle_at_2px_2px,#fff_1px,transparent_0)] bg-[size:32px_32px]" />
+
+                    {/* Tick + title */}
+                    <div className="flex items-center gap-4 relative z-10">
+                      <div className="w-14 h-14 rounded-2xl bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/30 shrink-0">
+                        <CheckCircle2 className="h-7 w-7 text-white" strokeWidth={2.5} />
+                      </div>
+                      <div>
+                        <h4 className="text-xl font-black text-foreground tracking-tighter uppercase leading-none">CONNECTED</h4>
+                        <p className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em] mt-1">WhatsApp Active</p>
+                      </div>
+                    </div>
+
+                    {/* Account details */}
+                    <div className="space-y-3 p-6 rounded-[2rem] bg-white/[0.02] border border-white/5 relative z-10">
+                      <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest text-center">Connected Mobile Number</p>
+                      <div className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-center text-foreground break-all max-w-full px-2">
+                        {instance?.instanceName.split('_')[1] || '916200469935'}
+                      </div>
+                      <div className="h-px w-12 bg-emerald-500/20 mx-auto" />
+                      <p className="text-[10px] font-black text-emerald-500/40 uppercase tracking-widest text-center truncate max-w-full px-2">
+                        ID: {instance?.instanceName || 'W_916200469935'}
+                      </p>
+                    </div>
+
+                    {/* Disconnect at bottom */}
+                    <div className="relative z-10">
+                      <Button
+                        variant="ghost"
+                        onClick={handleDisconnect}
+                        className="h-12 w-full rounded-xl bg-rose-500/5 border border-rose-500/10 hover:bg-rose-500/10 hover:border-rose-500/30 hover:text-rose-400 text-rose-500/50 font-black text-[10px] uppercase tracking-widest transition-all"
+                      >
+                        <LogOut className="h-4 w-4 mr-2" /> DISCONNECT
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              ) : qrCode ? (
-                <div className="flex flex-col items-center justify-center space-y-10 animate-in zoom-in-95 duration-500">
-                   <div className="text-center space-y-4">
-                     <h3 className="text-3xl font-black tracking-tighter">WHATSAPP <span className="text-primary italic">LINK</span></h3>
-                     <p className="text-sm font-medium text-muted-foreground max-w-sm mx-auto leading-relaxed">
-                       Scan the QR code below using your WhatsApp app to connect.
-                     </p>
-                   </div>
-
-                   <div className="relative group p-10 bg-white rounded-[3rem] shadow-2xl shadow-emerald-500/30 ring-[12px] ring-emerald-500/5 transition-all hover:scale-[1.02] active:scale-95 cursor-none">
-                     <img
-                       src={qrCode}
-                       alt="WhatsApp QR Code"
-                       className="w-64 h-64 grayscale group-hover:grayscale-0 transition-all duration-700"
-                     />
-                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity">
-                        <div className="w-16 h-16 rounded-full bg-emerald-500/20 backdrop-blur-md flex items-center justify-center animate-ping">
-                           <QrCode className="h-8 w-8 text-emerald-500" />
-                        </div>
-                     </div>
-                     <Button
-                       size="icon"
-                       variant="secondary"
-                       className="absolute -top-4 -right-4 h-12 w-12 rounded-2xl shadow-2xl border border-white/20 bg-background/80 backdrop-blur-xl hover:bg-background transition-all"
-                       onClick={handleRefreshQR}
-                     >
-                       <RefreshCw className="h-5 w-5 text-primary" />
-                     </Button>
-                   </div>
-
-                   <div className="flex flex-col items-center gap-6">
-                     <div className="flex items-center gap-3 px-6 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[10px] font-black uppercase tracking-[0.2em] animate-pulse">
-                       <Loader2 className="h-4 w-4 animate-spin" />
-                       WAITING FOR ENCRYPTION KEY...
-                     </div>
-                     <Button variant="ghost" onClick={() => { setQrCode(null); setConnecting(false); }} className="text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-all">
-                       TERMINATE CONNECTION ATTEMPT
-                     </Button>
-                   </div>
+              </div>
+            ) : qrCode ? (
+              /* ── QR Code State ── */
+              <div className="flex flex-col items-center justify-center space-y-8 animate-in zoom-in-95 duration-500">
+                <div className="text-center space-y-3">
+                  <h3 className="text-3xl font-black tracking-tighter">CONNECT <span className="text-emerald-500 italic">WHATSAPP</span></h3>
+                  <p className="text-sm font-medium text-muted-foreground max-w-sm mx-auto leading-relaxed">
+                    Follow the setup instructions to connect WhatsApp. Once connected you will be able to send and manage messages from your number.
+                  </p>
                 </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center space-y-12 text-center animate-in fade-in duration-700">
-                  <div className="relative">
-                     <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full animate-pulse-slow" />
-                     <div className="relative h-28 w-28 bg-muted/40 backdrop-blur-xl rounded-[2.5rem] flex items-center justify-center border border-white/10 shadow-2xl group transition-all hover:rotate-12 cursor-pointer">
-                       <QrCode className="h-12 w-12 text-muted-foreground group-hover:text-primary transition-colors" />
-                     </div>
-                  </div>
 
-                  <div className="space-y-4">
-                    <h3 className="text-4xl font-black tracking-tighter">CONNECTION <span className="text-primary italic">OFFLINE</span></h3>
-                    <p className="text-sm font-medium text-muted-foreground max-w-sm mx-auto leading-relaxed">
-                      Connect your WhatsApp account. Enter your mobile number to generate a QR code.
+                <div className="relative group p-10 bg-white rounded-[3rem] shadow-2xl shadow-emerald-500/30 ring-[12px] ring-emerald-500/5 transition-all hover:scale-[1.02]">
+                  <img
+                    src={qrCode}
+                    alt="WhatsApp QR Code"
+                    className="w-64 h-64 grayscale group-hover:grayscale-0 transition-all duration-700"
+                  />
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    className="absolute -top-4 -right-4 h-12 w-12 rounded-2xl shadow-2xl border border-white/20 bg-background/80 backdrop-blur-xl hover:bg-background transition-all"
+                    onClick={handleRefreshQR}
+                  >
+                    <RefreshCw className="h-5 w-5 text-primary" />
+                  </Button>
+                </div>
+
+                <div className="flex flex-col items-center gap-4">
+                  <div className="flex items-center gap-3 px-6 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[10px] font-black uppercase tracking-[0.2em] animate-pulse">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    WAITING FOR SCAN...
+                  </div>
+                  <Button
+                    variant="ghost"
+                    onClick={() => { setQrCode(null); setConnecting(false); }}
+                    className="text-[10px] font-black uppercase tracking-widest text-rose-500/60 hover:text-rose-500 transition-all"
+                  >
+                    CANCEL
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              /* ── Not Connected State ── */
+              <div className="flex flex-col items-center justify-center space-y-8 text-center animate-in fade-in duration-700 max-w-md mx-auto w-full">
+
+                <div className="relative">
+                  <div className="absolute inset-0 bg-emerald-500/10 blur-3xl rounded-full" />
+                  <div className="relative h-24 w-24 bg-muted/40 backdrop-blur-xl rounded-[2rem] flex items-center justify-center border border-white/10 shadow-2xl">
+                    <QrCode className="h-10 w-10 text-muted-foreground" />
+                  </div>
+                </div>
+
+                {/* Setup Guide button (no blinker) */}
+                <div className="flex items-center justify-between gap-4 flex-wrap w-full">
+                  <div className="text-left">
+                    <h3 className="text-lg font-black text-foreground uppercase tracking-tight">Connect WhatsApp</h3>
+                    <p className="text-xs text-muted-foreground/60 mt-0.5">
+                      Follow the setup instructions to connect WhatsApp. Once connected you will be able to send and manage messages from your number.
                     </p>
                   </div>
+                  <button
+                    onClick={() => setGuideOpen(true)}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-2xl border font-black text-[10px] uppercase tracking-widest transition-all bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 hover:scale-105"
+                  >
+                    <BookOpen className="w-3.5 h-3.5" />
+                    Setup Guide
+                  </button>
+                </div>
 
-                  {/* ── GUIDE BUTTON ── */}
-                  <div className="flex items-center justify-between gap-4 flex-wrap w-full max-w-md mx-auto animate-in fade-in">
-                    <div className="text-left">
-                      <h3 className="text-lg font-black text-foreground uppercase tracking-tight">Connect Your Account</h3>
-                      <p className="text-xs text-muted-foreground/60 mt-0.5">Need help connecting?</p>
-                    </div>
-                    <button
-                      onClick={() => setGuideOpen(true)}
-                      className={cn(
-                        "relative flex items-center gap-2 px-4 py-2.5 rounded-2xl border font-black text-[10px] uppercase tracking-widest transition-all",
-                        "bg-gradient-to-r from-emerald-500/10 to-blue-500/10 border-emerald-500/30 text-emerald-400",
-                        "hover:from-emerald-500/20 hover:to-blue-500/20 hover:border-emerald-500/50 hover:scale-105",
-                        "animate-pulse shadow-lg shadow-emerald-500/10"
-                      )}
-                    >
-                      <BookOpen className="w-3.5 h-3.5" />
-                      Setup Guide
-                      <span className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-emerald-500 rounded-full animate-ping" />
-                      <span className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-emerald-500 rounded-full" />
-                    </button>
-                  </div>
-
-                  {/* Pre-Connection Warning & Steps */}
-                  <div className="max-w-md mx-auto w-full space-y-4 text-left p-6 rounded-2xl bg-emerald-500/5 border border-emerald-500/20">
-                    <div className="flex gap-3">
-                      <AlertTriangle className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
-                      <div className="space-y-2">
-                        <h4 className="text-xs font-black uppercase tracking-widest text-emerald-500">Connection Steps & Limitations</h4>
-                        <div className="text-xs text-muted-foreground font-medium leading-relaxed space-y-2">
-                          <p>1. Enter your mobile number below (with country code, e.g., 919876543210).</p>
-                          <p>2. A QR code will be generated. Open WhatsApp on your phone, go to <strong>Linked Devices</strong>, and scan the QR code.</p>
-                          <p>3. <strong className="text-foreground">Session limitation:</strong> If you log out from your phone or the session expires, you will need to come back and scan a new QR code to reconnect.</p>
-                        </div>
-                      </div>
+                {/* Before Connecting Warning Box */}
+                <div className="w-full space-y-4 text-left p-5 rounded-2xl bg-amber-500/5 border border-amber-500/20">
+                  <div className="flex gap-3">
+                    <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="text-xs font-black uppercase tracking-widest text-amber-500">⚠ Before Connecting WhatsApp</h4>
                     </div>
                   </div>
-
-                  <div className="w-full max-w-md space-y-6">
-                     <div className="relative group w-full max-w-sm mx-auto">
-                        <div className="absolute -inset-1 bg-gradient-to-tr from-primary/30 to-emerald-500/30 rounded-[1.5rem] blur-lg opacity-30 group-focus-within:opacity-100 transition-all duration-700" />
-                        <div className="absolute left-6 top-1/2 -translate-y-1/2 text-primary font-black text-xl opacity-30 group-focus-within:opacity-100 transition-opacity z-10">+</div>
-                        <Input
-                          placeholder="E.g. 919876543210"
-                          value={mobileNumber}
-                          onChange={(e) => setMobileNumber(e.target.value)}
-                          className="h-20 pl-14 rounded-[1.5rem] bg-muted/60 border-border/50 focus:bg-background focus:ring-primary text-center text-3xl font-black tracking-[0.1em] shadow-inner transition-all relative z-0"
-                        />
-                     </div>
-                     <Button
-                       onClick={handleConnect}
-                       disabled={connecting}
-                       className="h-20 w-full bg-foreground text-background hover:bg-foreground/90 rounded-[1.5rem] text-lg font-black tracking-widest shadow-2xl transition-all active:scale-[0.98] group relative overflow-hidden"
-                     >
-                       {connecting ? (
-                         <>
-                           <Loader2 className="h-6 w-6 mr-4 animate-spin" />
-                           GENERATING QR CODE...
-                         </>
-                       ) : (
-                         <>
-                           <Zap className="h-6 w-6 mr-4 fill-background group-hover:animate-pulse" />
-                           CONNECT WHATSAPP
-                         </>
-                       )}
-                     </Button>
+                  <div className="text-xs text-muted-foreground font-medium leading-relaxed space-y-1.5 pl-8">
+                    <p>WhatsApp controls its own platform and policies.</p>
+                    <p>If your WhatsApp session expires or you log out on your phone, you'll need to reconnect by scanning a new QR code.</p>
+                    <p>CastHub cannot control WhatsApp account restrictions or policy decisions made by Meta.</p>
+                  </div>
+                  <div className="flex items-center gap-3 pl-8 pt-1">
+                    <Checkbox
+                      id="wa-understand"
+                      checked={warningAccepted}
+                      onCheckedChange={(c) => setWarningAccepted(!!c)}
+                    />
+                    <Label htmlFor="wa-understand" className="text-xs text-muted-foreground font-medium cursor-pointer">
+                      I understand
+                    </Label>
                   </div>
                 </div>
-              )}
-           </div>
+
+                {/* Input + Button (shown when checkbox accepted) */}
+                {warningAccepted && (
+                  <div className="w-full space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <div className="relative group w-full">
+                      <div className="absolute -inset-1 bg-gradient-to-tr from-primary/30 to-emerald-500/30 rounded-[1.5rem] blur-lg opacity-30 group-focus-within:opacity-100 transition-all duration-700" />
+                      <Input
+                        placeholder="Enter the WhatsApp number you want to use for outreach. E.g. 919876543210"
+                        value={mobileNumber}
+                        onChange={(e) => setMobileNumber(e.target.value)}
+                        className="h-16 px-5 rounded-[1.5rem] bg-muted/60 border-border/50 focus:bg-background focus:ring-primary text-sm font-bold shadow-inner transition-all relative z-0"
+                      />
+                    </div>
+                    <Button
+                      onClick={handleConnect}
+                      disabled={connecting}
+                      className="h-16 w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-[1.5rem] text-sm font-black tracking-widest shadow-2xl shadow-emerald-500/20 transition-all active:scale-[0.98] group relative overflow-hidden"
+                    >
+                      {connecting ? (
+                        <>
+                          <Loader2 className="h-5 w-5 mr-3 animate-spin" />
+                          GENERATING QR CODE...
+                        </>
+                      ) : (
+                        <>
+                          <QrCode className="h-5 w-5 mr-3" />
+                          GENERATE QR CODE
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* ── SETUP GUIDE DIALOG ── */}
       <Dialog open={guideOpen} onOpenChange={setGuideOpen}>
         <DialogContent className="max-w-2xl w-[95vw] p-0 gap-0 glass-card border-white/10 rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-          {/* Fixed Header */}
           <DialogHeader className="shrink-0 px-6 pt-6 pb-4 border-b border-white/5 bg-background/80 backdrop-blur-xl">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500/10 to-blue-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
                   <BookOpen className="w-5 h-5 text-emerald-400" />
                 </div>
                 <div>
-                  <DialogTitle className="text-base font-black text-foreground uppercase tracking-widest">WhatsApp Setup Guide</DialogTitle>
-                  <p className="text-[10px] text-muted-foreground/60 mt-0.5">Follow the steps to connect your WhatsApp seamlessly</p>
+                  <DialogTitle className="text-base font-black text-foreground uppercase tracking-widest">Connect WhatsApp</DialogTitle>
+                  <p className="text-[10px] text-muted-foreground/60 mt-0.5">Follow the steps to connect your WhatsApp</p>
                 </div>
               </div>
               <button
@@ -491,8 +468,8 @@ export function WhatsAppSettings() {
             </div>
           </DialogHeader>
 
-          {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto min-h-0 px-6 py-5 space-y-3">
+            {/* Steps */}
             {setupSteps.map((step, i) => (
               <div key={i} className={cn("flex gap-4 p-4 rounded-2xl border transition-all hover:scale-[1.01]", step.bg)}>
                 <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border", step.bg)}>
@@ -507,22 +484,31 @@ export function WhatsAppSettings() {
                 </div>
               </div>
             ))}
+
+            {/* Limitations box (separate, no step prefix) */}
+            <div className="flex gap-4 p-4 rounded-2xl border bg-amber-500/10 border-amber-500/20 mt-2">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border bg-amber-500/10 border-amber-500/20">
+                <AlertTriangle className="w-4 h-4 text-amber-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] font-black text-foreground uppercase tracking-wide leading-tight">Limitations</p>
+                <div className="text-[11px] text-muted-foreground/70 leading-relaxed mt-1 space-y-1">
+                  <p>WhatsApp controls its own platform and policies.</p>
+                  <p>If your WhatsApp session expires or you log out on your phone, you'll need to reconnect by scanning a new QR code.</p>
+                  <p>CastHub cannot control WhatsApp account restrictions or policy decisions made by Meta.</p>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Fixed Footer */}
-          <div className="shrink-0 px-6 py-4 border-t border-white/5 bg-background/80 backdrop-blur-xl flex items-center justify-between gap-4 flex-wrap">
-            <p className="text-[10px] text-muted-foreground/40 font-bold uppercase tracking-widest">
-              It takes less than a minute
-            </p>
-            <div className="flex items-center gap-3">
-              <Button
-                size="sm"
-                onClick={() => setGuideOpen(false)}
-                className="h-9 px-5 rounded-xl bg-gradient-to-r from-emerald-500 to-blue-500 text-white font-black text-[10px] uppercase tracking-widest gap-2"
-              >
-                Got It, Let's Connect!
-              </Button>
-            </div>
+          <div className="shrink-0 px-6 py-4 border-t border-white/5 bg-background/80 backdrop-blur-xl flex items-center justify-end gap-4">
+            <Button
+              size="sm"
+              onClick={() => setGuideOpen(false)}
+              className="h-9 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase tracking-widest"
+            >
+              Connect WhatsApp
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

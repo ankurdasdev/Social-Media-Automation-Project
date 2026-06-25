@@ -16,35 +16,39 @@ export default function Help() {
     <AppLayout>
       <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
         {/* Page Header */}
-        <div className="space-y-2">
-          <h1 className="text-4xl font-black tracking-tighter text-foreground sm:text-5xl uppercase">
-            Help & <span className="text-primary italic">Support</span>
+        <div className="space-y-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-black tracking-widest uppercase text-primary">
+            <BookOpen className="w-3 h-3" />
+            Resources
+          </div>
+          <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground uppercase">
+            Help & Support
           </h1>
-          <p className="text-muted-foreground font-bold tracking-widest uppercase text-[11px]">
-            Guides, AI Assistant & Direct Support
+          <p className="text-muted-foreground text-sm font-medium">
+            Guides, AI Assistant & Direct Support.
           </p>
         </div>
 
         {/* Tabs */}
         <Tabs defaultValue="guide" className="w-full">
-          <TabsList className="dark:bg-black/40 bg-muted border border-border/50 p-1 rounded-xl w-full justify-start h-12 overflow-x-auto">
+          <TabsList className="bg-muted/50 border border-border/50 p-1.5 h-14 rounded-2xl w-full md:w-auto overflow-x-auto justify-start">
             <TabsTrigger
               value="guide"
-              className="rounded-lg font-black uppercase tracking-widest text-[10px] h-full px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-2"
+              className="data-[state=active]:bg-background data-[state=active]:shadow-lg rounded-xl gap-2 h-11 px-6 font-bold transition-all text-[11px] uppercase tracking-wide"
             >
               <BookOpen className="w-3.5 h-3.5" />
               Guide
             </TabsTrigger>
             <TabsTrigger
               value="assistant"
-              className="rounded-lg font-black uppercase tracking-widest text-[10px] h-full px-6 data-[state=active]:bg-emerald-500 data-[state=active]:text-white gap-2"
+              className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl gap-2 h-11 px-6 font-bold transition-all text-[11px] uppercase tracking-wide"
             >
               <Bot className="w-3.5 h-3.5" />
               AI Assistant
             </TabsTrigger>
             <TabsTrigger
               value="contact"
-              className="rounded-lg font-black uppercase tracking-widest text-[10px] h-full px-6 data-[state=active]:bg-blue-500 data-[state=active]:text-white gap-2"
+              className="data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl gap-2 h-11 px-6 font-bold transition-all text-[11px] uppercase tracking-wide"
             >
               <MessageSquareText className="w-3.5 h-3.5" />
               Contact Us

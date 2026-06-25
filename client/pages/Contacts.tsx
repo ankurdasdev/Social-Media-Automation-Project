@@ -628,13 +628,15 @@ export default function Contacts() {
 
         {/* Header Section */}
         <div id="tutorial-contacts-welcome" className="flex flex-col lg:flex-row items-center justify-between gap-8 px-6 pt-4">
-          <div className="space-y-4 text-center lg:text-left">
-            <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[10px] font-black tracking-[0.2em] uppercase">
+          <div className="space-y-3 text-center lg:text-left">
+            <div className="inline-flex items-center gap-2.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[10px] font-black tracking-[0.2em] uppercase">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               Contact List :: Active
             </div>
-            <h1 className="text-5xl font-black tracking-tighter text-foreground text-glow whitespace-nowrap">LEAD <span className="text-primary italic">CONTACTS</span></h1>
-            <p className="text-muted-foreground/80 text-sm font-medium max-w-xl leading-relaxed">
+            <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground uppercase">
+              Contacts
+            </h1>
+            <p className="text-muted-foreground text-sm font-medium max-w-xl">
               Manage your talent database here. Import from Google Sheets, add new contacts manually, and prepare them for outreach.
             </p>
           </div>
@@ -665,7 +667,7 @@ export default function Contacts() {
                 </div>
               </Label>
             </div>
-            <Button id="tutorial-contacts-add" size="lg" onClick={handleOpenAddLead} className="h-16 bg-foreground text-background hover:bg-foreground/90 shadow-2xl shadow-primary/20 rounded-2xl font-black px-10 transition-all hover:-translate-y-1 active:scale-[0.98]">
+            <Button id="tutorial-contacts-add" size="lg" onClick={handleOpenAddLead} className="h-16 bg-primary hover:bg-primary/90 text-white shadow-2xl shadow-primary/20 rounded-[1.5rem] font-black px-10 transition-all hover:-translate-y-1 active:scale-[0.98]">
               <Plus className="mr-3 h-6 w-6" /> ADD CONTACT
             </Button>
           </div>

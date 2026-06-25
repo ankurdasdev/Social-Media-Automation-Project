@@ -78,7 +78,7 @@ export default function Dashboard() {
             <div className="flex-1 space-y-8 text-center lg:text-left">
               <div className="inline-flex items-center gap-3 px-4 py-2 rounded-2xl bg-primary/10 border border-primary/20">
                 <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(139,92,246,1)]" />
-                <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Casting Automation System :: Operational</span>
+                <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Outreach Automation Platform</span>
               </div>
               
               <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black text-foreground tracking-tighter leading-[1.1] text-glow break-words sm:break-normal max-w-full">
@@ -172,9 +172,10 @@ export default function Dashboard() {
               </div>
               <div className="space-y-4">
                   {[
-                    { label: "Controller", desc: "Manage your message sources", icon: Settings, link: "/controller", color: "text-primary", bg: "bg-primary/5" },
-                    { label: "Contacts", desc: "Manage your contact list", icon: Table, link: "/contacts", color: "text-blue-500", bg: "bg-blue-500/5" },
-                    { label: "Analytics", desc: "View your performance stats", icon: BarChart3, link: "/analytics", color: "text-orange-500", bg: "bg-orange-500/5" },
+                    { label: "Connect Your Channels", desc: "Connect WhatsApp, Gmail and Instagram", icon: Settings, link: "/integrations", color: "text-primary", bg: "bg-primary/5" },
+                    { label: "Manage Your Templates", desc: "Create and edit message templates", icon: Table, link: "/templates", color: "text-blue-500", bg: "bg-blue-500/5" },
+                    { label: "View Contacts", desc: "Manage your contact list", icon: Users, link: "/contacts", color: "text-emerald-500", bg: "bg-emerald-500/5" },
+                    { label: "Set Up AI Auto Sourcing", desc: "AI-powered contact sourcing", icon: BarChart3, link: "/controller", color: "text-orange-500", bg: "bg-orange-500/5" },
                   ].map((nav, i) => (
                     <Link key={i} to={nav.link} className="block group">
                        <div className="p-6 glass-card rounded-3xl border-border/50 hover:border-border hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-5 shadow-lg">
@@ -216,8 +217,6 @@ export default function Dashboard() {
                               <p className="font-black text-lg tracking-tight">{contact.name}</p>
                               <div className="flex items-center gap-2">
                                 <span className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-widest">{contact.project}</span>
-                                <div className="w-1 h-1 rounded-full bg-emerald-500" />
-                                <span className="text-[9px] font-black text-emerald-500/70 uppercase">AUTO-SYNCED</span>
                               </div>
                            </div>
                         </div>

@@ -37,7 +37,7 @@ const GRADIENTS = [
 ];
 
 export function AdvancedColorPicker({ color = "transparent", onChange }: AdvancedColorPickerProps) {
-  const safeColor = color || "transparent";
+  const safeColor = (typeof color === "string" ? color : null) || "transparent";
   const [hex, setHex] = React.useState(safeColor.startsWith("#") ? safeColor : "#ffffff");
   const [isExpanded, setIsExpanded] = React.useState(false);
   const [dirty, setDirty] = React.useState(false);
@@ -122,7 +122,7 @@ export function AdvancedColorPicker({ color = "transparent", onChange }: Advance
                <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-white/10 shadow-lg group">
                   <input 
                     type="color" 
-                    value={hex} 
+                    value={/^#[0-9A-F]{6}$/i.test(hex) ? hex : "#ffffff"} 
                     onChange={(e) => {
                       setHex(e.target.value);
                       setDirty(true);

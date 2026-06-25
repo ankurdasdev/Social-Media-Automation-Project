@@ -19,7 +19,7 @@ import {
 import { runIngestionJob, getIngestionState } from "../jobs/ingestion-job";
 import { generateSearchSQL } from "../services/ai-service";
 import { query, queryOne } from "../db/index";
-import type { ContactsResponse, ContactResponse, ErrorResponse, IngestionStatusResponse } from "@shared/api";
+import type { ContactsResponse, ContactResponse, ErrorResponse, IngestionStatusResponse, Contact } from "@shared/api";
 import { generateOpenAIResponse, generateChatResponse } from "../services/ai-service";
 import { parseCastingImageForMultipleContacts } from "../services/ai-parser";
 
@@ -255,15 +255,15 @@ export const handleBulkClearContacts: RequestHandler = async (req, res) => {
     const updatePayload: Partial<Contact> = {};
     for (const f of fields) {
       if (["templateSelectionWP", "templateSelectionGmail", "templateSelectionIG", "drive_attachments_wa", "drive_attachments_email", "drive_attachments_ig"].includes(f)) {
-         updatePayload[f as keyof Contact] = [] as any;
+         (updatePayload as any)[f] = [];
       } else if (f === "cellColors") {
-         updatePayload[f as keyof Contact] = {} as any;
+         (updatePayload as any)[f] = {};
       } else if (f === "rowColor") {
-         updatePayload[f as keyof Contact] = "transparent" as any;
+         (updatePayload as any)[f] = "transparent";
       } else if (["hasCustomMessageWA", "hasCustomMessageEmail", "hasCustomMessageIG"].includes(f)) {
-         updatePayload[f as keyof Contact] = false as any;
+         (updatePayload as any)[f] = false;
       } else {
-         updatePayload[f as keyof Contact] = "" as any;
+         (updatePayload as any)[f] = "";
       }
     }
     

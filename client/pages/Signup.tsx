@@ -456,7 +456,7 @@ export default function Signup() {
               />
               <LocationPicker 
                 value={formData.location.lat !== 0 ? formData.location : undefined} 
-                onChange={(loc) => setFormData(p => ({ ...p, location: loc }))} 
+                onChange={(loc) => setFormData(p => ({ ...p, location: { lat: loc.lat, lng: loc.lng, address: loc.address || "" } }))} 
                 error={fieldErrors.location}
               />
             </div>
