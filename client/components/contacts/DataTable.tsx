@@ -115,16 +115,20 @@ const MemoizedTableCell = React.memo(({
         isPinned && !isCustom && !cColor && "bg-background",
         isPinned && isLastPinned && "border-r-[3px] border-r-border/50"
       )}
-      style={{
-        backgroundColor: cColor 
-          ? (cColor.includes("gradient") ? undefined : cColor) 
-          : (isPinned && isCustom && !rColor.includes("gradient") ? rColor : undefined),
-        background: cColor?.includes("gradient") 
-          ? cColor 
-          : (isPinned && isCustom && rColor.includes("gradient") ? rColor : undefined),
-        minWidth: "max-content",
-        left: isPinned ? `${cell.column.getStart("left")}px` : undefined,
-      }}
+      style={(() => {
+        const style: React.CSSProperties = {
+          minWidth: "max-content",
+          left: isPinned ? `${cell.column.getStart("left")}px` : undefined,
+        };
+        if (cColor) {
+          if (cColor.includes("gradient")) style.background = cColor;
+          else style.backgroundColor = cColor;
+        } else if (isPinned && isCustom && rColor) {
+          if (rColor.includes("gradient")) style.background = rColor;
+          else style.backgroundColor = rColor;
+        }
+        return style;
+      })()}
       onContextMenu={(e) => {
         if (['select', 'actions'].includes(cellId)) return;
         e.preventDefault();
@@ -197,11 +201,14 @@ const MemoizedTableRow = React.memo(({
         isSelected && "border-l-primary",
         isCustom && "text-white dark:text-white" // Force text color to white for solid background readability
       )}
-      style={{ 
-        backgroundColor: isCustom ? rColor : undefined,
-        background: rColor.includes("gradient") ? rColor : undefined,
-        borderLeftColor: getBorderColor(rColor),
-      }}
+      style={(() => {
+        const style: React.CSSProperties = { borderLeftColor: getBorderColor(rColor) };
+        if (isCustom && rColor) {
+          if (rColor.includes("gradient")) style.background = rColor;
+          else style.backgroundColor = rColor;
+        }
+        return style;
+      })()}
       onClick={() => setSelectedContact(rowOriginal)}
       onDragOver={(e) => {
         if (dragFillState.startIdx !== null) {
