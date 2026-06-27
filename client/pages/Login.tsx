@@ -272,8 +272,8 @@ export default function Login() {
 
         <p className="text-[11px] text-foreground/20 font-medium">
           © {new Date().getFullYear()} CastHub ·{" "}
-          <a href="https://docs.google.com/document/d/1CiyDnxNm3rJLvnNfEFZE9H_UHQ6I8fMx" target="_blank" rel="noopener noreferrer" className="hover:text-foreground/40 transition-colors">Terms</a>{" "}·{" "}
-          <a href="https://docs.google.com/document/d/1jPLs_g_9sH-n0yTa-n1o3pK8uJFnZr7V" target="_blank" rel="noopener noreferrer" className="hover:text-foreground/40 transition-colors">Privacy</a>{" "}·{" "}
+          <a href="https://docs.google.com/document/d/1Hv3uKqVd4DzS0RKDxIDDlzFuyHO4h_KcbgqLFhb5G6s/edit?usp=sharing" target="_blank" rel="noopener noreferrer" className="hover:text-foreground/40 transition-colors">Terms</a>{" "}·{" "}
+          <a href="https://docs.google.com/document/d/1NG8TGUZPZBS8HR6GI_e_cDH1glw8b9bgyu9fz575VJY/edit?usp=sharing" target="_blank" rel="noopener noreferrer" className="hover:text-foreground/40 transition-colors">Privacy</a>{" "}·{" "}
           <a href="mailto:support@casthub.in" className="hover:text-foreground/40 transition-colors">support@casthub.in</a>
         </p>
       </div>
@@ -413,9 +413,9 @@ export default function Login() {
           {/* Legal + Support */}
           <p className="text-center text-[10px] text-foreground/20 font-medium">
             By continuing, you agree to our{" "}
-            <a href="https://docs.google.com/document/d/1CiyDnxNm3rJLvnNfEFZE9H_UHQ6I8fMx" target="_blank" rel="noopener noreferrer" className="text-primary/60 hover:text-primary transition-colors font-bold">Terms of Service</a>
+            <a href="https://docs.google.com/document/d/1Hv3uKqVd4DzS0RKDxIDDlzFuyHO4h_KcbgqLFhb5G6s/edit?usp=sharing" target="_blank" rel="noopener noreferrer" className="text-primary/60 hover:text-primary transition-colors font-bold">Terms of Service</a>
             {" "}and{" "}
-            <a href="https://docs.google.com/document/d/1jPLs_g_9sH-n0yTa-n1o3pK8uJFnZr7V" target="_blank" rel="noopener noreferrer" className="text-primary/60 hover:text-primary transition-colors font-bold">Privacy Policy</a>
+            <a href="https://docs.google.com/document/d/1NG8TGUZPZBS8HR6GI_e_cDH1glw8b9bgyu9fz575VJY/edit?usp=sharing" target="_blank" rel="noopener noreferrer" className="text-primary/60 hover:text-primary transition-colors font-bold">Privacy Policy</a>
           </p>
           <p className="text-center text-[10px] text-foreground/20 font-medium">
             Need help?{" "}

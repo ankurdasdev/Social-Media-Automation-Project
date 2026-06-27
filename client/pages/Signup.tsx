@@ -143,10 +143,13 @@ const FEATURES = [
 ];
 
 const BENEFITS = [
-  "Automate WhatsApp, Gmail & Instagram outreach",
-  "Smart personalization tags for every message",
-  "Manage 10,000+ contacts in one dashboard",
-  "Analytics to track what's working",
+  "Save hours of manual outreach",
+  "Keep contacts organized",
+  "Send personalized messages at scale",
+  "Manage campaigns from one dashboard",
+  "Avoid messy spreadsheets",
+  "Track outreach performance",
+  "Reach more people in less time",
 ];
 
 const COUNTRY_CODES = [
@@ -190,6 +193,7 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [step, setStep] = useState<1 | 2>(1);
   
   const [isTermsOpen, setIsTermsOpen] = useState(false);
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
@@ -199,7 +203,6 @@ export default function Signup() {
   const [formData, setFormData] = useState({
     name: "", email: "", phone: "", dialCode: "+91", gender: "", dob: "",
     password: "", confirmPassword: "", terms: false,
-    instagram: "", location: { lat: 0, lng: 0, address: "" },
   });
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
@@ -209,18 +212,17 @@ export default function Signup() {
     const target = e.target as HTMLInputElement;
     const { name, value, type } = target;
     setFormData(prev => ({ ...prev, [name]: type === "checkbox" ? target.checked : value }));
-    if (fieldErrors[name]) setFieldErrors(p => { const n = { ...p }; delete n[name]; return n; });
+    if (fieldErrors?.[name]) setFieldErrors(p => { const n = { ...p }; delete n![name]; return n; });
     if (error) setError("");
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Step 1 validation — Name, Email, Password
+  const handleStep1Continue = (e: React.FormEvent) => {
     e.preventDefault();
     const errs: Record<string, string> = {};
     if (!formData.name.trim()) errs.name = "Full name is required";
     if (!formData.email.trim()) errs.email = "Email is required";
     if (formData.email.includes("+")) errs.email = "Email aliases with '+' are not allowed";
-    if (!formData.gender) errs.gender = "Please select your gender";
-    if (!formData.dob) errs.dob = "Date of birth is required";
     const p = formData.password;
     if (p.length < 8) errs.password = "Minimum 8 characters";
     else if (!/[A-Z]/.test(p)) errs.password = "Needs an uppercase letter";
@@ -228,6 +230,16 @@ export default function Signup() {
     else if (!/[0-9]/.test(p)) errs.password = "Needs a number";
     else if (!/[^A-Za-z0-9]/.test(p)) errs.password = "Needs a special character";
     if (formData.password !== formData.confirmPassword) errs.confirmPassword = "Passwords do not match";
+    if (Object.keys(errs).length > 0) { setFieldErrors(errs); return; }
+    setFieldErrors({});
+    setStep(2);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const errs: Record<string, string> = {};
+    if (!formData.gender) errs.gender = "Please select your gender";
+    if (!formData.dob) errs.dob = "Date of birth is required";
     if (!formData.terms) errs.terms = "Please accept the terms to continue";
     if (Object.keys(errs).length > 0) { setFieldErrors(errs); return; }
 
@@ -241,7 +253,6 @@ export default function Signup() {
           name: formData.name.trim(), email: formData.email.trim(),
           phone: formData.phone.trim() ? `${formData.dialCode}${formData.phone.trim()}` : undefined,
           gender: formData.gender, dob: formData.dob, password: formData.password,
-          instagram: formData.instagram.trim(), location: formData.location.lat !== 0 ? formData.location : undefined,
         }),
       });
       const data = await res.json();
@@ -271,7 +282,7 @@ export default function Signup() {
             </div>
             <h1 className="text-4xl font-black tracking-tight text-foreground">Check Your Inbox! 📬</h1>
             <p className="text-foreground/50 font-medium leading-relaxed">We've sent a verification email to</p>
-            <p className="text-purple-400 font-black text-lg">{successEmail}</p>
+            <p className="text-primary font-black text-lg">{successEmail}</p>
             <p className="text-foreground/40 font-medium text-sm leading-relaxed max-w-sm mx-auto">
               Click the link in the email to activate your account. The link expires in 24 hours.
             </p>
@@ -285,7 +296,7 @@ export default function Signup() {
                   body: JSON.stringify({ email: successEmail }),
                 });
                 alert("Verification email resent!");
-              }} className="text-purple-400 font-bold hover:text-purple-300 transition-colors">
+              }} className="text-primary font-bold hover:text-primary/80 transition-colors">
                 click here to resend
               </button>
             </p>
@@ -333,7 +344,8 @@ export default function Signup() {
             </p>
           </div>
 
-          {/* Feature rows */}
+          {/* Feature rows — only show on step 1 */}
+          {step === 1 && (
           <div className="space-y-2.5">
             {FEATURES.map((f, i) => (
               <div key={i} className={cn(
@@ -351,10 +363,12 @@ export default function Signup() {
               </div>
             ))}
           </div>
+          )}
 
-          {/* Benefits checklist */}
+          {/* Benefits checklist — show on step 2 */}
+          {step === 2 && (
           <div className="space-y-2">
-            <p className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-[0.25em]">What You Get</p>
+            <p className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-[0.25em]">Benefits</p>
             {BENEFITS.map((b, i) => (
               <div key={i} className="flex items-center gap-3">
                 <div className="w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
@@ -365,6 +379,7 @@ export default function Signup() {
             ))}
             <p className="text-[10px] text-primary/70 font-bold mt-3 pl-7">7 day free trial. Cancel anytime before that.</p>
           </div>
+          )}
 
           {/* Trust */}
           <div className="flex items-center gap-3 p-4 rounded-2xl dark:bg-white/[0.03] bg-black/[0.03] border border-white/[0.06]">
@@ -377,9 +392,9 @@ export default function Signup() {
 
         <p className="text-[11px] text-foreground/20 font-medium">
           © {new Date().getFullYear()} CastHub ·{" "}
-          <a href="https://docs.google.com/document/d/1CiyDnxNm3rJLvnNfEFZE9H_UHQ6I8fMx" target="_blank" rel="noopener noreferrer" className="hover:text-foreground/40 transition-colors">Terms</a>
+          <a href="https://docs.google.com/document/d/1Hv3uKqVd4DzS0RKDxIDDlzFuyHO4h_KcbgqLFhb5G6s/edit?usp=sharing" target="_blank" rel="noopener noreferrer" className="hover:text-foreground/40 transition-colors">Terms</a>
           {" "}·{" "}
-          <a href="https://docs.google.com/document/d/1jPLs_g_9sH-n0yTa-n1o3pK8uJFnZr7V" target="_blank" rel="noopener noreferrer" className="hover:text-foreground/40 transition-colors">Privacy</a>
+          <a href="https://docs.google.com/document/d/1NG8TGUZPZBS8HR6GI_e_cDH1glw8b9bgyu9fz575VJY/edit?usp=sharing" target="_blank" rel="noopener noreferrer" className="hover:text-foreground/40 transition-colors">Privacy</a>
           {" "}·{" "}
           <a href="mailto:support@casthub.in" className="hover:text-foreground/40 transition-colors">support@casthub.in</a>
         </p>
@@ -399,10 +414,17 @@ export default function Signup() {
         </div>
 
         <div className="w-full max-w-[460px] space-y-7 my-auto">
-          {/* Header */}
+          {/* Header with step indicator */}
           <div className="space-y-1.5">
+            {/* Step indicator */}
+            <div className="flex items-center gap-2 mb-3">
+              <div className={cn("h-1.5 flex-1 rounded-full transition-all", step >= 1 ? "bg-primary" : "bg-muted/40")} />
+              <div className={cn("h-1.5 flex-1 rounded-full transition-all", step >= 2 ? "bg-primary" : "bg-muted/40")} />
+            </div>
             <h2 className="text-4xl font-black tracking-tight text-foreground">Create Your CastHub Account</h2>
-            <p className="text-foreground/40 font-medium text-[15px]">Start your casting automation journey</p>
+            <p className="text-foreground/40 font-medium text-[15px]">
+              {step === 1 ? "Step 1 of 2 — Your details" : "Step 2 of 2 — Complete your profile"}
+            </p>
           </div>
 
           {/* Error */}
@@ -413,269 +435,277 @@ export default function Signup() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Name */}
-            <GlassInput
-              id="name" name="name" type="text" autoFocus
-              placeholder="Jane Doe" label="Full Name"
-              value={formData.name} onChange={handleChange}
-              icon={User} error={fieldErrors.name}
-            />
+          <form onSubmit={step === 1 ? handleStep1Continue : handleSubmit} className="space-y-4">
+            {/* ── STEP 1: Name, Email, Password ── */}
+            {step === 1 && (
+              <>
+                {/* Name */}
+                <GlassInput
+                  id="name" name="name" type="text" autoFocus
+                  placeholder="Jane Doe" label="Full Name"
+                  value={formData.name} onChange={handleChange}
+                  icon={User} error={fieldErrors?.name}
+                />
 
-            {/* Email */}
-            <GlassInput
-              id="email" name="email" type="email"
-              placeholder="you@example.com" label="Email Address"
-              value={formData.email} onChange={handleChange}
-              icon={Mail} error={fieldErrors.email}
-            />
+                {/* Email */}
+                <GlassInput
+                  id="email" name="email" type="email"
+                  placeholder="you@example.com" label="Email Address"
+                  value={formData.email} onChange={handleChange}
+                  icon={Mail} error={fieldErrors?.email}
+                />
 
-            {/* Phone */}
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase tracking-[0.18em] text-foreground/40 block">
-                Phone Number <span className="text-foreground/20 normal-case tracking-normal font-normal">(optional)</span>
-              </label>
-              <div className="flex gap-2.5">
-                <div className="h-13 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex items-center shrink-0 w-[110px]">
-                  <Select value={formData.dialCode} onValueChange={(val) => setFormData(p => ({ ...p, dialCode: val }))}>
-                    <SelectTrigger className="h-full w-full border-0 focus:ring-0 px-3 bg-transparent hover:bg-white/[0.02] transition-colors rounded-2xl">
-                      <div className="flex items-center gap-2">
-                        <span className="text-base">{COUNTRY_CODES.find(c => c.dial === formData.dialCode)?.flag || "🌐"}</span>
-                        <span className="text-xs font-black text-foreground/70">{formData.dialCode}</span>
-                      </div>
-                    </SelectTrigger>
-                    <SelectContent className="dark:bg-[#0e0b1f] bg-background max-h-[300px]">
-                      {COUNTRY_CODES.map(country => (
-                        <SelectItem key={country.code} value={country.dial} className="cursor-pointer">
-                          <div className="flex items-center gap-2">
-                            <span>{country.flag}</span>
-                            <span className="text-xs font-medium">{country.name} ({country.dial})</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex-1">
+                {/* Password */}
+                <div>
                   <GlassInput
-                    id="phone" name="phone" type="tel"
-                    placeholder="9876543210"
-                    value={formData.phone} onChange={handleChange}
-                    icon={Phone}
-                    hint="You can also use your phone number to sign in"
+                    id="password" name="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Min. 8 characters" label="Password"
+                    value={formData.password} onChange={handleChange}
+                    icon={Lock} error={fieldErrors?.password}
+                    hint="Min. 8 chars, uppercase, lowercase, number, special character"
+                    rightEl={
+                      <button type="button" onClick={() => setShowPassword(!showPassword)}
+                        className="text-foreground/25 hover:text-foreground/60 transition-colors p-1">
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    }
                   />
+                  <PasswordStrength password={formData.password} />
                 </div>
-              </div>
-            </div>
 
-            {/* Instagram Handle & Location */}
-            <div className="grid grid-cols-2 gap-3">
-              <GlassInput
-                id="instagram" name="instagram" type="text"
-                placeholder="@username" label="Instagram Handle"
-                value={formData.instagram} onChange={handleChange}
-                icon={Instagram} error={fieldErrors.instagram}
-              />
-              <LocationPicker 
-                value={formData.location.lat !== 0 ? formData.location : undefined} 
-                onChange={(loc) => setFormData(p => ({ ...p, location: { lat: loc.lat, lng: loc.lng, address: loc.address || "" } }))} 
-                error={fieldErrors.location}
-              />
-            </div>
+                {/* Confirm Password */}
+                <GlassInput
+                  id="confirmPassword" name="confirmPassword"
+                  type={showConfirm ? "text" : "password"}
+                  placeholder="Repeat password" label="Confirm Password"
+                  value={formData.confirmPassword} onChange={handleChange}
+                  icon={Lock} error={fieldErrors?.confirmPassword}
+                  rightEl={
+                    <div className="flex items-center gap-1">
+                      {formData.confirmPassword && formData.password === formData.confirmPassword && (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                      )}
+                      <button type="button" onClick={() => setShowConfirm(!showConfirm)}
+                        className="text-foreground/25 hover:text-foreground/60 transition-colors p-1">
+                        {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  }
+                />
 
-            {/* Gender + DOB */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-[0.18em] text-foreground/40 block">Gender</label>
-                <div className={cn(
-                  "flex items-center rounded-2xl border transition-all duration-300 backdrop-blur-xl",
-                  "dark:border-white/10 border-border/50 dark:bg-white/5 bg-black/5 hover:bg-white/[0.07]",
-                  fieldErrors.gender && "border-rose-500/50"
-                )}>
-                  <Users className="w-4 h-4 text-foreground/25 ml-4 mr-2 shrink-0" />
-                  <Select value={formData.gender} onValueChange={(val) => {
-                    setFormData(p => ({ ...p, gender: val }));
-                    if (fieldErrors.gender) setFieldErrors(p => { const n = { ...p }; delete n.gender; return n; });
-                    if (error) setError("");
-                  }}>
-                    <SelectTrigger className={cn(
-                      "flex-1 h-13 py-3.5 pr-4 pl-0 bg-transparent text-[15px] font-medium outline-none border-none shadow-none focus:ring-0 ring-0 focus:ring-offset-0",
-                      !formData.gender ? "text-foreground/20" : "text-foreground"
+                {/* Continue button */}
+                <button type="submit"
+                  className="w-full h-14 mt-2 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all duration-300 shadow-xl shadow-primary/25 active:scale-[0.98]">
+                  Continue <ArrowRight className="w-4 h-4" />
+                </button>
+              </>
+            )}
+
+            {/* ── STEP 2: Phone, Gender, DOB, Terms ── */}
+            {step === 2 && (
+              <>
+                {/* Phone */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black uppercase tracking-[0.18em] text-foreground/40 block">
+                    Phone Number <span className="text-foreground/20 normal-case tracking-normal font-normal">(optional)</span>
+                  </label>
+                  <div className="flex gap-2.5">
+                    <div className="h-13 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex items-center shrink-0 w-[110px]">
+                      <Select value={formData.dialCode} onValueChange={(val) => setFormData(p => ({ ...p, dialCode: val }))}>
+                        <SelectTrigger className="h-full w-full border-0 focus:ring-0 px-3 bg-transparent hover:bg-white/[0.02] transition-colors rounded-2xl">
+                          <div className="flex items-center gap-2">
+                            <span className="text-base">{COUNTRY_CODES.find(c => c.dial === formData.dialCode)?.flag || "🌐"}</span>
+                            <span className="text-xs font-black text-foreground/70">{formData.dialCode}</span>
+                          </div>
+                        </SelectTrigger>
+                        <SelectContent className="dark:bg-[#0e0b1f] bg-background max-h-[300px]">
+                          {COUNTRY_CODES.map(country => (
+                            <SelectItem key={country.code} value={country.dial} className="cursor-pointer">
+                              <div className="flex items-center gap-2">
+                                <span>{country.flag}</span>
+                                <span className="text-xs font-medium">{country.name} ({country.dial})</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex-1">
+                      <GlassInput
+                        id="phone" name="phone" type="tel"
+                        placeholder="9876543210"
+                        value={formData.phone} onChange={handleChange}
+                        icon={Phone}
+                        hint="You can also use your phone number to sign in"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Gender + DOB */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black uppercase tracking-[0.18em] text-foreground/40 block">Gender</label>
+                    <div className={cn(
+                      "flex items-center rounded-2xl border transition-all duration-300 backdrop-blur-xl",
+                      "dark:border-white/10 border-border/50 dark:bg-white/5 bg-black/5 hover:bg-white/[0.07]",
+                      fieldErrors?.gender && "border-rose-500/50"
                     )}>
-                      <SelectValue placeholder="Select" />
-                    </SelectTrigger>
-                    <SelectContent className="dark:bg-[#0e0b1f] bg-background border dark:border-white/10 border-border/50 rounded-xl overflow-hidden shadow-2xl">
-                      <SelectItem value="male" className="text-foreground focus:bg-foreground/10 cursor-pointer">Male</SelectItem>
-                      <SelectItem value="female" className="text-foreground focus:bg-foreground/10 cursor-pointer">Female</SelectItem>
-                      <SelectItem value="other" className="text-foreground focus:bg-foreground/10 cursor-pointer">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
+                      <Users className="w-4 h-4 text-foreground/25 ml-4 mr-2 shrink-0" />
+                      <Select value={formData.gender} onValueChange={(val) => {
+                        setFormData(p => ({ ...p, gender: val }));
+                        if (fieldErrors?.gender) setFieldErrors(p => { const n = { ...p }; delete n!.gender; return n; });
+                        if (error) setError("");
+                      }}>
+                        <SelectTrigger className={cn(
+                          "flex-1 h-13 py-3.5 pr-4 pl-0 bg-transparent text-[15px] font-medium outline-none border-none shadow-none focus:ring-0 ring-0 focus:ring-offset-0",
+                          !formData.gender ? "text-foreground/20" : "text-foreground"
+                        )}>
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent className="dark:bg-[#0e0b1f] bg-background border dark:border-white/10 border-border/50 rounded-xl overflow-hidden shadow-2xl">
+                          <SelectItem value="male" className="text-foreground focus:bg-foreground/10 cursor-pointer">Male</SelectItem>
+                          <SelectItem value="female" className="text-foreground focus:bg-foreground/10 cursor-pointer">Female</SelectItem>
+                          <SelectItem value="other" className="text-foreground focus:bg-foreground/10 cursor-pointer">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {fieldErrors?.gender && <p className="text-[11px] text-rose-400 font-bold pl-1">{fieldErrors.gender}</p>}
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black uppercase tracking-[0.18em] text-foreground/40 block">Date of Birth</label>
+                    <div className={cn(
+                      "flex items-center rounded-2xl border transition-all duration-300 backdrop-blur-xl",
+                      "dark:border-white/10 border-border/50 dark:bg-white/5 bg-black/5 hover:bg-white/[0.07]",
+                      fieldErrors?.dob && "border-rose-500/50"
+                    )}>
+                      <Calendar className="w-4 h-4 text-foreground/25 ml-4 mr-2 shrink-0" />
+                      <input name="dob" type="date" value={formData.dob} onChange={handleChange}
+                        className="flex-1 h-13 py-3.5 pr-4 bg-transparent text-foreground text-[15px] font-medium outline-none [color-scheme:dark]" />
+                    </div>
+                    {fieldErrors?.dob && <p className="text-[11px] text-rose-400 font-bold pl-1">{fieldErrors.dob}</p>}
+                  </div>
                 </div>
-                {fieldErrors.gender && <p className="text-[11px] text-rose-400 font-bold pl-1">{fieldErrors.gender}</p>}
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-[0.18em] text-foreground/40 block">Date of Birth</label>
+
+                {/* Terms */}
                 <div className={cn(
-                  "flex items-center rounded-2xl border transition-all duration-300 backdrop-blur-xl",
-                  "dark:border-white/10 border-border/50 dark:bg-white/5 bg-black/5 hover:bg-white/[0.07]",
-                  fieldErrors.dob && "border-rose-500/50"
-                )}>
-                  <Calendar className="w-4 h-4 text-foreground/25 ml-4 mr-2 shrink-0" />
-                  <input name="dob" type="date" value={formData.dob} onChange={handleChange}
-                    className="flex-1 h-13 py-3.5 pr-4 bg-transparent text-foreground text-[15px] font-medium outline-none [color-scheme:dark]" />
-                </div>
-                {fieldErrors.dob && <p className="text-[11px] text-rose-400 font-bold pl-1">{fieldErrors.dob}</p>}
-              </div>
-            </div>
-
-            {/* Password */}
-            <div>
-              <GlassInput
-                id="password" name="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="Min. 8 characters" label="Password"
-                value={formData.password} onChange={handleChange}
-                icon={Lock} error={fieldErrors.password}
-                rightEl={
-                  <button type="button" onClick={() => setShowPassword(!showPassword)}
-                    className="text-foreground/25 hover:text-foreground/60 transition-colors p-1">
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                }
-              />
-              <PasswordStrength password={formData.password} />
-            </div>
-
-            {/* Confirm Password */}
-            <GlassInput
-              id="confirmPassword" name="confirmPassword"
-              type={showConfirm ? "text" : "password"}
-              placeholder="Repeat password" label="Confirm Password"
-              value={formData.confirmPassword} onChange={handleChange}
-              icon={Lock} error={fieldErrors.confirmPassword}
-              rightEl={
-                <div className="flex items-center gap-1">
-                  {formData.confirmPassword && formData.password === formData.confirmPassword && (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  )}
-                  <button type="button" onClick={() => setShowConfirm(!showConfirm)}
-                    className="text-foreground/25 hover:text-foreground/60 transition-colors p-1">
-                    {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              }
-            />
-
-            {/* Terms */}
-            <div className={cn(
-              "flex items-start gap-3.5 p-4 rounded-2xl border transition-all cursor-pointer",
-              formData.terms
-                ? "bg-purple-500/8 border-purple-500/25"
-                : "dark:bg-white/[0.03] bg-black/[0.03] dark:border-white/[0.07] border-border/50",
-              fieldErrors.terms && "border-rose-500/40"
-            )} onClick={() => setFormData(p => ({ ...p, terms: !p.terms }))}>
-              <div className={cn(
-                "w-5 h-5 rounded-[6px] border-2 flex items-center justify-center shrink-0 mt-0.5 transition-all",
-                formData.terms ? "border-purple-500 bg-purple-500" : "border-white/20 bg-transparent"
-              )}>
-                {formData.terms && <CheckCircle2 className="w-3.5 h-3.5 text-foreground" />}
-              </div>
-              <p className="text-xs text-foreground/40 font-medium leading-relaxed select-none">
-                I agree to the{" "}
-                <Dialog open={isTermsOpen} onOpenChange={setIsTermsOpen}>
-                  <DialogTrigger asChild>
-                    <button type="button" className="text-purple-400 hover:text-purple-300 font-bold" onClick={e => { e.stopPropagation(); setTermsScrolled(false); }}>Terms of Service</button>
-                  </DialogTrigger>
-                  <DialogContent hideCloseButton className="dark:bg-[#0e0b1f] bg-background border dark:border-white/10 border-border/50 rounded-3xl shadow-2xl max-w-3xl h-[85vh] p-0 flex flex-col overflow-hidden">
-                    <DialogHeader className="p-6 border-b dark:border-white/10 border-border/50 shrink-0">
-                      <DialogTitle className="text-2xl font-black tracking-tight text-foreground flex items-center gap-2.5">
-                        <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-                          <FileText className="w-4.5 h-4.5 text-primary" />
-                        </div>
-                        Terms of Service
-                      </DialogTitle>
-                    </DialogHeader>
-                    <div 
-                      className="flex-1 overflow-y-auto p-6"
-                      onScroll={(e) => {
-                        const target = e.currentTarget;
-                        if (Math.abs(target.scrollHeight - target.scrollTop - target.clientHeight) < 50) {
-                          setTermsScrolled(true);
-                        }
-                    }}
-                    >
-                      <TermsContent />
-                    </div>
-                    <div className="p-6 border-t dark:border-white/10 border-border/50 bg-muted/20 shrink-0 flex justify-end">
-                      <Button 
-                        type="button" 
-                        disabled={!termsScrolled}
-                        className="h-12 px-8 rounded-xl font-black tracking-widest uppercase transition-all"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setFormData(p => ({ ...p, terms: true }));
-                          setIsTermsOpen(false);
+                  "flex items-start gap-3.5 p-4 rounded-2xl border transition-all cursor-pointer",
+                  formData.terms
+                    ? "bg-primary/8 border-primary/25"
+                    : "dark:bg-white/[0.03] bg-black/[0.03] dark:border-white/[0.07] border-border/50",
+                  fieldErrors?.terms && "border-rose-500/40"
+                )} onClick={() => setFormData(p => ({ ...p, terms: !p.terms }))}>
+                  <div className={cn(
+                    "w-5 h-5 rounded-[6px] border-2 flex items-center justify-center shrink-0 mt-0.5 transition-all",
+                    formData.terms ? "border-primary bg-primary" : "border-white/20 bg-transparent"
+                  )}>
+                    {formData.terms && <CheckCircle2 className="w-3.5 h-3.5 text-primary-foreground" />}
+                  </div>
+                  <p className="text-xs text-foreground/40 font-medium leading-relaxed select-none">
+                    I agree to the{" "}
+                    <Dialog open={isTermsOpen} onOpenChange={setIsTermsOpen}>
+                      <DialogTrigger asChild>
+                        <button type="button" className="text-primary hover:text-primary/80 font-bold" onClick={e => { e.stopPropagation(); setTermsScrolled(false); }}>Terms of Service</button>
+                      </DialogTrigger>
+                      <DialogContent hideCloseButton className="dark:bg-[#0e0b1f] bg-background border dark:border-white/10 border-border/50 rounded-3xl shadow-2xl max-w-3xl h-[85vh] p-0 flex flex-col overflow-hidden">
+                        <DialogHeader className="p-6 border-b dark:border-white/10 border-border/50 shrink-0">
+                          <DialogTitle className="text-2xl font-black tracking-tight text-foreground flex items-center gap-2.5">
+                            <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                              <FileText className="w-4.5 h-4.5 text-primary" />
+                            </div>
+                            Terms of Service
+                          </DialogTitle>
+                        </DialogHeader>
+                        <div 
+                          className="flex-1 overflow-y-auto p-6"
+                          onScroll={(e) => {
+                            const target = e.currentTarget;
+                            if (Math.abs(target.scrollHeight - target.scrollTop - target.clientHeight) < 50) {
+                              setTermsScrolled(true);
+                            }
                         }}
-                      >
-                        {termsScrolled ? "I Agree" : "Scroll to bottom to agree"}
-                      </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-                {" "}and{" "}
-                <Dialog open={isPrivacyOpen} onOpenChange={setIsPrivacyOpen}>
-                  <DialogTrigger asChild>
-                    <button type="button" className="text-purple-400 hover:text-purple-300 font-bold" onClick={e => { e.stopPropagation(); setPrivacyScrolled(false); }}>Privacy Policy</button>
-                  </DialogTrigger>
-                  <DialogContent hideCloseButton className="dark:bg-[#0e0b1f] bg-background border dark:border-white/10 border-border/50 rounded-3xl shadow-2xl max-w-3xl h-[85vh] p-0 flex flex-col overflow-hidden">
-                    <DialogHeader className="p-6 border-b dark:border-white/10 border-border/50 shrink-0">
-                      <DialogTitle className="text-2xl font-black tracking-tight text-foreground flex items-center gap-2.5">
-                        <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                          <Shield className="w-4.5 h-4.5 text-blue-400" />
+                        >
+                          <TermsContent />
                         </div>
-                        Privacy Policy
-                      </DialogTitle>
-                    </DialogHeader>
-                    <div 
-                      className="flex-1 overflow-y-auto p-6"
-                      onScroll={(e) => {
-                        const target = e.currentTarget;
-                        if (Math.abs(target.scrollHeight - target.scrollTop - target.clientHeight) < 50) {
-                          setPrivacyScrolled(true);
-                        }
-                      }}
-                    >
-                      <PrivacyContent />
-                    </div>
-                    <div className="p-6 border-t dark:border-white/10 border-border/50 bg-muted/20 shrink-0 flex justify-end">
-                      <Button 
-                        type="button" 
-                        disabled={!privacyScrolled}
-                        className="h-12 px-8 rounded-xl font-black tracking-widest uppercase transition-all"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setFormData(p => ({ ...p, terms: true }));
-                          setIsPrivacyOpen(false);
-                        }}
-                      >
-                        {privacyScrolled ? "I Agree" : "Scroll to bottom to agree"}
-                      </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>.
-                I understand that CastHub automates outreach and I will use it responsibly.
-              </p>
-            </div>
-            {fieldErrors.terms && <p className="text-[11px] text-rose-400 font-bold pl-1">{fieldErrors.terms}</p>}
+                        <div className="p-6 border-t dark:border-white/10 border-border/50 bg-muted/20 shrink-0 flex justify-end">
+                          <Button 
+                            type="button" 
+                            disabled={!termsScrolled}
+                            className="h-12 px-8 rounded-xl font-black tracking-widest uppercase transition-all"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setFormData(p => ({ ...p, terms: true }));
+                              setIsTermsOpen(false);
+                            }}
+                          >
+                            {termsScrolled ? "I Agree" : "Scroll to bottom to agree"}
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                    {" "}and{" "}
+                    <Dialog open={isPrivacyOpen} onOpenChange={setIsPrivacyOpen}>
+                      <DialogTrigger asChild>
+                        <button type="button" className="text-primary hover:text-primary/80 font-bold" onClick={e => { e.stopPropagation(); setPrivacyScrolled(false); }}>Privacy Policy</button>
+                      </DialogTrigger>
+                      <DialogContent hideCloseButton className="dark:bg-[#0e0b1f] bg-background border dark:border-white/10 border-border/50 rounded-3xl shadow-2xl max-w-3xl h-[85vh] p-0 flex flex-col overflow-hidden">
+                        <DialogHeader className="p-6 border-b dark:border-white/10 border-border/50 shrink-0">
+                          <DialogTitle className="text-2xl font-black tracking-tight text-foreground flex items-center gap-2.5">
+                            <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                              <Shield className="w-4.5 h-4.5 text-blue-400" />
+                            </div>
+                            Privacy Policy
+                          </DialogTitle>
+                        </DialogHeader>
+                        <div 
+                          className="flex-1 overflow-y-auto p-6"
+                          onScroll={(e) => {
+                            const target = e.currentTarget;
+                            if (Math.abs(target.scrollHeight - target.scrollTop - target.clientHeight) < 50) {
+                              setPrivacyScrolled(true);
+                            }
+                          }}
+                        >
+                          <PrivacyContent />
+                        </div>
+                        <div className="p-6 border-t dark:border-white/10 border-border/50 bg-muted/20 shrink-0 flex justify-end">
+                          <Button 
+                            type="button" 
+                            disabled={!privacyScrolled}
+                            className="h-12 px-8 rounded-xl font-black tracking-widest uppercase transition-all"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setFormData(p => ({ ...p, terms: true }));
+                              setIsPrivacyOpen(false);
+                            }}
+                          >
+                            {privacyScrolled ? "I Agree" : "Scroll to bottom to agree"}
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>.
+                    I understand that CastHub automates outreach and I will use it responsibly.
+                  </p>
+                </div>
+                {fieldErrors?.terms && <p className="text-[11px] text-rose-400 font-bold pl-1">{fieldErrors.terms}</p>}
 
-            {/* Submit */}
-            <button type="submit" disabled={isLoading}
-              className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 disabled:opacity-60 text-primary-foreground font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all duration-300 shadow-xl shadow-primary/25 active:scale-[0.98]">
-              {isLoading
-                ? <><Loader2 className="w-4 h-4 animate-spin" /> Creating Account...</>
-                : <><ShieldCheck className="w-4 h-4" /> Create My Account <ArrowRight className="w-4 h-4" /></>
-              }
-            </button>
+                {/* Back + Submit */}
+                <div className="flex gap-3">
+                  <button type="button" onClick={() => setStep(1)}
+                    className="h-14 px-6 rounded-2xl border border-white/[0.08] hover:border-primary/30 text-foreground/60 hover:text-foreground font-bold text-sm transition-all">
+                    ← Back
+                  </button>
+                  <button type="submit" disabled={isLoading}
+                    className="flex-1 h-14 rounded-2xl bg-primary hover:bg-primary/90 disabled:opacity-60 text-primary-foreground font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all duration-300 shadow-xl shadow-primary/25 active:scale-[0.98]">
+                    {isLoading
+                      ? <><Loader2 className="w-4 h-4 animate-spin" /> Creating Account...</>
+                      : <><ShieldCheck className="w-4 h-4" /> Create My Account <ArrowRight className="w-4 h-4" /></>
+                    }
+                  </button>
+                </div>
+              </>
+            )}
           </form>
 
           {/* Sign in */}
