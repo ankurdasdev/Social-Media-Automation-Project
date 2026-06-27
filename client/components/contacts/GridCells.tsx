@@ -22,11 +22,11 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { X, Plus, Search, FileText, Sparkles, Wand2, Loader2, ExternalLink, GripVertical, ZoomIn, HardDrive, Paperclip, Pencil } from "lucide-react";
+import { X, Plus, Search, FileText, Sparkles, Wand2, Loader2, ExternalLink, GripVertical, ZoomIn, HardDrive, Paperclip, Pencil, Maximize2, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RichTextarea } from "@/components/ui/rich-textarea";
 import { DriveFilePicker, validateFile, FilePreviewModal } from "../drive/DriveFilePicker";
-import { getOrCreateUserId } from "@/lib/utils";
+import { getOrCreateUserId, resolveTokens } from "@/lib/utils";
 import type { Contact, DriveFile } from "@shared/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -50,16 +50,21 @@ export function EditableTextCell({
     setLocalValue(value || "");
   }, [value]);
 
+  const [isExpanded, setIsExpanded] = React.useState(false);
+
   if (readOnly) {
     return (
-      <div className="h-8 w-full flex items-center px-2 text-sm font-medium text-muted-foreground/70 truncate">
+      <div 
+        className="h-8 w-full flex items-center px-2 text-sm font-medium text-muted-foreground/70 truncate"
+        title={value}
+      >
         {value || placeholder}
       </div>
     );
   }
 
   return (
-    <div className="relative flex items-center w-full group">
+    <div className="relative flex items-center w-full group h-8">
       <Input
         value={localValue}
         onChange={(e) => setLocalValue(e.target.value)}
@@ -67,35 +72,69 @@ export function EditableTextCell({
           if (localValue !== value && onUpdate) onUpdate(localValue);
         }}
         placeholder={placeholder}
+        title={value}
         className={cn(
-          "h-8 w-full bg-transparent border-transparent hover:border-border/50 focus:bg-background focus:ring-1 focus:ring-primary pl-2 text-sm transition-all",
-          localValue && type ? "pr-8" : "pr-2"
+          "h-full w-full bg-transparent border-transparent hover:border-border/50 focus:bg-background focus:ring-1 focus:ring-primary pl-2 text-sm transition-all",
+          (localValue && type) || localValue.length > 20 ? "pr-14" : "pr-6"
         )}
       />
-      {localValue && type && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            let url = "";
-            if (type === "whatsapp") {
-              const cleanNumber = localValue.replace(/[^0-9]/g, "");
-              url = `https://wa.me/${cleanNumber}`;
-            } else if (type === "gmail") {
-              url = `https://mail.google.com/mail/u/0/#search/${encodeURIComponent(localValue)}`;
-            } else if (type === "instagram") {
-              const cleanHandle = localValue.replace(/^@/, "").trim();
-              url = `https://ig.me/m/${cleanHandle}`;
-            }
-            if (url) {
-              window.open(url, "_blank", "noopener,noreferrer");
-            }
-          }}
-          className="absolute right-2 opacity-0 group-hover:opacity-100 text-muted-foreground/60 hover:text-primary transition-all p-1 rounded hover:bg-muted/60 z-10"
-          title={`Launch in ${type === "whatsapp" ? "WhatsApp" : type === "gmail" ? "Gmail" : "Instagram"}`}
-        >
-          <ExternalLink className="w-3.5 h-3.5" />
-        </button>
-      )}
+      <div className="absolute right-1 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+        {localValue.length > 20 && !type && (
+          <Popover open={isExpanded} onOpenChange={setIsExpanded}>
+            <PopoverTrigger asChild>
+              <button 
+                className="text-muted-foreground/60 hover:text-primary transition-all p-1 rounded hover:bg-muted/60 z-10"
+                title="Expand text"
+                onClick={(e) => { e.stopPropagation(); setIsExpanded(true); }}
+              >
+                <Maximize2 className="w-3.5 h-3.5" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 glass-card p-3 rounded-xl shadow-2xl z-[150]" align="start">
+               <div className="space-y-2">
+                 <div className="flex items-center justify-between">
+                   <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Edit Text</span>
+                   <button onClick={() => setIsExpanded(false)} className="text-muted-foreground hover:text-foreground"><X className="w-3.5 h-3.5" /></button>
+                 </div>
+                 <textarea
+                   autoFocus
+                   value={localValue}
+                   onChange={(e) => setLocalValue(e.target.value)}
+                   onBlur={() => {
+                     if (localValue !== value && onUpdate) onUpdate(localValue);
+                   }}
+                   className="w-full min-h-[120px] bg-background/50 border border-border/50 rounded-lg p-2 text-sm focus:ring-1 focus:ring-primary outline-none resize-y"
+                   placeholder={placeholder}
+                 />
+               </div>
+            </PopoverContent>
+          </Popover>
+        )}
+        {localValue && type && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              let url = "";
+              if (type === "whatsapp") {
+                const cleanNumber = localValue.replace(/[^0-9]/g, "");
+                url = `https://wa.me/${cleanNumber}`;
+              } else if (type === "gmail") {
+                url = `https://mail.google.com/mail/u/0/#search/${encodeURIComponent(localValue)}`;
+              } else if (type === "instagram") {
+                const cleanHandle = localValue.replace(/^@/, "").trim();
+                url = `https://ig.me/m/${cleanHandle}`;
+              }
+              if (url) {
+                window.open(url, "_blank", "noopener,noreferrer");
+              }
+            }}
+            className="text-muted-foreground/60 hover:text-primary transition-all p-1 rounded hover:bg-muted/60 z-10"
+            title={`Launch in ${type === "whatsapp" ? "WhatsApp" : type === "gmail" ? "Gmail" : "Instagram"}`}
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -246,14 +285,16 @@ export function ConditionalTextareaCell({
   value,
   onValueChange,
   placeholder = "Enter custom message...",
-  platform
+  platform,
+  contact
 }: {
   checked: boolean,
   onCheckedChange: (val: boolean) => void,
   value: string,
   onValueChange: (val: string) => void,
   placeholder?: string,
-  platform?: "whatsapp" | "email" | "instagram"
+  platform?: "whatsapp" | "email" | "instagram",
+  contact?: any
 }) {
   const [isEditing, setIsEditing] = React.useState(false);
   const [isAIMode, setIsAIMode] = React.useState(false);
@@ -315,7 +356,7 @@ export function ConditionalTextareaCell({
             onClick={() => setIsEditing(true)}
             className="flex-1 min-h-[32px] py-1.5 px-3 rounded-md bg-primary/5 border border-primary/10 text-[10px] font-bold text-left whitespace-normal line-clamp-3 leading-tight text-primary hover:bg-primary/10 transition-all"
           >
-            {value || "EDIT MESSAGE"}
+            {value ? resolveTokens(value, contact) : "EDIT MESSAGE"}
           </button>
           
           <Dialog open={isEditing} onOpenChange={(open) => {
@@ -327,7 +368,7 @@ export function ConditionalTextareaCell({
               setAiPrompt("");
             }
           }}>
-            <DialogContent className="max-w-2xl bg-background/95 backdrop-blur-xl border-border shadow-2xl rounded-3xl" onClick={(e) => e.stopPropagation()}>
+            <DialogContent className="w-[95vw] sm:w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-background/95 backdrop-blur-xl border-border shadow-2xl rounded-3xl" onClick={(e) => e.stopPropagation()}>
                <DialogHeader>
                   <DialogTitle className="text-sm font-black uppercase tracking-widest text-primary flex items-center justify-between">
                     {isAIMode ? "AI Message Generator" : "Edit Custom Message"}
@@ -370,7 +411,27 @@ export function ConditionalTextareaCell({
                    </div>
                  )}
                </div>
-  
+
+               {/* Real-Time Token Evaluation / Live Preview */}
+               {!isAIMode && (
+                 <div className="mt-2 mb-4 p-4 rounded-xl bg-primary/5 border border-primary/20">
+                   <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                     <Eye className="w-3.5 h-3.5" />
+                     Live Preview (Tokens Evaluated)
+                   </p>
+                   {platform === "email" ? (
+                     <div 
+                       className="text-sm text-foreground"
+                       dangerouslySetInnerHTML={{ __html: resolveTokens(localText, contact) || '<span class="text-muted-foreground italic">Message preview will appear here...</span>' }}
+                     />
+                   ) : (
+                     <div className="text-sm text-foreground whitespace-pre-wrap">
+                       {resolveTokens(localText, contact) || <span className="text-muted-foreground italic">Message preview will appear here...</span>}
+                     </div>
+                   )}
+                 </div>
+               )}
+
                <DialogFooter className="flex items-center justify-between sm:justify-between border-t border-border/50 pt-4">
                   <Button
                     variant="ghost"
@@ -569,7 +630,7 @@ export function AttachmentCell({
   const files = attachments || [];
 
   return (
-    <div className="flex flex-wrap gap-1 items-center min-w-[100px] group">
+    <div className="flex gap-1 items-center min-w-[100px] group overflow-x-auto scrollbar-hide snap-x">
       {/* Lightbox */}
       {lightboxFile && (
         <FilePreviewModal
@@ -586,25 +647,25 @@ export function AttachmentCell({
         <div
           key={file.id}
           className={cn(
-            "flex items-center gap-1.5 pl-2 pr-1.5 py-1 rounded-xl border text-[10px] font-bold group/chip max-w-[120px]",
+            "flex items-center gap-1.5 pl-2 pr-1.5 py-1 rounded-xl border text-[10px] font-bold group/chip max-w-[120px] snap-center shrink-0",
             isInvalidFormat 
               ? "bg-red-500/10 border-red-500/50 text-red-500" 
               : "bg-muted/30 border-border/50 text-foreground"
           )}
           title={isInvalidFormat ? validation.reason : undefined}
         >
-          {isImage(file.mimeType) && file.thumbnailLink ? (
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); setLightboxFile(file); }}
-              className="relative w-4 h-4 shrink-0"
-              title="Preview"
-            >
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setLightboxFile(file); }}
+            className="relative w-4 h-4 shrink-0 flex items-center justify-center cursor-pointer"
+            title="Preview"
+          >
+            {isImage(file.mimeType) && file.thumbnailLink ? (
               <img src={file.thumbnailLink} alt="" className="w-4 h-4 rounded object-cover" />
-            </button>
-          ) : (
-            <FileText className={cn("w-3 h-3 shrink-0", isInvalidFormat ? "text-red-500" : "text-blue-500")} />
-          )}
+            ) : (
+              <FileText className={cn("w-3 h-3 shrink-0", isInvalidFormat ? "text-red-500" : "text-blue-500")} />
+            )}
+          </button>
           <span className="truncate max-w-[60px]">{file.customName || file.name}</span>
 
           <X
@@ -775,12 +836,14 @@ export function AttachmentCell({
                                 }}
                               />
                             </div>
-                            {platform === "whatsapp" && (
-                              <div className="space-y-1">
-                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">WhatsApp Caption</p>
+                            {(platform === "whatsapp" || platform === "email") && (
+                              <div className="space-y-1 mt-2">
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                                  {platform === "email" ? "Email Subject Override" : "WhatsApp Caption"}
+                                </p>
                                 <textarea 
                                   className="w-full min-h-[60px] text-xs p-2 rounded-md border border-input bg-background focus:ring-1 focus:ring-primary outline-none"
-                                  placeholder="Add a caption..."
+                                  placeholder={platform === "email" ? "Set email subject when sending this file..." : "Add a caption..."}
                                   defaultValue={file.caption || ""}
                                   onBlur={(e) => {
                                     const newFiles = [...files];

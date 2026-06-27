@@ -43,8 +43,8 @@ export const PLATFORM_RULES: Record<AttachmentPlatform, {
   },
   instagram: {
     maxMB: 8,
-    supported: ["Images only (JPEG, PNG, GIF)"],
-    note: "⚠ Instagram only supports image attachments. Other file types will fail to send.",
+    supported: ["Images", "Video"],
+    note: "⚠ Instagram supports image and video attachments.",
     color: "#E1306C",
     badgeClass: "bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-500/20",
   },
@@ -114,11 +114,11 @@ export function validateFile(file: DriveFile, platform?: AttachmentPlatform): { 
   }
 
   if (platform === "instagram") {
-    // Instagram only supports images
-    if (!mime.startsWith("image/")) {
+    // Instagram supports images and videos
+    if (!mime.startsWith("image/") && !mime.startsWith("video/")) {
       return {
         valid: false,
-        reason: "Instagram only supports image attachments (JPEG, PNG, GIF)"
+        reason: "Instagram only supports image and video attachments"
       };
     }
   } else if (platform === "whatsapp") {

@@ -26,12 +26,18 @@ function mapRowToTemplate(row: any): Template {
   };
 }
 
-export async function getAllTemplates(userId: string, category?: string): Promise<Template[]> {
+export async function getAllTemplates(userId: string, category?: string, showDeleted: boolean = false): Promise<Template[]> {
   let sql = "SELECT * FROM templates WHERE user_id = $1";
   const params: any[] = [userId];
 
+  if (showDeleted) {
+    sql += " AND deleted_at IS NOT NULL";
+  } else {
+    sql += " AND deleted_at IS NULL";
+  }
+
   if (category) {
-    sql += " AND category = $2";
+    sql += ` AND category = $${params.length + 1}`;
     params.push(category);
   }
 
@@ -99,6 +105,16 @@ export async function updateTemplate(userId: string, id: string, data: UpdateTem
 }
 
 export async function deleteTemplate(userId: string, id: string): Promise<boolean> {
+  const result = await query("UPDATE templates SET deleted_at = NOW(), updated_at = NOW() WHERE user_id = $1 AND id = $2", [userId, id]);
+  return true;
+}
+
+export async function restoreTemplate(userId: string, id: string): Promise<boolean> {
+  const result = await query("UPDATE templates SET deleted_at = NULL, updated_at = NOW() WHERE user_id = $1 AND id = $2", [userId, id]);
+  return true;
+}
+
+export async function hardDeleteTemplate(userId: string, id: string): Promise<boolean> {
   const result = await query("DELETE FROM templates WHERE user_id = $1 AND id = $2", [userId, id]);
   return true;
 }

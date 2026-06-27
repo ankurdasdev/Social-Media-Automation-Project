@@ -45,6 +45,8 @@ import {
   FileText,
   Paperclip,
   HardDrive,
+  RefreshCcw,
+  AlertTriangle,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -52,11 +54,12 @@ import type { Template, TemplateCategory, TemplatesResponse } from "@shared/api"
 import { TemplateEditor } from "../components/templates/TemplateEditor";
 import { getOrCreateUserId, cn } from "@/lib/utils";
 
-async function fetchTemplates(category?: string): Promise<Template[]> {
+async function fetchTemplates(category?: string, showDeleted?: boolean): Promise<Template[]> {
   const userId = getOrCreateUserId();
   const params = new URLSearchParams();
   params.set("userId", userId);
-  if (category) params.set("category", category);
+  if (category && category !== "bin") params.set("category", category);
+  if (showDeleted) params.set("deleted", "true");
   
   const res = await fetch(`/api/templates?${params}`);
   if (!res.ok) throw new Error("Failed to fetch templates");
@@ -76,27 +79,28 @@ function TemplateCard({
   onDelete: (t: Template) => void;
 }) {
   return (
-    <div className="flex items-center justify-between p-4 rounded-2xl border border-border/50 bg-card hover:bg-muted/30 transition-all shadow-sm hover:shadow-md group">
-      <div className="flex items-center gap-4 min-w-0 flex-1 pr-4">
-        <div className="shrink-0 w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+    <div className="flex items-center justify-between p-5 rounded-[2rem] border border-border/50 bg-background/30 backdrop-blur-xl hover:bg-muted/40 hover:-translate-y-0.5 transition-all shadow-xl hover:shadow-2xl group overflow-hidden relative">
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+      <div className="flex items-center gap-5 min-w-0 flex-1 pr-4 relative z-10">
+        <div className="shrink-0 w-12 h-12 rounded-[1.25rem] bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform">
           {template.isAttachment ? (
-            <Paperclip className="h-5 w-5 text-primary" />
+            <Paperclip className="h-5 w-5 text-primary drop-shadow-md" />
           ) : (
-            <FileText className="h-5 w-5 text-primary" />
+            <FileText className="h-5 w-5 text-primary drop-shadow-md" />
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-[15px] font-black truncate text-foreground">{template.name}</p>
+          <p className="text-base font-black truncate text-foreground tracking-tight">{template.name}</p>
           {template.isAttachment ? (
-            <p className="text-[11px] text-muted-foreground/60 font-bold uppercase tracking-widest mt-0.5">Attachment template</p>
+            <p className="text-[10px] text-muted-foreground/60 font-bold uppercase tracking-widest mt-1">Attachment template</p>
           ) : (
-            <p className="text-[13px] text-muted-foreground truncate font-medium mt-0.5">
+            <p className="text-xs text-muted-foreground truncate font-medium mt-1 pr-4">
               {(template.content || "").replace(/<[^>]+>/g, "")}
             </p>
           )}
         </div>
       </div>
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex items-center gap-3 shrink-0 relative z-10">
         {template.category === "email" && (
           <Badge 
             variant="outline" 
@@ -130,12 +134,61 @@ function TemplateCard({
             <DropdownMenuItem onClick={() => onRename(template)}>
               <Pencil className="mr-2 h-3.5 w-3.5" /> Rename
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => onDelete(template)} className="text-destructive focus:text-destructive">
-              <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
-            </DropdownMenuItem>
+            {onDelete && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => onDelete(template)} className="text-destructive focus:text-destructive">
+                  <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
+      </div>
+    </div>
+  );
+}
+
+function BinCard({
+  template,
+  onRestore,
+  onHardDelete,
+}: {
+  template: Template;
+  onRestore: (t: Template) => void;
+  onHardDelete: (t: Template) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between p-5 rounded-[2rem] border border-destructive/20 bg-background/30 backdrop-blur-xl hover:bg-destructive/5 hover:-translate-y-0.5 transition-all shadow-xl hover:shadow-2xl group overflow-hidden relative">
+      <div className="absolute inset-0 bg-gradient-to-r from-destructive/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+      <div className="flex items-center gap-5 min-w-0 flex-1 pr-4 relative z-10">
+        <div className="shrink-0 w-12 h-12 rounded-[1.25rem] bg-gradient-to-br from-destructive/20 to-destructive/5 border border-destructive/20 flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform">
+          <Trash2 className="h-5 w-5 text-destructive drop-shadow-md" />
+        </div>
+        <div className="min-w-0 flex-1 opacity-70 group-hover:opacity-100 transition-opacity">
+          <p className="text-base font-black truncate text-foreground tracking-tight">{template.name}</p>
+          <p className="text-[10px] text-muted-foreground/60 font-bold uppercase tracking-widest mt-1">
+            Deleted in {template.category}
+          </p>
+        </div>
+      </div>
+      <div className="flex items-center gap-3 shrink-0 relative z-10">
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 gap-2 font-bold text-xs"
+          onClick={() => onRestore(template)}
+        >
+          <RefreshCcw className="h-3.5 w-3.5" /> RESTORE
+        </Button>
+        <Button
+          variant="destructive"
+          size="sm"
+          className="h-8 gap-2 font-bold text-xs"
+          onClick={() => onHardDelete(template)}
+        >
+          <Trash2 className="h-3.5 w-3.5" /> PERMANENT DELETE
+        </Button>
       </div>
     </div>
   );
@@ -185,7 +238,7 @@ export default function Templates() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const [activeTab, setActiveTab] = React.useState<TemplateCategory>("whatsapp");
+  const [activeTab, setActiveTab] = React.useState<string>("whatsapp");
   const [editorOpen, setEditorOpen] = React.useState(false);
   const [editingTemplate, setEditingTemplate] = React.useState<Template | null>(null);
   const [typeSelectOpen, setTypeSelectOpen] = React.useState(false);
@@ -200,10 +253,19 @@ export default function Templates() {
   // Delete dialog state
   const [deleteOpen, setDeleteOpen] = React.useState(false);
   const [deleteTarget, setDeleteTarget] = React.useState<Template | null>(null);
+  
+  // Hard delete dialog state
+  const [hardDeleteOpen, setHardDeleteOpen] = React.useState(false);
+  const [hardDeleteTarget, setHardDeleteTarget] = React.useState<Template | null>(null);
 
   const { data: templates = [] } = useQuery({
     queryKey: ["templates"],
     queryFn: () => fetchTemplates(),
+  });
+
+  const { data: deletedTemplates = [] } = useQuery({
+    queryKey: ["templates", "deleted"],
+    queryFn: () => fetchTemplates(undefined, true),
   });
 
   const handleCreateNew = () => {
@@ -274,10 +336,41 @@ export default function Templates() {
       const res = await fetch(`/api/templates/${deleteTarget.id}?userId=${userId}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
       await queryClient.invalidateQueries({ queryKey: ["templates"] });
-      toast({ title: "Deleted", description: `"${deleteTarget.name}" was removed.` });
+      toast({ title: "Moved to Bin", description: `"${deleteTarget.name}" was moved to the bin.` });
       setDeleteOpen(false);
     } catch {
       toast({ title: "Error", description: "Could not delete template.", variant: "destructive" });
+    }
+  };
+
+  const handleRestore = async (t: Template) => {
+    try {
+      const userId = getOrCreateUserId();
+      const res = await fetch(`/api/templates/${t.id}/restore?userId=${userId}`, { method: "POST" });
+      if (!res.ok) throw new Error();
+      await queryClient.invalidateQueries({ queryKey: ["templates"] });
+      toast({ title: "Restored", description: `"${t.name}" was restored.` });
+    } catch {
+      toast({ title: "Error", description: "Could not restore template.", variant: "destructive" });
+    }
+  };
+
+  const handleHardDeleteOpen = (t: Template) => {
+    setHardDeleteTarget(t);
+    setHardDeleteOpen(true);
+  };
+
+  const handleHardDeleteConfirm = async () => {
+    if (!hardDeleteTarget) return;
+    try {
+      const userId = getOrCreateUserId();
+      const res = await fetch(`/api/templates/${hardDeleteTarget.id}/hard?userId=${userId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error();
+      await queryClient.invalidateQueries({ queryKey: ["templates"] });
+      toast({ title: "Permanently Deleted", description: `"${hardDeleteTarget.name}" was permanently removed.` });
+      setHardDeleteOpen(false);
+    } catch {
+      toast({ title: "Error", description: "Could not hard delete template.", variant: "destructive" });
     }
   };
 
@@ -304,7 +397,7 @@ export default function Templates() {
 
         <Tabs
           value={activeTab}
-          onValueChange={(v) => setActiveTab(v as TemplateCategory)}
+          onValueChange={setActiveTab}
           className="flex-1 flex flex-col"
         >
             <TabsList className="bg-muted/50 border border-border/50 p-1.5 h-14 rounded-2xl w-full mb-8">
@@ -326,6 +419,14 @@ export default function Templates() {
                   {templates.filter((t) => t.category === "instagram").length}
                 </Badge>
               </TabsTrigger>
+              <TabsTrigger value="bin" className="flex-1 rounded-xl gap-2 font-black data-[state=active]:bg-background transition-all data-[state=active]:text-destructive">
+                <Trash2 className="h-4 w-4" /> BIN
+                {deletedTemplates.length > 0 && (
+                  <Badge variant="secondary" className="ml-1 h-5 text-[10px] px-1.5 font-black bg-destructive/10 text-destructive border-none">
+                    {deletedTemplates.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
             </TabsList>
 
             <div className="overflow-y-auto flex-1 pr-2 -mr-2 space-y-4">
@@ -341,6 +442,27 @@ export default function Templates() {
                   />
                 </TabsContent>
               ))}
+              
+              <TabsContent value="bin" className="m-0 space-y-3">
+                <div className="space-y-2 pt-2">
+                  {deletedTemplates.length === 0 ? (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <Trash2 className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                      <p className="text-sm">Bin is empty.</p>
+                      <p className="text-xs mt-1">Deleted templates will appear here.</p>
+                    </div>
+                  ) : (
+                    deletedTemplates.map((t) => (
+                      <BinCard
+                        key={t.id}
+                        template={t}
+                        onRestore={handleRestore}
+                        onHardDelete={handleHardDeleteOpen}
+                      />
+                    ))
+                  )}
+                </div>
+              </TabsContent>
             </div>
         </Tabs>
       </div>
@@ -350,7 +472,7 @@ export default function Templates() {
         open={editorOpen}
         onOpenChange={setEditorOpen}
         template={editingTemplate}
-        defaultCategory={activeTab}
+        defaultCategory={activeTab === "bin" ? "whatsapp" : (activeTab as any)}
         selectedEmailType={selectedEmailType}
         forceAttachment={forceAttachment}
       />
@@ -459,9 +581,9 @@ export default function Templates() {
             <div className="w-16 h-16 rounded-3xl bg-destructive/10 flex items-center justify-center mb-2 mx-auto">
                <Trash2 className="w-8 h-8 text-destructive" />
             </div>
-            <AlertDialogTitle className="text-2xl font-black tracking-tight text-center">Delete Template?</AlertDialogTitle>
+            <AlertDialogTitle className="text-2xl font-black tracking-tight text-center">Move to Bin?</AlertDialogTitle>
             <AlertDialogDescription className="text-center font-medium leading-relaxed">
-              Are you sure you want to permanently delete "{deleteTarget?.name}"? Outreach tracking using this template will be affected.
+              Are you sure you want to move "{deleteTarget?.name}" to the bin? You can restore it later.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-8 flex gap-3 justify-center">
@@ -470,7 +592,31 @@ export default function Templates() {
               onClick={handleDeleteConfirm}
               className="h-14 rounded-xl font-black bg-destructive text-foreground hover:bg-destructive/90 shadow-xl shadow-destructive/20 px-8"
             >
-              CONFIRM TERMINATION
+              MOVE TO BIN
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Hard Delete Confirmation */}
+      <AlertDialog open={hardDeleteOpen} onOpenChange={setHardDeleteOpen}>
+        <AlertDialogContent className="glass-card border-border dark:border-border/50 rounded-[2rem] p-10 shadow-2xl border-destructive/50">
+          <AlertDialogHeader className="space-y-4">
+            <div className="w-16 h-16 rounded-3xl bg-destructive/20 flex items-center justify-center mb-2 mx-auto">
+               <AlertTriangle className="w-8 h-8 text-destructive" />
+            </div>
+            <AlertDialogTitle className="text-2xl font-black tracking-tight text-center text-destructive">Permanently Delete?</AlertDialogTitle>
+            <AlertDialogDescription className="text-center font-medium leading-relaxed">
+              Are you absolutely sure you want to permanently delete "{hardDeleteTarget?.name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-8 flex gap-3 justify-center">
+            <AlertDialogCancel className="h-14 rounded-xl font-bold bg-muted/50 border-none">CANCEL</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleHardDeleteConfirm}
+              className="h-14 rounded-xl font-black bg-destructive text-foreground hover:bg-destructive/90 shadow-xl shadow-destructive/30 px-8"
+            >
+              PERMANENTLY DELETE
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -147,28 +147,7 @@ export default function IntegrationsCenter() {
     },
   ];
 
-  // ── WA/IG status for sidebar pills ───────────────────────────────────────
-  const { data: waStatus } = useQuery({
-    queryKey: ["wa-status-pill", userId],
-    queryFn: async () => {
-      const res = await fetch(`/api/whatsapp/status?userId=${userId}`);
-      return res.json();
-    },
-    staleTime: 30000,
-  });
-  const { data: igStatus } = useQuery({
-    queryKey: ["ig-status-pill", userId],
-    queryFn: async () => {
-      const res = await fetch(`/api/instagram/status?userId=${userId}`);
-      if (!res.ok) return { isConnected: false };
-      return res.json();
-    },
-    staleTime: 30000,
-  });
-
   const googleConnected = !!googleStatus?.connected && !googleStatus?.needsReauth;
-  const waConnected = !!waStatus?.isConnected;
-  const igConnected = !!igStatus?.isConnected;
 
   return (
     <AppLayout>
@@ -187,56 +166,7 @@ export default function IntegrationsCenter() {
           </p>
         </div>
 
-        {/* ── Connection Status Pills ── */}
-        <div className="flex flex-wrap gap-3">
-          {[
-            {
-              label: "Google",
-              connected: googleConnected,
-              icon: <GoogleLogo className="w-4 h-4" />,
-              tab: "google",
-              connectedColor: "bg-emerald-500/10 border-emerald-500/30 text-emerald-400",
-              dot: "bg-emerald-500",
-            },
-            {
-              label: "WhatsApp",
-              connected: waConnected,
-              icon: <MessageSquare className="w-4 h-4" />,
-              tab: "whatsapp",
-              connectedColor: "bg-emerald-500/10 border-emerald-500/30 text-emerald-400",
-              dot: "bg-emerald-500",
-            },
-            {
-              label: "Instagram",
-              connected: igConnected,
-              icon: <Instagram className="w-4 h-4" />,
-              tab: "instagram",
-              connectedColor: "bg-emerald-500/10 border-emerald-500/30 text-emerald-400",
-              dot: "bg-emerald-500",
-            },
-          ].map((ch) => (
-            <button
-              key={ch.label}
-              onClick={() => {
-                // Navigate to the corresponding tab
-                const url = new URL(window.location.href);
-                url.searchParams.set("defaultTab", ch.tab);
-                window.history.replaceState({}, "", url.toString());
-                window.location.reload();
-              }}
-              className={cn(
-                "flex items-center gap-2.5 px-4 py-2 rounded-2xl border font-black text-[11px] uppercase tracking-widest transition-all hover:scale-105",
-                ch.connected
-                  ? ch.connectedColor
-                  : "bg-muted/30 border-border/30 text-muted-foreground"
-              )}
-            >
-              <div className={cn("w-2 h-2 rounded-full", ch.connected ? ch.dot : "bg-muted-foreground/30")} />
-              {ch.icon}
-              {ch.label} {ch.connected ? "Connected" : "Not Connected"}
-            </button>
-          ))}
-        </div>
+
 
         <Tabs defaultValue={defaultTab} className="space-y-10">
           <TabsList className="bg-muted/50 border border-border/50 p-1.5 h-14 rounded-2xl w-full md:w-auto overflow-x-auto justify-start md:justify-center">

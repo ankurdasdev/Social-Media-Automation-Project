@@ -15,6 +15,8 @@ export interface OutreachRequest extends Partial<Contact> {
   userId: string;
   channel?: "whatsapp" | "email" | "instagram";
   channels?: ("whatsapp" | "email" | "instagram")[];
+  sequence?: ("custom" | "templates" | "attachments")[];
+  sequenceOrder?: ("whatsapp" | "email" | "instagram")[];
 }
 
 function stripExtension(filename: string): string {
@@ -146,35 +148,60 @@ export async function sendOutreach(req: OutreachRequest) {
   const results: Record<string, { success: boolean; error?: string; result?: any }> = {};
   const contactedDates = Array.isArray(contact.contacted_dates) ? contact.contacted_dates : [];
 
-  // Run in parallel with a 60-second timeout safeguard per channel
-  const promises = channels.map(async (channel) => {
-    const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error("Timeout (stalled)")), 60000)
-    );
-    const executePromise = (async () => {
-      if (channel === "whatsapp") {
-        return await handleWhatsAppOutreach(userId, data);
-      } else if (channel === "email") {
-        return await handleEmailOutreach(userId, data);
-      } else if (channel === "instagram") {
-        return await handleInstagramOutreach(userId, data);
+  // Determine the final ordered list of channels to process
+  let orderedChannels = channels;
+  if (req.sequenceOrder && req.sequenceOrder.length > 0) {
+    // Only keep channels that are in both the requested sequenceOrder AND the channels list
+    orderedChannels = req.sequenceOrder.filter(c => channels.includes(c));
+  }
+
+  if (req.sequenceOrder && req.sequenceOrder.length > 0) {
+    // Run sequentially
+    for (const channel of orderedChannels) {
+      const executePromise = async () => {
+        if (channel === "whatsapp") return await handleWhatsAppOutreach(userId, data);
+        if (channel === "email") return await handleEmailOutreach(userId, data);
+        if (channel === "instagram") return await handleInstagramOutreach(userId, data);
+        throw new Error(`Unsupported channel: ${channel}`);
+      };
+
+      try {
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("Timeout (stalled)")), 60000)
+        );
+        const res = await Promise.race([executePromise(), timeoutPromise]);
+        results[channel] = { success: true, result: res };
+      } catch (err: any) {
+        console.error(`Outreach channel ${channel} failed for contact ${contactId}:`, err.message);
+        results[channel] = { success: false, error: err.message || "Unknown error" };
       }
-      throw new Error(`Unsupported channel: ${channel}`);
-    })();
-
-    try {
-      const res = await Promise.race([executePromise, timeoutPromise]);
-      results[channel] = { success: true, result: res };
-    } catch (err: any) {
-      console.error(`Outreach channel ${channel} failed for contact ${contactId}:`, err.message);
-      results[channel] = { success: false, error: err.message || "Unknown error" };
     }
-  });
+  } else {
+    // Legacy: Run in parallel with a 60-second timeout safeguard per channel
+    const promises = channels.map(async (channel) => {
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Timeout (stalled)")), 60000)
+      );
+      const executePromise = (async () => {
+        if (channel === "whatsapp") return await handleWhatsAppOutreach(userId, data);
+        if (channel === "email") return await handleEmailOutreach(userId, data);
+        if (channel === "instagram") return await handleInstagramOutreach(userId, data);
+        throw new Error(`Unsupported channel: ${channel}`);
+      })();
 
-  await Promise.all(promises);
+      try {
+        const res = await Promise.race([executePromise, timeoutPromise]);
+        results[channel] = { success: true, result: res };
+      } catch (err: any) {
+        console.error(`Outreach channel ${channel} failed for contact ${contactId}:`, err.message);
+        results[channel] = { success: false, error: err.message || "Unknown error" };
+      }
+    });
+    await Promise.all(promises);
+  }
 
   // Analyze consolidated results
-  const attemptedCount = channels.length;
+  const attemptedCount = orderedChannels.length;
   const successes = channels.filter(c => results[c]?.success);
   const failures = channels.filter(c => !results[c]?.success);
 
@@ -295,48 +322,61 @@ async function handleWhatsAppOutreach(userId: string, contact: Contact) {
   };
 
 
-  // 1. Custom Message (Sent First)
-  if (contact.hasCustomMessageWA && contact.editableMessageWP) {
+  // Helper blocks for dynamic sequence
+  const sendCustom = async () => {
+    if (contact.hasCustomMessageWA && contact.editableMessageWP) {
       const cleanMsg = cleanHtmlForPlainText(contact.editableMessageWP);
       await sendWA(instance.instance_name, jid, cleanMsg);
       await sleep(1500);
-  }
-
-  // 2. Templates in Order
-  const templateIds = Array.isArray(contact.templateSelectionWP) ? contact.templateSelectionWP : [];
-  for (const tId of templateIds) {
-    const template = await queryOne<any>(
-      "SELECT content, is_attachment, drive_file_id, drive_file_name, drive_attachments FROM templates WHERE id = $1 AND user_id = $2",
-      [tId, userId]
-    );
-    if (!template) continue;
-
-    if (template.is_attachment) {
-       const attachments = template.drive_attachments || (template.drive_file_id ? [{
-         id: template.drive_file_id,
-         name: template.drive_file_name || "",
-       }] : []);
-       
-       for (const file of attachments) {
-         if (file.id) {
-           await sendDriveFile(file as DriveFile);
-         }
-       }
-    } else if (template.content) {
-       const message = injectVariables(template.content, contact, "whatsapp");
-       const cleanMsg = cleanHtmlForPlainText(message);
-       await sendWA(instance.instance_name, jid, cleanMsg);
-       await sleep(1500);
     }
-  }
+  };
 
-  // 3. Row Attachments
-  const rowAttachments: DriveFile[] = [
-    ...(contact.drive_attachments_wa || []),
-    ...(contact.unified_attachments || [])
-  ];
-  for (const file of rowAttachments) {
-    await sendDriveFile(file);
+  const sendTemplates = async () => {
+    const templateIds = Array.isArray(contact.templateSelectionWP) ? contact.templateSelectionWP : [];
+    for (const tId of templateIds) {
+      const template = await queryOne<any>(
+        "SELECT content, is_attachment, drive_file_id, drive_file_name, drive_attachments FROM templates WHERE id = $1 AND user_id = $2",
+        [tId, userId]
+      );
+      if (!template) continue;
+
+      if (template.is_attachment) {
+         const attachments = template.drive_attachments || (template.drive_file_id ? [{
+           id: template.drive_file_id,
+           name: template.drive_file_name || "",
+         }] : []);
+         
+         for (const file of attachments) {
+           if (file.id) {
+             await sendDriveFile(file as DriveFile);
+           }
+         }
+      } else if (template.content) {
+         const message = injectVariables(template.content, contact, "whatsapp");
+         const cleanMsg = cleanHtmlForPlainText(message);
+         await sendWA(instance.instance_name, jid, cleanMsg);
+         await sleep(1500);
+      }
+    }
+  };
+
+  const sendAttachments = async () => {
+    const rowAttachments: DriveFile[] = [
+      ...(contact.drive_attachments_wa || []),
+      ...(contact.unified_attachments || [])
+    ];
+    for (const file of rowAttachments) {
+      await sendDriveFile(file);
+    }
+  };
+
+  // Default sequence if not provided
+  const sequence = (contact as any).sequence || ["custom", "templates", "attachments"];
+  
+  for (const step of sequence) {
+    if (step === "custom") await sendCustom();
+    if (step === "templates") await sendTemplates();
+    if (step === "attachments") await sendAttachments();
   }
 
   return { success: true };
@@ -506,8 +546,20 @@ async function handleEmailOutreach(userId: string, contact: Contact) {
     const attachmentTemplates = selectedTemplates.filter(t => t.is_attachment);
 
     // Compose elements
+    
+    const manualAttachments = [
+      ...(Array.isArray(contact.drive_attachments_email) ? contact.drive_attachments_email : []),
+      ...(Array.isArray(contact.unified_attachments) ? contact.unified_attachments : [])
+    ];
+    const attachmentWithCaption = manualAttachments.find((a: any) => a.caption?.trim());
+
     // Priority 1: Contact row subject. Priority 2: Body template subject (only if custom message is NOT used).
-    let composedSubject = contact.editableGmailSubject?.trim() || "";
+    let composedSubject = "";
+    if (attachmentWithCaption && attachmentWithCaption.caption) {
+      composedSubject = attachmentWithCaption.caption.trim();
+    } else if (contact.editableGmailSubject?.trim()) {
+      composedSubject = contact.editableGmailSubject.trim();
+    }
     
     // If we are NOT using a custom message, we can fallback to the body template subject.
     if (!useCustomMessage && !composedSubject && bodyTemplate) {
@@ -664,48 +716,59 @@ async function handleInstagramOutreach(userId: string, contact: Contact) {
     await sleep(1500);
   };
 
-  // 1. Custom Message (Sent First)
-  if (contact.hasCustomMessageIG && contact.editableMessageIG) {
-     const cleanMsg = cleanHtmlForPlainText(contact.editableMessageIG);
-     await sendIG([handle], cleanMsg, session.session_data);
-     await sleep(1500);
-  }
-
-  // 2. Templates in Order
-  const templateIds = Array.isArray(contact.templateSelectionIG) ? contact.templateSelectionIG : [];
-  for (const tId of templateIds) {
-    const template = await queryOne<any>(
-      "SELECT content, is_attachment, drive_file_id, drive_file_name, drive_attachments FROM templates WHERE id = $1 AND user_id = $2",
-      [tId, userId]
-    );
-    if (!template) continue;
-
-    if (template.is_attachment) {
-       const attachments = template.drive_attachments || (template.drive_file_id ? [{
-         id: template.drive_file_id,
-         name: template.drive_file_name || "",
-       }] : []);
-       
-       for (const file of attachments) {
-         if (file.id) {
-           await sendDriveFileAsIG(file.id, file.name);
-         }
-       }
-    } else if (template.content) {
-       const message = injectVariables(template.content, contact, "instagram");
-       const cleanMsg = cleanHtmlForPlainText(message);
+  const sendCustom = async () => {
+    if (contact.hasCustomMessageIG && contact.editableMessageIG) {
+       const cleanMsg = cleanHtmlForPlainText(contact.editableMessageIG);
        await sendIG([handle], cleanMsg, session.session_data);
        await sleep(1500);
     }
-  }
+  };
 
-  // 3. Row Attachments
-  const rowAttachments: DriveFile[] = [
-    ...(contact.drive_attachments_ig || []),
-    ...(contact.unified_attachments || [])
-  ];
-  for (const file of rowAttachments) {
-    await sendDriveFileAsIG(file.id, file.name);
+  const sendTemplates = async () => {
+    const templateIds = Array.isArray(contact.templateSelectionIG) ? contact.templateSelectionIG : [];
+    for (const tId of templateIds) {
+      const template = await queryOne<any>(
+        "SELECT content, is_attachment, drive_file_id, drive_file_name, drive_attachments FROM templates WHERE id = $1 AND user_id = $2",
+        [tId, userId]
+      );
+      if (!template) continue;
+
+      if (template.is_attachment) {
+         const attachments = template.drive_attachments || (template.drive_file_id ? [{
+           id: template.drive_file_id,
+           name: template.drive_file_name || "",
+         }] : []);
+         
+         for (const file of attachments) {
+           if (file.id) {
+             await sendDriveFileAsIG(file.id, file.name);
+           }
+         }
+      } else if (template.content) {
+         const message = injectVariables(template.content, contact, "instagram");
+         const cleanMsg = cleanHtmlForPlainText(message);
+         await sendIG([handle], cleanMsg, session.session_data);
+         await sleep(1500);
+      }
+    }
+  };
+
+  const sendAttachments = async () => {
+    const rowAttachments: DriveFile[] = [
+      ...(contact.drive_attachments_ig || []),
+      ...(contact.unified_attachments || [])
+    ];
+    for (const file of rowAttachments) {
+      if (file.id) await sendDriveFileAsIG(file.id, file.name);
+    }
+  };
+
+  const sequence = (contact as any).sequence || ["custom", "templates", "attachments"];
+  
+  for (const step of sequence) {
+    if (step === "custom") await sendCustom();
+    if (step === "templates") await sendTemplates();
+    if (step === "attachments") await sendAttachments();
   }
 
   return { success: true };

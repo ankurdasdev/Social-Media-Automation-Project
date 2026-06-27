@@ -156,7 +156,8 @@ async function runMigrations(): Promise<void> {
     `ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT FALSE;`,
     `ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verify_token TEXT;`,
     `ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verify_expires TIMESTAMPTZ;`,
-    `ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN DEFAULT FALSE;`
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN DEFAULT FALSE;`,
+    `ALTER TABLE templates ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;`
   ];
 
   for (const statement of alterStatements) {
@@ -287,6 +288,7 @@ async function runMigrations(): Promise<void> {
       drive_file_name TEXT,
       drive_attachments JSONB DEFAULT '[]',
       email_template_type TEXT DEFAULT 'body',
+      deleted_at TIMESTAMPTZ,
       created_at TIMESTAMPTZ DEFAULT NOW(),
       updated_at TIMESTAMPTZ DEFAULT NOW()
     );

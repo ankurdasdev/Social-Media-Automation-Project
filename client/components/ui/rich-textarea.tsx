@@ -1,8 +1,9 @@
 import React, { useRef, useEffect, useCallback, useState } from "react";
 import {
   Bold, Italic, Underline, Highlighter, AlertTriangle, RotateCcw,
-  ChevronDown, X as XIcon, GripVertical
+  ChevronDown, X as XIcon, GripVertical, Smile, Strikethrough, List, ListOrdered, AlignLeft, AlignCenter, AlignRight, Link, Undo2, Redo2, Type
 } from "lucide-react";
+import EmojiPicker, { Theme } from "emoji-picker-react";
 import { cn } from "@/lib/utils";
 
 // ─── Platform Constraints ─────────────────────────────────────────────────────
@@ -81,6 +82,20 @@ const HIGHLIGHT_COLORS = [
   { label: "Pink", color: "#fbcfe8", tw: "bg-pink-200" },
 ];
 
+const TEXT_COLORS = [
+  { label: "Default", color: "#000000", tw: "bg-black dark:bg-white" },
+  { label: "Red", color: "#ef4444", tw: "bg-red-500" },
+  { label: "Blue", color: "#3b82f6", tw: "bg-blue-500" },
+  { label: "Green", color: "#22c55e", tw: "bg-green-500" },
+];
+
+const FONT_SIZES = [
+  { label: "Small", size: "2" },
+  { label: "Normal", size: "3" },
+  { label: "Large", size: "5" },
+  { label: "Huge", size: "7" },
+];
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function RichTextarea({
@@ -100,6 +115,9 @@ export function RichTextarea({
 
   const [warning, setWarning] = useState<string | null>(null);
   const [highlightOpen, setHighlightOpen] = useState(false);
+  const [textColorOpen, setTextColorOpen] = useState(false);
+  const [fontSizeOpen, setFontSizeOpen] = useState(false);
+  const [emojiOpen, setEmojiOpen] = useState(false);
   const charCount = getCharCount(value, platform);
 
   // ── Sync value → contentEditable ─────────────────────────────────────────
@@ -122,16 +140,61 @@ export function RichTextarea({
     }
   }, [charCount, config]);
 
+  // ── History Stack (for plain text Undo/Redo) ──────────────────────────
+  const [history, setHistory] = useState<string[]>([value || ""]);
+  const [historyIdx, setHistoryIdx] = useState(0);
+
+  // Helper to push to history
+  const pushHistory = useCallback((newVal: string) => {
+    setHistory((prev) => {
+      const upToNow = prev.slice(0, historyIdx + 1);
+      if (upToNow[upToNow.length - 1] === newVal) return prev; // no change
+      return [...upToNow, newVal];
+    });
+    setHistoryIdx((prev) => prev + 1);
+  }, [historyIdx]);
+
+  const handleUndo = useCallback(() => {
+    if (isRich) {
+      editorRef.current?.focus();
+      document.execCommand("undo", false);
+      if (editorRef.current) onChange(editorRef.current.innerHTML);
+    } else {
+      if (historyIdx > 0) {
+        const newVal = history[historyIdx - 1];
+        setHistoryIdx(historyIdx - 1);
+        onChange(newVal);
+      }
+    }
+  }, [isRich, history, historyIdx, onChange]);
+
+  const handleRedo = useCallback(() => {
+    if (isRich) {
+      editorRef.current?.focus();
+      document.execCommand("redo", false);
+      if (editorRef.current) onChange(editorRef.current.innerHTML);
+    } else {
+      if (historyIdx < history.length - 1) {
+        const newVal = history[historyIdx + 1];
+        setHistoryIdx(historyIdx + 1);
+        onChange(newVal);
+      }
+    }
+  }, [isRich, history, historyIdx, onChange]);
+
   const handlePlainChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       const raw = e.target.value;
       if (platform === "instagram" && raw.length > config.maxChars) {
-        onChange(raw.slice(0, config.maxChars));
+        const capped = raw.slice(0, config.maxChars);
+        onChange(capped);
+        pushHistory(capped);
         return;
       }
       onChange(raw);
+      pushHistory(raw);
     },
-    [onChange, platform, config.maxChars]
+    [onChange, platform, config.maxChars, pushHistory]
   );
 
   // ── Rich-text input handler (email) ──────────────────────────────────────
@@ -288,7 +351,6 @@ export function RichTextarea({
     [onChange]
   );
 
-  // ── Email: apply highlight color ──────────────────────────────────────────
   const applyHighlight = useCallback(
     (color: string | null) => {
       editorRef.current?.focus();
@@ -305,6 +367,26 @@ export function RichTextarea({
     [onChange]
   );
 
+  const applyTextColor = useCallback(
+    (color: string) => {
+      editorRef.current?.focus();
+      document.execCommand("foreColor", false, color);
+      if (editorRef.current) onChange(editorRef.current.innerHTML);
+      setTextColorOpen(false);
+    },
+    [onChange]
+  );
+
+  const applyFontSize = useCallback(
+    (size: string) => {
+      editorRef.current?.focus();
+      document.execCommand("fontSize", false, size);
+      if (editorRef.current) onChange(editorRef.current.innerHTML);
+      setFontSizeOpen(false);
+    },
+    [onChange]
+  );
+
   // ── Email: Reset All formatting ───────────────────────────────────────────
   const resetAllFormatting = useCallback(() => {
     editorRef.current?.focus();
@@ -316,11 +398,84 @@ export function RichTextarea({
   const isOverLimit = charCount > config.maxChars;
   const isNearLimit = charCount >= config.warnAt;
 
+  const handleEmojiSelect = (emojiData: any) => {
+    if (isRich && editorRef.current) {
+      editorRef.current.focus();
+      // Use execCommand to insert at current cursor position
+      document.execCommand("insertText", false, emojiData.emoji);
+      onChange(editorRef.current.innerHTML);
+    } else {
+      const ta = textareaRef.current;
+      if (ta) {
+        const start = ta.selectionStart;
+        const end = ta.selectionEnd;
+        const val = ta.value;
+        const newVal = val.substring(0, start) + emojiData.emoji + val.substring(end);
+        
+        if (platform === "instagram" && newVal.length > config.maxChars) {
+          return; // Do not insert if it exceeds the hard limit
+        }
+        
+        onChange(newVal);
+        setTimeout(() => {
+          ta.focus();
+          ta.setSelectionRange(start + emojiData.emoji.length, start + emojiData.emoji.length);
+        }, 0);
+      } else {
+        onChange(value + emojiData.emoji);
+      }
+    }
+  };
+
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className={cn("flex flex-col border border-input rounded-xl shadow-sm overflow-hidden bg-background", className)}>
       {/* Toolbar */}
       <div className="flex items-center gap-1 p-2 border-b bg-muted/20 flex-wrap min-h-[44px]">
+        
+        {/* Universal Emoji Picker */}
+        <div className="relative">
+          <ToolbarButton
+            title="Insert Emoji"
+            onMouseDown={(e) => { 
+              e.preventDefault(); 
+              setEmojiOpen((o) => !o); 
+              setHighlightOpen(false); 
+              setTextColorOpen(false);
+              setFontSizeOpen(false);
+            }}
+            className={cn(emojiOpen && "bg-muted ring-1 ring-primary/30")}
+          >
+            <Smile className="w-4 h-4 text-foreground/80" />
+          </ToolbarButton>
+          {emojiOpen && (
+            <div className="absolute top-full left-0 mt-1 z-50 animate-in fade-in zoom-in-95 duration-150 shadow-2xl">
+              <div 
+                className="fixed inset-0 z-40" 
+                onClick={() => setEmojiOpen(false)} 
+              />
+              <div className="relative z-50">
+                <EmojiPicker 
+                  onEmojiClick={handleEmojiSelect}
+                  theme={Theme.AUTO}
+                  lazyLoadEmojis={true}
+                  searchDisabled={false}
+                  skinTonesDisabled={true}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="w-px h-5 bg-border/50 mx-1" />
+
+        {/* Universal Undo/Redo */}
+        <ToolbarButton title="Undo" onMouseDown={(e) => { e.preventDefault(); handleUndo(); }} disabled={!isRich && historyIdx === 0}>
+          <Undo2 className="w-4 h-4" />
+        </ToolbarButton>
+        <ToolbarButton title="Redo" onMouseDown={(e) => { e.preventDefault(); handleRedo(); }} disabled={!isRich && historyIdx === history.length - 1}>
+          <Redo2 className="w-4 h-4" />
+        </ToolbarButton>
+        <div className="w-px h-5 bg-border/50 mx-1" />
 
         {/* ── WhatsApp toolbar ── */}
         {platform === "whatsapp" && (
@@ -356,14 +511,125 @@ export function RichTextarea({
             <ToolbarButton title="Underline" onMouseDown={(e) => { e.preventDefault(); execRich("underline"); }}>
               <Underline className="w-4 h-4" />
             </ToolbarButton>
+            <ToolbarButton title="Strikethrough" onMouseDown={(e) => { e.preventDefault(); execRich("strikeThrough"); }}>
+              <Strikethrough className="w-4 h-4" />
+            </ToolbarButton>
 
             <div className="w-px h-5 bg-border/50 mx-1" />
+            
+            {/* Font Size picker */}
+            <div className="relative">
+              <ToolbarButton
+                title="Font Size"
+                onMouseDown={(e) => { 
+                  e.preventDefault(); 
+                  setFontSizeOpen((o) => !o); 
+                  setHighlightOpen(false);
+                  setTextColorOpen(false);
+                  setEmojiOpen(false);
+                }}
+                className={cn(fontSizeOpen && "bg-muted ring-1 ring-primary/30")}
+              >
+                <span className="flex items-center gap-1">
+                  <span className="text-xs font-black">A</span>
+                  <ChevronDown className="w-2.5 h-2.5 text-muted-foreground" />
+                </span>
+              </ToolbarButton>
+              {fontSizeOpen && (
+                <div className="absolute top-full left-0 mt-1 z-50 bg-popover border border-border/50 rounded-xl shadow-xl p-2 flex flex-col gap-1.5 min-w-[120px] animate-in fade-in zoom-in-95 duration-150">
+                  {FONT_SIZES.map((fs) => (
+                    <button
+                      key={fs.label}
+                      type="button"
+                      onMouseDown={(e) => { e.preventDefault(); applyFontSize(fs.size); }}
+                      className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg hover:bg-muted transition-colors text-left"
+                    >
+                      <span className="text-xs font-bold">{fs.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="w-px h-5 bg-border/50 mx-1" />
+
+            <ToolbarButton title="Align Left" onMouseDown={(e) => { e.preventDefault(); execRich("justifyLeft"); }}>
+              <AlignLeft className="w-4 h-4" />
+            </ToolbarButton>
+            <ToolbarButton title="Align Center" onMouseDown={(e) => { e.preventDefault(); execRich("justifyCenter"); }}>
+              <AlignCenter className="w-4 h-4" />
+            </ToolbarButton>
+            <ToolbarButton title="Align Right" onMouseDown={(e) => { e.preventDefault(); execRich("justifyRight"); }}>
+              <AlignRight className="w-4 h-4" />
+            </ToolbarButton>
+
+            <div className="w-px h-5 bg-border/50 mx-1" />
+
+            <ToolbarButton title="Bulleted List" onMouseDown={(e) => { e.preventDefault(); execRich("insertUnorderedList"); }}>
+              <List className="w-4 h-4" />
+            </ToolbarButton>
+            <ToolbarButton title="Numbered List" onMouseDown={(e) => { e.preventDefault(); execRich("insertOrderedList"); }}>
+              <ListOrdered className="w-4 h-4" />
+            </ToolbarButton>
+
+            <div className="w-px h-5 bg-border/50 mx-1" />
+            
+            <ToolbarButton title="Insert Link" onMouseDown={(e) => { 
+              e.preventDefault(); 
+              const url = prompt("Enter link URL:");
+              if (url) execRich("createLink", url); 
+            }}>
+              <Link className="w-4 h-4" />
+            </ToolbarButton>
+
+            <div className="w-px h-5 bg-border/50 mx-1" />
+
+            {/* Text Color picker */}
+            <div className="relative">
+              <ToolbarButton
+                title="Text Color"
+                onMouseDown={(e) => { 
+                  e.preventDefault(); 
+                  setTextColorOpen((o) => !o); 
+                  setHighlightOpen(false);
+                  setFontSizeOpen(false);
+                  setEmojiOpen(false);
+                }}
+                className={cn(textColorOpen && "bg-muted ring-1 ring-primary/30")}
+              >
+                <span className="flex items-center gap-1">
+                  <Type className="w-4 h-4 text-foreground" />
+                  <ChevronDown className="w-2.5 h-2.5 text-muted-foreground" />
+                </span>
+              </ToolbarButton>
+              {textColorOpen && (
+                <div className="absolute top-full left-0 mt-1 z-50 bg-popover border border-border/50 rounded-xl shadow-xl p-2 flex flex-col gap-1.5 min-w-[160px] animate-in fade-in zoom-in-95 duration-150">
+                  {TEXT_COLORS.map((tc) => (
+                    <button
+                      key={tc.label}
+                      type="button"
+                      onMouseDown={(e) => { e.preventDefault(); applyTextColor(tc.color); }}
+                      className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg hover:bg-muted transition-colors text-left"
+                    >
+                      <span className={cn("w-4 h-4 rounded-full border border-border/50 shrink-0", tc.tw)} />
+                      <span className="text-xs font-bold">{tc.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {/* Highlight picker */}
             <div className="relative">
               <ToolbarButton
                 title="Highlight"
-                onMouseDown={(e) => { e.preventDefault(); setHighlightOpen((o) => !o); }}
+                onMouseDown={(e) => { 
+                  e.preventDefault(); 
+                  setHighlightOpen((o) => !o); 
+                  setTextColorOpen(false);
+                  setFontSizeOpen(false);
+                  setEmojiOpen(false);
+                }}
                 className={cn(highlightOpen && "bg-muted ring-1 ring-primary/30")}
               >
                 <span className="flex items-center gap-1">
@@ -504,12 +770,14 @@ function ToolbarButton({
   onClick,
   onMouseDown,
   className,
+  disabled,
 }: {
   children: React.ReactNode;
   title?: string;
   onClick?: () => void;
   onMouseDown?: (e: React.MouseEvent) => void;
   className?: string;
+  disabled?: boolean;
 }) {
   return (
     <button
@@ -517,8 +785,9 @@ function ToolbarButton({
       title={title}
       onClick={onClick}
       onMouseDown={onMouseDown}
+      disabled={disabled}
       className={cn(
-        "p-1.5 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition-colors",
+        "p-1.5 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 disabled:pointer-events-none",
         className
       )}
     >

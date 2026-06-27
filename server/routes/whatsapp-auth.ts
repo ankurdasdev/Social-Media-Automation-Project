@@ -37,6 +37,11 @@ export const handleWhatsAppStatus: RequestHandler = async (req, res) => {
       return res.json({ instance: null, isConnected: false });
     }
 
+    if (!EVOLUTION_API_URL) {
+      console.warn("⚠️ [whatsapp] EVOLUTION_API_URL is missing in .env");
+      return res.json({ instance: null, isConnected: false });
+    }
+
     const instanceName = dbRes.rows[0].instance_name;
 
     try {

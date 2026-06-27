@@ -75,6 +75,8 @@ interface DataTableProps<TData, TValue> {
   isExternalTransitioning?: boolean;
 }
 
+export type GridDensity = "compact" | "normal" | "spacious";
+
 // ─── Drag Fill State (Decoupled from React State for Performance) ──────
 const dragFillState = {
   startIdx: null as number | null,
@@ -114,6 +116,7 @@ const MemoizedTableCell = React.memo(({
   isSelected,
   rColor,
   isCustom,
+  density,
   onContextMenu,
   onDragFillComplete
 }: any) => {
@@ -121,7 +124,8 @@ const MemoizedTableCell = React.memo(({
     <TableCell
       id={`cell-${rowIndex}-${cellId}`}
       className={cn(
-        "relative py-2 px-6 border-r border-border/10 last:border-r-0",
+        "relative border-r border-border/10 last:border-r-0",
+        density === "compact" ? "py-1 px-4" : density === "spacious" ? "py-4 px-6" : "py-2 px-6",
         isPinned && "sticky z-[15] shadow-[2px_0_10px_-3px_rgba(0,0,0,0.3)]",
         isPinned && !isCustom && !cColor && "bg-background",
         isPinned && isLastPinned && "border-r-[3px] border-r-border/50"
@@ -196,6 +200,7 @@ const MemoizedTableRow = React.memo(({
   isCustom,
   columnsFingerprint,
   setSelectedContact,
+  density,
   onContextMenu,
   onDragFillComplete
 }: any) => {
@@ -244,10 +249,11 @@ const MemoizedTableRow = React.memo(({
             rowIndex={row.index}
             colSize={cell.column.getSize()}
             isPinned={cell.column.getIsPinned() === "left"}
-            isLastPinned={cell.column.getIsLastColumn("left")}
-            isSelected={isSelected}
+            isLastPinned={cell.column.getIsPinned() === "left" && cell.column.getIsLastColumn("left")}
+            isSelected={row.getIsSelected()}
             rColor={rColor}
             isCustom={isCustom}
+            density={density}
             onContextMenu={onContextMenu}
             onDragFillComplete={onDragFillComplete}
           />
@@ -386,6 +392,26 @@ export function DataTable<TData, TValue>({
   }, [columnFilters]);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = React.useState(initialGlobalFilter);
+  const [columnPinning, setColumnPinning] = React.useState<any>(() => {
+    try {
+      const saved = localStorage.getItem("casthub-column-pinning");
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return { left: ["select"] };
+  });
+
+  React.useEffect(() => {
+    localStorage.setItem("casthub-column-pinning", JSON.stringify(columnPinning));
+  }, [columnPinning]);
+
+  const [density, setDensity] = React.useState<GridDensity>(() => {
+    return (localStorage.getItem("casthub-grid-density") as GridDensity) || "normal";
+  });
+
+  React.useEffect(() => {
+    localStorage.setItem("casthub-grid-density", density);
+  }, [density]);
+
   const [isFullscreen, setIsFullscreen] = React.useState(false);
   const [isFullscreenAnimating, setIsFullscreenAnimating] = React.useState(false);
 
@@ -444,13 +470,14 @@ export function DataTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
     onGlobalFilterChange: setGlobalFilter,
     onColumnOrderChange: setColumnOrder,
+    onColumnPinningChange: setColumnPinning,
     state: {
       rowSelection,
       columnFilters,
       sorting,
       globalFilter,
       columnOrder,
-      columnPinning: { left: ["select"] },
+      columnPinning,
     },
     enableRowSelection: true,
     enablePinning: true,
@@ -548,6 +575,8 @@ export function DataTable<TData, TValue>({
           onZoomChange={setZoomLevel}
           isTitleFrozen={isTitleFrozen}
           onToggleTitleFreeze={setIsTitleFrozen}
+          density={density}
+          onDensityChange={setDensity}
           className="flex-1"
         />
       </div>
@@ -623,6 +652,7 @@ export function DataTable<TData, TValue>({
                       isSelected={row.getIsSelected()}
                       rColor={rColor}
                       isCustom={isCustom}
+                      density={density}
                       columnsFingerprint={columnsFingerprint}
                       setSelectedContact={setSelectedContact}
                       onContextMenu={handleContextMenu}

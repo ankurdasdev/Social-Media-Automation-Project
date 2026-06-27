@@ -59,6 +59,8 @@ interface DataTableToolbarProps<TData> {
   onAddContact?: () => void;
   isTitleFrozen?: boolean;
   onToggleTitleFreeze?: (frozen: boolean) => void;
+  density?: "compact" | "normal" | "spacious";
+  onDensityChange?: (density: "compact" | "normal" | "spacious") => void;
 }
 
 export function DataTableToolbar<TData>({
@@ -80,6 +82,8 @@ export function DataTableToolbar<TData>({
   onAddContact,
   isTitleFrozen,
   onToggleTitleFreeze,
+  density = "normal",
+  onDensityChange,
 }: DataTableToolbarProps<TData>) {
   const selectedRows = table.getFilteredSelectedRowModel().rows;
   const hasSelection = selectedRows.length > 0;
@@ -354,6 +358,26 @@ export function DataTableToolbar<TData>({
                      className="scale-75"
                   />
                </div>
+               
+               <DropdownMenuSeparator className="dark:bg-white/[0.02] bg-black/5" />
+               <div className="px-3 py-2 space-y-2">
+                 <span className="text-[10px] font-black uppercase tracking-widest text-foreground block">Grid Density</span>
+                 <div className="flex bg-muted/30 p-1 rounded-xl">
+                   {(["compact", "normal", "spacious"] as const).map((d) => (
+                     <button
+                       key={d}
+                       onClick={() => onDensityChange?.(d)}
+                       className={cn(
+                         "flex-1 text-[9px] font-black uppercase tracking-widest py-1.5 rounded-lg transition-all",
+                         density === d ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:bg-white/5"
+                       )}
+                     >
+                       {d}
+                     </button>
+                   ))}
+                 </div>
+               </div>
+
                <DropdownMenuSeparator className="dark:bg-white/[0.02] bg-black/5" />
               
                <DropdownMenuItem 

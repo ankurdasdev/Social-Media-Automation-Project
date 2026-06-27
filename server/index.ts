@@ -33,6 +33,8 @@ import {
   handleCreateTemplate,
   handleUpdateTemplate,
   handleDeleteTemplate,
+  handleRestoreTemplate,
+  handleHardDeleteTemplate,
 } from "./routes/templates";
 import {
   handleGoogleAuth,
@@ -304,6 +306,8 @@ export function createServer() {
   app.post("/api/templates", handleCreateTemplate);
   app.put("/api/templates/:id", handleUpdateTemplate);
   app.delete("/api/templates/:id", handleDeleteTemplate);
+  app.post("/api/templates/:id/restore", handleRestoreTemplate);
+  app.delete("/api/templates/:id/hard", handleHardDeleteTemplate);
 
   // ── Google OAuth + Drive ───────────────────────────────────────────────────────
   app.get("/api/auth/google", handleGoogleAuth);

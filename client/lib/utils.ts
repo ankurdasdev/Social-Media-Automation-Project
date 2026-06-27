@@ -84,3 +84,30 @@ export function getCurrentUser(): { userId: string; email: string; name: string 
   if (!payload?.userId) return null;
   return { userId: payload.userId, email: payload.email, name: payload.name };
 }
+
+// ─── Token Resolution ─────────────────────────────────────────────────────────
+
+export function resolveTokens(text: string, contact: any): string {
+  if (!text) return "";
+  let resolved = text;
+  
+  const tokenMap: Record<string, string> = {
+    "{{leadName}}": contact?.name || "",
+    "{{castingName}}": contact?.castingName || "",
+    "{{actingContext}}": contact?.actingContext || "",
+    "{{project}}": contact?.project || "",
+    "{{age}}": contact?.age || "",
+    "{{personalizedWP}}": contact?.personalizedNameWA || "",
+    "{{personalizedGmail}}": contact?.personalizedNameGmail || "",
+    "{{personalizedIG}}": contact?.personalizedNameIG || "",
+  };
+
+  Object.entries(tokenMap).forEach(([token, value]) => {
+    // Replace all instances of the token with its value (or keep the token if value is empty/null so user sees it needs filling)
+    // Actually, roadmap says "resolve when user types". If empty, maybe just show blank or fallback.
+    const safeValue = value || `[${token.replace(/[{}]/g, "")}]`;
+    resolved = resolved.replace(new RegExp(token, 'gi'), safeValue);
+  });
+
+  return resolved;
+}

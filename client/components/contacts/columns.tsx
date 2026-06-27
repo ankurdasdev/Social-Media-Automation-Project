@@ -23,6 +23,8 @@ import {
   AlertCircle,
   Type,
   Pencil,
+  Pin,
+  PinOff,
 } from "lucide-react";
 import { 
   EditableTextCell, 
@@ -319,6 +321,23 @@ function DataTableColumnHeader({
                 </Button>
               </div>
             )}
+            <div className="pt-2 mt-2 border-t border-border/50">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  column.pin(column.getIsPinned() === "left" ? false : "left");
+                  // Optional: trigger re-render of layout
+                }}
+                className={cn("w-full h-8 text-[10px] font-black uppercase transition-all", column.getIsPinned() === "left" ? "bg-primary/20 text-primary border-primary/50 hover:bg-primary/30 hover:text-primary" : "text-muted-foreground hover:bg-white/5 hover:text-foreground")}
+              >
+                {column.getIsPinned() === "left" ? (
+                  <><PinOff className="w-3.5 h-3.5 mr-2" /> Unpin Column</>
+                ) : (
+                  <><Pin className="w-3.5 h-3.5 mr-2" /> Pin to Left</>
+                )}
+              </Button>
+            </div>
           </div>
         </PopoverContent>
         </Popover>
@@ -673,6 +692,7 @@ export const columns: ColumnDef<Contact>[] = [
               onValueChange={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { editableMessageWP: val })}
               placeholder="Override WP Template..."
               platform="whatsapp"
+              contact={row.original}
             />
           </div>
         ),
@@ -767,6 +787,7 @@ export const columns: ColumnDef<Contact>[] = [
               onValueChange={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { editableMessageGmail: val })}
               placeholder="Override Email Body..."
               platform="email"
+              contact={row.original}
             />
           </div>
         ),
@@ -847,6 +868,7 @@ export const columns: ColumnDef<Contact>[] = [
               onValueChange={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { editableMessageIG: val })}
               placeholder="Override IG Message..."
               platform="instagram"
+              contact={row.original}
             />
           </div>
         ),

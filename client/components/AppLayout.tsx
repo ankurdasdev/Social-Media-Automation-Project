@@ -10,23 +10,19 @@ import {
   LogOut,
   User,
   SlidersHorizontal,
-  Mail,
-  MessageSquare,
   CheckCircle2,
   XCircle,
-  AlertTriangle,
   Loader2,
   LayoutDashboard,
   ShieldCheck,
   Zap,
   Instagram,
-  Sparkles,
   Crown,
   HelpCircle,
+  Circle,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getOrCreateUserId, clearAuthToken, getCurrentUser, getAuthToken } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 import { WhatsAppStatusResponse } from "@shared/api";
 import {
   DropdownMenu,
@@ -36,7 +32,6 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { useTutorial } from "./TutorialProvider";
 import { LayoutTemplate } from "lucide-react";
 import SubscriptionBanner from "./SubscriptionBanner";
 
@@ -44,6 +39,7 @@ interface AppLayoutProps {
   children: React.ReactNode;
 }
 
+// Nav items — Contacts moved above Source Manager per client request
 const navItems = [
   {
     label: "Integrations Centre",
@@ -56,14 +52,14 @@ const navItems = [
     icon: LayoutTemplate,
   },
   {
-    label: "Source Manager",
-    href: "/controller",
-    icon: Settings,
-  },
-  {
     label: "Contacts",
     href: "/contacts",
     icon: Table,
+  },
+  {
+    label: "Source Manager",
+    href: "/controller",
+    icon: Settings,
   },
   {
     label: "Analytics",
@@ -82,6 +78,86 @@ const navItems = [
   },
 ];
 
+// ── CastHub Logo Component ─────────────────────────────────────────────────────
+function CastHubLogo({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
+  const iconSize = size === "sm" ? "w-9 h-9" : size === "lg" ? "w-14 h-14" : "w-12 h-12";
+  const zapSize = size === "sm" ? "w-5 h-5" : size === "lg" ? "w-8 h-8" : "w-7 h-7";
+  const textSize = size === "sm" ? "text-xl" : size === "lg" ? "text-3xl" : "text-2xl";
+
+  return (
+    <div className="flex items-center gap-3.5 group">
+      <div className={cn(
+        iconSize,
+        "rounded-2xl flex items-center justify-center shadow-2xl transition-all duration-500 group-hover:scale-105 group-hover:shadow-primary/30",
+        "bg-gradient-to-br from-primary via-primary/90 to-amber-600 shadow-primary/20"
+      )}>
+        <Zap className={cn(zapSize, "text-primary-foreground fill-primary-foreground")} />
+      </div>
+      <div className="flex flex-col leading-none">
+        <span className={cn(textSize, "font-black tracking-tighter leading-none")}>
+          CAST<span className="text-primary">HUB</span>
+        </span>
+        <span className="text-[8.5px] font-semibold tracking-[0.06em] text-muted-foreground/60 mt-1 leading-tight max-w-[150px]">
+          Automate Your Outreach. Grow Your Opportunities.
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ── Status Pill Component ──────────────────────────────────────────────────────
+function ConnectionStatusPill({
+  label,
+  connectedLabel,
+  disconnectedLabel,
+  isConnected,
+  loading = false,
+}: {
+  label: string;
+  connectedLabel: string;
+  disconnectedLabel: string;
+  isConnected: boolean | undefined;
+  loading?: boolean;
+}) {
+  if (loading || isConnected === undefined) {
+    return (
+      <div className="flex items-center justify-between p-2.5 rounded-xl border bg-muted/10 border-border/20 opacity-50">
+        <div className="flex items-center gap-2.5">
+          <div className="w-2 h-2 rounded-full bg-muted-foreground/20 animate-pulse" />
+          <span className="text-[9.5px] font-bold uppercase tracking-widest text-muted-foreground/40">{label}</span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn(
+      "flex items-center justify-between p-2.5 rounded-xl border transition-all duration-300",
+      isConnected
+        ? "bg-emerald-500/8 border-emerald-500/20 dark:bg-emerald-500/5"
+        : "bg-muted/10 border-border/20"
+    )}>
+      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+        <div className={cn(
+          "w-2 h-2 rounded-full shrink-0 transition-all duration-300",
+          isConnected
+            ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.6)]"
+            : "bg-muted-foreground/25"
+        )} />
+        <span className={cn(
+          "text-[9.5px] font-bold uppercase tracking-widest truncate transition-colors duration-300",
+          isConnected ? "text-emerald-500 dark:text-emerald-400" : "text-muted-foreground/50"
+        )}>
+          {isConnected ? connectedLabel : disconnectedLabel}
+        </span>
+      </div>
+      {isConnected && (
+        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 ml-1" />
+      )}
+    </div>
+  );
+}
+
 export default function AppLayout({ children }: AppLayoutProps) {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -96,19 +172,17 @@ export default function AppLayout({ children }: AppLayoutProps) {
     localStorage.setItem('casthub-theme', next ? 'dark' : 'light');
   };
 
-  const { startTutorial } = useTutorial();
-
   // ── Global Status Polling ──────────────────────────────────────────────────
-  const { data: googleStatus } = useQuery({
+  const { data: googleStatus, isLoading: googleLoading } = useQuery({
     queryKey: ["google-status", userId],
     queryFn: async () => {
       const res = await fetch(`/api/auth/google/status?userId=${userId}`);
       return res.json() as Promise<{ connected: boolean; needsReauth: boolean }>;
     },
-    refetchInterval: 60000, 
+    refetchInterval: 60000,
   });
 
-  const { data: waStatus } = useQuery({
+  const { data: waStatus, isLoading: waLoading } = useQuery({
     queryKey: ["whatsapp-status", userId],
     queryFn: async () => {
       const res = await fetch(`/api/whatsapp/status?userId=${userId}`);
@@ -117,7 +191,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
     refetchInterval: 30000,
   });
 
-  const { data: igStatus } = useQuery({
+  const { data: igStatus, isLoading: igLoading } = useQuery({
     queryKey: ["instagram-status", userId],
     queryFn: async () => {
       const res = await fetch(`/api/instagram/status?userId=${userId}`);
@@ -144,41 +218,39 @@ export default function AppLayout({ children }: AppLayoutProps) {
     window.location.href = "/login";
   };
 
+  const googleConnected = !!googleStatus?.connected && !googleStatus?.needsReauth;
+  const waConnected = !!waStatus?.isConnected;
+  const igConnected = !!igStatus?.isConnected;
+
   return (
     <div className="h-screen overflow-hidden bg-background text-foreground flex">
       {/* Dynamic Background Effects */}
       <div className="fixed inset-0 pointer-events-none -z-10">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-secondary/10 rounded-full blur-[120px]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)] opacity-20" />
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/8 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.3)_100%)] opacity-20" />
       </div>
 
-      <aside className="hidden md:flex flex-col w-72 h-screen border-r border-border/40 bg-card/30 backdrop-blur-2xl px-6 py-10 relative z-30 overflow-y-auto overflow-x-hidden">
-        {/* Sidebar Noise/Texture */}
-        <div className="absolute inset-0 opacity-[0.03] pointer-events-none brightness-100 contrast-150 bg-black" />
-        
-        {/* Scrollable Flex Wrapper to support sticky bottom sections without browser clipping on zoom */}
+      {/* ── SIDEBAR ── */}
+      <aside className="hidden md:flex flex-col w-72 h-screen border-r border-border/40 bg-card/30 backdrop-blur-2xl px-5 py-8 relative z-30 overflow-y-auto overflow-x-hidden">
+        {/* Sidebar Texture */}
+        <div className="absolute inset-0 opacity-[0.015] pointer-events-none bg-[radial-gradient(circle_at_1px_1px,#fff_1px,transparent_0)] bg-[size:24px_24px]" />
+
         <div className="flex flex-col min-h-full w-full relative z-10">
-          {/* Logo Section */}
-          <div className="mb-12 relative">
-            <Link to="/dashboard" className="flex items-center gap-4 group">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary via-primary/80 to-secondary flex items-center justify-center shadow-2xl shadow-primary/20 group-hover:scale-105 transition-all duration-500">
-                <Zap className="w-7 h-7 text-white fill-white" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-2xl font-black tracking-tighter leading-none">CAST<span className="text-primary italic">HUB</span></span>
-                <span className="text-[10px] font-black tracking-[0.3em] text-muted-foreground uppercase opacity-70">Automation Dashboard</span>
-              </div>
+
+          {/* ── Logo — clicks go to dashboard ── */}
+          <div className="mb-10">
+            <Link to="/dashboard">
+              <CastHubLogo size="md" />
             </Link>
           </div>
 
-          {/* Navigation */}
-          <nav className="flex-1 space-y-2 relative">
-            <p className="px-4 mb-4 text-[10px] font-black text-muted-foreground/50 uppercase tracking-[0.2em]">Navigation</p>
+          {/* ── Navigation (no label) ── */}
+          <nav className="flex-1 space-y-1">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.href;
-              const targetId = item.label === "Contacts" ? "tutorial-contacts-nav" : 
+              const targetId = item.label === "Contacts" ? "tutorial-contacts-nav" :
                                item.label === "Controller" ? "tutorial-controller-nav" : undefined;
               return (
                 <Link
@@ -186,170 +258,154 @@ export default function AppLayout({ children }: AppLayoutProps) {
                   to={item.href}
                   id={targetId}
                   className={cn(
-                    "flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 group relative",
-                    isActive 
-                      ? "bg-primary/10 text-primary shadow-inner" 
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                    "flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200 group relative overflow-hidden",
+                    isActive
+                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25 font-bold"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/40 font-medium"
                   )}
                 >
-                  <Icon className={cn("w-5 h-5 transition-transform group-hover:scale-110", isActive && "text-primary")} />
-                  <span className="font-bold text-sm tracking-tight">{item.label}</span>
                   {isActive && (
-                    <div className="absolute right-4 w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_rgba(139,92,246,0.8)]" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary to-primary/80 -z-10" />
+                  )}
+                  <Icon className={cn(
+                    "w-4.5 h-4.5 shrink-0 transition-transform group-hover:scale-110",
+                    isActive ? "text-primary-foreground" : ""
+                  )} style={{ width: '18px', height: '18px' }} />
+                  <span className="text-sm tracking-tight">{item.label}</span>
+                  {isActive && (
+                    <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary-foreground/80 shadow-sm" />
                   )}
                 </Link>
               );
             })}
-            
+
             {userProfile?.is_admin && (
-               <Link
-                 to="/admin"
-                 className={cn(
-                   "flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 group relative mt-4",
-                   location.pathname === "/admin" 
-                     ? "bg-primary text-white shadow-lg shadow-primary/20" 
-                     : "text-primary/70 hover:text-primary hover:bg-primary/10 border border-primary/20"
-                 )}
-               >
-                 <ShieldCheck className="w-5 h-5 transition-transform group-hover:scale-110" />
-                 <span className="font-bold text-sm tracking-tight">System Admin</span>
-                 {location.pathname === "/admin" && (
-                   <div className="absolute right-4 w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
-                 )}
-               </Link>
+              <Link
+                to="/admin"
+                className={cn(
+                  "flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200 group relative mt-3",
+                  location.pathname === "/admin"
+                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25 font-bold"
+                    : "text-primary/70 hover:text-primary hover:bg-primary/10 border border-primary/20 font-medium"
+                )}
+              >
+                <ShieldCheck className="w-4.5 h-4.5 shrink-0" style={{ width: '18px', height: '18px' }} />
+                <span className="text-sm tracking-tight">System Admin</span>
+              </Link>
             )}
           </nav>
 
-          {/* Status Indicators */}
-          <div className="mt-auto pt-10 border-t border-border/30 space-y-6 relative">
-               <div className="space-y-4">
-                  <p className="px-4 text-[10px] font-black text-muted-foreground/50 uppercase tracking-[0.2em]">Connection Status</p>
-                  <div className="space-y-2 px-2">
-                      {/* Drive Status */}
-                      <div className={cn(
-                          "flex items-center justify-between p-3 rounded-2xl border transition-all",
-                          googleStatus?.connected ? "bg-blue-500/5 border-blue-500/20" : "bg-muted/10 border-border/20"
-                      )}>
-                          <div className="flex items-center gap-3">
-                              <div className={cn("w-2 h-2 rounded-full", googleStatus?.connected ? (googleStatus.needsReauth ? "bg-yellow-500 animate-pulse" : "bg-blue-500") : "bg-muted-foreground/30")} />
-                              <span className="text-[10px] font-black uppercase tracking-widest">GOOGLE DRIVE</span>
-                          </div>
-                          {googleStatus?.connected && <ShieldCheck className="w-3.5 h-3.5 text-blue-500" />}
-                      </div>
+          {/* ── Connection Status ── */}
+          <div className="mt-auto pt-6 border-t border-border/30 space-y-5">
+            <div className="space-y-2">
+              <p className="px-1 text-[9px] font-bold text-muted-foreground/40 uppercase tracking-[0.25em] mb-3">
+                Connection Status
+              </p>
+              <ConnectionStatusPill
+                label="Google"
+                connectedLabel="Google Connected"
+                disconnectedLabel="Google Not Connected"
+                isConnected={googleConnected}
+                loading={googleLoading}
+              />
+              <ConnectionStatusPill
+                label="WhatsApp"
+                connectedLabel="WhatsApp Connected"
+                disconnectedLabel="WhatsApp Not Connected"
+                isConnected={waConnected}
+                loading={waLoading}
+              />
+              <ConnectionStatusPill
+                label="Instagram"
+                connectedLabel="Instagram Connected"
+                disconnectedLabel="Instagram Not Connected"
+                isConnected={igConnected}
+                loading={igLoading}
+              />
+            </div>
 
-                      {/* WhatsApp Status */}
-                      <div className={cn(
-                          "flex items-center justify-between p-3 rounded-2xl border transition-all",
-                          waStatus?.isConnected ? "bg-emerald-500/5 border-emerald-500/20" : "bg-muted/10 border-border/20"
-                      )}>
-                          <div className="flex items-center gap-3">
-                              <div className={cn("w-2 h-2 rounded-full animate-pulse", waStatus?.isConnected ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-muted-foreground/30")} />
-                              <span className="text-[10px] font-black uppercase tracking-widest text-foreground">WHATSAPP</span>
-                          </div>
-                          {waStatus?.isConnected && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />}
-                      </div>
-
-                      {/* Instagram Status */}
-                      <div className={cn(
-                          "flex items-center justify-between p-3 rounded-2xl border transition-all",
-                          igStatus?.isConnected ? "bg-pink-500/5 border-pink-500/20" : "bg-muted/10 border-border/20"
-                      )}>
-                          <div className="flex items-center gap-3">
-                              <div className={cn("w-2 h-2 rounded-full animate-pulse", igStatus?.isConnected ? "bg-pink-500 shadow-[0_0_8px_rgba(236,72,153,0.5)]" : "bg-muted-foreground/30")} />
-                              <span className="text-[10px] font-black uppercase tracking-widest text-foreground">INSTAGRAM</span>
-                          </div>
-                          {igStatus?.isConnected && <Instagram className="w-3.5 h-3.5 text-pink-500" />}
-                      </div>
-                  </div>
-               </div>
-
-               {/* User Section */}
-               <div className="flex items-center justify-between gap-3 p-3 bg-muted/20 border border-border/30 rounded-2xl">
-                  <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary/30 to-secondary/30 border border-white/10 flex items-center justify-center shrink-0">
-                          <User className="w-5 h-5" />
-                      </div>
-                      <div className="flex flex-col min-w-0">
-                          <span className="text-xs font-black truncate">{currentUser?.name || "Anonymous User"}</span>
-                          <span className="text-[10px] font-bold text-muted-foreground truncate uppercase tracking-[0.05em]">{currentUser?.email?.split('@')[0]}</span>
-                      </div>
-                  </div>
-                  <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-muted/50">
-                              <SlidersHorizontal className="w-4 h-4" />
-                          </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" side="right" className="glass-card w-48 p-2 rounded-2xl">
-                           <DropdownMenuItem asChild className="rounded-xl gap-2 cursor-pointer font-bold mb-1 hover:bg-muted/50">
-                              <Link to="/profile" className="flex items-center gap-2 w-full">
-                                  <User className="w-4 h-4" /> View Profile
-                              </Link>
-                           </DropdownMenuItem>
-                           <DropdownMenuSeparator className="bg-border/30 mx-2" />
-                           <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive hover:bg-destructive/10 rounded-xl gap-2 cursor-pointer font-bold">
-                              <LogOut className="w-4 h-4" /> Logout System
-                           </DropdownMenuItem>
-                      </DropdownMenuContent>
-                  </DropdownMenu>
+            {/* ── User Section ── */}
+            <div className="flex items-center justify-between gap-3 p-3 bg-muted/20 border border-border/30 rounded-xl">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary/30 to-amber-500/20 border border-primary/20 flex items-center justify-center shrink-0">
+                  <User className="w-4 h-4 text-primary" />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-xs font-bold truncate">{currentUser?.name || "Anonymous User"}</span>
+                  <span className="text-[9px] font-medium text-muted-foreground truncate uppercase tracking-wide">{currentUser?.email?.split('@')[0]}</span>
+                </div>
               </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-muted/50 shrink-0">
+                    <SlidersHorizontal className="w-3.5 h-3.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" side="right" className="glass-card w-48 p-2 rounded-2xl">
+                  <DropdownMenuItem asChild className="rounded-xl gap-2 cursor-pointer font-bold mb-1 hover:bg-muted/50">
+                    <Link to="/profile" className="flex items-center gap-2 w-full">
+                      <User className="w-4 h-4" /> View Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-border/30 mx-2" />
+                  <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive hover:bg-destructive/10 rounded-xl gap-2 cursor-pointer font-bold">
+                    <LogOut className="w-4 h-4" /> Logout System
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
-        </aside>
+        </div>
+      </aside>
 
-      {/* Main Container */}
+      {/* ── MAIN CONTAINER ── */}
       <div className="flex-1 flex flex-col min-w-0 relative">
-        {/* Top Header - Mobile & Desktop Actions */}
-        <header className="h-20 border-b border-border/30 bg-background/30 backdrop-blur-xl flex items-center justify-between px-6 lg:px-10 z-20">
+
+        {/* ── Top Header ── */}
+        <header className="h-16 border-b border-border/30 bg-background/40 backdrop-blur-xl flex items-center justify-between px-6 lg:px-8 z-20 shrink-0">
+          {/* Mobile: show logo */}
           <div className="flex items-center gap-4 md:hidden">
-            <Link to="/dashboard" className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-                    <Zap className="w-6 h-6 text-white" />
-                </div>
-                <span className="text-xl font-black">CAST<span className="text-primary italic">HUB</span></span>
+            <Link to="/dashboard">
+              <CastHubLogo size="sm" />
             </Link>
           </div>
 
-          <div className="hidden md:flex items-center gap-2">
-             <Badge variant="secondary" className="bg-muted/50 text-muted-foreground border-none font-black tracking-widest text-[9px] px-3 py-1">
-                SYSTEM OPERATIONAL
-             </Badge>
+          {/* Desktop: show CastHub brand in header too */}
+          <div className="hidden md:flex items-center gap-3">
+            <Link to="/dashboard" className="flex items-center gap-2 group">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-amber-600 flex items-center justify-center shadow-md shadow-primary/20 group-hover:scale-105 transition-transform">
+                <Zap className="w-4.5 h-4.5 text-primary-foreground fill-primary-foreground" style={{ width: '18px', height: '18px' }} />
+              </div>
+              <span className="text-base font-black tracking-tight leading-none">
+                CAST<span className="text-primary">HUB</span>
+              </span>
+            </Link>
           </div>
 
-          <div className="flex items-center gap-4">
-             {location.pathname !== "/profile" && (
-               <Button
-                 variant="outline"
-                 size="sm"
-                 onClick={() => startTutorial()}
-                 className="h-11 rounded-xl bg-amber-500/10 border-amber-500/20 text-amber-500 hover:text-amber-400 gap-2 hover:bg-amber-500/20 transition-all font-black text-[10px] tracking-widest uppercase shadow-md shadow-amber-500/5 group px-3 md:px-4 shrink-0"
-               >
-                 <Sparkles className="w-4 h-4 text-amber-500 group-hover:rotate-45 transition-transform shrink-0" />
-                 <span className="hidden sm:inline">Page Guide</span>
-               </Button>
-             )}
-
-             {/* Dark Mode Toggle */}
-             <button
-                onClick={toggleTheme}
-                className="w-11 h-11 rounded-xl bg-muted/30 border border-border/30 flex items-center justify-center hover:bg-muted/50 transition-all text-foreground"
-              >
-                <div className="relative w-5 h-5 flex items-center justify-center">
-                  <div className="absolute dark:opacity-0 transition-opacity">
-                    <svg className="w-5 h-5 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path d="M10 15a5 5 0 100-10 5 5 0 000 10z" /></svg>
-                  </div>
-                  <div className="absolute opacity-0 dark:opacity-100 transition-opacity">
-                    <svg className="w-5 h-5 text-indigo-400" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" /></svg>
-                  </div>
+          {/* Right actions */}
+          <div className="flex items-center gap-3">
+            {/* Dark Mode Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="w-10 h-10 rounded-xl bg-muted/30 border border-border/30 flex items-center justify-center hover:bg-muted/50 transition-all text-foreground hover:border-primary/30"
+              title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              <div className="relative w-5 h-5 flex items-center justify-center">
+                <div className="absolute dark:opacity-0 transition-opacity duration-200">
+                  <svg className="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path d="M10 15a5 5 0 100-10 5 5 0 000 10z" /></svg>
                 </div>
-              </button>
+                <div className="absolute opacity-0 dark:opacity-100 transition-opacity duration-200">
+                  <svg className="w-4 h-4 text-primary" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" /></svg>
+                </div>
+              </div>
+            </button>
 
-              <button
-                className="md:hidden w-11 h-11 rounded-xl bg-muted/30 border border-border/30 flex items-center justify-center"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              >
-                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-              </button>
+            <button
+              className="md:hidden w-10 h-10 rounded-xl bg-muted/30 border border-border/30 flex items-center justify-center hover:bg-muted/50 transition-all"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
           </div>
         </header>
 
@@ -357,43 +413,50 @@ export default function AppLayout({ children }: AppLayoutProps) {
         {mobileMenuOpen && (
           <div className="fixed inset-0 z-50 md:hidden animate-in fade-in duration-300">
             <div className="absolute inset-0 bg-background/80 backdrop-blur-2xl" onClick={() => setMobileMenuOpen(false)} />
-            <nav className="absolute inset-y-0 right-0 w-72 bg-card/60 backdrop-blur-3xl border-l border-border/40 p-10 flex flex-col gap-8 shadow-2xl">
-                <div className="flex items-center justify-between">
-                    <span className="text-xl font-black">System <span className="text-primary italic">Menu</span></span>
-                    <button onClick={() => setMobileMenuOpen(false)}><X className="w-6 h-6" /></button>
-                </div>
-                <div className="space-y-2">
-                    {navItems.map((item) => (
-                         <Link
-                         key={item.href}
-                         to={item.href}
-                         onClick={() => setMobileMenuOpen(false)}
-                         className={cn(
-                           "flex items-center gap-4 px-6 py-4 rounded-2xl font-black text-sm",
-                           location.pathname === item.href ? "bg-primary text-white" : "text-muted-foreground hover:bg-muted/30"
-                         )}
-                       >
-                         <item.icon className="w-5 h-5" /> {item.label}
-                       </Link>
-                    ))}
-                    {userProfile?.is_admin && (
-                         <Link
-                         to="/admin"
-                         onClick={() => setMobileMenuOpen(false)}
-                         className={cn(
-                           "flex items-center gap-4 px-6 py-4 rounded-2xl font-black text-sm",
-                           location.pathname === "/admin" ? "bg-primary text-white" : "text-primary hover:bg-primary/10"
-                         )}
-                       >
-                         <ShieldCheck className="w-5 h-5" /> System Admin
-                       </Link>
+            <nav className="absolute inset-y-0 right-0 w-72 bg-card/70 backdrop-blur-3xl border-l border-border/40 p-8 flex flex-col gap-6 shadow-2xl">
+              <div className="flex items-center justify-between">
+                <CastHubLogo size="sm" />
+                <button onClick={() => setMobileMenuOpen(false)}>
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              <div className="space-y-1">
+                {navItems.map((item) => (
+                  <Link
+                    key={item.href}
+                    to={item.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={cn(
+                      "flex items-center gap-3.5 px-4 py-3.5 rounded-xl font-semibold text-sm",
+                      location.pathname === item.href
+                        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
+                        : "text-muted-foreground hover:bg-muted/30"
                     )}
-                </div>
-                <div className="mt-auto border-t border-border/30 pt-8">
-                     <Button onClick={handleLogout} variant="destructive" className="w-full h-14 rounded-2xl font-black gap-2">
-                         <LogOut className="w-5 h-5" /> LOGOUT
-                     </Button>
-                </div>
+                  >
+                    <item.icon className="w-4.5 h-4.5 shrink-0" style={{ width: '18px', height: '18px' }} />
+                    {item.label}
+                  </Link>
+                ))}
+                {userProfile?.is_admin && (
+                  <Link
+                    to="/admin"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={cn(
+                      "flex items-center gap-3.5 px-4 py-3.5 rounded-xl font-semibold text-sm",
+                      location.pathname === "/admin"
+                        ? "bg-primary text-primary-foreground"
+                        : "text-primary hover:bg-primary/10"
+                    )}
+                  >
+                    <ShieldCheck className="w-4.5 h-4.5 shrink-0" style={{ width: '18px', height: '18px' }} /> System Admin
+                  </Link>
+                )}
+              </div>
+              <div className="mt-auto border-t border-border/30 pt-6">
+                <Button onClick={handleLogout} variant="destructive" className="w-full h-12 rounded-xl font-bold gap-2">
+                  <LogOut className="w-4 h-4" /> Logout
+                </Button>
+              </div>
             </nav>
           </div>
         )}
@@ -403,35 +466,34 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
         {/* Dynamic Content Area */}
         <main className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide">
-            <div className="w-full max-w-[1400px] mx-auto p-4 sm:p-6 lg:p-10 space-y-8 lg:space-y-12 pb-24">
-                {children}
+          <div className="w-full max-w-[1400px] mx-auto p-4 sm:p-6 lg:p-10 space-y-8 lg:space-y-12 pb-24">
+            {children}
+          </div>
+
+          {/* Legal Footer */}
+          <footer className="border-t border-border/20 bg-background/20 backdrop-blur-sm px-6 lg:px-10 py-4 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-[10px] font-medium text-muted-foreground/30 tracking-widest uppercase">
+              © {new Date().getFullYear()} CastHub — Casting Automation Platform
+            </p>
+            <div className="flex items-center gap-4">
+              <Link to="/terms" className="text-[10px] font-medium text-muted-foreground/40 hover:text-muted-foreground transition-colors uppercase tracking-widest">
+                Terms
+              </Link>
+              <span className="text-muted-foreground/20 text-[10px]">·</span>
+              <Link to="/privacy" className="text-[10px] font-medium text-muted-foreground/40 hover:text-muted-foreground transition-colors uppercase tracking-widest">
+                Privacy
+              </Link>
+              <span className="text-muted-foreground/20 text-[10px]">·</span>
+              <Link to="/help" className="text-[10px] font-medium text-muted-foreground/40 hover:text-muted-foreground transition-colors uppercase tracking-widest">
+                Contact
+              </Link>
             </div>
+          </footer>
 
-            {/* Legal Footer */}
-            <footer className="border-t border-border/20 bg-background/20 backdrop-blur-sm px-6 lg:px-10 py-5 flex flex-wrap items-center justify-between gap-3">
-              <p className="text-[10px] font-bold text-muted-foreground/30 tracking-widest uppercase">
-                © {new Date().getFullYear()} CastHub — Casting Automation Platform
-              </p>
-              <div className="flex items-center gap-5">
-                <Link to="/terms" className="text-[10px] font-bold text-muted-foreground/40 hover:text-muted-foreground transition-colors uppercase tracking-widest">
-                  Terms of Service
-                </Link>
-                <span className="text-muted-foreground/20 text-[10px]">·</span>
-                <Link to="/privacy" className="text-[10px] font-bold text-muted-foreground/40 hover:text-muted-foreground transition-colors uppercase tracking-widest">
-                  Privacy Policy
-                </Link>
-                <span className="text-muted-foreground/20 text-[10px]">·</span>
-                <Link to="/help" className="text-[10px] font-bold text-muted-foreground/40 hover:text-muted-foreground transition-colors uppercase tracking-widest">
-                  Contact
-                </Link>
-              </div>
-            </footer>
-
-            {/* Ambient Lighting Background */}
-            <div className="fixed bottom-0 left-0 w-full h-[50vh] bg-gradient-to-t from-background to-transparent pointer-events-none -z-10 opacity-60" />
+          {/* Ambient Lighting */}
+          <div className="fixed bottom-0 left-0 w-full h-[50vh] bg-gradient-to-t from-background to-transparent pointer-events-none -z-10 opacity-60" />
         </main>
       </div>
     </div>
   );
 }
-

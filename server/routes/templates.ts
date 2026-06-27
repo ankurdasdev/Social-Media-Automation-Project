@@ -4,6 +4,8 @@ import {
   createTemplate,
   updateTemplate,
   deleteTemplate,
+  restoreTemplate,
+  hardDeleteTemplate,
 } from "../store/templates-store";
 import type {
   TemplatesResponse,
@@ -17,13 +19,15 @@ export const handleGetTemplates: RequestHandler = async (req, res) => {
   const userId = req.query.userId as string;
   const { category } = req.query as Record<string, string>;
 
+  const showDeleted = req.query.deleted === "true";
+
   if (!userId) {
     res.status(400).json({ error: "userId is required" });
     return;
   }
 
   try {
-    const templates = await getAllTemplates(userId, category);
+    const templates = await getAllTemplates(userId, category, showDeleted);
     const response: TemplatesResponse = { templates };
     res.json(response);
   } catch (err) {
@@ -97,5 +101,49 @@ export const handleDeleteTemplate: RequestHandler = async (req, res) => {
     res.status(204).send();
   } catch (err) {
     res.status(500).json({ error: "Failed to delete template" });
+  }
+};
+
+// POST /api/templates/:id/restore
+export const handleRestoreTemplate: RequestHandler = async (req, res) => {
+  const userId = req.query.userId as string || req.body.userId;
+  const { id } = req.params;
+
+  if (!userId) {
+    res.status(400).json({ error: "userId is required" });
+    return;
+  }
+
+  try {
+    const restored = await restoreTemplate(userId as string, id as string);
+    if (!restored) {
+      res.status(404).json({ error: "Template not found" });
+      return;
+    }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to restore template" });
+  }
+};
+
+// DELETE /api/templates/:id/hard
+export const handleHardDeleteTemplate: RequestHandler = async (req, res) => {
+  const userId = req.query.userId as string;
+  const { id } = req.params;
+
+  if (!userId) {
+    res.status(400).json({ error: "userId is required" });
+    return;
+  }
+
+  try {
+    const deleted = await hardDeleteTemplate(userId as string, id as string);
+    if (!deleted) {
+      res.status(404).json({ error: "Template not found" });
+      return;
+    }
+    res.status(204).send();
+  } catch (err) {
+    res.status(500).json({ error: "Failed to hard delete template" });
   }
 };
