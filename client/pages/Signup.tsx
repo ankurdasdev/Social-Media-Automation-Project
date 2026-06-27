@@ -30,20 +30,20 @@ function AnimatedBackground() {
   }, []);
 
   return (
-    <div className="fixed inset-0 -z-10 overflow-hidden dark:bg-[#03020a] bg-slate-50">
+    <div className="fixed inset-0 -z-10 overflow-hidden dark:bg-[#0d0b08] bg-amber-50/30">
       <div
         className="absolute inset-0 opacity-[0.025]"
-        style={{ backgroundImage: "linear-gradient(rgba(139,92,246,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.6) 1px, transparent 1px)", backgroundSize: "60px 60px" }}
+        style={{ backgroundImage: "linear-gradient(rgba(245,197,24,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(245,197,24,0.4) 1px, transparent 1px)", backgroundSize: "60px 60px" }}
       />  
       {/* Orbs with mouse tracking wrappers */}
       <div className="absolute inset-0 transition-transform duration-1000 ease-out" style={{ transform: `translate(${mousePos.x * 60}px, ${mousePos.y * 60}px)` }}>
-        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-purple-600/20 blur-[140px] animate-float-1" />
+        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-amber-500/15 blur-[140px] animate-float-1" />
       </div>
       <div className="absolute inset-0 transition-transform duration-1000 ease-out" style={{ transform: `translate(${mousePos.x * -80}px, ${mousePos.y * -80}px)` }}>
-        <div className="absolute -bottom-40 -right-40 w-[700px] h-[700px] rounded-full bg-indigo-600/15 blur-[160px] animate-float-2" />
+        <div className="absolute -bottom-40 -right-40 w-[700px] h-[700px] rounded-full bg-primary/10 blur-[160px] animate-float-2" />
       </div>
       <div className="absolute inset-0 transition-transform duration-1000 ease-out" style={{ transform: `translate(${mousePos.x * 120}px, ${mousePos.y * 120}px)` }}>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-violet-500/10 blur-[120px] animate-float-3" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-amber-600/8 blur-[120px] animate-float-3" />
       </div>
     </div>
   );
@@ -138,8 +138,15 @@ function PasswordStrength({ password }: { password: string }) {
 
 const FEATURES = [
   { icon: MessageCircle, color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20", label: "WhatsApp Automation", desc: "Mass outreach in minutes" },
-  { icon: FileText, color: "text-purple-400", bg: "bg-purple-500/10 border-purple-500/20", label: "Template Builder", desc: "Craft winning messages" },
-  { icon: ShieldCheck, color: "text-rose-400", bg: "bg-rose-500/10 border-rose-500/20", label: "Anti-Ban Protection", desc: "Safe sending intervals" },
+  { icon: Mail, color: "text-primary", bg: "bg-primary/10 border-primary/20", label: "Gmail Campaigns", desc: "Personalised emails at scale" },
+  { icon: Instagram, color: "text-pink-400", bg: "bg-pink-500/10 border-pink-500/20", label: "Instagram DMs", desc: "Connect with talent on social" },
+];
+
+const BENEFITS = [
+  "Automate WhatsApp, Gmail & Instagram outreach",
+  "Smart personalization tags for every message",
+  "Manage 10,000+ contacts in one dashboard",
+  "Analytics to track what's working",
 ];
 
 const COUNTRY_CODES = [
@@ -303,22 +310,21 @@ export default function Signup() {
       )}>
         {/* Logo */}
         <div className="flex items-center gap-3.5">
-          <div className="w-11 h-11 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-[14px] flex items-center justify-center shadow-lg shadow-purple-500/30">
-            <Zap className="w-5.5 h-5.5 text-foreground fill-current" />
+          <div className="w-11 h-11 bg-gradient-to-br from-primary to-amber-600 rounded-[14px] flex items-center justify-center shadow-lg shadow-primary/30">
+            <Zap className="w-5 h-5 text-primary-foreground fill-primary-foreground" />
           </div>
-          <span className="text-xl font-black tracking-tight text-foreground">CAST<span className="text-purple-400 italic">HUB</span></span>
+          <div className="flex flex-col">
+            <span className="text-xl font-black tracking-tight text-foreground">CAST<span className="text-primary">HUB</span></span>
+            <span className="text-[8px] font-semibold text-muted-foreground/50 tracking-wide leading-tight">Automate Your Outreach. Grow Your Opportunities.</span>
+          </div>
         </div>
 
         {/* Hero */}
         <div className="space-y-8">
           <div className="space-y-5">
-            <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-purple-500/10 border border-purple-500/20">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-[11px] font-black text-purple-300 uppercase tracking-[0.25em]">Join the Platform</span>
-            </div>
             <h1 className="text-5xl font-black tracking-[-0.03em] text-foreground leading-[1.08]">
               Automate your<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-violet-400 to-indigo-400">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-amber-400 to-amber-600">
                 casting outreach.
               </span>
             </h1>
@@ -346,9 +352,23 @@ export default function Signup() {
             ))}
           </div>
 
+          {/* Benefits checklist */}
+          <div className="space-y-2">
+            <p className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-[0.25em]">What You Get</p>
+            {BENEFITS.map((b, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <div className="w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="w-2.5 h-2.5 text-primary" />
+                </div>
+                <p className="text-xs text-foreground/60 font-medium">{b}</p>
+              </div>
+            ))}
+            <p className="text-[10px] text-primary/70 font-bold mt-3 pl-7">7 day free trial. Cancel anytime before that.</p>
+          </div>
+
           {/* Trust */}
           <div className="flex items-center gap-3 p-4 rounded-2xl dark:bg-white/[0.03] bg-black/[0.03] border border-white/[0.06]">
-            <ShieldCheck className="w-5 h-5 text-purple-400 shrink-0" />
+            <ShieldCheck className="w-5 h-5 text-primary shrink-0" />
             <p className="text-xs text-foreground/40 font-medium leading-relaxed">
               Your data is protected with AES-256 encryption and stored securely in our EU-compliant infrastructure.
             </p>
@@ -357,9 +377,11 @@ export default function Signup() {
 
         <p className="text-[11px] text-foreground/20 font-medium">
           © {new Date().getFullYear()} CastHub ·{" "}
-          <Link to="/terms" className="hover:text-foreground/40 transition-colors">Terms</Link>
+          <a href="https://docs.google.com/document/d/1CiyDnxNm3rJLvnNfEFZE9H_UHQ6I8fMx" target="_blank" rel="noopener noreferrer" className="hover:text-foreground/40 transition-colors">Terms</a>
           {" "}·{" "}
-          <Link to="/privacy" className="hover:text-foreground/40 transition-colors">Privacy</Link>
+          <a href="https://docs.google.com/document/d/1jPLs_g_9sH-n0yTa-n1o3pK8uJFnZr7V" target="_blank" rel="noopener noreferrer" className="hover:text-foreground/40 transition-colors">Privacy</a>
+          {" "}·{" "}
+          <a href="mailto:support@casthub.in" className="hover:text-foreground/40 transition-colors">support@casthub.in</a>
         </p>
       </div>
 
@@ -370,16 +392,16 @@ export default function Signup() {
       )}>
         {/* Mobile logo */}
         <div className="lg:hidden flex items-center gap-3 mb-8 self-start">
-          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center">
-            <Zap className="w-5 h-5 text-foreground fill-current" />
+          <div className="w-10 h-10 bg-gradient-to-br from-primary to-amber-600 rounded-2xl flex items-center justify-center">
+            <Zap className="w-5 h-5 text-primary-foreground fill-primary-foreground" />
           </div>
-          <span className="text-xl font-black tracking-tight text-foreground">CAST<span className="text-purple-400 italic">HUB</span></span>
+          <span className="text-xl font-black tracking-tight text-foreground">CAST<span className="text-primary">HUB</span></span>
         </div>
 
         <div className="w-full max-w-[460px] space-y-7 my-auto">
           {/* Header */}
           <div className="space-y-1.5">
-            <h2 className="text-4xl font-black tracking-tight text-foreground">Create account</h2>
+            <h2 className="text-4xl font-black tracking-tight text-foreground">Create Your CastHub Account</h2>
             <p className="text-foreground/40 font-medium text-[15px]">Start your casting automation journey</p>
           </div>
 
@@ -648,7 +670,7 @@ export default function Signup() {
 
             {/* Submit */}
             <button type="submit" disabled={isLoading}
-              className="w-full h-14 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-60 text-foreground font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all duration-300 shadow-xl shadow-purple-500/25 active:scale-[0.98]">
+              className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 disabled:opacity-60 text-primary-foreground font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all duration-300 shadow-xl shadow-primary/25 active:scale-[0.98]">
               {isLoading
                 ? <><Loader2 className="w-4 h-4 animate-spin" /> Creating Account...</>
                 : <><ShieldCheck className="w-4 h-4" /> Create My Account <ArrowRight className="w-4 h-4" /></>
@@ -663,10 +685,14 @@ export default function Signup() {
             <div className="flex-1 h-px bg-white/[0.06]" />
           </div>
           <Link to="/login"
-            className="w-full h-13 rounded-2xl border border-white/[0.08] hover:border-purple-500/40 hover:bg-purple-500/5 text-foreground/60 hover:text-foreground font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all duration-300 group">
+            className="w-full h-13 rounded-2xl border border-white/[0.08] hover:border-primary/40 hover:bg-primary/5 text-foreground/60 hover:text-foreground font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all duration-300 group">
             Sign In Instead
             <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
           </Link>
+          <p className="text-center text-[10px] text-foreground/20 font-medium">
+            Need help?{" "}
+            <a href="mailto:support@casthub.in" className="text-primary/60 hover:text-primary transition-colors font-bold">support@casthub.in</a>
+          </p>
         </div>
       </div>
     </div>

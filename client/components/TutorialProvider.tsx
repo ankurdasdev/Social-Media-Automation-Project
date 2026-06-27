@@ -88,6 +88,36 @@ const TUTORIAL_STEPS: Record<string, TutorialStep[]> = {
       path: "/contacts"
     }
   ],
+  templates: [
+    {
+      targetId: "tutorial-templates-title",
+      title: "Step 1 of 4 — Templates",
+      content: "This is your Template Library. Here you can create, save and reuse outreach messages for all your channels.",
+      placement: "bottom",
+      path: "/templates"
+    },
+    {
+      targetId: "tutorial-templates-tabs",
+      title: "Step 2 of 4 — Choose a Channel",
+      content: "Switch between WhatsApp, Email, and Instagram tabs to manage templates for each channel separately.",
+      placement: "bottom",
+      path: "/templates"
+    },
+    {
+      targetId: "tutorial-templates-new",
+      title: "Step 3 of 4 — Create a Template",
+      content: "Click 'NEW TEMPLATE' to open the creation modal. Choose your template type and start composing your outreach message.",
+      placement: "bottom",
+      path: "/templates"
+    },
+    {
+      targetId: "tutorial-contacts-nav",
+      title: "Step 4 of 4 — Use Templates in Campaigns",
+      content: "Head to the Contacts section to assign your templates to contacts and launch your outreach campaigns.",
+      placement: "right",
+      path: "/templates"
+    }
+  ],
   controller: [
     {
       targetId: "tutorial-controller-welcome",
@@ -222,6 +252,7 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
       else if (location.pathname === "/controller") resolvedPage = "controller";
       else if (location.pathname === "/analytics") resolvedPage = "analytics";
       else if (location.pathname === "/integrations") resolvedPage = "settings";
+      else if (location.pathname === "/templates") resolvedPage = "templates";
       else resolvedPage = "dashboard";
     }
 

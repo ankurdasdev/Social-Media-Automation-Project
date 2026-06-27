@@ -212,12 +212,12 @@ function TemplateTabContent({
   const categoryTemplates = templates.filter((t) => t.category === category);
 
   return (
-    <div className="space-y-2 pt-2">
+    <div className="space-y-4 pt-2">
       {categoryTemplates.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           <FileText className="h-8 w-8 mx-auto mb-2 opacity-30" />
           <p className="text-sm">No templates yet.</p>
-          <p className="text-xs mt-1">Click "Create Template" above to get started.</p>
+          <p className="text-xs mt-1">Use the buttons below or click "New Template" to get started.</p>
         </div>
       ) : (
         categoryTemplates.map((t) => (
@@ -230,6 +230,16 @@ function TemplateTabContent({
           />
         ))
       )}
+      {/* Channel-specific CTA buttons */}
+      <div className="pt-4 flex flex-col sm:flex-row gap-3">
+        <button
+          onClick={onCreateNew}
+          className="flex-1 h-12 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 hover:bg-emerald-500/15 text-emerald-500 font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
+        >
+          <Plus className="h-4 w-4" />
+          {category === "whatsapp" ? "Create Template for WhatsApp" : category === "email" ? "Create Template for Email" : "Create Template for Instagram"}
+        </button>
+      </div>
     </div>
   );
 }
@@ -383,14 +393,14 @@ export default function Templates() {
               <FileText className="w-3 h-3" />
               Template Library
             </div>
-            <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground uppercase">
+            <h1 id="tutorial-templates-title" className="text-4xl md:text-5xl font-black tracking-tighter text-foreground uppercase">
               Templates
             </h1>
             <p className="text-muted-foreground text-sm font-medium">
-              Create and manage message templates for all your outreach channels.
+              Create, save and reuse outreach messages.
             </p>
           </div>
-          <Button onClick={handleCreateNew} className="h-14 px-8 rounded-[1.5rem] font-black bg-primary hover:bg-primary/90 text-white gap-2 shadow-xl shadow-primary/20 transition-all active:scale-95 shrink-0 text-[11px] uppercase tracking-widest">
+          <Button id="tutorial-templates-new" onClick={handleCreateNew} className="h-14 px-8 rounded-[1.5rem] font-black bg-primary hover:bg-primary/90 text-white gap-2 shadow-xl shadow-primary/20 transition-all active:scale-95 shrink-0 text-[11px] uppercase tracking-widest">
             <Plus className="h-5 w-5" /> NEW TEMPLATE
           </Button>
         </div>
@@ -400,7 +410,7 @@ export default function Templates() {
           onValueChange={setActiveTab}
           className="flex-1 flex flex-col"
         >
-            <TabsList className="bg-muted/50 border border-border/50 p-1.5 h-14 rounded-2xl w-full mb-8">
+            <TabsList id="tutorial-templates-tabs" className="bg-muted/50 border border-border/50 p-1.5 h-14 rounded-2xl w-full mb-8">
               <TabsTrigger value="whatsapp" className="flex-1 rounded-xl gap-2 font-black data-[state=active]:bg-background transition-all data-[state=active]:text-emerald-500">
                 <MessageCircle className="h-4 w-4" /> WHATSAPP
                 <Badge variant="secondary" className="ml-1 h-5 text-[10px] px-1.5 font-black bg-emerald-500/10 text-emerald-500 border-none">
@@ -482,11 +492,8 @@ export default function Templates() {
         <DialogContent className="sm:max-w-[480px] glass-card border-border dark:border-border/50 rounded-[2rem] p-10 shadow-2xl">
           <DialogHeader className="space-y-3">
             <DialogTitle className="text-2xl font-black tracking-tight text-center">
-              {activeTab === "whatsapp" ? "WHATSAPP" : activeTab === "email" ? "EMAIL" : "INSTAGRAM"} TEMPLATE TYPE
+              What would you like to create?
             </DialogTitle>
-            <DialogDescription className="text-center font-medium uppercase tracking-widest text-[9px]">
-              Choose the template structure to initialize
-            </DialogDescription>
           </DialogHeader>
 
           <div className="grid grid-cols-1 gap-4 pt-6">
@@ -506,7 +513,7 @@ export default function Templates() {
               </button>
             )}
 
-            {/* Email body / footer */}
+            {/* Email body / signature / attachment */}
             {activeTab === "email" && (
               <>
                 <button
@@ -514,15 +521,15 @@ export default function Templates() {
                   className="h-24 rounded-2xl flex flex-col items-center justify-center p-4 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 gap-1.5 transition-all"
                 >
                   <Mail className="h-6 w-6" />
-                  <span className="text-sm font-black uppercase">Email Body Template</span>
-                  <span className="text-[9px] text-muted-foreground/60 font-bold uppercase tracking-widest">Contains Subject &amp; Main Content</span>
+                  <span className="text-sm font-black uppercase">Full Email Template</span>
+                  <span className="text-[9px] text-muted-foreground/60 font-bold uppercase tracking-widest">Subject &amp; Main Content</span>
                 </button>
                 <button
                   onClick={() => handleSelectType("footer")}
                   className="h-24 rounded-2xl flex flex-col items-center justify-center p-4 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 gap-1.5 transition-all"
                 >
                   <FileText className="h-6 w-6" />
-                  <span className="text-sm font-black uppercase">Email Footer Template</span>
+                  <span className="text-sm font-black uppercase">Email Signature Template</span>
                   <span className="text-[9px] text-muted-foreground/60 font-bold uppercase tracking-widest">Appended to the bottom of drafts</span>
                 </button>
               </>
@@ -541,11 +548,6 @@ export default function Templates() {
             >
               <Paperclip className="h-6 w-6" />
               <span className="text-sm font-black uppercase">Attachment Template</span>
-              <span className="text-[9px] text-muted-foreground/60 font-bold uppercase tracking-widest">
-                {activeTab === "whatsapp" ? "Image, Video, Audio, PDF (max 64MB)" :
-                 activeTab === "instagram" ? "Images only (max 8MB)" :
-                 "Any file type (max 25MB total)"}
-              </span>
             </button>
           </div>
         </DialogContent>
@@ -555,7 +557,7 @@ export default function Templates() {
       <RenameDialog open={renameOpen} onOpenChange={setRenameOpen}>
         <RenameDialogContent className="sm:max-w-[420px] glass-card border-border dark:border-border/50 rounded-[2rem] p-10 shadow-2xl">
           <RenameDialogHeader>
-            <RenameDialogTitle className="text-2xl font-black tracking-tight">Modify Label</RenameDialogTitle>
+            <RenameDialogTitle className="text-2xl font-black tracking-tight">Modify Name</RenameDialogTitle>
           </RenameDialogHeader>
           <div className="py-6 space-y-3">
             <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Template Name</Label>

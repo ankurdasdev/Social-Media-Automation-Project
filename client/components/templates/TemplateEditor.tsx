@@ -381,6 +381,9 @@ export function TemplateEditor({
                 )}
                 required
               />
+              <p className="text-[10px] text-muted-foreground/60 font-medium">
+                This subject can be changed by writing the desired subject on the &apos;Email Subject&apos; column on the contacts grid.
+              </p>
               {!emailSubject.trim() && (
                 <p className="text-[10px] text-red-500 font-bold">⚠ Subject is required for body templates — it will be used as the email subject line.</p>
               )}
@@ -407,19 +410,26 @@ export function TemplateEditor({
                   <p className="text-[11px] font-black uppercase tracking-widest">
                     {categoryLabel} Attachment Limits
                   </p>
-                  <p className="text-[11px] text-muted-foreground font-medium">
-                    {attachRule.label}
-                  </p>
+                  {defaultCategory === "whatsapp" && (
+                    <p className="text-[11px] text-muted-foreground font-medium">
+                      Supported file types include images, video, audio, PDF and more. Maximum 64 MB. HEIC/HEIF images are not supported. Please use JPG/PNG.
+                    </p>
+                  )}
+                  {defaultCategory === "email" && (
+                    <p className="text-[11px] text-muted-foreground font-medium">
+                      Supports all file types. Total 25 MB.
+                    </p>
+                  )}
                   {defaultCategory === "instagram" && (
-                    <p className="text-[10px] text-yellow-500 font-bold mt-1">
-                      ⚠ Instagram only supports image attachments. Videos and documents will fail.
+                    <p className="text-[11px] text-muted-foreground font-medium">
+                      Supported file types include images and video in JPEG, PNG, GIF and MP4 format. Maximum 8 MB for images and 25 MB for Videos.
                     </p>
                   )}
                 </div>
               </div>
 
               <div className="space-y-3">
-                <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground text-primary">SELECT DRIVE FILES</Label>
+                <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground text-primary">SELECT FILES</Label>
                 <DriveFilePicker
                   userId={getOrCreateUserId()}
                   selectedFiles={driveFiles}
@@ -467,7 +477,8 @@ export function TemplateEditor({
                           {idx === 0 ? "First" : idx === driveFiles.length - 1 ? "Last" : `#${idx + 1}`}
                         </Badge>
 
-                        {/* Edit details */}
+                        {/* Edit details — only for WhatsApp and Email, not Instagram */}
+                        {defaultCategory !== "instagram" && (
                         <Popover>
                           <PopoverTrigger asChild>
                             <button
@@ -491,6 +502,7 @@ export function TemplateEditor({
                             />
                           </PopoverContent>
                         </Popover>
+                        )}
 
                         {/* Remove attachment */}
                         <button
@@ -517,29 +529,7 @@ export function TemplateEditor({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Personalization Tags</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <button type="button" className="text-muted-foreground hover:text-primary transition-colors">
-                          <Info className="w-3.5 h-3.5" />
-                        </button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-80 p-4 space-y-3 glass-card rounded-xl">
-                        <div className="space-y-1">
-                          <h4 className="font-black text-sm uppercase tracking-widest">Token Mapping</h4>
-                          <p className="text-xs text-muted-foreground">These tokens map directly to columns in your imported Excel sheet.</p>
-                        </div>
-                        <div className="space-y-2 text-xs">
-                          {VARIABLES.map((v) => (
-                            <div key={v.label} className="grid grid-cols-2 gap-2 border-b border-white/5 pb-2 last:border-0 last:pb-0">
-                              <span className="font-black text-primary">{v.label}</span>
-                              <span className="text-muted-foreground">{v.description.replace('column: ', '')}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </PopoverContent>
-                    </Popover>
                   </div>
-                  <span className="text-[10px] font-bold text-primary animate-pulse">DRAG &amp; DROP READY</span>
                 </div>
                 <div className="flex flex-wrap gap-2.5">
                   {VARIABLES.map((v) => (
@@ -562,7 +552,7 @@ export function TemplateEditor({
                   ))}
                 </div>
                 <p className="text-[10px] text-muted-foreground/60 font-medium">
-                  These tags map to your Contacts grid columns — they will be replaced with each contact's actual data at send time.
+                  Insert variable information automatically to your message. These tags map to the same name column in your contacts grid — they will be replaced with each contact's actual data at send time. You can change the column name in the Contacts grid and it will reflect in these Personalization Tags.
                 </p>
               </div>
 

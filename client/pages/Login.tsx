@@ -27,21 +27,21 @@ function AnimatedBackground() {
   }, []);
 
   return (
-    <div className="fixed inset-0 -z-10 overflow-hidden dark:bg-[#03020a] bg-slate-50">
+    <div className="fixed inset-0 -z-10 overflow-hidden dark:bg-[#0d0b08] bg-amber-50/30">
       {/* Grid */}
       <div
         className="absolute inset-0 opacity-[0.025]"
-        style={{ backgroundImage: "linear-gradient(rgba(139,92,246,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.6) 1px, transparent 1px)", backgroundSize: "60px 60px" }}
+        style={{ backgroundImage: "linear-gradient(rgba(245,197,24,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(245,197,24,0.4) 1px, transparent 1px)", backgroundSize: "60px 60px" }}
       />
       {/* Orbs with mouse tracking wrappers */}
       <div className="absolute inset-0 transition-transform duration-1000 ease-out" style={{ transform: `translate(${mousePos.x * 60}px, ${mousePos.y * 60}px)` }}>
-        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-purple-600/20 blur-[140px] animate-float-1" />
+        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-amber-500/15 blur-[140px] animate-float-1" />
       </div>
       <div className="absolute inset-0 transition-transform duration-1000 ease-out" style={{ transform: `translate(${mousePos.x * -80}px, ${mousePos.y * -80}px)` }}>
-        <div className="absolute -bottom-40 -right-40 w-[700px] h-[700px] rounded-full bg-indigo-600/15 blur-[160px] animate-float-2" />
+        <div className="absolute -bottom-40 -right-40 w-[700px] h-[700px] rounded-full bg-primary/10 blur-[160px] animate-float-2" />
       </div>
       <div className="absolute inset-0 transition-transform duration-1000 ease-out" style={{ transform: `translate(${mousePos.x * 120}px, ${mousePos.y * 120}px)` }}>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-violet-500/10 blur-[120px] animate-float-3" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-amber-600/8 blur-[120px] animate-float-3" />
       </div>
       {/* Noise overlay */}
       <div className="absolute inset-0 opacity-[0.015] bg-[url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%224%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22/%3E%3C/svg%3E')]" />
@@ -92,12 +92,12 @@ function GlassInput({
       )}
       <div className={cn(
         "relative flex items-center rounded-2xl border transition-all duration-300 backdrop-blur-xl",
-        focused ? "border-purple-500/60 bg-purple-500/10 shadow-[0_0_0_3px_rgba(139,92,246,0.12)]" : "dark:border-white/10 border-border/50 dark:bg-white/5 bg-black/5 hover:bg-white/[0.07]",
+        focused ? "border-primary/60 bg-primary/8 shadow-[0_0_0_3px_rgba(245,197,24,0.12)]" : "dark:border-white/10 border-border/50 dark:bg-white/5 bg-black/5 hover:bg-white/[0.07]",
         error && "border-rose-500/50 bg-rose-500/10"
       )}>
         {Icon && (
           <div className="pl-4 pr-2 shrink-0">
-            <Icon className={cn("w-4 h-4 transition-colors", focused ? "text-purple-400" : "text-foreground/25")} />
+            <Icon className={cn("w-4 h-4 transition-colors", focused ? "text-primary" : "text-foreground/25")} />
           </div>
         )}
         <input
@@ -216,22 +216,21 @@ export default function Login() {
       )}>
         {/* Logo */}
         <div className="flex items-center gap-3.5">
-          <div className="w-11 h-11 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-[14px] flex items-center justify-center shadow-lg shadow-purple-500/30">
-            <Zap className="w-5.5 h-5.5 text-foreground fill-current" />
+          <div className="w-11 h-11 bg-gradient-to-br from-primary to-amber-600 rounded-[14px] flex items-center justify-center shadow-lg shadow-primary/30">
+            <Zap className="w-5 h-5 text-primary-foreground fill-primary-foreground" />
           </div>
-          <span className="text-xl font-black tracking-tight text-foreground">CAST<span className="text-purple-400 italic">HUB</span></span>
+          <div className="flex flex-col">
+            <span className="text-xl font-black tracking-tight text-foreground">CAST<span className="text-primary">HUB</span></span>
+            <span className="text-[8px] font-semibold text-muted-foreground/50 tracking-wide leading-tight">Automate Your Outreach. Grow Your Opportunities.</span>
+          </div>
         </div>
 
         {/* Hero */}
         <div className="space-y-10">
           <div className="space-y-5">
-            <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-purple-500/10 border border-purple-500/20">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-[11px] font-black text-purple-300 uppercase tracking-[0.25em]">Casting Automation Platform</span>
-            </div>
             <h1 className="text-5xl font-black tracking-[-0.03em] text-foreground leading-[1.08]">
               Reach talent<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-violet-400 to-indigo-400">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-amber-400 to-amber-600">
                 at scale.
               </span>
             </h1>
@@ -272,7 +271,10 @@ export default function Login() {
         </div>
 
         <p className="text-[11px] text-foreground/20 font-medium">
-          © {new Date().getFullYear()} CastHub — All rights reserved · <Link to="/terms" className="hover:text-foreground/40 transition-colors">Terms</Link> · <Link to="/privacy" className="hover:text-foreground/40 transition-colors">Privacy</Link>
+          © {new Date().getFullYear()} CastHub ·{" "}
+          <a href="https://docs.google.com/document/d/1CiyDnxNm3rJLvnNfEFZE9H_UHQ6I8fMx" target="_blank" rel="noopener noreferrer" className="hover:text-foreground/40 transition-colors">Terms</a>{" "}·{" "}
+          <a href="https://docs.google.com/document/d/1jPLs_g_9sH-n0yTa-n1o3pK8uJFnZr7V" target="_blank" rel="noopener noreferrer" className="hover:text-foreground/40 transition-colors">Privacy</a>{" "}·{" "}
+          <a href="mailto:support@casthub.in" className="hover:text-foreground/40 transition-colors">support@casthub.in</a>
         </p>
       </div>
 
@@ -283,17 +285,17 @@ export default function Login() {
       )}>
         {/* Mobile logo */}
         <div className="lg:hidden flex items-center gap-3 mb-10">
-          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center">
-            <Zap className="w-5 h-5 text-foreground fill-current" />
+          <div className="w-10 h-10 bg-gradient-to-br from-primary to-amber-600 rounded-2xl flex items-center justify-center">
+            <Zap className="w-5 h-5 text-primary-foreground fill-primary-foreground" />
           </div>
-          <span className="text-xl font-black tracking-tight text-foreground">CAST<span className="text-purple-400 italic">HUB</span></span>
+          <span className="text-xl font-black tracking-tight text-foreground">CAST<span className="text-primary">HUB</span></span>
         </div>
 
         <div className="w-full max-w-[440px] space-y-8">
           {/* Header */}
           <div className="space-y-2">
-            <h2 className="text-4xl font-black tracking-tight text-foreground">Welcome back</h2>
-            <p className="text-foreground/40 font-medium text-[15px]">Sign in to your dashboard</p>
+            <h2 className="text-4xl font-black tracking-tight text-foreground">Sign In to CastHub</h2>
+            <p className="text-foreground/40 font-medium text-[15px]">Welcome back. Your dashboard awaits.</p>
           </div>
 
           {/* Error Banner */}
@@ -346,7 +348,7 @@ export default function Login() {
               <div className="flex justify-end pt-1">
                 <Dialog open={isForgotOpen} onOpenChange={setIsForgotOpen}>
                   <DialogTrigger asChild>
-                    <button type="button" className="text-xs font-bold text-purple-400 hover:text-purple-300 transition-colors">
+                    <button type="button" className="text-xs font-bold text-primary hover:text-primary/80 transition-colors">
                       Forgot password?
                     </button>
                   </DialogTrigger>
@@ -373,7 +375,7 @@ export default function Login() {
                       </div>
                       <DialogFooter>
                         <button type="submit" disabled={isResetLoading}
-                          className="w-full h-13 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-foreground font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg shadow-purple-500/20 active:scale-[0.98]">
+                          className="w-full h-13 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/20 active:scale-[0.98]">
                           {isResetLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Send Reset Link"}
                         </button>
                       </DialogFooter>
@@ -385,7 +387,7 @@ export default function Login() {
 
             {/* CTA */}
             <button type="submit" disabled={isLoading}
-              className="w-full h-14 mt-2 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-60 text-foreground font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all duration-300 shadow-xl shadow-purple-500/25 active:scale-[0.98]">
+              className="w-full h-14 mt-2 rounded-2xl bg-primary hover:bg-primary/90 disabled:opacity-60 text-primary-foreground font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all duration-300 shadow-xl shadow-primary/25 active:scale-[0.98]">
               {isLoading ? (
                 <><Loader2 className="w-4 h-4 animate-spin" /> Signing in...</>
               ) : (
@@ -403,17 +405,21 @@ export default function Login() {
 
           {/* Sign up CTA */}
           <Link to="/signup"
-            className="w-full h-13 rounded-2xl border border-white/[0.08] hover:border-purple-500/40 hover:bg-purple-500/5 text-foreground/60 hover:text-foreground font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all duration-300 group">
+            className="w-full h-13 rounded-2xl border border-white/[0.08] hover:border-primary/40 hover:bg-primary/5 text-foreground/60 hover:text-foreground font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all duration-300 group">
             Create Free Account
             <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
           </Link>
 
-          {/* Legal */}
+          {/* Legal + Support */}
           <p className="text-center text-[10px] text-foreground/20 font-medium">
             By continuing, you agree to our{" "}
-            <Link to="/terms" className="text-purple-400/60 hover:text-purple-400 transition-colors font-bold">Terms</Link>
+            <a href="https://docs.google.com/document/d/1CiyDnxNm3rJLvnNfEFZE9H_UHQ6I8fMx" target="_blank" rel="noopener noreferrer" className="text-primary/60 hover:text-primary transition-colors font-bold">Terms of Service</a>
             {" "}and{" "}
-            <Link to="/privacy" className="text-purple-400/60 hover:text-purple-400 transition-colors font-bold">Privacy Policy</Link>
+            <a href="https://docs.google.com/document/d/1jPLs_g_9sH-n0yTa-n1o3pK8uJFnZr7V" target="_blank" rel="noopener noreferrer" className="text-primary/60 hover:text-primary transition-colors font-bold">Privacy Policy</a>
+          </p>
+          <p className="text-center text-[10px] text-foreground/20 font-medium">
+            Need help?{" "}
+            <a href="mailto:support@casthub.in" className="text-primary/60 hover:text-primary transition-colors font-bold">support@casthub.in</a>
           </p>
         </div>
       </div>
