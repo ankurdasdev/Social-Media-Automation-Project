@@ -2,6 +2,9 @@ import { Link } from "react-router-dom";
 import { Mail, MessageCircle, Instagram, Zap, ArrowRight, ShieldCheck, ChevronRight, Sun, Moon } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
+import { Canvas } from "@react-three/fiber";
+import { Stars, Float } from "@react-three/drei";
 
 function AnimatedBackground() {
   return (
@@ -12,6 +15,19 @@ function AnimatedBackground() {
       />
       <div className="absolute top-0 right-0 w-[50vw] h-[50vw] bg-amber-600/10 rounded-full blur-[150px] animate-pulse" />
       <div className="absolute bottom-0 left-0 w-[40vw] h-[40vw] bg-primary/5 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: "2s" }} />
+    </div>
+  );
+}
+
+function Hero3DBackground() {
+  return (
+    <div className="absolute inset-0 -z-0 pointer-events-none opacity-40 dark:opacity-60 mix-blend-screen">
+      <Canvas camera={{ position: [0, 0, 5], fov: 60 }} gl={{ alpha: true }}>
+        <ambientLight intensity={0.5} />
+        <Float speed={1} rotationIntensity={0.5} floatIntensity={0.5}>
+          <Stars radius={50} depth={20} count={300} factor={3} saturation={0} fade speed={0.5} />
+        </Float>
+      </Canvas>
     </div>
   );
 }
@@ -73,8 +89,15 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <div className="max-w-5xl mx-auto px-6 pt-32 pb-20 text-center animate-in fade-in zoom-in-95 duration-1000">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 mb-8">
+      <div className="relative">
+        <Hero3DBackground />
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="max-w-5xl mx-auto px-6 pt-32 pb-20 text-center relative z-10"
+        >
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 mb-8">
           <Zap className="w-3.5 h-3.5 text-amber-500" />
           <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">Multi-Channel Automation</span>
         </div>
@@ -95,24 +118,39 @@ export default function LandingPage() {
             Learn How It Works
           </Link>
         </div>
+        </motion.div>
       </div>
 
       {/* Feature Channels */}
-      <div className="max-w-4xl mx-auto px-6 py-10 animate-in fade-in slide-in-from-bottom-10 duration-1000 delay-300">
-        <p className="text-center text-xs font-black uppercase tracking-widest text-muted-foreground/60 mb-8">Powering outreach across</p>
+      <div className="max-w-4xl mx-auto px-6 py-10">
+        <motion.p 
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-10%" }}
+          className="text-center text-xs font-black uppercase tracking-widest text-muted-foreground/60 mb-8"
+        >
+          Powering outreach across
+        </motion.p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
             { icon: Mail, name: "Gmail", color: "text-blue-500", bg: "bg-blue-500/10 border-blue-500/20", desc: "Send personalized emails at scale." },
             { icon: MessageCircle, name: "WhatsApp", color: "text-emerald-500", bg: "bg-emerald-500/10 border-emerald-500/20", desc: "Automate direct WhatsApp messaging." },
             { icon: Instagram, name: "Instagram", color: "text-pink-500", bg: "bg-pink-500/10 border-pink-500/20", desc: "Manage bulk Instagram DMs easily." }
           ].map((channel, idx) => (
-            <div key={idx} className="p-6 rounded-3xl dark:bg-[#0a0a0a]/50 bg-black/5 border dark:border-white/5 border-black/5 backdrop-blur-sm flex flex-col items-center text-center group hover:bg-black/10 dark:hover:bg-[#0a0a0a] dark:hover:border-white/10 hover:border-black/10 transition-all">
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-10%" }}
+              transition={{ duration: 0.5, delay: idx * 0.1 }}
+              key={idx} 
+              className="p-6 rounded-3xl dark:bg-[#0a0a0a]/50 bg-black/5 border dark:border-white/5 border-black/5 backdrop-blur-sm flex flex-col items-center text-center group hover:bg-black/10 dark:hover:bg-[#0a0a0a] dark:hover:border-white/10 hover:border-black/10 transition-all"
+            >
               <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110", channel.bg)}>
                 <channel.icon className={cn("w-7 h-7", channel.color)} />
               </div>
               <h3 className="text-lg font-black tracking-tight mb-2">{channel.name}</h3>
               <p className="text-sm text-muted-foreground font-medium">{channel.desc}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
@@ -126,7 +164,13 @@ export default function LandingPage() {
 
         <div className="grid gap-12 md:gap-24">
           {/* Step 1 */}
-          <div className="flex flex-col md:flex-row items-center gap-10">
+          <motion.div 
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-20%" }}
+            transition={{ duration: 0.8 }}
+            className="flex flex-col md:flex-row items-center gap-10"
+          >
             <div className="flex-1 space-y-6">
               <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 font-black text-xl">1</div>
               <h3 className="text-3xl font-black tracking-tight">Connect Your Channels</h3>
@@ -151,10 +195,16 @@ export default function LandingPage() {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Step 2 */}
-          <div className="flex flex-col md:flex-row-reverse items-center gap-10">
+          <motion.div 
+            initial={{ opacity: 0, x: 30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-20%" }}
+            transition={{ duration: 0.8 }}
+            className="flex flex-col md:flex-row-reverse items-center gap-10"
+          >
             <div className="flex-1 space-y-6">
               <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 font-black text-xl">2</div>
               <h3 className="text-3xl font-black tracking-tight">Build Dynamic Templates</h3>
@@ -178,10 +228,16 @@ export default function LandingPage() {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Step 3 */}
-          <div className="flex flex-col md:flex-row items-center gap-10">
+          <motion.div 
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-20%" }}
+            transition={{ duration: 0.8 }}
+            className="flex flex-col md:flex-row items-center gap-10"
+          >
             <div className="flex-1 space-y-6">
               <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 font-black text-xl">3</div>
               <h3 className="text-3xl font-black tracking-tight">Launch & Track</h3>
@@ -199,18 +255,24 @@ export default function LandingPage() {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
 
       {/* CTA */}
-      <div className="max-w-4xl mx-auto px-6 py-20 text-center space-y-8">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        viewport={{ once: true, margin: "-10%" }}
+        transition={{ duration: 0.8 }}
+        className="max-w-4xl mx-auto px-6 py-20 text-center space-y-8"
+      >
         <h2 className="text-4xl md:text-5xl font-black tracking-tighter">Ready to scale your casting?</h2>
         <p className="text-xl text-muted-foreground font-medium">Join professionals who save 30+ hours a week.</p>
         <Link to={hasToken ? "/dashboard" : "/signup"} className="inline-flex items-center justify-center gap-2 h-16 px-12 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-lg uppercase tracking-widest shadow-2xl shadow-primary/20 transition-all active:scale-[0.98]">
           {hasToken ? "Open Dashboard" : "Create Free Account"}
         </Link>
-      </div>
+      </motion.div>
 
       {/* Footer */}
       <footer className="border-t border-border/50 bg-background/50 backdrop-blur-md">
