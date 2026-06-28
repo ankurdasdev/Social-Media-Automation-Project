@@ -215,9 +215,8 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-border/50 bg-background/50 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-6 py-12 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2.5 opacity-50">
+          <div className="flex items-center opacity-50">
             <img src="/casthub-logo.png" alt="CastHub" className="w-6 h-6 grayscale" draggable={false} />
-            <span className="text-sm font-black tracking-tight">CAST<span className="italic">HUB</span></span>
           </div>
           <div className="flex flex-wrap gap-6 text-sm font-bold text-muted-foreground/60">
             <Link to="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>
