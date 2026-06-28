@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Zap, Shield, FileText, Mail } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import Animated3DBackground from "@/components/Animated3DBackground";
 
 const privacyContentStr = `# **Privacy Policy**
 
@@ -480,10 +481,7 @@ export default function PrivacyPolicy() {
   return (
     <div className="min-h-screen dark:bg-[#060610] bg-background text-foreground">
       {/* Ambient bg */}
-      <div className="fixed inset-0 pointer-events-none -z-10">
-        <div className="absolute top-0 right-0 w-[50vw] h-[50vw] bg-indigo-600/10 rounded-full blur-[150px]" />
-        <div className="absolute bottom-0 left-0 w-[40vw] h-[40vw] bg-purple-600/10 rounded-full blur-[120px]" />
-      </div>
+      <Animated3DBackground className="fixed inset-0 pointer-events-none -z-10 opacity-30 dark:opacity-40" />
 
       {/* Navbar */}
       <nav className="sticky top-0 z-50 border-b border-border/50 dark:bg-[#060610]/80 bg-background/80 backdrop-blur-xl px-6 py-4 flex items-center justify-between">

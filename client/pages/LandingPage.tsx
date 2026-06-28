@@ -3,8 +3,7 @@ import { Mail, MessageCircle, Instagram, Zap, ArrowRight, ShieldCheck, ChevronRi
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { Canvas } from "@react-three/fiber";
-import { Stars, Float } from "@react-three/drei";
+import Animated3DBackground from "@/components/Animated3DBackground";
 
 function AnimatedBackground() {
   return (
@@ -15,19 +14,6 @@ function AnimatedBackground() {
       />
       <div className="absolute top-0 right-0 w-[50vw] h-[50vw] bg-amber-600/10 rounded-full blur-[150px] animate-pulse" />
       <div className="absolute bottom-0 left-0 w-[40vw] h-[40vw] bg-primary/5 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: "2s" }} />
-    </div>
-  );
-}
-
-function Hero3DBackground() {
-  return (
-    <div className="absolute inset-0 -z-0 pointer-events-none opacity-40 dark:opacity-60 mix-blend-screen">
-      <Canvas camera={{ position: [0, 0, 5], fov: 60 }} gl={{ alpha: true }}>
-        <ambientLight intensity={0.5} />
-        <Float speed={1} rotationIntensity={0.5} floatIntensity={0.5}>
-          <Stars radius={50} depth={20} count={300} factor={3} saturation={0} fade speed={0.5} />
-        </Float>
-      </Canvas>
     </div>
   );
 }
@@ -90,7 +76,7 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <div className="relative">
-        <Hero3DBackground />
+        <Animated3DBackground />
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

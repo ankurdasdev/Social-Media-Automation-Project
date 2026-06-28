@@ -3,34 +3,11 @@ import { Link } from "react-router-dom";
 import { Mail, MessageSquare, Send, CheckCircle2, User, Loader2, Sun, Moon, Type } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import Animated3DBackground from "@/components/Animated3DBackground";
 
 // ── Animated Background ──────────────────────────────────────────────────────
 function AnimatedBackground() {
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePos({ x: (e.clientX / window.innerWidth) - 0.5, y: (e.clientY / window.innerHeight) - 0.5 });
-    };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
-
-  return (
-    <div className="fixed inset-0 -z-10 overflow-hidden dark:bg-[#060608] bg-amber-50/40">
-      {/* Grid Pattern */}
-      <div 
-        className="absolute inset-0 opacity-[0.03] mix-blend-overlay dark:mix-blend-normal"
-        style={{ backgroundImage: "linear-gradient(rgba(245,197,24,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(245,197,24,0.4) 1px, transparent 1px)", backgroundSize: "60px 60px" }}
-      />
-      {/* Floating Orbs */}
-      <div className="absolute inset-0 transition-transform duration-1000 ease-out" style={{ transform: `translate(${mousePos.x * 60}px, ${mousePos.y * 60}px)` }}>
-        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-amber-500/15 blur-[140px] animate-float-1" />
-      </div>
-      <div className="absolute inset-0 transition-transform duration-1000 ease-out" style={{ transform: `translate(${mousePos.x * -80}px, ${mousePos.y * -80}px)` }}>
-        <div className="absolute -bottom-40 -right-40 w-[700px] h-[700px] rounded-full bg-primary/10 blur-[160px] animate-float-2" />
-      </div>
-    </div>
-  );
+  return <Animated3DBackground className="fixed inset-0 -z-10 pointer-events-none opacity-40 dark:opacity-60 mix-blend-screen" />;
 }
 
 function ThemeToggle() {
