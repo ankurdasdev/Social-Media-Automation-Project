@@ -51,13 +51,6 @@ export default function Dashboard() {
       onClick: () => navigate("/contacts")
     },
     {
-      label: "SYSTEM STATUS",
-      value: "ONLINE",
-      icon: Zap,
-      color: "bg-emerald-500/10 text-emerald-500",
-      trend: "STABLE",
-    },
-    {
       label: "OUTREACH RATE",
       value: statsData?.total > 0 ? `${((statsData.success / statsData.total) * 100).toFixed(1)}%` : "0%",
       icon: TrendingUp,
@@ -78,7 +71,7 @@ export default function Dashboard() {
             <div className="flex-1 space-y-8 text-center lg:text-left">
               <div className="inline-flex items-center gap-3 px-4 py-2 rounded-2xl bg-primary/10 border border-primary/20">
                 <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(139,92,246,1)]" />
-                <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Outreach Automation Platform</span>
+                <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Casting Automation System</span>
               </div>
               
               <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black text-foreground tracking-tighter leading-[1.1] text-glow break-words sm:break-normal max-w-full">
@@ -122,7 +115,7 @@ export default function Dashboard() {
         </section>
 
         {/* Global Statistics Grid */}
-        <div id="tutorial-dashboard-stats" className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div id="tutorial-dashboard-stats" className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {stats.map((stat, index) => {
             const Icon = stat.icon;
             return (
@@ -204,50 +197,70 @@ export default function Dashboard() {
               <Card className="glass-card border-border/50 rounded-[2.5rem] overflow-hidden shadow-2xl">
                 <CardContent className="p-0">
                   <div className="divide-y divide-border/30">
-                    {recentContacts.map((contact, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-7 hover:dark:bg-white/[0.02] hover:bg-black/5 transition-colors group"
-                      >
-                        <div className="flex items-center gap-5">
-                           <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-muted to-muted/50 border border-border/50 flex items-center justify-center font-black text-xl text-primary shadow-inner group-hover:scale-110 transition-transform duration-500">
-                              {contact.name.charAt(0)}
-                           </div>
-                           <div>
-                              <p className="font-black text-lg tracking-tight">{contact.name}</p>
-                              <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-widest">{contact.project}</span>
-                              </div>
-                           </div>
+                    {recentContacts.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
+                        <div className="w-14 h-14 rounded-2xl bg-muted/40 flex items-center justify-center">
+                          <Users className="w-7 h-7 text-muted-foreground/30" />
                         </div>
-                        <div className="text-right">
-                           <div className="px-4 py-1.5 rounded-xl border border-border bg-muted/20 text-[10px] font-black uppercase tracking-widest text-muted-foreground group-hover:text-foreground transition-colors">
-                            {contact.date}
-                           </div>
-                        </div>
+                        <p className="text-sm font-bold text-muted-foreground/40">No contacts yet</p>
+                        <Link to="/contacts" className="text-xs text-primary font-bold hover:underline">Add your first contact →</Link>
                       </div>
-                    ))}
+                    ) : (
+                      recentContacts.map((contact: any, index: number) => {
+                        // Parse date string into human-readable date + time
+                        const dateObj = contact.date ? new Date(contact.date) : null;
+                        const dateStr = dateObj && !isNaN(dateObj.getTime())
+                          ? dateObj.toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" })
+                          : (typeof contact.date === "string" ? contact.date.split("T")[0] : "—");
+                        const timeStr = dateObj && !isNaN(dateObj.getTime())
+                          ? dateObj.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })
+                          : "";
+                        const channel = contact.channel || "";
+
+                        return (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between p-6 hover:dark:bg-white/[0.02] hover:bg-black/5 transition-colors group"
+                          >
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-muted to-muted/50 border border-border/50 flex items-center justify-center font-black text-lg text-primary shadow-inner group-hover:scale-110 transition-transform duration-500">
+                                {contact.name.charAt(0)}
+                              </div>
+                              <div>
+                                <p className="font-black text-base tracking-tight">{contact.name}</p>
+                                {channel && (
+                                  <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/40">{channel}</span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-right space-y-0.5">
+                              <p className="text-[10px] font-black text-foreground/70">{dateStr}</p>
+                              {timeStr && <p className="text-[9px] font-medium text-muted-foreground/40">{timeStr}</p>}
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
                   </div>
                 </CardContent>
               </Card>
            </div>
         </div>
 
-        {/* Workflow Section */}
+        {/* How CastHub Works */}
         <section className="space-y-10 pt-10">
            <div className="text-center space-y-3">
-              <p className="text-[10px] font-black text-primary uppercase tracking-[0.4em]">Integrated Pipeline</p>
-              <h2 className="text-4xl font-black tracking-tighter">OUR WORKFLOW</h2>
-              <p className="text-muted-foreground font-medium max-w-xl mx-auto">CastHub operates on a simple cycle designed for maximum outreach efficiency.</p>
+              <h2 className="text-4xl font-black tracking-tighter">How CastHub Works</h2>
+              <p className="text-muted-foreground font-medium max-w-xl mx-auto">Three simple steps to automate your outreach at scale.</p>
            </div>
            
            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
               {[
-                { step: "01", title: "CONFIGURE", desc: "Add your contacts and organize them into sheets for better management.", icon: SlidersHorizontal, color: "from-primary to-purple-600" },
-                { step: "02", title: "SYNC", desc: "Sync your contacts and monitor their status in real-time.", icon: TrendingUp, color: "from-secondary to-blue-600" },
-                { step: "03", title: "REACH OUT", desc: "Send automated messages to your contacts via WhatsApp or Instagram.", icon: Zap, color: "from-accent to-orange-600" },
+                { step: "01", title: "CONFIGURE", desc: "Add your contacts and organize them into sheets for better management.", icon: SlidersHorizontal, color: "from-primary to-purple-600", cta: "Go to Controller", href: "/controller" },
+                { step: "02", title: "SYNC", desc: "Sync your contacts and monitor their status in real-time.", icon: TrendingUp, color: "from-secondary to-blue-600", cta: "View Contacts", href: "/contacts" },
+                { step: "03", title: "REACH OUT", desc: "Send automated messages to your contacts via WhatsApp, Gmail or Instagram.", icon: Zap, color: "from-accent to-orange-600", cta: "Start Outreach", href: "/controller" },
               ].map((item, i) => (
-                <div key={i} className="glass-card h-[320px] p-10 rounded-[3rem] relative overflow-hidden group flex flex-col justify-between border-border/50 hover:border-primary/30 transition-all duration-700">
+                <div key={i} className="glass-card h-[340px] p-10 rounded-[3rem] relative overflow-hidden group flex flex-col justify-between border-border/50 hover:border-primary/30 transition-all duration-700">
                    <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${item.color} opacity-0 group-hover:opacity-10 -z-10 group-hover:scale-[2] transition-all duration-1000 blur-2xl`} />
                    
                    <div className="flex items-start justify-between">
@@ -260,6 +273,11 @@ export default function Dashboard() {
                    <div className="space-y-4">
                       <h3 className="text-2xl font-black tracking-tight">{item.title}</h3>
                       <p className="text-xs font-medium text-muted-foreground/80 leading-relaxed">{item.desc}</p>
+                      <Link to={item.href}>
+                        <Button size="sm" className="h-9 px-5 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 font-black text-[10px] uppercase tracking-widest transition-all gap-2 mt-2">
+                          {item.cta} <ArrowRight className="w-3 h-3" />
+                        </Button>
+                      </Link>
                    </div>
                 </div>
               ))}

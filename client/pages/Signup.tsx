@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
   AlertCircle, Loader2, Eye, EyeOff, CheckCircle2,
-  Mail, MessageCircle, Instagram, Zap, ArrowRight, ShieldCheck, User, Phone, Lock, Calendar, Users, Moon, Sun, FileText, Shield
+  Mail, ArrowRight, ShieldCheck, User, Phone, Lock, Calendar, Users, Moon, Sun, FileText, Shield
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
@@ -13,6 +13,55 @@ import { PrivacyContent } from "./PrivacyPolicy";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { LocationPicker } from "@/components/ui/LocationPicker";
+
+// ── Brand Logo Components (official brand colors) ────────────────────────────
+function WhatsAppBrand() {
+  return (
+    <div className="flex flex-col items-center gap-1.5">
+      <div className="w-11 h-11 rounded-xl bg-[#25D366] flex items-center justify-center shadow-[0_4px_14px_rgba(37,211,102,0.35)] transition-transform hover:scale-105">
+        <svg width={24} height={24} viewBox="0 0 24 24" fill="white">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zM12 0C5.373 0 0 5.373 0 12c0 2.139.558 4.144 1.534 5.877L.054 23.298a.75.75 0 0 0 .906.91l5.444-1.475A11.955 11.955 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z" />
+        </svg>
+      </div>
+      <span className="text-[9px] font-bold text-foreground/40 uppercase tracking-wider">WhatsApp</span>
+    </div>
+  );
+}
+
+function GmailBrand() {
+  return (
+    <div className="flex flex-col items-center gap-1.5">
+      <div className="w-11 h-11 rounded-xl bg-white flex items-center justify-center shadow-[0_4px_14px_rgba(234,67,53,0.25)] transition-transform hover:scale-105">
+        <svg width={26} height={20} viewBox="0 0 24 18" fill="none">
+          <path d="M1.5 0h21A1.5 1.5 0 0 1 24 1.5v15A1.5 1.5 0 0 1 22.5 18H1.5A1.5 1.5 0 0 1 0 16.5V1.5A1.5 1.5 0 0 1 1.5 0z" fill="white" />
+          <path d="M0 1.5L12 10.5 24 1.5" stroke="#EA4335" strokeWidth="1.5" fill="none" />
+          <path d="M0 1.5v15h24V1.5" stroke="#EA4335" strokeWidth="1.5" fill="none" />
+          <path d="M0 1.5L12 10.5" stroke="#EA4335" strokeWidth="1.5" />
+          <path d="M24 1.5L12 10.5" stroke="#FBBC05" strokeWidth="1.5" />
+        </svg>
+      </div>
+      <span className="text-[9px] font-bold text-foreground/40 uppercase tracking-wider">Gmail</span>
+    </div>
+  );
+}
+
+function InstagramBrand() {
+  return (
+    <div className="flex flex-col items-center gap-1.5">
+      <div
+        className="w-11 h-11 rounded-xl flex items-center justify-center shadow-[0_4px_14px_rgba(188,24,136,0.3)] transition-transform hover:scale-105"
+        style={{ background: "linear-gradient(135deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)" }}
+      >
+        <svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+          <rect x="2.5" y="2.5" width="19" height="19" rx="5.5" stroke="white" strokeWidth="1.8" />
+          <circle cx="12" cy="12" r="4.5" stroke="white" strokeWidth="1.8" />
+          <circle cx="18" cy="6" r="1.3" fill="white" />
+        </svg>
+      </div>
+      <span className="text-[9px] font-bold text-foreground/40 uppercase tracking-wider">Instagram</span>
+    </div>
+  );
+}
 
 // ── Reuse same animated background ──────────────────────────────────────────
 function AnimatedBackground() {
@@ -136,11 +185,6 @@ function PasswordStrength({ password }: { password: string }) {
   );
 }
 
-const FEATURES = [
-  { icon: MessageCircle, color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20", label: "WhatsApp Automation", desc: "Mass outreach in minutes" },
-  { icon: Mail, color: "text-primary", bg: "bg-primary/10 border-primary/20", label: "Gmail Campaigns", desc: "Personalised emails at scale" },
-  { icon: Instagram, color: "text-pink-400", bg: "bg-pink-500/10 border-pink-500/20", label: "Instagram DMs", desc: "Connect with talent on social" },
-];
 
 const BENEFITS = [
   "Save hours of manual outreach",
@@ -335,37 +379,31 @@ export default function Signup() {
 
         {/* Hero */}
         <div className="space-y-8">
-          <div className="space-y-5">
+          <div className="space-y-3">
             <h1 className="text-5xl font-black tracking-[-0.03em] text-foreground leading-[1.08]">
-              Automate your<br />
+              Create Your<br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-amber-400 to-amber-600">
-                casting outreach.
+                CastHub Account
               </span>
             </h1>
-            <p className="text-foreground/50 font-medium leading-relaxed text-[15px] max-w-[340px]">
-              Connect with talent across WhatsApp, Gmail, and Instagram — all from one powerful casting dashboard.
+            <p className="text-foreground/60 font-semibold text-base">
+              Automate Your Outreach. Grow Your Opportunities.
+            </p>
+            <p className="text-foreground/40 font-medium leading-relaxed text-[13.5px] max-w-[330px]">
+              Join casting professionals automating WhatsApp, Gmail &amp; Instagram outreach from one dashboard.
             </p>
           </div>
 
-          {/* Feature rows — only show on step 1 */}
+          {/* Brand logos row — only show on step 1 (WhatsApp, Gmail, Instagram in order always) */}
           {step === 1 && (
-          <div className="space-y-2.5">
-            {FEATURES.map((f, i) => (
-              <div key={i} className={cn(
-                "flex items-center gap-4 p-4 rounded-2xl border backdrop-blur-sm transition-all duration-500 cursor-default hover:scale-[1.01]",
-                f.bg,
-                mounted ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4"
-              )} style={{ transitionDelay: `${400 + i * 80}ms` }}>
-                <div className="w-9 h-9 rounded-xl dark:bg-white/5 bg-black/5 flex items-center justify-center shrink-0">
-                  <f.icon className={cn("w-4 h-4", f.color)} />
-                </div>
-                <div>
-                  <p className="text-xs font-black text-foreground uppercase tracking-wide">{f.label}</p>
-                  <p className="text-[11px] text-foreground/40 font-medium">{f.desc}</p>
-                </div>
+            <div className="space-y-2">
+              <p className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-[0.25em]">Outreach Channels</p>
+              <div className="flex items-center gap-5">
+                <WhatsAppBrand />
+                <GmailBrand />
+                <InstagramBrand />
               </div>
-            ))}
-          </div>
+            </div>
           )}
 
           {/* Benefits checklist — show on step 2 */}

@@ -94,31 +94,28 @@ function CastHubLogo({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
         className="object-contain shrink-0 drop-shadow-[0_0_10px_rgba(245,168,0,0.4)] transition-transform duration-300 group-hover:scale-105"
         draggable={false}
       />
-      <div className="flex flex-col leading-none">
-        <span className={cn(textSize, "font-black tracking-tighter leading-none")}>
-          CAST<span className="text-primary">HUB</span>
-        </span>
-        <span className="text-[8.5px] font-semibold tracking-[0.06em] text-muted-foreground/60 mt-1 leading-tight max-w-[150px]">
-          Automate Your Outreach. Grow Your Opportunities.
-        </span>
-      </div>
+      <span className={cn(textSize, "font-black tracking-tighter leading-none")}>
+        CAST<span className="text-primary">HUB</span>
+      </span>
     </div>
   );
 }
 
-// ── Status Pill Component ──────────────────────────────────────────────────────
+// ── Status Pill Component (clickable link to integrations) ────────────────────────
 function ConnectionStatusPill({
   label,
   connectedLabel,
   disconnectedLabel,
   isConnected,
   loading = false,
+  href = "/integrations",
 }: {
   label: string;
   connectedLabel: string;
   disconnectedLabel: string;
   isConnected: boolean | undefined;
   loading?: boolean;
+  href?: string;
 }) {
   if (loading || isConnected === undefined) {
     return (
@@ -132,12 +129,15 @@ function ConnectionStatusPill({
   }
 
   return (
-    <div className={cn(
-      "flex items-center justify-between p-2.5 rounded-xl border transition-all duration-300",
-      isConnected
-        ? "bg-emerald-500/8 border-emerald-500/20 dark:bg-emerald-500/5"
-        : "bg-muted/10 border-border/20"
-    )}>
+    <Link
+      to={href}
+      className={cn(
+        "flex items-center justify-between p-2.5 rounded-xl border transition-all duration-300 cursor-pointer group",
+        isConnected
+          ? "bg-emerald-500/10 border-emerald-500/25 hover:bg-emerald-500/15 dark:bg-emerald-500/8"
+          : "bg-muted/10 border-border/20 hover:bg-muted/20"
+      )}
+    >
       <div className="flex items-center gap-2.5 min-w-0 flex-1">
         <div className={cn(
           "w-2 h-2 rounded-full shrink-0 transition-all duration-300",
@@ -146,7 +146,7 @@ function ConnectionStatusPill({
             : "bg-muted-foreground/25"
         )} />
         <span className={cn(
-          "text-[9.5px] font-bold uppercase tracking-widest truncate transition-colors duration-300",
+          "text-[9px] font-bold uppercase tracking-widest truncate transition-colors duration-300",
           isConnected ? "text-emerald-500 dark:text-emerald-400" : "text-muted-foreground/50"
         )}>
           {isConnected ? connectedLabel : disconnectedLabel}
@@ -155,7 +155,7 @@ function ConnectionStatusPill({
       {isConnected && (
         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 ml-1" />
       )}
-    </div>
+    </Link>
   );
 }
 
@@ -308,6 +308,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 disconnectedLabel="Google Not Connected"
                 isConnected={googleConnected}
                 loading={googleLoading}
+                href="/integrations?defaultTab=google"
               />
               <ConnectionStatusPill
                 label="WhatsApp"
@@ -315,6 +316,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 disconnectedLabel="WhatsApp Not Connected"
                 isConnected={waConnected}
                 loading={waLoading}
+                href="/integrations?defaultTab=whatsapp"
               />
               <ConnectionStatusPill
                 label="Instagram"
@@ -322,6 +324,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 disconnectedLabel="Instagram Not Connected"
                 isConnected={igConnected}
                 loading={igLoading}
+                href="/integrations?defaultTab=instagram"
               />
             </div>
 
@@ -371,17 +374,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
             </Link>
           </div>
 
-          {/* Desktop: show CastHub brand in header too */}
-          <div className="hidden md:flex items-center gap-3">
-            <Link to="/dashboard" className="flex items-center gap-2 group">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-amber-600 flex items-center justify-center shadow-md shadow-primary/20 group-hover:scale-105 transition-transform">
-                <Zap className="w-4.5 h-4.5 text-primary-foreground fill-primary-foreground" style={{ width: '18px', height: '18px' }} />
-              </div>
-              <span className="text-base font-black tracking-tight leading-none">
-                CAST<span className="text-primary">HUB</span>
-              </span>
-            </Link>
-          </div>
+          {/* Empty spacer for desktop layout balance */}
+          <div className="hidden md:block flex-1" />
 
           {/* Right actions */}
           <div className="flex items-center gap-3">
