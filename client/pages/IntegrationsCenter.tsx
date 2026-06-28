@@ -61,7 +61,18 @@ export default function IntegrationsCenter() {
   const defaultTab = React.useMemo(() => {
     const params = new URLSearchParams(window.location.search);
     return params.get("defaultTab") || "google";
-  }, []);
+  }, [window.location.search]);
+
+  React.useEffect(() => {
+    if (defaultTab) {
+      setTimeout(() => {
+        const el = document.getElementById(`section-${defaultTab}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    }
+  }, [defaultTab]);
 
   // ── Google Status ────────────────────────────────────────────────────────────
   const { data: googleStatus, isLoading: googleLoading, refetch: refetchGoogle } = useQuery({
@@ -164,7 +175,7 @@ export default function IntegrationsCenter() {
 
 
         {/* ── GOOGLE SECTION ── */}
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+        <div id="section-google" className="animate-in fade-in slide-in-from-bottom-4 duration-300 scroll-mt-24">
           <div className="relative overflow-hidden glass-card border-white/10 rounded-[2.5rem] shadow-2xl bg-background/60">
             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] -z-10" />
             <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-blue-500/5 rounded-full blur-[100px] -z-10" />
@@ -180,11 +191,15 @@ export default function IntegrationsCenter() {
 
                 <div className="flex-1 space-y-8">
                   <div className="flex flex-col gap-3">
-                    <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground uppercase leading-none">
-                      CONNECT<br/>
-                      <span className="text-primary drop-shadow-[0_0_15px_rgba(139,92,246,0.3)]">GOOGLE</span>
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 text-[10px] font-black tracking-widest uppercase w-fit">
+                      <ShieldCheck className="w-3 h-3" />
+                      Secure Gateway
+                    </div>
+                    <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground uppercase leading-none mt-2">
+                      GOOGLE<br/>
+                      <span className="text-primary drop-shadow-[0_0_15px_rgba(139,92,246,0.3)]">WORKSPACE</span>
                     </h2>
-                    <p className="text-muted-foreground/70 text-sm font-medium leading-relaxed max-w-sm">
+                    <p className="text-muted-foreground/70 text-sm font-medium leading-relaxed max-w-sm mt-2">
                       Send personalised outreach campaigns through your Gmail account.
                     </p>
 
@@ -294,18 +309,19 @@ export default function IntegrationsCenter() {
                     <div className="relative">
                       <div className="absolute inset-0 bg-primary/10 blur-3xl rounded-full" />
                       <div className="relative h-24 w-24 bg-muted/40 backdrop-blur-xl rounded-[2rem] flex items-center justify-center border border-white/10 shadow-2xl">
-                        <GoogleLogo className="h-12 w-12" />
+                        <Globe className="h-12 w-12 text-foreground/80" />
                       </div>
                     </div>
 
+                    <div className="text-center space-y-3">
+                      <h3 className="text-3xl font-black text-foreground uppercase tracking-tight">LINK GOOGLE</h3>
+                      <p className="text-sm text-muted-foreground/80 leading-relaxed px-4">
+                        Establish a secure OAuth 2.0 connection with Google to unlock CastHub's automation sequence.
+                      </p>
+                    </div>
+
                     {/* Guide button (no blinker) */}
-                    <div className="flex items-center justify-between gap-4 flex-wrap w-full">
-                      <div className="text-left">
-                        <h3 className="text-lg font-black text-foreground uppercase tracking-tight">Connect Google</h3>
-                        <p className="text-xs text-muted-foreground/60 mt-0.5">
-                          Follow the setup instructions and approve the requested permissions to connect Google. Once connected you will be able to access your Drive for attachments and send mails from your Gmail.
-                        </p>
-                      </div>
+                    <div className="flex items-center justify-end gap-4 flex-wrap w-full">
                       <button
                         onClick={() => setGoogleGuideOpen(true)}
                         className="flex items-center gap-2 px-4 py-2.5 rounded-2xl border font-black text-[10px] uppercase tracking-widest transition-all bg-primary/10 border-primary/30 text-primary hover:bg-primary/20 hover:scale-105"
@@ -428,7 +444,7 @@ export default function IntegrationsCenter() {
         </div>
 
         {/* ── WHATSAPP SECTION ── */}
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+        <div id="section-whatsapp" className="animate-in fade-in slide-in-from-bottom-4 duration-300 scroll-mt-24">
           <WhatsAppSettings />
         </div>
 
@@ -440,7 +456,7 @@ export default function IntegrationsCenter() {
         </div>
 
         {/* ── INSTAGRAM SECTION ── */}
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+        <div id="section-instagram" className="animate-in fade-in slide-in-from-bottom-4 duration-300 scroll-mt-24">
           <InstagramSettings />
         </div>
 

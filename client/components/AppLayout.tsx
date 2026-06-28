@@ -101,28 +101,24 @@ function CastHubLogo({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
   );
 }
 
-// ── Status Pill Component (clickable link to integrations) ────────────────────────
 function ConnectionStatusPill({
   label,
-  connectedLabel,
-  disconnectedLabel,
   isConnected,
   loading = false,
   href = "/integrations",
 }: {
   label: string;
-  connectedLabel: string;
-  disconnectedLabel: string;
   isConnected: boolean | undefined;
   loading?: boolean;
   href?: string;
 }) {
   if (loading || isConnected === undefined) {
     return (
-      <div className="flex items-center justify-between p-2.5 rounded-xl border bg-muted/10 border-border/20 opacity-50">
-        <div className="flex items-center gap-2.5">
-          <div className="w-2 h-2 rounded-full bg-muted-foreground/20 animate-pulse" />
-          <span className="text-[9.5px] font-bold uppercase tracking-widest text-muted-foreground/40">{label}</span>
+      <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border bg-muted/10 border-border/20 opacity-40 animate-pulse">
+        <div className="w-2 h-2 rounded-full bg-muted-foreground/20 shrink-0" />
+        <div className="space-y-1">
+          <div className="h-2 w-16 rounded bg-muted-foreground/20" />
+          <div className="h-1.5 w-10 rounded bg-muted-foreground/10" />
         </div>
       </div>
     );
@@ -132,32 +128,38 @@ function ConnectionStatusPill({
     <Link
       to={href}
       className={cn(
-        "flex items-center justify-between p-2.5 rounded-xl border transition-all duration-300 cursor-pointer group",
+        "flex items-center justify-between px-3 py-2.5 rounded-xl border transition-all duration-300 cursor-pointer group",
         isConnected
-          ? "bg-emerald-500/10 border-emerald-500/25 hover:bg-emerald-500/15 dark:bg-emerald-500/8"
+          ? "bg-emerald-500/10 border-emerald-500/25 hover:bg-emerald-500/18 dark:bg-emerald-500/8 shadow-[0_2px_8px_rgba(16,185,129,0.08)]"
           : "bg-muted/10 border-border/20 hover:bg-muted/20"
       )}
     >
       <div className="flex items-center gap-2.5 min-w-0 flex-1">
+        {/* Status dot */}
         <div className={cn(
           "w-2 h-2 rounded-full shrink-0 transition-all duration-300",
           isConnected
-            ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.6)]"
+            ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.7)]"
             : "bg-muted-foreground/25"
         )} />
-        <span className={cn(
-          "text-[9px] font-bold uppercase tracking-widest truncate transition-colors duration-300",
-          isConnected ? "text-emerald-500 dark:text-emerald-400" : "text-muted-foreground/50"
-        )}>
-          {isConnected ? connectedLabel : disconnectedLabel}
-        </span>
+        {/* Single-line label */}
+        <div className="min-w-0">
+          <p className={cn(
+            "text-[9px] font-black uppercase tracking-widest truncate",
+            isConnected ? "text-emerald-500 dark:text-emerald-400" : "text-muted-foreground/60"
+          )}>
+            {label}
+          </p>
+        </div>
       </div>
+      {/* Tick for connected */}
       {isConnected && (
-        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 ml-1" />
+        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 ml-2 transition-transform group-hover:scale-110" />
       )}
     </Link>
   );
 }
+
 
 export default function AppLayout({ children }: AppLayoutProps) {
   const location = useLocation();
@@ -304,24 +306,18 @@ export default function AppLayout({ children }: AppLayoutProps) {
               </p>
               <ConnectionStatusPill
                 label="Google"
-                connectedLabel="Google Connected"
-                disconnectedLabel="Google Not Connected"
                 isConnected={googleConnected}
                 loading={googleLoading}
                 href="/integrations?defaultTab=google"
               />
               <ConnectionStatusPill
                 label="WhatsApp"
-                connectedLabel="WhatsApp Connected"
-                disconnectedLabel="WhatsApp Not Connected"
                 isConnected={waConnected}
                 loading={waLoading}
                 href="/integrations?defaultTab=whatsapp"
               />
               <ConnectionStatusPill
                 label="Instagram"
-                connectedLabel="Instagram Connected"
-                disconnectedLabel="Instagram Not Connected"
                 isConnected={igConnected}
                 loading={igLoading}
                 href="/integrations?defaultTab=instagram"
