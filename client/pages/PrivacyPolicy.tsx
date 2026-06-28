@@ -1,107 +1,473 @@
 import { Link } from "react-router-dom";
 import { Zap, Shield, FileText, Mail } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+
+const privacyContentStr = `# **Privacy Policy**
+
+**Last Updated: June 2025**
+
+## **1. Introduction**
+
+CastHub (“CastHub”, “we”, “our”, or “us”) is committed to protecting your privacy and personal information.
+
+This Privacy Policy explains how we collect, use, process, disclose, store, and safeguard your information when you access or use the CastHub platform, website, applications, integrations, and related services (collectively, the “Platform”).
+
+By accessing or using CastHub, you consent to the collection and use of information as described in this Privacy Policy.
+
+If you do not agree with this Privacy Policy, please do not use the Platform.
+
+---
+
+## **2. Information We Collect**
+
+We may collect the following categories of information:
+
+### **Account Information**
+
+Information provided during registration and account management, including:
+
+* Full name
+* Email address
+* Phone number
+* Gender
+* Date of birth
+* Organization or company information
+* Profile information
+
+### **Usage Data**
+
+Information automatically collected when using the Platform, including:
+
+* IP address
+* Device information
+* Browser type and version
+* Operating system
+* Referring URLs
+* Pages visited
+* Features used
+* Session duration
+* Login activity
+* Error logs
+
+### **Integration Credentials**
+
+Information required to connect third-party services, including:
+
+* OAuth authorization tokens
+* API credentials
+* Access permissions
+* Session identifiers
+* Authentication metadata
+
+for services such as:
+
+* Google Gmail
+* Google Drive
+* WhatsApp
+* Instagram
+* Facebook
+* Other supported integrations
+
+### **Contact Data**
+
+Information uploaded, imported, generated, or managed by users, including:
+
+* Names
+* Email addresses
+* Phone numbers
+* Social media handles
+* Company information
+* Contact notes
+* Outreach lists
+* Imported databases
+
+### **Communications Data**
+
+Information created or stored through the Platform, including:
+
+* Messages
+* Campaign content
+* Templates
+* Outreach content
+* Notes
+* Attachments
+* Communication history
+
+### **Payment Information**
+
+Subscription and billing information processed through payment providers including:
+
+* Billing name
+* Billing address
+* Transaction records
+* Payment status
+
+CastHub does not store full credit card or payment card information.
+
+Payments are processed by authorized third-party payment providers such as Razorpay.
+
+---
+
+## **2A. Contact Information Uploaded by Users**
+
+Users may upload contact information including names, email addresses, phone numbers, social media profiles, company names, and related information.
+
+Users are solely responsible for ensuring they have the legal right to collect, upload, store, process, and communicate with such contacts.
+
+CastHub acts solely as a software platform and does not independently verify the legality, accuracy, ownership, source, or validity of uploaded contact information.
+
+Users remain fully responsible for compliance with all applicable privacy, communications, marketing, and data protection laws relating to their contact databases.
+
+---
+
+## **3. How We Use Your Information**
+
+We may use information we collect to:
+
+* Provide, operate, maintain, and improve the Platform
+* Authenticate users
+* Secure user accounts
+* Process payments and subscriptions
+* Deliver requested features
+* Manage integrations
+* Respond to inquiries and support requests
+* Analyze usage trends
+* Improve user experience
+* Detect fraud and abuse
+* Monitor security
+* Enforce our Terms of Service
+* Comply with legal obligations
+
+---
+
+## **3A. Artificial Intelligence Processing**
+
+CastHub may use artificial intelligence, machine learning models, OCR technologies, automated processing systems, language models, and similar technologies to provide certain Platform features.
+
+These features may include:
+
+* Contact extraction
+* Data classification
+* Campaign generation
+* Message suggestions
+* Personalization recommendations
+* Workflow automation
+* Analytics assistance
+
+Information submitted to these features may be processed automatically in order to provide requested functionality.
+
+Users acknowledge that AI-generated outputs may contain inaccuracies, omissions, misclassifications, or errors and should be reviewed before use.
+
+CastHub does not use customer content to train proprietary AI models unless explicitly disclosed and authorized.
+
+---
+
+## **3B. Communications**
+
+CastHub may send users:
+
+* Account notifications
+* Security alerts
+* Authentication messages
+* Password reset emails
+* Billing notices
+* Service announcements
+* Product updates
+* Administrative communications
+
+Users may opt out of non-essential marketing communications where applicable.
+
+Users may continue to receive essential service-related communications necessary for operation of their account.
+
+---
+
+## **4. Third-Party Account Connections**
+
+When users connect third-party services such as Google, Gmail, Google Drive, WhatsApp, Instagram, Facebook, or similar services, CastHub may receive:
+
+* Account information
+* Authentication credentials
+* Access tokens
+* Metadata
+* Configuration settings
+* Information necessary to provide requested functionality
+
+Access is limited to permissions explicitly granted by the user.
+
+Users may revoke access through the relevant third-party platform settings or through the Platform where supported.
+
+---
+
+## **5. Data Sharing and Disclosure**
+
+We do not sell, rent, or trade personal information to third parties.
+
+We may share information in the following circumstances:
+
+### **Service Providers**
+
+We may share information with vendors and service providers that assist in operating the Platform, including:
+
+* Cloud hosting providers
+* Email delivery providers
+* Analytics providers
+* Infrastructure providers
+* Customer support providers
+* Payment processors
+
+### **Third-Party Platforms**
+
+When users authorize integrations with third-party services, relevant information may be transmitted to those services in accordance with user instructions and the respective third-party privacy policies.
+
+### **Legal Compliance**
+
+We may disclose information when required to:
+
+* Comply with applicable law
+* Respond to legal process
+* Enforce agreements
+* Protect rights and safety
+* Prevent fraud or abuse
+
+### **Business Transfers**
+
+Information may be transferred in connection with:
+
+* Mergers
+* Acquisitions
+* Asset sales
+* Corporate restructuring
+* Financing transactions
+
+---
+
+## **6. Data Retention**
+
+We retain personal information for as long as reasonably necessary to:
+
+* Provide services
+* Maintain accounts
+* Fulfill contractual obligations
+* Comply with legal requirements
+* Resolve disputes
+* Prevent fraud
+
+Upon verified account deletion requests, CastHub will remove, anonymize, or delete personal information within a commercially reasonable period, generally not exceeding thirty (30) days, except where retention is required for:
+
+* Legal obligations
+* Security investigations
+* Fraud prevention
+* Tax and accounting records
+* Dispute resolution
+* Regulatory compliance
+
+---
+
+## **6A. Analytics and Performance Monitoring**
+
+CastHub may use analytics, logging, monitoring, diagnostic, and performance tools to:
+
+* Understand platform usage
+* Improve functionality
+* Monitor performance
+* Detect technical issues
+* Improve reliability
+* Enhance security
+
+These tools may collect:
+
+* Device information
+* Browser information
+* Session information
+* Usage events
+* Performance metrics
+* Error reports
+
+---
+
+## **7. Cookies and Tracking Technologies**
+
+We use cookies and similar technologies to:
+
+* Maintain session state
+* Authenticate users
+* Improve user experience
+* Analyze usage patterns
+* Store preferences
+* Improve performance
+
+Users may control cookie settings through their browser preferences.
+
+Disabling cookies may affect certain Platform functionality.
+
+---
+
+## **8. Data Security**
+
+CastHub implements commercially reasonable security measures designed to protect personal information.
+
+Such measures may include:
+
+* Encryption in transit (TLS/HTTPS)
+* Encryption at rest
+* Access controls
+* Authentication safeguards
+* Password hashing
+* Infrastructure monitoring
+* Security logging
+
+However, no transmission method or storage system is completely secure.
+
+Accordingly, we cannot guarantee absolute security.
+
+---
+
+## **8A. Security Incidents**
+
+In the event of a security incident involving unauthorized access to personal information, CastHub will take commercially reasonable steps to:
+
+* Investigate the incident
+* Mitigate potential harm
+* Restore affected systems
+* Notify affected users where required by applicable law
+
+The timing and method of notification may vary depending upon the nature of the incident and applicable legal requirements.
+
+---
+
+## **9. Your Privacy Rights**
+
+Depending on applicable laws and jurisdiction, users may have rights including:
+
+### **Access**
+
+Request access to personal information we hold.
+
+### **Correction**
+
+Request correction of inaccurate or incomplete information.
+
+### **Deletion**
+
+Request deletion of personal information, subject to legal limitations.
+
+### **Portability**
+
+Request personal information in a machine-readable format where applicable.
+
+### **Restriction**
+
+Request limitation of certain processing activities.
+
+### **Objection**
+
+Object to certain processing activities where permitted by law.
+
+To exercise these rights, contact:
+
+**support@casthub.in**
+
+---
+
+## **10. Children’s Privacy**
+
+CastHub is not intended for individuals under the age of eighteen (18).
+
+We do not knowingly collect personal information from minors.
+
+If we become aware that a minor has submitted personal information, we will take reasonable steps to delete such information.
+
+Parents or guardians who believe a minor has submitted information should contact:
+
+**support@casthub.in**
+
+---
+
+## **10A. Google API Services**
+
+CastHub’s use and transfer of information received from Google APIs will adhere to the Google API Services User Data Policy, including applicable Limited Use requirements.
+
+Information obtained through Google APIs will only be used to provide user-requested functionality and services.
+
+CastHub does not sell Google user data to third parties.
+
+---
+
+## **11. Third-Party Services**
+
+CastHub integrates with third-party services including:
+
+* Google
+* Gmail
+* Google Drive
+* Meta
+* WhatsApp
+* Instagram
+* Facebook
+* Razorpay
+* Other approved service providers
+
+These services operate under their own privacy policies and terms.
+
+Users should review those policies before using such integrations.
+
+Users acknowledge that information transmitted through third-party platforms such as WhatsApp, Instagram, Facebook, Gmail, Google Drive, or other integrated services may also be processed, stored, or handled by those providers according to their own privacy policies and practices.
+
+CastHub does not control and is not responsible for the privacy, security, retention, or processing activities of third-party providers.
+
+---
+
+## **12. International Data Transfers**
+
+CastHub primarily stores and processes data on servers located in India.
+
+If users access the Platform from outside India, information may be transferred to, stored in, and processed in India or other jurisdictions where service providers operate.
+
+By using the Platform, users consent to such transfers.
+
+---
+
+## **13. Changes to This Privacy Policy**
+
+We may update this Privacy Policy from time to time.
+
+When significant changes are made, we may notify users through:
+
+* Platform notifications
+* Email communications
+* Updated policy notices
+
+The “Last Updated” date at the top of this policy will indicate the effective revision date.
+
+Continued use of the Platform after updates become effective constitutes acceptance of the revised Privacy Policy.
+
+---
+
+## **14. Contact Us**
+
+For privacy-related questions, requests, concerns, or complaints, please contact:
+
+**CastHub Support**
+
+Email: support@casthub.in
+`;
 
 export function PrivacyContent() {
   return (
-    <div className="prose dark:prose-invert max-w-none space-y-10 text-muted-foreground leading-relaxed">
-      <section className="space-y-3">
-        <h2 className="text-xl font-black text-foreground">1. Introduction</h2>
-        <p>CastHub ("we", "our", or "us") is committed to protecting your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your data when you use our platform. By using CastHub, you consent to the practices described in this policy.</p>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-xl font-black text-foreground">2. Information We Collect</h2>
-        <p>We collect the following categories of information:</p>
-        <ul className="list-disc pl-6 space-y-1.5">
-          <li><strong className="text-foreground">Account Information:</strong> Name, email address, phone number, gender, and date of birth provided at registration.</li>
-          <li><strong className="text-foreground">Usage Data:</strong> Log data, IP addresses, browser type, pages visited, and time spent on the platform.</li>
-          <li><strong className="text-foreground">Integration Credentials:</strong> OAuth tokens for Google (Gmail/Drive) and session data for WhatsApp and Instagram connections.</li>
-          <li><strong className="text-foreground">Contact Data:</strong> Information you upload or import (e.g., talent contact lists) for use with our outreach tools.</li>
-          <li><strong className="text-foreground">Payment Information:</strong> Billing details processed via our payment providers (Razorpay). We do not store raw card details.</li>
-          <li><strong className="text-foreground">Communications:</strong> Messages, templates, and campaign content you create within the platform.</li>
-        </ul>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-xl font-black text-foreground">3. How We Use Your Information</h2>
-        <p>We use your data to:</p>
-        <ul className="list-disc pl-6 space-y-1.5">
-          <li>Provide, operate, and improve the CastHub platform</li>
-          <li>Authenticate your identity and secure your account</li>
-          <li>Send transactional emails (e.g., email verification, password resets)</li>
-          <li>Process payments and manage subscriptions</li>
-          <li>Respond to support requests and inquiries</li>
-          <li>Analyze usage patterns to improve user experience</li>
-          <li>Comply with legal obligations</li>
-        </ul>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-xl font-black text-foreground">4. Data Sharing and Disclosure</h2>
-        <p>We do not sell, trade, or rent your personal information. We may share data with:</p>
-        <ul className="list-disc pl-6 space-y-1.5">
-          <li><strong className="text-foreground">Service Providers:</strong> Third-party vendors that assist us in operating the platform (e.g., cloud hosting, email delivery, payment processing).</li>
-          <li><strong className="text-foreground">Third-Party Platforms:</strong> When you authorize integrations with Google, WhatsApp, or Instagram, relevant data is transmitted to those platforms under their own privacy policies.</li>
-          <li><strong className="text-foreground">Legal Requirements:</strong> We may disclose your data if required by law, court order, or governmental authority.</li>
-          <li><strong className="text-foreground">Business Transfers:</strong> In the event of a merger, acquisition, or sale of assets, your data may be transferred as part of the transaction.</li>
-        </ul>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-xl font-black text-foreground">5. Data Retention</h2>
-        <p>We retain your personal data for as long as your account is active or as needed to provide the service. If you delete your account, we will delete or anonymize your personal data within 30 days, except where retention is required by law or for legitimate business interests (e.g., fraud prevention).</p>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-xl font-black text-foreground">6. Cookies and Tracking</h2>
-        <p>We use cookies and similar tracking technologies to maintain session state and improve user experience. You can control cookie preferences through your browser settings. Disabling cookies may affect the functionality of certain features.</p>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-xl font-black text-foreground">7. Data Security</h2>
-        <p>We implement industry-standard security measures including encryption at rest and in transit (TLS/HTTPS), hashed password storage (bcrypt), and access controls. However, no method of transmission over the internet is 100% secure, and we cannot guarantee absolute security.</p>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-xl font-black text-foreground">8. Your Rights</h2>
-        <p>Depending on your jurisdiction, you may have the following rights regarding your personal data:</p>
-        <ul className="list-disc pl-6 space-y-1.5">
-          <li><strong className="text-foreground">Access:</strong> Request a copy of the personal data we hold about you.</li>
-          <li><strong className="text-foreground">Correction:</strong> Request that we correct inaccurate or incomplete data.</li>
-          <li><strong className="text-foreground">Deletion:</strong> Request deletion of your personal data (subject to legal obligations).</li>
-          <li><strong className="text-foreground">Portability:</strong> Request your data in a machine-readable format.</li>
-          <li><strong className="text-foreground">Objection:</strong> Object to or restrict certain types of processing.</li>
-        </ul>
-        <p>To exercise any of these rights, contact us at <a href="mailto:support@casthub.in" className="text-primary font-bold hover:underline">support@casthub.in</a>.</p>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-xl font-black text-foreground">9. Children's Privacy</h2>
-        <p>CastHub is not intended for individuals under the age of 18. We do not knowingly collect personal data from minors. If you believe a minor has provided us with their information, please contact us immediately and we will take steps to delete it.</p>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-xl font-black text-foreground">10. Third-Party Services</h2>
-        <p>Our platform integrates with third-party services such as Google, Meta (WhatsApp/Instagram), and Razorpay. These services have their own privacy policies, and we encourage you to review them. We are not responsible for the privacy practices of these external services.</p>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-xl font-black text-foreground">11. International Data Transfers</h2>
-        <p>Your data is stored and processed on servers located in India. If you access CastHub from outside India, your data may be transferred to and processed in India. By using the platform, you consent to this transfer.</p>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-xl font-black text-foreground">12. Changes to This Policy</h2>
-        <p>We may update this Privacy Policy from time to time. We will notify you of significant changes by updating the "Last updated" date and, where appropriate, via email. Your continued use of the platform after changes are posted constitutes your acceptance of the updated policy.</p>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-xl font-black text-foreground">13. Contact Us</h2>
-        <p>For privacy-related questions, requests, or complaints, please contact our Data Protection team:</p>
-        <a href="mailto:support@casthub.in" className="inline-flex items-center gap-2 text-primary font-bold hover:underline">
-          <Mail className="w-4 h-4" /> support@casthub.in
-        </a>
-      </section>
+    <div className="prose dark:prose-invert max-w-none space-y-4 text-muted-foreground leading-relaxed">
+      <ReactMarkdown
+        components={{
+          h1: ({node, ...props}) => <h1 className="text-3xl font-black text-foreground mt-8 mb-4" {...props} />,
+          h2: ({node, ...props}) => <h2 className="text-xl font-black text-foreground mt-8 mb-4" {...props} />,
+          h3: ({node, ...props}) => <h3 className="text-lg font-bold text-foreground mt-6 mb-3" {...props} />,
+          p: ({node, ...props}) => <p className="mb-4" {...props} />,
+          ul: ({node, ...props}) => <ul className="list-disc pl-6 space-y-2 mb-4" {...props} />,
+          li: ({node, ...props}) => <li {...props} />,
+          hr: ({node, ...props}) => <hr className="border-border/50 my-8" {...props} />
+        }}
+      >
+        {privacyContentStr}
+      </ReactMarkdown>
     </div>
   );
 }
@@ -140,7 +506,7 @@ export default function PrivacyPolicy() {
             <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Legal</span>
           </div>
           <h1 className="text-5xl font-black tracking-tighter text-foreground">Privacy Policy</h1>
-          <p className="text-muted-foreground font-medium">Last updated: June 2025</p>
+          <p className="text-muted-foreground font-medium">Last updated: June 2026</p>
         </div>
 
         <PrivacyContent />

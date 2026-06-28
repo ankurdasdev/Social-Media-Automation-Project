@@ -1,89 +1,431 @@
 import { Link } from "react-router-dom";
-import { Zap, Shield, FileText, Mail, ExternalLink } from "lucide-react";
+import { Shield, FileText } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+
+const termsContentStr = `# **Terms of Service**
+
+**Last Updated: June 2026**
+
+## **1. Acceptance of Terms**
+
+By accessing or using CastHub (“Platform”, “CastHub”, “we”, “our”, or “us”), you agree to be bound by these Terms of Service (“Terms”).
+
+If you do not agree with any part of these Terms, you must not access or use the Platform.
+
+These Terms apply to all users, visitors, customers, organizations, representatives, and other persons accessing or using the Platform.
+
+Your use of the Platform is also governed by our Privacy Policy, which is incorporated into these Terms by reference.
+
+---
+
+## **2. Description of Service**
+
+CastHub is a multi-channel outreach automation platform that enables users to organize contacts, create campaigns, automate outreach workflows, manage communications, analyze campaign performance, and integrate with third-party communication platforms including, but not limited to, WhatsApp, Instagram, Facebook, Gmail, Google Drive, and similar services.
+
+The Platform may provide features including:
+
+* Contact management  
+* Campaign management  
+* Messaging automation  
+* Outreach tracking  
+* Analytics and reporting  
+* AI-powered workflows  
+* Template creation  
+* Third-party integrations  
+* Communication tools
+
+CastHub provides software tools only and does not act as an employment agency, talent agency, recruitment firm, casting agency, or communications provider.
+
+---
+
+## **2A. No Guarantee of Results**
+
+CastHub provides software tools designed to assist users with contact management, outreach automation, campaign execution, and workflow organization.
+
+CastHub does not guarantee:
+
+* Auditions  
+* Casting opportunities  
+* Employment  
+* Talent representation  
+* Responses from casting directors  
+* Responses from agents  
+* Responses from production houses  
+* Message opens  
+* Message replies  
+* Meetings  
+* Leads  
+* Sales  
+* Revenue  
+* Business opportunities  
+* Conversions  
+* Bookings  
+* Any specific outcome arising from use of the Platform
+
+Users acknowledge that success depends on numerous factors outside CastHub’s control, including market conditions, recipient decisions, content quality, timing, platform policies, and third-party provider actions.
+
+---
+
+## **2B. Artificial Intelligence Features**
+
+The Platform may utilize artificial intelligence, machine learning, OCR technologies, automated parsing systems, language models, and other automated processes.
+
+AI-generated outputs may contain inaccuracies, omissions, outdated information, incorrect classifications, or other errors.
+
+Users are solely responsible for reviewing, validating, and verifying all AI-generated information before relying on it or using it for outreach, communications, business activities, or professional purposes.
+
+CastHub shall not be responsible for losses, damages, missed opportunities, incorrect communications, or other consequences arising from reliance upon AI-generated outputs.
+
+---
+
+## **3. Eligibility**
+
+You must be at least eighteen (18) years old to use the Platform.
+
+By using CastHub, you represent and warrant that:
+
+* You are at least 18 years of age.  
+* You have legal capacity to enter into binding agreements.  
+* You are authorized to use any third-party accounts connected to the Platform.  
+* Any organization account is created by an authorized representative.
+
+---
+
+## **4. Account Registration**
+
+To access certain features, you must create an account.
+
+You agree to:
+
+* Provide accurate, current, and complete information.  
+* Keep your information updated.  
+* Maintain the confidentiality of your credentials.  
+* Notify us immediately of unauthorized access.
+
+You are responsible for all activities conducted through your account.
+
+---
+
+## **5. Acceptable Use Policy**
+
+You agree to use the Platform only in compliance with applicable laws and regulations.
+
+You may not use CastHub to:
+
+* Send spam or unsolicited communications.  
+* Harass, threaten, or abuse individuals.  
+* Impersonate another person or entity.  
+* Upload malicious software or code.  
+* Interfere with Platform infrastructure.  
+* Violate third-party platform policies.  
+* Circumvent system limitations.  
+* Engage in fraudulent activity.  
+* Upload unlawful or infringing content.  
+* Damage CastHub’s reputation, services, or operations.
+
+---
+
+## **5A. User Responsibility for Communications**
+
+Users are solely responsible for:
+
+* All messages sent through the Platform.  
+* Outreach recipients.  
+* Contact lists.  
+* Templates.  
+* Attachments.  
+* Message content.  
+* Campaign execution.  
+* Compliance with laws.  
+* Compliance with third-party platform policies.
+
+CastHub does not review, approve, monitor, endorse, or verify communications created or transmitted by users.
+
+Users assume full responsibility for any consequences arising from their communications, including complaints, legal claims, account restrictions, account suspensions, account bans, regulatory actions, or damages.
+
+---
+
+## **5B. Compliance with Anti-Spam and Communications Laws**
+
+Users are solely responsible for ensuring compliance with all applicable laws relating to:
+
+* Electronic communications  
+* Direct marketing  
+* Consumer protection  
+* Anti-spam regulations  
+* Privacy regulations  
+* Data protection laws
+
+CastHub is a software provider only and does not provide legal advice.
+
+Users are solely responsible for obtaining any required permissions, authorizations, notices, or consents prior to sending communications.
+
+---
+
+## **6. Third-Party Platforms and Integrations**
+
+CastHub integrates with third-party services including, but not limited to:
+
+* WhatsApp  
+* Instagram  
+* Gmail  
+* Google Drive  
+* Meta services  
+* Google services  
+* Other external platforms
+
+Your use of such integrations is subject to the terms, policies, and requirements of the respective providers.
+
+CastHub is not affiliated with, endorsed by, sponsored by, or approved by Meta Platforms, Inc., WhatsApp LLC, Google LLC, or any other provider unless explicitly stated.
+
+Users acknowledge and agree that:
+
+* Third-party providers may modify, suspend, restrict, or discontinue APIs, integrations, policies, or services at any time.  
+* Third-party providers may suspend, disable, flag, restrict, review, or permanently ban accounts for reasons beyond CastHub’s control.  
+* Message delivery and platform functionality may be impacted by third-party actions.  
+* CastHub does not guarantee message delivery, account approval, account safety, platform access, API availability, or continued integration functionality.  
+* CastHub shall not be liable for account suspensions, account bans, delivery failures, API restrictions, policy enforcement actions, security reviews, service interruptions, or other actions taken by third parties.
+
+Users acknowledge that connecting WhatsApp, Instagram, Facebook, Gmail, Google Drive, or any third-party account carries inherent risks including:
+
+* Account suspension  
+* Account restriction  
+* Account review  
+* API limitations  
+* Reduced message delivery  
+* Policy enforcement actions  
+* Permanent account bans
+
+CastHub does not control such providers and shall not be liable for any resulting consequences.
+
+Users assume all risks associated with connecting third-party accounts.
+
+---
+
+## **7. Subscription and Payments**
+
+Certain features may require a paid subscription.
+
+Subscription fees:
+
+* Are billed in advance.  
+* May recur automatically.  
+* Exclude taxes unless stated otherwise.
+
+Users may cancel subscriptions at any time.
+
+Cancellations become effective at the end of the current billing cycle.
+
+Except where required by law, refunds are provided at CastHub’s sole discretion.
+
+---
+
+## **8. Intellectual Property**
+
+All Platform content, software, designs, graphics, logos, trademarks, interfaces, and functionality are owned by CastHub or its licensors.
+
+Users may not:
+
+* Copy  
+* Reproduce  
+* Modify  
+* Reverse engineer  
+* Distribute  
+* Create derivative works
+
+without prior written permission.
+
+---
+
+## **8A. User Content**
+
+Users retain ownership of content uploaded to the Platform including:
+
+* Contact data  
+* Templates  
+* Messages  
+* Documents  
+* Images  
+* Media files  
+* Campaign assets
+
+Users grant CastHub a limited, non-exclusive license to store, process, transmit, display, and use such content solely for the purpose of providing the Services.
+
+Users represent and warrant that they possess all rights necessary to upload and use such content.
+
+---
+
+## **8B. Data Storage and Backup**
+
+While CastHub takes commercially reasonable measures to protect user data, the Platform may experience interruptions, outages, corruption, accidental deletion, or technical failures.
+
+Users are responsible for maintaining independent backups of important information.
+
+CastHub does not guarantee preservation or recovery of user data.
+
+---
+
+## **9. Limitation of Liability**
+
+To the maximum extent permitted by law, CastHub shall not be liable for:
+
+* Indirect damages  
+* Incidental damages  
+* Special damages  
+* Consequential damages  
+* Punitive damages  
+* Loss of profits  
+* Loss of revenue  
+* Loss of opportunities  
+* Loss of business  
+* Loss of goodwill  
+* Loss of data
+
+arising from use of the Platform.
+
+In no event shall CastHub’s aggregate liability exceed the total amount paid by the user to CastHub during the twelve (12) months immediately preceding the claim.
+
+---
+
+## **10. Disclaimer of Warranties**
+
+The Platform is provided on an “AS IS” and “AS AVAILABLE” basis.
+
+CastHub disclaims all warranties including:
+
+* Merchantability  
+* Fitness for a particular purpose  
+* Non-infringement  
+* Reliability  
+* Accuracy  
+* Availability
+
+We do not warrant that:
+
+* The Platform will be uninterrupted.  
+* The Platform will be error-free.  
+* The Platform will be secure.  
+* Messages will be delivered.  
+* Third-party integrations will remain available.
+
+---
+
+## **10A. Beta and Experimental Features**
+
+CastHub may offer beta, preview, experimental, or early-access features.
+
+Such features may:
+
+* Contain bugs  
+* Be incomplete  
+* Be modified  
+* Be restricted  
+* Be suspended  
+* Be discontinued
+
+without notice.
+
+Users assume all risks associated with beta features.
+
+---
+
+## **11. Termination**
+
+We may suspend, restrict, or terminate access to the Platform at any time if we reasonably believe that:
+
+* These Terms have been violated.  
+* Spam activity has occurred.  
+* Fraudulent activity has occurred.  
+* Platform security is threatened.  
+* Third-party policies are violated.  
+* Continued access creates risk for CastHub or other users.
+
+Termination may occur with or without notice.
+
+---
+
+## **12. Governing Law**
+
+These Terms shall be governed by and construed in accordance with the laws of India.
+
+Any dispute arising out of or relating to these Terms shall be subject to the exclusive jurisdiction of the courts located in Gurugram, Haryana, India.
+
+---
+
+## **12A. Indemnification**
+
+Users agree to defend, indemnify, and hold harmless CastHub, its affiliates, directors, officers, employees, contractors, agents, successors, and assigns from and against any claims, liabilities, damages, losses, penalties, fines, costs, expenses, or legal fees arising from:
+
+* User content  
+* User communications  
+* Outreach campaigns  
+* Violation of laws  
+* Violation of these Terms  
+* Violation of third-party platform policies  
+* Misuse of the Platform
+
+This obligation survives account termination.
+
+---
+
+## **13. Changes to Terms**
+
+We reserve the right to modify these Terms at any time.
+
+Changes may be communicated through:
+
+* Platform notifications  
+* Email communications  
+* Updated Terms pages
+
+Continued use of the Platform after changes become effective constitutes acceptance of the revised Terms.
+
+---
+
+## **13A. Force Majeure**
+
+CastHub shall not be liable for delays, interruptions, or failures resulting from events beyond its reasonable control, including:
+
+* Internet outages  
+* Third-party service interruptions  
+* Government actions  
+* Regulatory changes  
+* Cyberattacks  
+* Security incidents  
+* Labor disputes  
+* Natural disasters  
+* Acts of God  
+* Infrastructure failures
+
+Such events shall not constitute a breach of these Terms.
+
+---
+
+## **14. Contact Us**
+
+If you have any questions regarding these Terms of Service, please contact:
+
+**CastHub Support**
+
+Email: support@casthub.in
+`;
 
 export function TermsContent() {
   return (
-    <div className="prose dark:prose-invert max-w-none space-y-10 text-muted-foreground leading-relaxed">
-      <section className="space-y-3">
-        <h2 className="text-xl font-black text-foreground">1. Acceptance of Terms</h2>
-        <p>By accessing or using CastHub ("the Platform", "we", "our", or "us"), you agree to be bound by these Terms of Service. If you do not agree to all the terms and conditions, you must not access or use the Platform. These terms apply to all users, visitors, and others who access or use the service.</p>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-xl font-black text-foreground">2. Description of Service</h2>
-        <p>CastHub is a casting automation platform that allows professionals in the entertainment industry to manage outreach campaigns via WhatsApp, Gmail, and Instagram. The platform provides tools for contact management, bulk messaging, template creation, and campaign analytics.</p>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-xl font-black text-foreground">3. Eligibility</h2>
-        <p>You must be at least 18 years of age to use the Platform. By using CastHub, you represent and warrant that you are at least 18 years old and have the legal capacity to enter into binding contracts. Accounts registered on behalf of organizations must be created by authorized representatives.</p>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-xl font-black text-foreground">4. Account Registration</h2>
-        <p>To access certain features, you must create an account. You agree to provide accurate, current, and complete information and to keep it updated. You are responsible for maintaining the confidentiality of your login credentials and for all activities that occur under your account. You must notify us immediately of any unauthorized use of your account.</p>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-xl font-black text-foreground">5. Acceptable Use Policy</h2>
-        <p>You agree to use the Platform only for lawful purposes and in compliance with all applicable laws and regulations, including those of the country in which you operate. You must NOT use CastHub to:</p>
-        <ul className="list-disc pl-6 space-y-1.5">
-          <li>Send spam, unsolicited, or bulk messages in violation of any law</li>
-          <li>Harass, threaten, or harm any individual</li>
-          <li>Impersonate any person or entity</li>
-          <li>Transmit malicious code or interfere with platform infrastructure</li>
-          <li>Violate the Terms of Service of WhatsApp, Google, or Instagram</li>
-          <li>Engage in any activity that could damage CastHub's reputation or operations</li>
-        </ul>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-xl font-black text-foreground">6. Third-Party Platforms</h2>
-        <p>CastHub integrates with third-party platforms including WhatsApp, Gmail (Google), and Instagram (Meta). Your use of these integrations is also subject to the respective terms and conditions of those platforms. We are not affiliated with, endorsed by, or sponsored by Meta Platforms, Inc., Google LLC, or WhatsApp LLC. Misuse of these integrations that results in account restrictions or bans on those platforms is solely your responsibility.</p>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-xl font-black text-foreground">7. Subscription and Payments</h2>
-        <p>Certain features of CastHub may require a paid subscription. All fees are exclusive of taxes unless otherwise stated. Subscription fees are billed in advance on a recurring basis. You may cancel your subscription at any time; cancellations take effect at the end of the current billing period. Refunds are issued at our sole discretion.</p>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-xl font-black text-foreground">8. Intellectual Property</h2>
-        <p>All content, features, and functionality of the Platform — including but not limited to text, graphics, logos, icons, and software — are owned by CastHub and are protected by applicable intellectual property laws. You may not copy, modify, distribute, or create derivative works without our express written permission.</p>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-xl font-black text-foreground">9. Limitation of Liability</h2>
-        <p>To the maximum extent permitted by applicable law, CastHub shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising out of or related to your use of the Platform, including but not limited to loss of data, loss of profits, or interruption of service, even if we have been advised of the possibility of such damages.</p>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-xl font-black text-foreground">10. Disclaimer of Warranties</h2>
-        <p>The Platform is provided "as is" and "as available" without warranties of any kind, either express or implied, including but not limited to warranties of merchantability, fitness for a particular purpose, or non-infringement. We do not warrant that the Platform will be uninterrupted, error-free, or free of viruses.</p>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-xl font-black text-foreground">11. Termination</h2>
-        <p>We reserve the right to suspend or terminate your account and access to the Platform at our sole discretion, without notice, for conduct that we believe violates these Terms of Service or is harmful to other users, us, third parties, or the integrity of the Platform.</p>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-xl font-black text-foreground">12. Governing Law</h2>
-        <p>These Terms shall be governed by and construed in accordance with the laws of India. Any disputes arising under or in connection with these Terms shall be subject to the exclusive jurisdiction of the courts located in India.</p>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-xl font-black text-foreground">13. Changes to Terms</h2>
-        <p>We reserve the right to modify these Terms at any time. We will provide notice of significant changes by updating the "Last updated" date at the top of this page or by sending an email notification. Your continued use of the Platform after any modifications constitutes your acceptance of the new Terms.</p>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-xl font-black text-foreground">14. Contact Us</h2>
-        <p>If you have any questions about these Terms of Service, please contact us at:</p>
-        <a href="mailto:support@casthub.in" className="inline-flex items-center gap-2 text-primary font-bold hover:underline">
-          <Mail className="w-4 h-4" /> support@casthub.in
-        </a>
-      </section>
+    <div className="prose dark:prose-invert max-w-none space-y-4 text-muted-foreground leading-relaxed">
+      <ReactMarkdown
+        components={{
+          h1: ({node, ...props}) => <h1 className="text-3xl font-black text-foreground mt-8 mb-4" {...props} />,
+          h2: ({node, ...props}) => <h2 className="text-xl font-black text-foreground mt-8 mb-4" {...props} />,
+          h3: ({node, ...props}) => <h3 className="text-lg font-bold text-foreground mt-6 mb-3" {...props} />,
+          p: ({node, ...props}) => <p className="mb-4" {...props} />,
+          ul: ({node, ...props}) => <ul className="list-disc pl-6 space-y-2 mb-4" {...props} />,
+          li: ({node, ...props}) => <li {...props} />,
+          hr: ({node, ...props}) => <hr className="border-border/50 my-8" {...props} />
+        }}
+      >
+        {termsContentStr}
+      </ReactMarkdown>
     </div>
   );
 }
@@ -93,8 +435,8 @@ export default function TermsOfService() {
     <div className="min-h-screen dark:bg-[#060610] bg-background text-foreground">
       {/* Ambient bg */}
       <div className="fixed inset-0 pointer-events-none -z-10">
-        <div className="absolute top-0 left-0 w-[50vw] h-[50vw] bg-purple-600/10 rounded-full blur-[150px]" />
-        <div className="absolute bottom-0 right-0 w-[40vw] h-[40vw] bg-blue-600/10 rounded-full blur-[120px]" />
+        <div className="absolute top-0 right-0 w-[50vw] h-[50vw] bg-indigo-600/10 rounded-full blur-[150px]" />
+        <div className="absolute bottom-0 left-0 w-[40vw] h-[40vw] bg-purple-600/10 rounded-full blur-[120px]" />
       </div>
 
       {/* Navbar */}
@@ -117,12 +459,12 @@ export default function TermsOfService() {
       <div className="max-w-3xl mx-auto px-6 py-16 space-y-12">
         {/* Header */}
         <div className="space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
-            <FileText className="w-3.5 h-3.5 text-primary" />
-            <span className="text-[10px] font-black text-primary uppercase tracking-widest">Legal</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20">
+            <FileText className="w-3.5 h-3.5 text-blue-400" />
+            <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Legal</span>
           </div>
           <h1 className="text-5xl font-black tracking-tighter text-foreground">Terms of Service</h1>
-          <p className="text-muted-foreground font-medium">Last updated: June 2025</p>
+          <p className="text-muted-foreground font-medium">Last updated: June 2026</p>
         </div>
 
         <TermsContent />

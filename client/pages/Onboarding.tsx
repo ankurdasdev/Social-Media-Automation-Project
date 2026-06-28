@@ -78,19 +78,19 @@ function AnimatedBackground() {
   }, []);
 
   return (
-    <div className="fixed inset-0 -z-10 overflow-hidden dark:bg-[#03020a] bg-slate-50">
+    <div className="fixed inset-0 -z-10 overflow-hidden dark:bg-[#0d0b08] bg-amber-50/30">
       <div
         className="absolute inset-0 opacity-[0.025]"
-        style={{ backgroundImage: "linear-gradient(rgba(139,92,246,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.6) 1px, transparent 1px)", backgroundSize: "60px 60px" }}
+        style={{ backgroundImage: "linear-gradient(rgba(245,197,24,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(245,197,24,0.4) 1px, transparent 1px)", backgroundSize: "60px 60px" }}
       />
       <div className="absolute inset-0 transition-transform duration-1000 ease-out" style={{ transform: `translate(${mousePos.x * 60}px, ${mousePos.y * 60}px)` }}>
-        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-purple-600/20 blur-[140px] animate-float-1" />
+        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-amber-500/15 blur-[140px] animate-float-1" />
       </div>
       <div className="absolute inset-0 transition-transform duration-1000 ease-out" style={{ transform: `translate(${mousePos.x * -80}px, ${mousePos.y * -80}px)` }}>
-        <div className="absolute -bottom-40 -right-40 w-[700px] h-[700px] rounded-full bg-indigo-600/15 blur-[160px] animate-float-2" />
+        <div className="absolute -bottom-40 -right-40 w-[700px] h-[700px] rounded-full bg-primary/10 blur-[160px] animate-float-2" />
       </div>
       <div className="absolute inset-0 transition-transform duration-1000 ease-out" style={{ transform: `translate(${mousePos.x * 120}px, ${mousePos.y * 120}px)` }}>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-violet-500/10 blur-[120px] animate-float-3" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-amber-600/8 blur-[120px] animate-float-3" />
       </div>
     </div>
   );
@@ -229,11 +229,11 @@ export default function SetupWizard() {
           </div>
         </div>
         <div className="space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
-            <ShieldCheck className="w-3.5 h-3.5 text-primary" />
-            <span className="text-[10px] font-black text-primary uppercase tracking-widest">Email Verified Successfully</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20">
+            <ShieldCheck className="w-3.5 h-3.5 text-amber-500" />
+            <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">Email Verified Successfully</span>
           </div>
-          <h1 className="text-5xl font-black tracking-tighter text-foreground">Welcome to<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">CastHub</span></h1>
+          <h1 className="text-5xl font-black tracking-tighter text-foreground">Welcome to<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-amber-400 to-amber-600">CastHub</span></h1>
           <p className="text-muted-foreground font-medium max-w-sm mx-auto leading-relaxed">
             Let's set up your workspace in 3 quick steps so you can start automating your casting outreach right away.
           </p>
@@ -256,7 +256,7 @@ export default function SetupWizard() {
       <div className="flex flex-col sm:flex-row gap-3 justify-center">
         <Button
           onClick={handleNext}
-          className="h-14 px-10 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-foreground font-black uppercase tracking-widest gap-2 shadow-xl shadow-primary/20 transition-all active:scale-[0.98]"
+          className="h-14 px-10 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest gap-2 shadow-xl shadow-primary/20 transition-all active:scale-[0.98]"
         >
           Let's Get Started <ArrowRight className="w-5 h-5" />
         </Button>
@@ -289,7 +289,7 @@ export default function SetupWizard() {
       </div>
 
       {/* How to connect */}
-      <div className="p-5 rounded-2xl dark:bg-white/[0.03] bg-black/5 border border-border/50 space-y-3">
+      <div className="p-6 rounded-2xl bg-[#0a0a0a] border border-white/5 space-y-3 shadow-xl shadow-black/10">
         <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">How to connect</p>
         <ol className="space-y-2">
           {[
@@ -313,7 +313,7 @@ export default function SetupWizard() {
       </div>
 
       {/* Limits */}
-      <div className="p-4 rounded-xl dark:bg-white/[0.03] bg-black/5 border border-border/50">
+      <div className="p-5 rounded-xl bg-amber-500/5 border border-amber-500/10">
         <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Limitations</p>
         <p className="text-xs text-muted-foreground font-medium">Gmail allows ~500 emails/day for regular accounts. Excessive bounces or spam reports may temporarily restrict sending. Always use personalized templates.</p>
       </div>
@@ -322,7 +322,7 @@ export default function SetupWizard() {
         {statuses.google !== "connected" && (
           <Button
             onClick={() => { window.open(`/api/auth/google?userId=${userId}`, "_blank"); setTimeout(checkGoogle, 5000); }}
-            className="w-full h-13 rounded-2xl bg-blue-600 hover:bg-blue-500 text-foreground font-black gap-2 transition-all"
+            className="w-full h-14 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black gap-2 transition-all shadow-lg shadow-blue-600/20"
           >
             <ExternalLink className="w-4 h-4" /> Connect Google Account
           </Button>
@@ -331,7 +331,7 @@ export default function SetupWizard() {
           onClick={checkGoogle}
           variant="outline"
           disabled={checkingGoogle}
-          className="w-full h-11 rounded-xl border-border font-bold gap-2"
+          className="w-full h-12 rounded-xl border-white/10 hover:bg-white/5 bg-transparent font-bold gap-2"
         >
           {checkingGoogle ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wifi className="w-4 h-4" />}
           {checkingGoogle ? "Checking..." : "Check Connection Status"}
@@ -360,7 +360,7 @@ export default function SetupWizard() {
         <FeaturePill icon={ShieldCheck} label="Session-based auth" color="bg-purple-500/10 border-purple-500/20 text-purple-400" />
       </div>
 
-      <div className="p-5 rounded-2xl dark:bg-white/[0.03] bg-black/5 border border-border/50 space-y-3">
+      <div className="p-6 rounded-2xl bg-[#0a0a0a] border border-white/5 space-y-3 shadow-xl shadow-black/10">
         <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">How to scan QR</p>
         <ol className="space-y-2">
           {[
@@ -378,7 +378,7 @@ export default function SetupWizard() {
         </ol>
       </div>
 
-      <div className="p-4 rounded-xl bg-rose-500/5 border border-rose-500/10 space-y-1">
+      <div className="p-5 rounded-xl bg-rose-500/5 border border-rose-500/10 space-y-1">
         <p className="text-[10px] font-black uppercase tracking-widest text-rose-400/60 mb-1">⚠️ Important Limitations</p>
         <p className="text-xs text-rose-400/80 font-medium">WhatsApp automation carries a risk of account bans if abused. We strongly recommend a dedicated business number. If your session expires or you log out from your phone, you'll need to re-scan the QR code. Comply with WhatsApp's Terms of Service.</p>
       </div>
@@ -386,7 +386,7 @@ export default function SetupWizard() {
       <div className="flex flex-col gap-3">
         <Button
           onClick={() => setShowWADialog(true)}
-          className="w-full h-13 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-foreground font-black gap-2 transition-all"
+          className="w-full h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black gap-2 transition-all shadow-lg shadow-emerald-600/20"
         >
           <MessageCircle className="w-4 h-4" /> Open WhatsApp QR Scanner
         </Button>
@@ -394,7 +394,7 @@ export default function SetupWizard() {
           onClick={checkWhatsApp}
           variant="outline"
           disabled={checkingWA}
-          className="w-full h-11 rounded-xl border-border font-bold gap-2"
+          className="w-full h-12 rounded-xl border-white/10 hover:bg-white/5 bg-transparent font-bold gap-2"
         >
           {checkingWA ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wifi className="w-4 h-4" />}
           {checkingWA ? "Checking..." : "Check Connection Status"}
@@ -423,7 +423,7 @@ export default function SetupWizard() {
         <FeaturePill icon={ShieldCheck} label="Session auth" color="bg-purple-500/10 border-purple-500/20 text-purple-400" />
       </div>
 
-      <div className="p-5 rounded-2xl dark:bg-white/[0.03] bg-black/5 border border-border/50 space-y-3">
+      <div className="p-6 rounded-2xl bg-[#0a0a0a] border border-white/5 space-y-3 shadow-xl shadow-black/10">
         <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">How to connect</p>
         <ol className="space-y-2">
           {[
@@ -440,7 +440,7 @@ export default function SetupWizard() {
         </ol>
       </div>
 
-      <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/10 space-y-1">
+      <div className="p-5 rounded-xl bg-amber-500/5 border border-amber-500/10 space-y-1">
         <p className="text-[10px] font-black uppercase tracking-widest text-amber-400/60 mb-1">Privacy & Limitations</p>
         <p className="text-xs text-amber-400/80 font-medium">Your session is stored securely. Avoid excessive API calls in short timeframes to prevent action blocks. Instagram may require periodic re-authentication.</p>
       </div>
@@ -448,7 +448,7 @@ export default function SetupWizard() {
       <div className="flex flex-col gap-3">
         <Button
           onClick={() => setShowIGDialog(true)}
-          className="w-full h-13 rounded-2xl bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-foreground font-black gap-2 transition-all"
+          className="w-full h-14 rounded-2xl bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white font-black gap-2 transition-all shadow-lg shadow-pink-600/20"
         >
           <Instagram className="w-4 h-4" /> Connect Instagram
         </Button>
@@ -456,7 +456,7 @@ export default function SetupWizard() {
           onClick={checkInstagram}
           variant="outline"
           disabled={checkingIG}
-          className="w-full h-11 rounded-xl border-border font-bold gap-2"
+          className="w-full h-12 rounded-xl border-white/10 hover:bg-white/5 bg-transparent font-bold gap-2"
         >
           {checkingIG ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wifi className="w-4 h-4" />}
           {checkingIG ? "Checking..." : "Check Connection Status"}
@@ -547,7 +547,7 @@ export default function SetupWizard() {
             { icon: ShieldCheck, label: "Analytics & tracking", color: "text-blue-400" },
             { icon: Star, label: "Bulk contact management", color: "text-emerald-400" },
           ].map((f, i) => (
-            <div key={i} className="flex items-center gap-2.5 p-3 rounded-xl dark:bg-white/[0.03] bg-black/5 border border-border/50">
+            <div key={i} className="flex items-center gap-2.5 p-4 rounded-xl bg-[#0a0a0a] border border-white/5 shadow-lg shadow-black/5">
               <f.icon className={cn("w-4 h-4 shrink-0", f.color)} />
               <span className="text-xs font-bold text-muted-foreground">{f.label}</span>
             </div>
@@ -556,7 +556,7 @@ export default function SetupWizard() {
 
         <Button
           onClick={goToDashboard}
-          className="h-16 px-12 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-foreground font-black text-base uppercase tracking-widest gap-3 shadow-2xl shadow-primary/30 transition-all active:scale-[0.98]"
+          className="h-16 px-12 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-base uppercase tracking-widest gap-3 shadow-2xl shadow-primary/20 transition-all active:scale-[0.98]"
         >
           <Zap className="w-5 h-5 fill-current" /> Enter CastHub Dashboard
         </Button>

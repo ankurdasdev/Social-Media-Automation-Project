@@ -457,7 +457,7 @@ export default function Profile() {
             <div className="mt-8">
               <Card className="bg-[#0a0a0a] border-white/5 overflow-hidden">
                 <CardHeader className="p-8 pb-4">
-                  <CardTitle className="text-2xl font-black tracking-tight text-rose-500 flex items-center gap-2">
+                  <CardTitle className="text-2xl font-black tracking-tight text-foreground flex items-center gap-2">
                     <AlertTriangle className="w-6 h-6 shrink-0" />
                     Danger Zone
                   </CardTitle>
@@ -466,8 +466,8 @@ export default function Profile() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-8 pt-4 space-y-6">
-                  <div className="p-5 rounded-2xl bg-rose-950/30 border border-rose-500/20">
-                    <p className="text-sm font-bold text-rose-500 leading-relaxed">
+                  <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5">
+                    <p className="text-sm font-bold text-foreground leading-relaxed">
                       Delete your account and all associated data. This action cannot be undone.
                     </p>
                   </div>
@@ -494,13 +494,13 @@ export default function Profile() {
         <CardHeader className="flex flex-row items-center justify-between p-8 pb-4">
           <div>
             <CardTitle className="text-xl font-black tracking-tight flex items-center gap-2">
-              <Crown className="w-5 h-5 text-pink-500" /> Subscription & Billing
+              <Crown className="w-5 h-5 text-primary" /> Subscription & Billing
             </CardTitle>
             <CardDescription>Your current plan and payment history</CardDescription>
           </div>
           <Button
             onClick={() => navigate("/subscription")}
-            className="h-10 px-5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 text-white font-black text-[10px] uppercase tracking-widest shadow-lg hover:opacity-90 gap-2"
+            className="h-10 px-5 rounded-xl bg-primary text-primary-foreground font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-primary/90 gap-2"
           >
             <CreditCard className="w-4 h-4" /> Manage Plan
           </Button>
@@ -571,7 +571,7 @@ export default function Profile() {
                 </table>
               </div>
               {historyData.payments.length > 5 && (
-                <button onClick={() => navigate("/subscription")} className="text-[10px] font-black uppercase text-pink-500 hover:text-pink-400 flex items-center gap-1 mt-1">
+                <button onClick={() => navigate("/subscription")} className="text-[10px] font-black uppercase text-primary hover:text-primary/80 flex items-center gap-1 mt-1">
                   View all {historyData.payments.length} payments <ExternalLink className="w-3 h-3" />
                 </button>
               )}

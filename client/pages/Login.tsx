@@ -315,9 +315,9 @@ export default function Login() {
         {/* Footer */}
         <p className="text-[11px] text-foreground/20 font-medium">
           © {new Date().getFullYear()} CastHub ·{" "}
-          <a href="https://docs.google.com/document/d/1Hv3uKqVd4DzS0RKDxIDDlzFuyHO4h_KcbgqLFhb5G6s/edit?usp=sharing" target="_blank" rel="noopener noreferrer" className="hover:text-foreground/40 transition-colors">Terms</a>
+          <Link to="/terms" className="hover:text-foreground/40 transition-colors">Terms</Link>
           {" "}·{" "}
-          <a href="https://docs.google.com/document/d/1NG8TGUZPZBS8HR6GI_e_cDH1glw8b9bgyu9fz575VJY/edit?usp=sharing" target="_blank" rel="noopener noreferrer" className="hover:text-foreground/40 transition-colors">Privacy</a>
+          <Link to="/privacy" className="hover:text-foreground/40 transition-colors">Privacy</Link>
           {" "}·{" "}
           <a href="mailto:support@casthub.in" className="hover:text-foreground/40 transition-colors">support@casthub.in</a>
         </p>
@@ -420,9 +420,9 @@ export default function Login() {
           {/* Legal + Support */}
           <p className="text-center text-[10px] text-foreground/20 font-medium">
             By continuing, you agree to our{" "}
-            <a href="https://docs.google.com/document/d/1Hv3uKqVd4DzS0RKDxIDDlzFuyHO4h_KcbgqLFhb5G6s/edit?usp=sharing" target="_blank" rel="noopener noreferrer" className="text-primary/60 hover:text-primary transition-colors font-bold">Terms of Service</a>
+            <Link to="/terms" className="text-primary/60 hover:text-primary transition-colors font-bold">Terms of Service</Link>
             {" "}and{" "}
-            <a href="https://docs.google.com/document/d/1NG8TGUZPZBS8HR6GI_e_cDH1glw8b9bgyu9fz575VJY/edit?usp=sharing" target="_blank" rel="noopener noreferrer" className="text-primary/60 hover:text-primary transition-colors font-bold">Privacy Policy</a>
+            <Link to="/privacy" className="text-primary/60 hover:text-primary transition-colors font-bold">Privacy Policy</Link>
           </p>
           <p className="text-center text-[10px] text-foreground/20 font-medium">
             Need help?{" "}
