@@ -35,6 +35,7 @@ import {
 import { cn } from "@/lib/utils";
 import { LayoutTemplate } from "lucide-react";
 import SubscriptionBanner from "./SubscriptionBanner";
+import { HelpDrawer } from "./HelpDrawer";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -78,8 +79,8 @@ const navItems = [
     icon: Crown,
   },
   {
-    label: "Contact Us",
-    href: "/contact",
+    label: "Help & Support",
+    href: "/help",
     icon: HelpCircle,
   },
 ];
@@ -502,6 +503,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
           <div className="fixed bottom-0 left-0 w-full h-[50vh] bg-gradient-to-t from-background to-transparent pointer-events-none -z-10 opacity-60" />
         </main>
       </div>
+      <HelpDrawer />
     </div>
   );
 }

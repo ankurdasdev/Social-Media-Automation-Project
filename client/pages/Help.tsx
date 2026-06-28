@@ -10,11 +10,13 @@ import Changelog from "@/components/help/Changelog";
 import HelpAssistant from "@/components/help/HelpAssistant";
 import ContactForm from "@/components/help/ContactForm";
 import StatusDashboard from "@/components/help/StatusDashboard";
+import Animated3DBackground from "@/components/Animated3DBackground";
 
 export default function Help() {
   return (
     <AppLayout>
-      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
+      <Animated3DBackground />
+      <div className="relative space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
         {/* Page Header */}
         <div className="space-y-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-black tracking-widest uppercase text-primary">
