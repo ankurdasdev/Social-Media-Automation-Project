@@ -102,11 +102,11 @@ export default function LandingPage() {
         <p className="text-center text-xs font-black uppercase tracking-widest text-muted-foreground/60 mb-8">Powering outreach across</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
-            { icon: Mail, name: "Gmail", color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20", desc: "Send personalized emails at scale." },
-            { icon: MessageCircle, name: "WhatsApp", color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20", desc: "Automate direct WhatsApp messaging." },
-            { icon: Instagram, name: "Instagram", color: "text-pink-400", bg: "bg-pink-500/10 border-pink-500/20", desc: "Manage bulk Instagram DMs easily." }
+            { icon: Mail, name: "Gmail", color: "text-blue-500", bg: "bg-blue-500/10 border-blue-500/20", desc: "Send personalized emails at scale." },
+            { icon: MessageCircle, name: "WhatsApp", color: "text-emerald-500", bg: "bg-emerald-500/10 border-emerald-500/20", desc: "Automate direct WhatsApp messaging." },
+            { icon: Instagram, name: "Instagram", color: "text-pink-500", bg: "bg-pink-500/10 border-pink-500/20", desc: "Manage bulk Instagram DMs easily." }
           ].map((channel, idx) => (
-            <div key={idx} className="p-6 rounded-3xl bg-[#0a0a0a]/50 border border-white/5 backdrop-blur-sm flex flex-col items-center text-center group hover:bg-[#0a0a0a] hover:border-white/10 transition-all">
+            <div key={idx} className="p-6 rounded-3xl dark:bg-[#0a0a0a]/50 bg-black/5 border dark:border-white/5 border-black/5 backdrop-blur-sm flex flex-col items-center text-center group hover:bg-black/10 dark:hover:bg-[#0a0a0a] dark:hover:border-white/10 hover:border-black/10 transition-all">
               <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110", channel.bg)}>
                 <channel.icon className={cn("w-7 h-7", channel.color)} />
               </div>
@@ -206,7 +206,7 @@ export default function LandingPage() {
       {/* CTA */}
       <div className="max-w-4xl mx-auto px-6 py-20 text-center space-y-8">
         <h2 className="text-4xl md:text-5xl font-black tracking-tighter">Ready to scale your casting?</h2>
-        <p className="text-xl text-muted-foreground font-medium">Join professionals who save 10+ hours a week.</p>
+        <p className="text-xl text-muted-foreground font-medium">Join professionals who save 30+ hours a week.</p>
         <Link to={hasToken ? "/dashboard" : "/signup"} className="inline-flex items-center justify-center gap-2 h-16 px-12 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-lg uppercase tracking-widest shadow-2xl shadow-primary/20 transition-all active:scale-[0.98]">
           {hasToken ? "Open Dashboard" : "Create Free Account"}
         </Link>

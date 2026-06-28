@@ -484,15 +484,15 @@ export default function AppLayout({ children }: AppLayoutProps) {
               © {new Date().getFullYear()} CastHub — Casting Automation Platform
             </p>
             <div className="flex items-center gap-4">
-              <Link to="/terms" className="text-[10px] font-medium text-muted-foreground/40 hover:text-muted-foreground transition-colors uppercase tracking-widest">
+              <Link to="/terms" className="text-[10px] font-bold text-muted-foreground/60 hover:text-muted-foreground transition-colors uppercase tracking-widest">
                 Terms
               </Link>
               <span className="text-muted-foreground/20 text-[10px]">·</span>
-              <Link to="/privacy" className="text-[10px] font-medium text-muted-foreground/40 hover:text-muted-foreground transition-colors uppercase tracking-widest">
+              <Link to="/privacy" className="text-[10px] font-bold text-muted-foreground/60 hover:text-muted-foreground transition-colors uppercase tracking-widest">
                 Privacy
               </Link>
               <span className="text-muted-foreground/20 text-[10px]">·</span>
-              <Link to="/help" className="text-[10px] font-medium text-muted-foreground/40 hover:text-muted-foreground transition-colors uppercase tracking-widest">
+              <Link to="/contact" className="text-[10px] font-bold text-muted-foreground/60 hover:text-muted-foreground transition-colors uppercase tracking-widest">
                 Contact
               </Link>
             </div>

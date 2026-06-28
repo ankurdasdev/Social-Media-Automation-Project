@@ -361,7 +361,7 @@ export default function IntegrationsCenter() {
 
           {/* ── GOOGLE SETUP GUIDE DIALOG ── */}
           <Dialog open={googleGuideOpen} onOpenChange={setGoogleGuideOpen}>
-            <DialogContent className="max-w-2xl w-[95vw] p-0 gap-0 glass-card border-white/10 rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <DialogContent hideCloseButton className="max-w-2xl w-[95vw] p-0 gap-0 glass-card border-white/10 rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
               <DialogHeader className="shrink-0 px-6 pt-6 pb-4 border-b border-white/5 bg-background/80 backdrop-blur-xl">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
@@ -467,7 +467,7 @@ export default function IntegrationsCenter() {
 
       {/* Page Guide Modal */}
       <Dialog open={pageGuideOpen} onOpenChange={setPageGuideOpen}>
-        <DialogContent className="max-w-md p-0 overflow-hidden border-white/10 shadow-2xl rounded-[2rem] bg-card/95 backdrop-blur-3xl">
+        <DialogContent hideCloseButton className="max-w-md p-0 overflow-hidden border-white/10 shadow-2xl rounded-[2rem] bg-card/95 backdrop-blur-3xl">
           <DialogHeader className="shrink-0 px-6 pt-6 pb-4 border-b border-white/5 bg-background/80 backdrop-blur-xl">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
