@@ -1,10 +1,133 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Mail, MessageSquare, Send, CheckCircle2, User, Loader2 } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Mail, MessageSquare, Send, CheckCircle2, User, Loader2, Sun, Moon, Type } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+
+// ── Animated Background ──────────────────────────────────────────────────────
+function AnimatedBackground() {
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePos({ x: (e.clientX / window.innerWidth) - 0.5, y: (e.clientY / window.innerHeight) - 0.5 });
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
+
+  return (
+    <div className="fixed inset-0 -z-10 overflow-hidden dark:bg-[#060608] bg-amber-50/40">
+      {/* Grid Pattern */}
+      <div 
+        className="absolute inset-0 opacity-[0.03] mix-blend-overlay dark:mix-blend-normal"
+        style={{ backgroundImage: "linear-gradient(rgba(245,197,24,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(245,197,24,0.4) 1px, transparent 1px)", backgroundSize: "60px 60px" }}
+      />
+      {/* Floating Orbs */}
+      <div className="absolute inset-0 transition-transform duration-1000 ease-out" style={{ transform: `translate(${mousePos.x * 60}px, ${mousePos.y * 60}px)` }}>
+        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-amber-500/15 blur-[140px] animate-float-1" />
+      </div>
+      <div className="absolute inset-0 transition-transform duration-1000 ease-out" style={{ transform: `translate(${mousePos.x * -80}px, ${mousePos.y * -80}px)` }}>
+        <div className="absolute -bottom-40 -right-40 w-[700px] h-[700px] rounded-full bg-primary/10 blur-[160px] animate-float-2" />
+      </div>
+    </div>
+  );
+}
+
+function ThemeToggle() {
+  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
+  const toggleTheme = () => {
+    const next = !isDark;
+    setIsDark(next);
+    document.documentElement.classList.toggle('dark', next);
+    localStorage.setItem('casthub-theme', next ? 'dark' : 'light');
+  };
+  return (
+    <button onClick={toggleTheme} className="w-10 h-10 rounded-full dark:bg-white/5 bg-black/5 border dark:border-white/10 border-border/50 flex items-center justify-center text-foreground/60 hover:text-foreground hover:dark:bg-white/10 bg-black/10 transition-all backdrop-blur-md">
+      {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+    </button>
+  );
+}
+
+// ── Glassmorphic input ───────────────────────────────────────────────────────
+function GlassInput({
+  id, name, type = "text", placeholder, value, onChange, required, autoFocus, icon: Icon, error, label
+}: {
+  id: string; name: string; type?: string; placeholder?: string; value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; required?: boolean;
+  autoFocus?: boolean; icon?: any; error?: string; label?: string;
+}) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <div className="space-y-1.5">
+      {label && (
+        <label htmlFor={id} className="text-[10px] font-black uppercase tracking-[0.18em] text-foreground/40 block">
+          {label}
+        </label>
+      )}
+      <div className={cn(
+        "relative flex items-center rounded-2xl border transition-all duration-300 backdrop-blur-xl",
+        focused ? "border-primary/60 bg-primary/8 shadow-[0_0_0_3px_rgba(245,197,24,0.12)]" : "dark:border-white/10 border-border/50 dark:bg-white/5 bg-black/5 hover:bg-black/10 dark:hover:bg-white/[0.07]",
+        error && "border-rose-500/50 bg-rose-500/10"
+      )}>
+        {Icon && (
+          <div className="pl-4 pr-2 shrink-0">
+            <Icon className={cn("w-4 h-4 transition-colors", focused ? "text-primary" : "text-foreground/25")} />
+          </div>
+        )}
+        <input
+          id={id}
+          name={name}
+          type={type}
+          placeholder={placeholder}
+          value={value}
+          onChange={onChange}
+          required={required}
+          autoFocus={autoFocus}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          className="w-full h-13 bg-transparent text-sm font-bold text-foreground placeholder:text-foreground/20 focus:outline-none focus:ring-0 px-4 rounded-2xl"
+        />
+      </div>
+      {error && <p className="text-[11px] text-rose-400 font-bold pl-1">{error}</p>}
+    </div>
+  );
+}
+
+function GlassTextarea({
+  id, name, placeholder, value, onChange, required, label
+}: {
+  id: string; name: string; placeholder?: string; value: string;
+  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void; required?: boolean;
+  label?: string;
+}) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <div className="space-y-1.5">
+      {label && (
+        <label htmlFor={id} className="text-[10px] font-black uppercase tracking-[0.18em] text-foreground/40 block">
+          {label}
+        </label>
+      )}
+      <div className={cn(
+        "relative flex rounded-2xl border transition-all duration-300 backdrop-blur-xl",
+        focused ? "border-primary/60 bg-primary/8 shadow-[0_0_0_3px_rgba(245,197,24,0.12)]" : "dark:border-white/10 border-border/50 dark:bg-white/5 bg-black/5 hover:bg-black/10 dark:hover:bg-white/[0.07]"
+      )}>
+        <textarea
+          id={id}
+          name={name}
+          placeholder={placeholder}
+          value={value}
+          onChange={onChange}
+          required={required}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          className="w-full min-h-[120px] bg-transparent text-sm font-bold text-foreground placeholder:text-foreground/20 focus:outline-none focus:ring-0 p-4 rounded-2xl resize-none"
+        />
+      </div>
+    </div>
+  );
+}
+
 
 export default function ContactUs() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -47,15 +170,11 @@ export default function ContactUs() {
   };
 
   return (
-    <div className="min-h-screen dark:bg-[#060610] bg-background text-foreground flex flex-col">
-      {/* Ambient bg */}
-      <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
-        <div className="absolute top-0 right-0 w-[50vw] h-[50vw] bg-amber-600/10 rounded-full blur-[150px]" />
-        <div className="absolute bottom-0 left-0 w-[40vw] h-[40vw] bg-primary/5 rounded-full blur-[120px]" />
-      </div>
+    <div className="min-h-screen text-foreground flex flex-col relative">
+      <AnimatedBackground />
 
       {/* Navbar */}
-      <nav className="sticky top-0 z-50 border-b border-border/50 dark:bg-[#060610]/80 bg-background/80 backdrop-blur-xl px-6 py-4 flex items-center justify-between">
+      <nav className="sticky top-0 z-50 border-b dark:border-white/5 border-border/50 dark:bg-[#060608]/80 bg-background/80 backdrop-blur-xl px-6 py-4 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5">
           <img
             src="/casthub-logo.png"
@@ -65,9 +184,12 @@ export default function ContactUs() {
           />
           <span className="text-lg font-black tracking-tight">CAST<span className="text-primary italic">HUB</span></span>
         </Link>
-        <Link to="/login" className="text-[11px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors">
-          Back to Login
-        </Link>
+        <div className="flex items-center gap-4">
+          <ThemeToggle />
+          <Link to="/login" className="text-[11px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors">
+            Back to Login
+          </Link>
+        </div>
       </nav>
 
       {/* Main Content */}
@@ -88,7 +210,7 @@ export default function ContactUs() {
           
           <div className="pt-8 space-y-6">
             <div className="flex items-center gap-4 text-sm font-bold text-muted-foreground">
-              <div className="w-12 h-12 rounded-2xl bg-[#0a0a0a] border border-white/5 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-2xl dark:bg-white/5 bg-black/5 border dark:border-white/5 border-border/50 flex items-center justify-center">
                 <Mail className="w-5 h-5 text-primary" />
               </div>
               <div>
@@ -101,9 +223,9 @@ export default function ContactUs() {
 
         {/* Right Column - Form */}
         <div className="flex-1 w-full max-w-md mx-auto animate-in fade-in slide-in-from-right-8 duration-700 delay-150">
-          <div className="glass-card bg-[#0a0a0a]/80 border-white/5 p-8 rounded-3xl shadow-2xl relative overflow-hidden">
+          <div className="dark:bg-[#0a0a0a]/80 bg-background/80 backdrop-blur-2xl border dark:border-white/5 border-border/50 p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
             {isSuccess ? (
-              <div className="absolute inset-0 bg-[#0a0a0a] flex flex-col items-center justify-center p-8 text-center space-y-4 animate-in fade-in zoom-in duration-500 z-10">
+              <div className="absolute inset-0 dark:bg-[#0a0a0a] bg-background flex flex-col items-center justify-center p-8 text-center space-y-4 animate-in fade-in zoom-in duration-500 z-10">
                 <div className="w-20 h-20 rounded-full bg-emerald-500/10 flex items-center justify-center mb-4">
                   <CheckCircle2 className="w-10 h-10 text-emerald-500" />
                 </div>
@@ -120,68 +242,58 @@ export default function ContactUs() {
               </div>
             ) : null}
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                  <User className="w-3 h-3" /> Full Name
-                </Label>
-                <Input 
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="Jane Doe" 
-                  required
-                  className="h-12 rounded-xl bg-muted/30 border-border/50 focus:ring-primary font-bold shadow-inner"
-                />
-              </div>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <GlassInput 
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="Jane Doe"
+                label="Full Name"
+                icon={User}
+                required
+              />
 
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                  <Mail className="w-3 h-3" /> Email Address
-                </Label>
-                <Input 
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="you@example.com" 
-                  required
-                  className="h-12 rounded-xl bg-muted/30 border-border/50 focus:ring-primary font-bold shadow-inner"
-                />
-              </div>
+              <GlassInput 
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="you@example.com"
+                label="Email Address"
+                icon={Mail}
+                required
+              />
 
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Subject</Label>
-                <Input 
-                  name="subject"
-                  value={formData.subject}
-                  onChange={handleChange}
-                  placeholder="How can we help?" 
-                  required
-                  className="h-12 rounded-xl bg-muted/30 border-border/50 focus:ring-primary font-bold shadow-inner"
-                />
-              </div>
+              <GlassInput 
+                id="subject"
+                name="subject"
+                value={formData.subject}
+                onChange={handleChange}
+                placeholder="How can we help?"
+                label="Subject"
+                icon={Type}
+                required
+              />
 
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Message</Label>
-                <Textarea 
-                  name="message"
-                  value={formData.message}
-                  onChange={handleChange}
-                  placeholder="Type your message here..." 
-                  required
-                  className="min-h-[120px] resize-none rounded-xl bg-muted/30 border-border/50 focus:ring-primary font-bold shadow-inner p-4"
-                />
-              </div>
+              <GlassTextarea 
+                id="message"
+                name="message"
+                value={formData.message}
+                onChange={handleChange}
+                placeholder="Type your message here..."
+                label="Message"
+                required
+              />
 
-              <Button 
+              <button 
                 type="submit" 
                 disabled={isSubmitting}
-                className="w-full h-14 rounded-2xl font-black bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl shadow-primary/20 transition-all active:scale-[0.98] gap-2 mt-4"
+                className="w-full h-14 rounded-2xl font-black bg-primary hover:bg-primary/90 disabled:opacity-60 text-primary-foreground shadow-xl shadow-primary/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2.5 mt-2 uppercase tracking-widest text-sm"
               >
-                {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
-                {isSubmitting ? "SENDING..." : "SEND MESSAGE"}
-              </Button>
+                {isSubmitting ? <><Loader2 className="w-4 h-4 animate-spin" /> Sending...</> : <><Send className="w-4 h-4" /> Send Message</>}
+              </button>
             </form>
           </div>
         </div>

@@ -78,8 +78,8 @@ const navItems = [
     icon: Crown,
   },
   {
-    label: "Help & Support",
-    href: "/help",
+    label: "Contact Us",
+    href: "/contact",
     icon: HelpCircle,
   },
 ];
@@ -247,12 +247,10 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
         <div className="flex flex-col min-h-full w-full relative z-10">
 
-          {/* ── Logo — clicks go to dashboard ── */}
-          <div className="mb-10">
-            <Link to="/dashboard">
-              <CastHubLogo size="md" />
-            </Link>
-          </div>
+          {/* ── Logo — clicks go to landing page ── */}
+          <Link to="/" className="inline-block mb-12 relative group/logo px-2">
+            <CastHubLogo size="md" />
+          </Link>
 
           {/* ── Navigation (no label) ── */}
           <nav className="flex-1 space-y-1">
@@ -371,8 +369,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
         <header className="h-16 border-b border-border/30 bg-background/40 backdrop-blur-xl flex items-center justify-between px-6 lg:px-8 z-20 shrink-0">
           {/* Mobile: show logo */}
           <div className="flex items-center gap-4 md:hidden">
-            <Link to="/dashboard">
+            <Link to="/" className="inline-block relative group/logo">
               <CastHubLogo size="sm" />
+              <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full opacity-0 group-hover/logo:opacity-100 transition-opacity" />
             </Link>
           </div>
 

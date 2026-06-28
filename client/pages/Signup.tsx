@@ -364,7 +364,7 @@ export default function Signup() {
         mounted ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-8"
       )}>
         {/* Logo */}
-        <div className="flex items-center gap-3.5">
+        <Link to="/" className="flex items-center gap-3.5">
           <img
             src="/casthub-logo.png"
             alt="CastHub"
@@ -375,7 +375,7 @@ export default function Signup() {
             <span className="text-xl font-black tracking-tight text-foreground">CAST<span className="text-primary">HUB</span></span>
             <span className="text-[8px] font-semibold text-muted-foreground/50 tracking-wide leading-tight">Automate Your Outreach. Grow Your Opportunities.</span>
           </div>
-        </div>
+        </Link>
 
         {/* Hero */}
         <div className="space-y-8">
@@ -447,7 +447,7 @@ export default function Signup() {
         mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
       )}>
         {/* Mobile logo */}
-        <div className="lg:hidden flex items-center gap-3 mb-8 self-start">
+        <Link to="/" className="lg:hidden flex items-center gap-3 mb-8 self-start">
           <img
             src="/casthub-logo.png"
             alt="CastHub"
@@ -455,7 +455,7 @@ export default function Signup() {
             draggable={false}
           />
           <span className="text-xl font-black tracking-tight text-foreground">CAST<span className="text-primary">HUB</span></span>
-        </div>
+        </Link>
 
         <div className="w-full max-w-[460px] space-y-7 my-auto">
           {/* Header with step indicator */}
@@ -765,7 +765,7 @@ export default function Signup() {
           </Link>
           <p className="text-center text-[10px] text-foreground/20 font-medium">
             Need help?{" "}
-            <a href="mailto:support@casthub.in" className="text-primary/60 hover:text-primary transition-colors font-bold">support@casthub.in</a>
+            <Link to="/contact" className="text-primary/60 hover:text-primary transition-colors font-bold">Contact Us</Link>
           </p>
         </div>
       </div>

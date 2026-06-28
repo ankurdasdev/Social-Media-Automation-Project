@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { Mail, MessageCircle, Instagram, Zap, ArrowRight, ShieldCheck, ChevronRight } from "lucide-react";
+import { Mail, MessageCircle, Instagram, Zap, ArrowRight, ShieldCheck, ChevronRight, Sun, Moon } from "lucide-react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 function AnimatedBackground() {
@@ -40,6 +41,19 @@ export default function LandingPage() {
           <Link to="/contact" className="hidden md:flex text-xs font-bold text-muted-foreground hover:text-foreground transition-colors">
             Contact Us
           </Link>
+          
+          <button 
+            onClick={() => {
+              const isDark = document.documentElement.classList.contains('dark');
+              const next = !isDark;
+              document.documentElement.classList.toggle('dark', next);
+              localStorage.setItem('casthub-theme', next ? 'dark' : 'light');
+            }}
+            className="w-8 h-8 rounded-full dark:bg-white/5 bg-black/5 border dark:border-white/10 border-border/50 flex items-center justify-center text-foreground/60 hover:text-foreground transition-colors"
+          >
+            <Sun className="w-4 h-4 hidden dark:block" />
+            <Moon className="w-4 h-4 block dark:hidden" />
+          </button>
           
           {hasToken ? (
             <Link to="/dashboard" className="text-[11px] font-black uppercase tracking-widest bg-primary text-primary-foreground px-5 py-2.5 rounded-full hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20">

@@ -236,7 +236,7 @@ export default function Login() {
         mounted ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-8"
       )}>
         {/* Logo */}
-        <div className="flex items-center gap-3.5">
+        <Link to="/" className="flex items-center gap-3.5">
           <img
             src="/casthub-logo.png"
             alt="CastHub"
@@ -247,7 +247,7 @@ export default function Login() {
             <span className="text-xl font-black tracking-tight text-foreground">CAST<span className="text-primary">HUB</span></span>
             <span className="text-[8px] font-semibold text-muted-foreground/50 tracking-wide leading-tight">Casting Automation Platform</span>
           </div>
-        </div>
+        </Link>
 
         {/* Hero */}
         <div className="space-y-8">
@@ -329,7 +329,7 @@ export default function Login() {
         mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
       )}>
         {/* Mobile logo */}
-        <div className="lg:hidden flex items-center gap-3 mb-10">
+        <Link to="/" className="lg:hidden flex items-center gap-3 mb-10">
           <img
             src="/casthub-logo.png"
             alt="CastHub"
@@ -337,7 +337,7 @@ export default function Login() {
             draggable={false}
           />
           <span className="text-xl font-black tracking-tight text-foreground">CAST<span className="text-primary">HUB</span></span>
-        </div>
+        </Link>
 
         <div className="w-full max-w-[440px] space-y-8">
           {/* Header — clean, no "Welcome back" */}
@@ -426,7 +426,7 @@ export default function Login() {
           </p>
           <p className="text-center text-[10px] text-foreground/20 font-medium">
             Need help?{" "}
-            <a href="mailto:support@casthub.in" className="text-primary/60 hover:text-primary transition-colors font-bold">support@casthub.in</a>
+            <Link to="/contact" className="text-primary/60 hover:text-primary transition-colors font-bold">Contact Us</Link>
           </p>
         </div>
       </div>
