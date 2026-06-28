@@ -392,10 +392,6 @@ export default function AppLayout({ children }: AppLayoutProps) {
               <span className="text-[10px] font-black uppercase tracking-widest">Page Guide</span>
             </button>
 
-            {/* Notification/Yellow Dot */}
-            <button className="hidden md:flex items-center justify-center w-8 h-8 rounded-full border border-border/40 bg-muted/30 hover:bg-muted/50 transition-colors">
-              <div className="w-2 h-2 rounded-full bg-amber-500" />
-            </button>
 
             {/* Dark Mode Toggle */}
             <button
