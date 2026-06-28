@@ -172,13 +172,13 @@ export function IngestionScheduleCard({ userId }: { userId: string }) {
 
   return (
     <section className="glass-card p-10 rounded-[2.5rem] border-white/5 relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-96 h-96 bg-violet-500/5 rounded-full blur-3xl -z-10" />
+      <div className="absolute top-0 left-0 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl -z-10" />
 
       <div className="flex flex-col lg:flex-row gap-10">
         {/* ── Left: Icon + Description ── */}
         <div className="flex flex-col gap-5 lg:w-72 shrink-0">
-          <div className="w-20 h-20 rounded-3xl bg-violet-500/10 flex items-center justify-center border border-violet-500/20 shadow-lg shadow-violet-500/10">
-            <Brain className="h-10 w-10 text-violet-400" />
+          <div className="w-20 h-20 rounded-3xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 shadow-lg shadow-amber-500/10">
+            <Brain className="h-10 w-10 text-amber-400" />
           </div>
           <div className="space-y-2">
             <h3 className="text-2xl font-black flex items-center gap-2">
@@ -203,19 +203,19 @@ export function IngestionScheduleCard({ userId }: { userId: string }) {
           </div>
           <div className="flex flex-col gap-2 text-[11px] text-muted-foreground font-medium">
             <div className="flex items-center gap-2">
-              <Zap className="h-3.5 w-3.5 text-violet-400" />
+              <Zap className="h-3.5 w-3.5 text-amber-400" />
               Text messages (GPT-4 class model)
             </div>
             <div className="flex items-center gap-2">
-              <Zap className="h-3.5 w-3.5 text-violet-400" />
+              <Zap className="h-3.5 w-3.5 text-amber-400" />
               Image flyers (Gemini Flash Vision)
             </div>
             <div className="flex items-center gap-2">
-              <Zap className="h-3.5 w-3.5 text-violet-400" />
+              <Zap className="h-3.5 w-3.5 text-amber-400" />
               Keyword pre-filtering to save API calls
             </div>
             <div className="flex items-center gap-2">
-              <Zap className="h-3.5 w-3.5 text-violet-400" />
+              <Zap className="h-3.5 w-3.5 text-amber-400" />
               Smart deduplication — never duplicates
             </div>
           </div>
@@ -227,7 +227,7 @@ export function IngestionScheduleCard({ userId }: { userId: string }) {
           <div className="space-y-5 p-6 rounded-2xl bg-white/3 border border-white/5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-violet-400" />
+                <Clock className="h-4 w-4 text-amber-400" />
                 <span className="text-sm font-black uppercase tracking-wider">
                   Scan Duration
                 </span>
@@ -243,7 +243,7 @@ export function IngestionScheduleCard({ userId }: { userId: string }) {
                   id="ingestion-toggle"
                   checked={enabled}
                   onCheckedChange={setEnabled}
-                  className="data-[state=checked]:bg-violet-500"
+                  className="data-[state=checked]:bg-amber-500"
                 />
               </div>
             </div>
@@ -275,8 +275,8 @@ export function IngestionScheduleCard({ userId }: { userId: string }) {
                     className={cn(
                       "h-11 rounded-xl text-xs font-black transition-all duration-200 border",
                       isSelected
-                        ? "bg-violet-500 border-violet-500 text-white shadow-lg shadow-violet-500/30 scale-105"
-                        : "bg-background/40 border-white/8 text-muted-foreground hover:border-violet-500/40 hover:text-violet-300 hover:bg-violet-500/5"
+                        ? "bg-amber-500 border-amber-500 text-white shadow-lg shadow-amber-500/30 scale-105"
+                        : "bg-background/40 border-white/8 text-muted-foreground hover:border-amber-500/40 hover:text-amber-300 hover:bg-amber-500/5"
                     )}
                   >
                     {preset.label}
@@ -287,7 +287,7 @@ export function IngestionScheduleCard({ userId }: { userId: string }) {
 
             {/* Custom input */}
             {showCustom && (
-              <div className="flex items-center gap-3 p-4 rounded-xl bg-background/30 border border-violet-500/20 animate-in slide-in-from-top-2 duration-200">
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-background/30 border border-amber-500/20 animate-in slide-in-from-top-2 duration-200">
                 <span className="text-xs text-muted-foreground font-bold whitespace-nowrap">
                   Scan last
                 </span>
@@ -314,7 +314,7 @@ export function IngestionScheduleCard({ userId }: { userId: string }) {
                   </SelectContent>
                 </Select>
                 {effectiveHours > 0 && (
-                  <span className="text-xs text-violet-400 font-bold ml-1 whitespace-nowrap">
+                  <span className="text-xs text-amber-400 font-bold ml-1 whitespace-nowrap">
                     = {effectiveHours}h total
                   </span>
                 )}
@@ -324,7 +324,7 @@ export function IngestionScheduleCard({ userId }: { userId: string }) {
             {/* Active summary pill */}
             {!schedLoading && (
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span className="px-2.5 py-1 rounded-full bg-violet-500/10 text-violet-400 font-black border border-violet-500/20">
+                <span className="px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400 font-black border border-amber-500/20">
                   Currently set to scan last{" "}
                   {hoursToLabel(scanDurationHours)}
                 </span>
@@ -339,7 +339,7 @@ export function IngestionScheduleCard({ userId }: { userId: string }) {
             <Button
               onClick={() => saveMutation.mutate()}
               disabled={saveMutation.isPending}
-              className="h-11 px-6 rounded-xl font-black bg-violet-500 hover:bg-violet-600 text-white shadow-lg shadow-violet-500/20"
+              className="h-11 px-6 rounded-xl font-black bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-500/20"
             >
               {saveMutation.isPending ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -359,7 +359,7 @@ export function IngestionScheduleCard({ userId }: { userId: string }) {
               <p className="text-sm text-muted-foreground">
                 Run the AI scanner immediately across all groups, scanning the
                 last{" "}
-                <span className="text-violet-400 font-bold">
+                <span className="text-amber-400 font-bold">
                   {hoursToLabel(effectiveHours)}
                 </span>
                 .
@@ -368,7 +368,7 @@ export function IngestionScheduleCard({ userId }: { userId: string }) {
                 onClick={runNow}
                 disabled={isRunningNow || statusData?.isRunning}
                 variant="outline"
-                className="w-full h-11 rounded-xl font-black border-violet-500/30 text-violet-400 hover:bg-violet-500/10 gap-2"
+                className="w-full h-11 rounded-xl font-black border-amber-500/30 text-amber-400 hover:bg-amber-500/10 gap-2"
               >
                 {isRunningNow || statusData?.isRunning ? (
                   <>
@@ -389,7 +389,7 @@ export function IngestionScheduleCard({ userId }: { userId: string }) {
                 </p>
                 <div className="grid grid-cols-2 gap-2 text-center">
                   <div className="p-3 rounded-xl bg-background/40">
-                    <p className="text-2xl font-black text-violet-400">
+                    <p className="text-2xl font-black text-amber-400">
                       {lastRun.messagesScanned || 0}
                     </p>
                     <p className="text-[9px] text-muted-foreground font-bold">

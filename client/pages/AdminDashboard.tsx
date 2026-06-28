@@ -704,7 +704,7 @@ export default function AdminDashboard() {
                 const cards = [
                   { label: "Total Revenue", value: `₹${(payments.filter(p => p.status === "captured").reduce((s: number, p: any) => s + (p.amount || 0), 0) / 100).toFixed(0)}`, color: "emerald" },
                   { label: "Active Subs", value: subs.filter(s => s.status === "active").length, color: "blue" },
-                  { label: "On Trial", value: subs.filter(s => s.status === "trialing").length, color: "purple" },
+                  { label: "On Trial", value: subs.filter(s => s.status === "trialing").length, color: "orange" },
                   { label: "Expired", value: subs.filter(s => s.status === "expired").length, color: "rose" },
                 ];
                 const c = cards[i];
@@ -720,7 +720,7 @@ export default function AdminDashboard() {
             {/* Subscriptions Table */}
             <Card className="glass-card border-white/10">
               <CardHeader>
-                <CardTitle className="text-xl font-black flex items-center gap-2"><Crown className="w-5 h-5 text-pink-500" /> Subscriptions</CardTitle>
+                <CardTitle className="text-xl font-black flex items-center gap-2"><Crown className="w-5 h-5 text-amber-500" /> Subscriptions</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="rounded-2xl border border-white/5 overflow-auto">
@@ -742,7 +742,7 @@ export default function AdminDashboard() {
                             <div className="text-xs text-muted-foreground">{s.user_email}</div>
                           </td>
                           <td className="px-4 py-3 text-center">
-                            <Badge className="bg-pink-500/20 text-pink-500 border-none font-black uppercase">{s.plan_type}</Badge>
+                            <Badge className="bg-amber-500/20 text-amber-500 border-none font-black uppercase">{s.plan_type}</Badge>
                           </td>
                           <td className="px-4 py-3 text-center">
                             <Badge className={`border-none font-black uppercase ${
@@ -805,7 +805,7 @@ export default function AdminDashboard() {
                     </thead>
                     <tbody className="divide-y divide-white/5">
                       {paymentsLoading ? (
-                        <tr><td colSpan={6} className="text-center py-8"><Loader2 className="w-5 h-5 animate-spin mx-auto text-pink-500" /></td></tr>
+                        <tr><td colSpan={6} className="text-center py-8"><Loader2 className="w-5 h-5 animate-spin mx-auto text-amber-500" /></td></tr>
                       ) : (paymentsData?.payments || []).map((p: any) => (
                         <tr key={p.id} className="hover:bg-muted/20">
                           <td className="px-4 py-3 text-xs text-muted-foreground font-bold">{format(new Date(p.created_at), "MMM d, yyyy")}</td>
@@ -831,18 +831,18 @@ export default function AdminDashboard() {
             {/* Create Coupon Form */}
             <Card className="glass-card border-white/10">
               <CardHeader>
-                <CardTitle className="text-xl font-black flex items-center gap-2"><Plus className="w-5 h-5 text-purple-500" /> Create Coupon Code</CardTitle>
+                <CardTitle className="text-xl font-black flex items-center gap-2"><Plus className="w-5 h-5 text-orange-500" /> Create Coupon Code</CardTitle>
                 <CardDescription>Create discount coupons for your users</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest">Code <span className="text-pink-500">*</span></Label>
+                    <Label className="text-[10px] font-black uppercase tracking-widest">Code <span className="text-amber-500">*</span></Label>
                     <Input placeholder="LAUNCH50" value={newCouponCode} onChange={e => setNewCouponCode(e.target.value.toUpperCase())}
                       className="h-12 rounded-xl bg-muted/40 border-white/10 font-black uppercase tracking-widest" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest">Discount % <span className="text-pink-500">*</span></Label>
+                    <Label className="text-[10px] font-black uppercase tracking-widest">Discount % <span className="text-amber-500">*</span></Label>
                     <Input type="number" min="1" max="100" placeholder="20" value={newCouponDiscount} onChange={e => setNewCouponDiscount(e.target.value)}
                       className="h-12 rounded-xl bg-muted/40 border-white/10 font-black" />
                   </div>
@@ -860,7 +860,7 @@ export default function AdminDashboard() {
                 <Button
                   onClick={() => createCouponMutation.mutate()}
                   disabled={!newCouponCode || !newCouponDiscount || createCouponMutation.isPending}
-                  className="mt-4 h-12 px-8 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-purple-500/20 hover:opacity-90 gap-2"
+                  className="mt-4 h-12 px-8 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-orange-500/20 hover:opacity-90 gap-2"
                 >
                   {createCouponMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                   CREATE COUPON
@@ -871,7 +871,7 @@ export default function AdminDashboard() {
             {/* Coupons List */}
             <Card className="glass-card border-white/10">
               <CardHeader>
-                <CardTitle className="text-xl font-black flex items-center gap-2"><BadgePercent className="w-5 h-5 text-purple-500" /> All Coupons</CardTitle>
+                <CardTitle className="text-xl font-black flex items-center gap-2"><BadgePercent className="w-5 h-5 text-orange-500" /> All Coupons</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="rounded-2xl border border-white/5 overflow-auto">
@@ -891,8 +891,8 @@ export default function AdminDashboard() {
                         <tr><td colSpan={6} className="text-center py-10 text-muted-foreground font-bold">No coupons yet. Create one above!</td></tr>
                       ) : (couponsData?.coupons || []).map((c: any) => (
                         <tr key={c.id} className="hover:bg-muted/20">
-                          <td className="px-4 py-3 font-black font-mono text-purple-400 tracking-widest">{c.code}</td>
-                          <td className="px-4 py-3 text-center"><Badge className="bg-purple-500/20 text-purple-500 border-none font-black">{c.discount_percent}% OFF</Badge></td>
+                          <td className="px-4 py-3 font-black font-mono text-orange-400 tracking-widest">{c.code}</td>
+                          <td className="px-4 py-3 text-center"><Badge className="bg-orange-500/20 text-orange-500 border-none font-black">{c.discount_percent}% OFF</Badge></td>
                           <td className="px-4 py-3 text-center font-bold text-muted-foreground">{c.used_count} / {c.max_uses === 0 ? "∞" : c.max_uses}</td>
                           <td className="px-4 py-3 text-center text-xs text-muted-foreground font-bold">{c.valid_until ? format(new Date(c.valid_until), "MMM d, yyyy") : "No Expiry"}</td>
                           <td className="px-4 py-3 text-center">
@@ -939,7 +939,7 @@ export default function AdminDashboard() {
                   <Button
                     onClick={() => saveSettingMutation.mutate({ key: "admin_notification_email", value: adminEmail })}
                     disabled={!adminEmail || saveSettingMutation.isPending}
-                    className="h-14 px-8 rounded-2xl bg-gradient-to-r from-blue-500 to-purple-500 text-white font-black text-[10px] uppercase tracking-widest shadow-lg hover:opacity-90 gap-2"
+                    className="h-14 px-8 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black text-[10px] uppercase tracking-widest shadow-lg hover:opacity-90 gap-2"
                   >
                     {saveSettingMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
                     SAVE
@@ -964,7 +964,7 @@ export default function AdminDashboard() {
                     { label: "RAZORPAY_WEBHOOK_SECRET", desc: "From Razorpay Dashboard → Webhooks (optional)" },
                   ].map(item => (
                     <div key={item.label} className="flex items-start gap-3">
-                      <code className="px-2 py-1 rounded-lg bg-muted/60 text-pink-400 font-mono text-[10px] font-black shrink-0 mt-0.5">{item.label}</code>
+                      <code className="px-2 py-1 rounded-lg bg-muted/60 text-amber-400 font-mono text-[10px] font-black shrink-0 mt-0.5">{item.label}</code>
                       <p className="text-xs text-muted-foreground font-medium">{item.desc}</p>
                     </div>
                   ))}

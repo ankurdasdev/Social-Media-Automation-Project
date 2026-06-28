@@ -480,7 +480,7 @@ export default function Controller() {
                 id="tutorial-controller-profiling"
                 variant="outline" 
                 onClick={() => setIsAIProfilingOpen(true)} 
-                className="h-12 px-6 rounded-xl font-bold bg-purple-500/5 border-purple-500/20 text-purple-600 gap-2 hover:bg-purple-500/10 transition-all shadow-sm"
+                className="h-12 px-6 rounded-xl font-bold bg-amber-500/5 border-amber-500/20 text-amber-600 gap-2 hover:bg-amber-500/10 transition-all shadow-sm"
             >
               <Brain className="w-4 h-4" />
               AI Profiling
@@ -489,7 +489,7 @@ export default function Controller() {
                 id="tutorial-controller-scheduler"
                 variant="outline" 
                 onClick={() => setIsAIScheduleOpen(true)} 
-                className="h-12 px-6 rounded-xl font-bold bg-violet-500/5 border-violet-500/20 text-violet-600 gap-2 hover:bg-violet-500/10 transition-all shadow-sm"
+                className="h-12 px-6 rounded-xl font-bold bg-amber-500/5 border-amber-500/20 text-amber-600 gap-2 hover:bg-amber-500/10 transition-all shadow-sm"
             >
               <Clock className="w-4 h-4" />
               Auto-Scheduler
