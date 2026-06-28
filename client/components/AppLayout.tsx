@@ -80,19 +80,20 @@ const navItems = [
 
 // ── CastHub Logo Component ─────────────────────────────────────────────────────
 function CastHubLogo({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
-  const iconSize = size === "sm" ? "w-9 h-9" : size === "lg" ? "w-14 h-14" : "w-12 h-12";
-  const zapSize = size === "sm" ? "w-5 h-5" : size === "lg" ? "w-8 h-8" : "w-7 h-7";
+  const imgSize = size === "sm" ? 36 : size === "lg" ? 56 : 44;
   const textSize = size === "sm" ? "text-xl" : size === "lg" ? "text-3xl" : "text-2xl";
 
   return (
-    <div className="flex items-center gap-3.5 group">
-      <div className={cn(
-        iconSize,
-        "rounded-2xl flex items-center justify-center shadow-2xl transition-all duration-500 group-hover:scale-105 group-hover:shadow-primary/30",
-        "bg-gradient-to-br from-primary via-primary/90 to-amber-600 shadow-primary/20"
-      )}>
-        <Zap className={cn(zapSize, "text-primary-foreground fill-primary-foreground")} />
-      </div>
+    <div className="flex items-center gap-3 group">
+      <img
+        src="/casthub-logo.png"
+        alt="CastHub"
+        width={imgSize}
+        height={imgSize}
+        style={{ width: imgSize, height: imgSize }}
+        className="object-contain shrink-0 drop-shadow-[0_0_10px_rgba(245,168,0,0.4)] transition-transform duration-300 group-hover:scale-105"
+        draggable={false}
+      />
       <div className="flex flex-col leading-none">
         <span className={cn(textSize, "font-black tracking-tighter leading-none")}>
           CAST<span className="text-primary">HUB</span>

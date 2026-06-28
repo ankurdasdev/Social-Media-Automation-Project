@@ -219,8 +219,13 @@ export default function SetupWizard() {
       <div className="space-y-6">
         <div className="relative mx-auto w-28 h-28">
           <div className="absolute inset-0 bg-primary/30 rounded-full blur-3xl animate-pulse" />
-          <div className="relative w-28 h-28 bg-gradient-to-br from-primary/20 to-indigo-500/10 border border-primary/30 rounded-[2rem] flex items-center justify-center">
-            <Zap className="w-14 h-14 text-primary fill-current" />
+          <div className="relative w-28 h-28 flex items-center justify-center">
+            <img
+              src="/casthub-logo.png"
+              alt="CastHub"
+              className="w-28 h-28 object-contain drop-shadow-[0_0_24px_rgba(245,168,0,0.5)]"
+              draggable={false}
+            />
           </div>
         </div>
         <div className="space-y-3">
@@ -569,11 +574,14 @@ export default function SetupWizard() {
       {/* Top bar */}
       {step > 0 && step < 4 && (
         <div className="fixed top-0 left-0 right-0 z-50 px-6 py-4 flex items-center justify-between bg-background/80 backdrop-blur-md border-b border-border/50">
-          <div className="flex items-center gap-3">
-            <div className="w-7 h-7 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center">
-              <Zap className="w-3.5 h-3.5 text-foreground fill-current" />
-            </div>
-            <span className="text-sm font-black tracking-tight text-foreground">CASTHUB</span>
+          <div className="flex items-center gap-2.5">
+            <img
+              src="/casthub-logo.png"
+              alt="CastHub"
+              className="w-7 h-7 object-contain drop-shadow-[0_0_6px_rgba(245,168,0,0.4)]"
+              draggable={false}
+            />
+            <span className="text-sm font-black tracking-tight text-foreground">CAST<span className="text-primary">HUB</span></span>
           </div>
           <ProgressBar current={step} total={TOTAL_STEPS} />
           <button

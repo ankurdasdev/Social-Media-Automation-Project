@@ -99,10 +99,13 @@ export default function TermsOfService() {
 
       {/* Navbar */}
       <nav className="sticky top-0 z-50 border-b border-border/50 dark:bg-[#060610]/80 bg-background/80 backdrop-blur-xl px-6 py-4 flex items-center justify-between">
-        <Link to="/dashboard" className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center">
-            <Zap className="w-4.5 h-4.5 text-foreground fill-current" />
-          </div>
+        <Link to="/dashboard" className="flex items-center gap-2.5">
+          <img
+            src="/casthub-logo.png"
+            alt="CastHub"
+            className="w-7 h-7 object-contain drop-shadow-[0_0_6px_rgba(245,168,0,0.4)]"
+            draggable={false}
+          />
           <span className="text-lg font-black tracking-tight">CAST<span className="text-primary italic">HUB</span></span>
         </Link>
         <Link to="/privacy" className="text-xs font-bold text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5">
