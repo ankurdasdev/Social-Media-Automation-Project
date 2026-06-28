@@ -230,27 +230,13 @@ export function WhatsAppSettings() {
 
             <div className="flex-1 space-y-8 relative">
               <div className="flex flex-col gap-3">
-                <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground uppercase leading-none">
-                  CONNECT<br/>
-                  <span className="text-emerald-500 drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]">WHATSAPP</span>
-                </h2>
-                <p className="text-muted-foreground/70 text-sm font-medium leading-relaxed max-w-sm">
-                  Send personalised WhatsApp campaigns at scale.
-                </p>
-
-                {isConnected && (
-                  <div className="mt-2 px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 w-fit flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                    <span className="text-[11px] font-black text-emerald-500 uppercase tracking-[0.1em]">CONNECTED</span>
-                  </div>
-                )}
               </div>
 
               {/* Unlock cards */}
-              <div className="space-y-3 pt-2">
-                <p className="text-[10px] font-black text-muted-foreground/50 uppercase tracking-[0.25em]">
+              <div className="space-y-4 pt-2">
+                <h2 className="text-2xl md:text-3xl font-black tracking-tighter text-foreground uppercase leading-none">
                   {isConnected ? "What You Unlocked" : "What You Will Unlock"}
-                </p>
+                </h2>
                 <div className="space-y-2">
                   {unlockCards.map((card, i) => (
                     <div key={i} className={cn("flex items-start gap-3 p-3 rounded-2xl border transition-all", card.bg)}>
@@ -285,8 +271,7 @@ export function WhatsAppSettings() {
                         <CheckCircle2 className="h-7 w-7 text-white" strokeWidth={2.5} />
                       </div>
                       <div>
-                        <h4 className="text-xl font-black text-foreground tracking-tighter uppercase leading-none">CONNECTED</h4>
-                        <p className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em] mt-1">WhatsApp Active</p>
+                        <h4 className="text-xl md:text-2xl font-black text-foreground tracking-tighter uppercase leading-none">WhatsApp Connected</h4>
                       </div>
                     </div>
 
@@ -319,8 +304,8 @@ export function WhatsAppSettings() {
               /* ── QR Code State ── */
               <div className="flex flex-col items-center justify-center space-y-8 animate-in zoom-in-95 duration-500">
                 <div className="text-center space-y-3">
-                  <h3 className="text-3xl font-black tracking-tighter">CONNECT <span className="text-emerald-500 italic">WHATSAPP</span></h3>
-                  <p className="text-sm font-medium text-muted-foreground max-w-sm mx-auto leading-relaxed">
+                  <h3 className="text-3xl font-black text-foreground uppercase tracking-tight">Connect WhatsApp</h3>
+                  <p className="text-sm text-muted-foreground/80 leading-relaxed px-4">
                     Follow the setup instructions to connect WhatsApp. Once connected you will be able to send and manage messages from your number.
                   </p>
                 </div>
@@ -342,10 +327,6 @@ export function WhatsAppSettings() {
                 </div>
 
                 <div className="flex flex-col items-center gap-4">
-                  <div className="flex items-center gap-3 px-6 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[10px] font-black uppercase tracking-[0.2em] animate-pulse">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    WAITING FOR SCAN...
-                  </div>
                   <Button
                     variant="ghost"
                     onClick={() => { setQrCode(null); setConnecting(false); }}
@@ -366,14 +347,15 @@ export function WhatsAppSettings() {
                   </div>
                 </div>
 
+                <div className="text-center space-y-3">
+                  <h3 className="text-3xl font-black text-foreground uppercase tracking-tight">Connect WhatsApp</h3>
+                  <p className="text-sm text-muted-foreground/80 leading-relaxed px-4">
+                    Follow the setup instructions to connect WhatsApp. Once connected you will be able to send and manage messages from your number.
+                  </p>
+                </div>
+
                 {/* Setup Guide button (no blinker) */}
-                <div className="flex items-center justify-between gap-4 flex-wrap w-full">
-                  <div className="text-left">
-                    <h3 className="text-lg font-black text-foreground uppercase tracking-tight">Connect WhatsApp</h3>
-                    <p className="text-xs text-muted-foreground/60 mt-0.5">
-                      Follow the setup instructions to connect WhatsApp. Once connected you will be able to send and manage messages from your number.
-                    </p>
-                  </div>
+                <div className="flex items-center justify-end gap-4 flex-wrap w-full">
                   <button
                     onClick={() => setGuideOpen(true)}
                     className="flex items-center gap-2 px-4 py-2.5 rounded-2xl border font-black text-[10px] uppercase tracking-widest transition-all bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 hover:scale-105"
@@ -391,10 +373,22 @@ export function WhatsAppSettings() {
                       <h4 className="text-xs font-black uppercase tracking-widest text-amber-500">⚠ Before Connecting WhatsApp</h4>
                     </div>
                   </div>
-                  <div className="text-xs text-muted-foreground font-medium leading-relaxed space-y-1.5 pl-8">
-                    <p>WhatsApp controls its own platform and policies.</p>
-                    <p>If your WhatsApp session expires or you log out on your phone, you'll need to reconnect by scanning a new QR code.</p>
-                    <p>CastHub cannot control WhatsApp account restrictions or policy decisions made by Meta.</p>
+                  <div className="text-xs text-muted-foreground font-medium leading-relaxed space-y-4 pl-8">
+                    <div className="space-y-1.5">
+                      <p>WhatsApp controls its own platform and policies.</p>
+                      <p>If your WhatsApp session expires or you log out on your phone, you'll need to reconnect by scanning a new QR code.</p>
+                      <p>CastHub cannot control WhatsApp account restrictions or policy decisions made by Meta.</p>
+                    </div>
+                    
+                    <div className="space-y-1.5">
+                      <p className="text-foreground">How it works:</p>
+                      <p>1. Enter your WhatsApp number</p>
+                      <p>2. Generate a QR code</p>
+                      <p>3. Scan it using WhatsApp → Linked Devices</p>
+                      <p>4. Start sending campaigns</p>
+                    </div>
+
+                    <p>You can disconnect and reconnect anytime.</p>
                   </div>
                   <div className="flex items-center gap-3 pl-8 pt-1">
                     <Checkbox
@@ -459,12 +453,6 @@ export function WhatsAppSettings() {
                   <p className="text-[10px] text-muted-foreground/60 mt-0.5">Follow the steps to connect your WhatsApp</p>
                 </div>
               </div>
-              <button
-                onClick={() => setGuideOpen(false)}
-                className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-muted-foreground hover:text-foreground transition-all shrink-0"
-              >
-                <X className="w-4 h-4" />
-              </button>
             </div>
           </DialogHeader>
 

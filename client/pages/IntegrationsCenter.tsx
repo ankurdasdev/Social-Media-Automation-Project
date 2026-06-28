@@ -54,25 +54,21 @@ export default function IntegrationsCenter() {
   // Google Pre-connection State
   const [googleAccepted, setGoogleAccepted] = React.useState(false);
   const [googleGuideOpen, setGoogleGuideOpen] = React.useState(false);
+  const [pageGuideOpen, setPageGuideOpen] = React.useState(false);
   const queryClient = useQueryClient();
   const userId = getOrCreateUserId();
+
+  React.useEffect(() => {
+    const handleOpenPageGuide = () => setPageGuideOpen(true);
+    window.addEventListener('open-page-guide', handleOpenPageGuide);
+    return () => window.removeEventListener('open-page-guide', handleOpenPageGuide);
+  }, []);
 
   // Read defaultTab from URL params
   const defaultTab = React.useMemo(() => {
     const params = new URLSearchParams(window.location.search);
     return params.get("defaultTab") || "google";
   }, [window.location.search]);
-
-  React.useEffect(() => {
-    if (defaultTab) {
-      setTimeout(() => {
-        const el = document.getElementById(`section-${defaultTab}`);
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }, 100);
-    }
-  }, [defaultTab]);
 
   // ── Google Status ────────────────────────────────────────────────────────────
   const { data: googleStatus, isLoading: googleLoading, refetch: refetchGoogle } = useQuery({
@@ -174,8 +170,23 @@ export default function IntegrationsCenter() {
         </div>
 
 
-        {/* ── GOOGLE SECTION ── */}
-        <div id="section-google" className="animate-in fade-in slide-in-from-bottom-4 duration-300 scroll-mt-24">
+        {/* ── TABS FOR CHANNELS ── */}
+        <Tabs defaultValue={defaultTab} className="w-full">
+          <TabsList className="w-full max-w-md mx-auto flex p-1 h-12 bg-muted/50 rounded-2xl mb-8">
+            <TabsTrigger value="google" className="flex-1 rounded-xl font-black text-xs gap-2">
+              <Globe className="w-4 h-4" /> GOOGLE
+            </TabsTrigger>
+            <TabsTrigger value="whatsapp" className="flex-1 rounded-xl font-black text-xs gap-2">
+              <MessageSquare className="w-4 h-4" /> WHATSAPP
+            </TabsTrigger>
+            <TabsTrigger value="instagram" className="flex-1 rounded-xl font-black text-xs gap-2">
+              <Instagram className="w-4 h-4" /> INSTAGRAM
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="google" className="m-0 focus-visible:outline-none">
+            {/* ── GOOGLE SECTION ── */}
+            <div id="section-google" className="animate-in fade-in slide-in-from-bottom-4 duration-300">
           <div className="relative overflow-hidden glass-card border-white/10 rounded-[2.5rem] shadow-2xl bg-background/60">
             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] -z-10" />
             <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-blue-500/5 rounded-full blur-[100px] -z-10" />
@@ -191,31 +202,13 @@ export default function IntegrationsCenter() {
 
                 <div className="flex-1 space-y-8">
                   <div className="flex flex-col gap-3">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 text-[10px] font-black tracking-widest uppercase w-fit">
-                      <ShieldCheck className="w-3 h-3" />
-                      Secure Gateway
-                    </div>
-                    <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground uppercase leading-none mt-2">
-                      GOOGLE<br/>
-                      <span className="text-primary drop-shadow-[0_0_15px_rgba(139,92,246,0.3)]">WORKSPACE</span>
-                    </h2>
-                    <p className="text-muted-foreground/70 text-sm font-medium leading-relaxed max-w-sm mt-2">
-                      Send personalised outreach campaigns through your Gmail account.
-                    </p>
-
-                    {googleConnected && (
-                      <div className="mt-2 px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 w-fit flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                        <span className="text-[11px] font-black text-emerald-500 uppercase tracking-[0.1em]">CONNECTED</span>
-                      </div>
-                    )}
                   </div>
 
                   {/* Unlock cards */}
-                  <div className="space-y-3">
-                    <p className="text-[10px] font-black text-muted-foreground/50 uppercase tracking-[0.25em]">
+                  <div className="space-y-4">
+                    <h2 className="text-2xl md:text-3xl font-black tracking-tighter text-foreground uppercase leading-none">
                       {googleConnected ? "What You Unlocked" : "What You Will Unlock"}
-                    </p>
+                    </h2>
                     <div className="space-y-2">
                       {googleUnlockCards.map((card, i) => (
                         <div key={i} className={cn("flex items-start gap-3 p-3 rounded-2xl border transition-all", card.bg)}>
@@ -265,8 +258,7 @@ export default function IntegrationsCenter() {
                             <CheckCircle2 className="h-7 w-7 text-white" strokeWidth={2.5} />
                           </div>
                           <div>
-                            <h4 className="text-xl font-black text-foreground tracking-tighter uppercase leading-none">CONNECTED</h4>
-                            <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mt-1">Google Active</p>
+                            <h4 className="text-xl md:text-2xl font-black text-foreground tracking-tighter uppercase leading-none">Google Connected</h4>
                           </div>
                         </div>
 
@@ -314,9 +306,9 @@ export default function IntegrationsCenter() {
                     </div>
 
                     <div className="text-center space-y-3">
-                      <h3 className="text-3xl font-black text-foreground uppercase tracking-tight">LINK GOOGLE</h3>
+                      <h3 className="text-3xl font-black text-foreground uppercase tracking-tight">Connect Google</h3>
                       <p className="text-sm text-muted-foreground/80 leading-relaxed px-4">
-                        Establish a secure OAuth 2.0 connection with Google to unlock CastHub's automation sequence.
+                        Send personalised outreach campaigns through your Gmail account.
                       </p>
                     </div>
 
@@ -434,33 +426,23 @@ export default function IntegrationsCenter() {
               </div>
             </DialogContent>
           </Dialog>
-        </div>
+            </div>
+          </TabsContent>
 
-        {/* Divider */}
-        <div className="flex items-center gap-4">
-          <div className="flex-1 h-px bg-border/30" />
-          <span className="text-[9px] font-black text-muted-foreground/30 uppercase tracking-[0.3em]">WhatsApp</span>
-          <div className="flex-1 h-px bg-border/30" />
-        </div>
+          <TabsContent value="whatsapp" className="m-0 focus-visible:outline-none">
+            {/* ── WHATSAPP SECTION ── */}
+            <div id="section-whatsapp" className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+              <WhatsAppSettings />
+            </div>
+          </TabsContent>
 
-        {/* ── WHATSAPP SECTION ── */}
-        <div id="section-whatsapp" className="animate-in fade-in slide-in-from-bottom-4 duration-300 scroll-mt-24">
-          <WhatsAppSettings />
-        </div>
-
-        {/* Divider */}
-        <div className="flex items-center gap-4">
-          <div className="flex-1 h-px bg-border/30" />
-          <span className="text-[9px] font-black text-muted-foreground/30 uppercase tracking-[0.3em]">Instagram</span>
-          <div className="flex-1 h-px bg-border/30" />
-        </div>
-
-        {/* ── INSTAGRAM SECTION ── */}
-        <div id="section-instagram" className="animate-in fade-in slide-in-from-bottom-4 duration-300 scroll-mt-24">
-          <InstagramSettings />
-        </div>
-
-
+          <TabsContent value="instagram" className="m-0 focus-visible:outline-none">
+            {/* ── INSTAGRAM SECTION ── */}
+            <div id="section-instagram" className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+              <InstagramSettings />
+            </div>
+          </TabsContent>
+        </Tabs>
 
         {/* ── Security / Info ── */}
         <section className="glass-card p-10 rounded-[2.5rem] border-white/5 relative overflow-hidden">
@@ -482,6 +464,48 @@ export default function IntegrationsCenter() {
           </div>
         </section>
       </div>
+
+      {/* Page Guide Modal */}
+      <Dialog open={pageGuideOpen} onOpenChange={setPageGuideOpen}>
+        <DialogContent className="max-w-md p-0 overflow-hidden border-white/10 shadow-2xl rounded-[2rem] bg-card/95 backdrop-blur-3xl">
+          <DialogHeader className="shrink-0 px-6 pt-6 pb-4 border-b border-white/5 bg-background/80 backdrop-blur-xl">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                  <Globe className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <DialogTitle className="text-base font-black text-foreground tracking-tight">Integrations Center</DialogTitle>
+                  <p className="text-[10px] text-muted-foreground/80 mt-1 leading-relaxed">Connect and monitor your security-verified outreach networks. Set credentials, authentication, and API variables here.</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setPageGuideOpen(false)}
+                className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-muted-foreground hover:text-foreground transition-all shrink-0"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </DialogHeader>
+
+          <div className="px-6 py-6 space-y-6">
+            <div className="space-y-2">
+              <h4 className="text-[13px] font-black uppercase text-foreground tracking-wide">1. Connect Your Channels</h4>
+              <p className="text-xs text-muted-foreground/80 leading-relaxed">
+                Connect Gmail, WhatsApp, or Instagram to enable outreach through CastHub.<br/>
+                You'll only need to do this once.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <h4 className="text-[13px] font-black uppercase text-foreground tracking-wide">2. Connect Google</h4>
+              <p className="text-xs text-muted-foreground/80 leading-relaxed">
+                Follow the setup instructions and approve the requested permissions to connect Google.<br/>
+                Once connected you will be able to access your Drive for attachments/documents/assets and send mails from your Gmail.
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }

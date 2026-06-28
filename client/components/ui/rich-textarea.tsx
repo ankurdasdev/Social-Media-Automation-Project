@@ -154,6 +154,12 @@ export function RichTextarea({
     setHistoryIdx((prev) => prev + 1);
   }, [historyIdx]);
 
+  useEffect(() => {
+    if (!isRich && value !== history[historyIdx]) {
+      pushHistory(value);
+    }
+  }, [value, isRich, history, historyIdx, pushHistory]);
+
   const handleUndo = useCallback(() => {
     if (isRich) {
       editorRef.current?.focus();
@@ -188,13 +194,11 @@ export function RichTextarea({
       if (platform === "instagram" && raw.length > config.maxChars) {
         const capped = raw.slice(0, config.maxChars);
         onChange(capped);
-        pushHistory(capped);
         return;
       }
       onChange(raw);
-      pushHistory(raw);
     },
-    [onChange, platform, config.maxChars, pushHistory]
+    [onChange, platform, config.maxChars]
   );
 
   // ── Rich-text input handler (email) ──────────────────────────────────────
@@ -494,8 +498,6 @@ export function RichTextarea({
             >
               <RotateCcw className="w-3.5 h-3.5" />
             </ToolbarButton>
-            <div className="w-px h-5 bg-border/50 mx-1" />
-            <PlatformTag label="WA MARKDOWN" color="emerald" />
           </>
         )}
 

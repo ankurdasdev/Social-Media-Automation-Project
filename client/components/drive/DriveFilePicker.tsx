@@ -9,6 +9,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
@@ -21,7 +22,6 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { DriveFile } from "@shared/api";
-import { createPortal } from "react-dom";
 
 // ─── Platform constraints ────────────────────────────────────────────────────
 
@@ -29,28 +29,27 @@ export type AttachmentPlatform = "whatsapp" | "instagram" | "email";
 
 export const PLATFORM_RULES: Record<AttachmentPlatform, {
   maxMB: number;
-  supported: string[];
+  description: string;
   note?: string;
   color: string;
   badgeClass: string;
 }> = {
   whatsapp: {
     maxMB: 64,
-    supported: ["Images", "Video", "Audio", "PDF", "Docs"],
-    note: "⚠ HEIC/HEIF images (iPhone defaults) are not supported. Please use JPG/PNG.",
+    description: "Supported file types include images, video, audio, pdf and more. Maximum 64 MB.",
+    note: "HEIC/HEIF images are not supported. Please use JPG/PNG.",
     color: "#25D366",
     badgeClass: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
   },
   instagram: {
-    maxMB: 8,
-    supported: ["Images", "Video"],
-    note: "⚠ Instagram supports image and video attachments.",
+    maxMB: 25,
+    description: "Supported file types include images and video in JPEG, PNG, GIF and MP4 Format. Maximum 8 MB for images and 25 MB For Videos.",
     color: "#E1306C",
     badgeClass: "bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-500/20",
   },
   email: {
     maxMB: 25,
-    supported: ["All file types"],
+    description: "Supports all file types. Total 25 MB.",
     color: "#4285F4",
     badgeClass: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
   },
@@ -121,6 +120,18 @@ export function validateFile(file: DriveFile, platform?: AttachmentPlatform): { 
         reason: "Instagram only supports image and video attachments"
       };
     }
+    if (mime.startsWith("image/") && file.size && Number(file.size) > 8 * 1024 * 1024) {
+      return {
+        valid: false,
+        reason: `Image file size exceeds 8MB limit (Selected file is ${formatFileSize(Number(file.size))})`
+      };
+    }
+    if (mime.startsWith("video/") && file.size && Number(file.size) > 25 * 1024 * 1024) {
+      return {
+        valid: false,
+        reason: `Video file size exceeds 25MB limit (Selected file is ${formatFileSize(Number(file.size))})`
+      };
+    }
   } else if (platform === "whatsapp") {
     // WhatsApp supports image, video, audio, pdf, document (docs)
     const isSupported = mime.startsWith("image/") || 
@@ -150,31 +161,12 @@ export function FilePreviewModal({ file, onClose }: { file: DriveFile; onClose: 
   const isImg = (file.mimeType || "").startsWith("image/");
   const [imgError, setImgError] = React.useState(false);
 
-  React.useEffect(() => {
-    const handler = (e: KeyboardEvent) => { 
-      if (e.key === "Escape") {
-        e.stopPropagation();
-        onClose(); 
-      }
-    };
-    document.addEventListener("keydown", handler, true); // Use capture phase
-    return () => document.removeEventListener("keydown", handler, true);
-  }, [onClose]);
-
-  return createPortal(
-    <div
-      className="fixed inset-0 z-[600] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
-      style={{ pointerEvents: "auto" }}
-      onClick={(e) => {
-        e.stopPropagation();
-        onClose();
-      }}
-      onPointerDown={(e) => e.stopPropagation()} // Prevent Radix from seeing outside clicks
-    >
-      <div
-        className="relative w-full max-w-2xl bg-card rounded-3xl overflow-hidden shadow-2xl border dark:border-white/10 border-border/50 animate-in zoom-in-95 duration-200"
-        onClick={(e) => e.stopPropagation()}
-      >
+  return (
+    <Dialog open={true} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
+      <DialogContent className="max-w-2xl bg-card rounded-3xl overflow-hidden shadow-2xl p-0 border dark:border-white/10 border-border/50 [&>button]:hidden z-[600]">
+        <DialogTitle className="sr-only">Preview {file.name}</DialogTitle>
+        <DialogDescription className="sr-only">Previewing file {file.name}</DialogDescription>
+        
         {/* Header */}
         <div className="flex items-center gap-4 px-6 py-4 border-b dark:border-white/10 border-border/50 bg-muted/30">
           <FileIcon mimeType={file.mimeType} className="w-5 h-5 text-primary" />
@@ -239,9 +231,8 @@ export function FilePreviewModal({ file, onClose }: { file: DriveFile; onClose: 
             </div>
           )}
         </div>
-      </div>
-    </div>,
-    document.body
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -257,13 +248,13 @@ export function PlatformConstraintsBanner({ platform }: { platform: AttachmentPl
       <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
       <div className="space-y-1 min-w-0">
         <p className="font-black uppercase tracking-widest">
-          {platform.charAt(0).toUpperCase() + platform.slice(1)} Limits · Max {rule.maxMB} MB
+          {platform.charAt(0).toUpperCase() + platform.slice(1)} Limits
         </p>
         <p className="opacity-80 leading-relaxed">
-          Supported: {rule.supported.join(", ")}
+          {rule.description}
         </p>
         {rule.note && (
-          <p className="text-yellow-600 dark:text-yellow-400 mt-1 leading-relaxed font-black">{rule.note}</p>
+          <p className="opacity-80 leading-relaxed">{rule.note}</p>
         )}
       </div>
     </div>
@@ -410,7 +401,7 @@ export function DriveFilePicker({
           </p>
         </div>
       ) : (
-        <ScrollArea className="flex-1 min-h-[200px] w-full" type="scroll">
+        <div className="flex-1 min-h-[200px] w-full overflow-y-auto overflow-x-hidden">
           <div className="p-3 space-y-1.5">
             {data?.files?.map((file) => {
               const isSelected = selectedFiles.some((f) => f.id === file.id);
@@ -527,7 +518,7 @@ export function DriveFilePicker({
               </div>
             </div>
           )}
-        </ScrollArea>
+        </div>
       )}
     </div>
   );
@@ -611,7 +602,7 @@ export function DriveFilePicker({
               <DialogHeader className="px-8 pt-8 pb-4 flex-shrink-0 border-b border-border/50 bg-muted/30 relative">
                 <DialogTitle className="text-2xl font-black tracking-tight flex items-center gap-3">
                   <HardDrive className="h-6 w-6 text-primary shrink-0" />
-                  SELECT DRIVE FILES
+                  Select Files
                 </DialogTitle>
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">
                   Choose files matching platform size and type rules

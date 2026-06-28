@@ -369,20 +369,13 @@ export default function InstagramSettings() {
                 <p className="text-muted-foreground/70 text-sm font-medium leading-relaxed max-w-sm">
                   Send personalised outreach campaigns through your Instagram DM.
                 </p>
-
-                {isConnected && (
-                  <div className="mt-2 px-4 py-2 rounded-xl bg-pink-500/10 border border-pink-500/20 w-fit flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-pink-500" />
-                    <span className="text-[11px] font-black text-pink-500 uppercase tracking-[0.1em]">CONNECTED</span>
-                  </div>
-                )}
               </div>
 
               {/* Unlock cards */}
-              <div className="space-y-3">
-                <p className="text-[10px] font-black text-muted-foreground/50 uppercase tracking-[0.25em]">
+              <div className="space-y-4">
+                <h2 className="text-2xl md:text-3xl font-black tracking-tighter text-foreground uppercase leading-none">
                   {isConnected ? "What You Unlocked" : "What You Will Unlock"}
-                </p>
+                </h2>
                 <div className="space-y-2">
                   {unlockCards.map((card, i) => (
                     <div key={i} className={cn("flex items-start gap-3 p-3 rounded-2xl border transition-all", card.bg)}>
@@ -428,8 +421,7 @@ export default function InstagramSettings() {
                         <CheckCircle2 className="h-7 w-7 text-white" strokeWidth={2.5} />
                       </div>
                       <div>
-                        <h4 className="text-xl font-black text-foreground tracking-tighter uppercase leading-none">CONNECTED</h4>
-                        <p className="text-[10px] font-black text-pink-500 uppercase tracking-[0.2em] mt-1">Instagram Active</p>
+                        <h4 className="text-xl md:text-2xl font-black text-foreground tracking-tighter uppercase leading-none">Instagram Connected</h4>
                       </div>
                     </div>
 
@@ -475,11 +467,14 @@ export default function InstagramSettings() {
               <div className="space-y-6 animate-in fade-in duration-700 max-w-md mx-auto w-full">
 
                 {/* Guide Button (no blinker) + header */}
-                <div className="flex items-center justify-between gap-4 flex-wrap">
-                  <div>
-                    <h3 className="text-lg font-black text-foreground uppercase tracking-tight">Connect Instagram</h3>
-                    <p className="text-xs text-muted-foreground/60 mt-0.5">Paste your Connection Code below to connect</p>
-                  </div>
+                <div className="text-center space-y-3">
+                  <h3 className="text-3xl font-black text-foreground uppercase tracking-tight">Connect Instagram</h3>
+                  <p className="text-sm text-muted-foreground/80 leading-relaxed px-4">
+                    Send personalised outreach campaigns through your Instagram DM
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-end gap-4 flex-wrap w-full">
                   <button
                     onClick={() => { setGuideTab("install"); setGuideOpen(true); }}
                     className="flex items-center gap-2 px-4 py-2.5 rounded-2xl border font-black text-[10px] uppercase tracking-widest transition-all bg-pink-500/10 border-pink-500/30 text-pink-400 hover:bg-pink-500/20 hover:scale-105"
@@ -541,7 +536,7 @@ export default function InstagramSettings() {
                           Connection Code <span className="text-pink-500">*</span>
                         </Label>
                         <button
-                          onClick={() => { setGuideTab("session"); setGuideOpen(true); }}
+                          onClick={() => { setGuideTab("install"); setGuideOpen(true); }}
                           className="text-[10px] font-black text-pink-500/60 hover:text-pink-500 uppercase tracking-widest flex items-center gap-1 transition-colors"
                         >
                           <ChevronRight className="w-3 h-3" /> How to get this?
@@ -603,12 +598,6 @@ export default function InstagramSettings() {
                   <p className="text-[10px] text-muted-foreground/60 mt-0.5">Follow the steps to connect Instagram seamlessly</p>
                 </div>
               </div>
-              <button
-                onClick={() => setGuideOpen(false)}
-                className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-muted-foreground hover:text-foreground transition-all shrink-0"
-              >
-                <X className="w-4 h-4" />
-              </button>
             </div>
 
             {/* Tabs */}

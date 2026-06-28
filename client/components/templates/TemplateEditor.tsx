@@ -313,10 +313,14 @@ export function TemplateEditor({
   const attachRule = ATTACHMENT_RULES[defaultCategory];
 
   const editorTitle = isAttachment
-    ? `New ${categoryLabel} Attachment Template`
+    ? `Attachment Template`
     : template
     ? "Edit Template"
-    : `New ${categoryLabel} Template`;
+    : defaultCategory === "email" && emailTemplateType === "body"
+    ? "Full Email Template"
+    : defaultCategory === "email" && emailTemplateType === "footer"
+    ? "Email Signature Template"
+    : `Message Template`;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -327,8 +331,14 @@ export function TemplateEditor({
           </DialogTitle>
           <DialogDescription className="text-muted-foreground font-medium uppercase tracking-widest text-[10px]">
             {isAttachment
-              ? "Send a file attachment directly to contacts — no message body required."
-              : "Compose your outreach template with personalization variables."}
+              ? defaultCategory === "instagram" 
+                ? "Send Images and Videos via IG DM from Google Drive to your contacts."
+                : `Send File via ${categoryLabel} from Google Drive to your contacts.`
+              : defaultCategory === "email" && emailTemplateType === "body"
+              ? "Create a complete email with a subject and message with personalisation tags"
+              : defaultCategory === "email" && emailTemplateType === "footer"
+              ? "Save a reusable closing with your name, links and contact details."
+              : "Plain Texts With Personalisation Tags"}
           </DialogDescription>
         </DialogHeader>
 
@@ -340,28 +350,12 @@ export function TemplateEditor({
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder={`e.g. ${categoryLabel} ${isAttachment ? "Attachment" : "Template"} 1`}
+              placeholder={isAttachment ? `e.g. Headshots (${categoryLabel}).` : defaultCategory === "email" && emailTemplateType === "footer" ? `e.g. Work Links (${categoryLabel})` : `e.g. Initial Casting Message (${categoryLabel})`}
               className="h-14 rounded-2xl bg-muted/30 border-border/50 focus:ring-primary font-bold shadow-inner"
             />
           </div>
 
-          {/* Email Template Mode Badge */}
-          {defaultCategory === "email" && !isAttachment && (
-            <div className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-muted/30 border border-white/5 w-fit">
-              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Template Mode ::</span>
-              <Badge
-                variant="outline"
-                className={cn(
-                  "text-[10px] font-black uppercase tracking-widest px-3 py-1",
-                  emailTemplateType === "footer"
-                    ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
-                    : "bg-blue-500/10 text-blue-500 border-blue-500/20"
-                )}
-              >
-                {emailTemplateType === "footer" ? "Footer Template" : "Body Template"}
-              </Badge>
-            </div>
-          )}
+
 
           {/* Email Subject */}
           {defaultCategory === "email" && emailTemplateType === "body" && !isAttachment && (
@@ -408,28 +402,28 @@ export function TemplateEditor({
                 )} />
                 <div className="space-y-0.5">
                   <p className="text-[11px] font-black uppercase tracking-widest">
-                    {categoryLabel} Attachment Limits
+                    {categoryLabel} Limits
                   </p>
                   {defaultCategory === "whatsapp" && (
-                    <p className="text-[11px] text-muted-foreground font-medium">
-                      Supported file types include images, video, audio, PDF and more. Maximum 64 MB. HEIC/HEIF images are not supported. Please use JPG/PNG.
+                    <p className="text-[11px] text-muted-foreground font-medium whitespace-pre-wrap leading-relaxed mt-1">
+                      {"Supported file types include images, video, audio, pdf and more. Maximum 64 MB.\n\nHEIC/HEIF images are not supported. Please use JPG/PNG."}
                     </p>
                   )}
                   {defaultCategory === "email" && (
-                    <p className="text-[11px] text-muted-foreground font-medium">
+                    <p className="text-[11px] text-muted-foreground font-medium whitespace-pre-wrap leading-relaxed mt-1">
                       Supports all file types. Total 25 MB.
                     </p>
                   )}
                   {defaultCategory === "instagram" && (
-                    <p className="text-[11px] text-muted-foreground font-medium">
-                      Supported file types include images and video in JPEG, PNG, GIF and MP4 format. Maximum 8 MB for images and 25 MB for Videos.
+                    <p className="text-[11px] text-muted-foreground font-medium whitespace-pre-wrap leading-relaxed mt-1">
+                      Supported file types include images and video in JPEG, PNG, GIF and MP4 Format. Maximum 8 MB for images and 25 MB For Videos.
                     </p>
                   )}
                 </div>
               </div>
 
               <div className="space-y-3">
-                <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground text-primary">SELECT FILES</Label>
+                <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground text-primary">Select Files</Label>
                 <DriveFilePicker
                   userId={getOrCreateUserId()}
                   selectedFiles={driveFiles}
@@ -526,9 +520,13 @@ export function TemplateEditor({
             <>
               {/* Variable Chips */}
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2 mt-1">
                     <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Personalization Tags</Label>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-primary block leading-tight">DRAG & DROP READY</span>
+                    <span className="text-[9px] font-bold text-muted-foreground/60">Just Drag and Drop In Your Message</span>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2.5">
@@ -551,9 +549,6 @@ export function TemplateEditor({
                     </button>
                   ))}
                 </div>
-                <p className="text-[10px] text-muted-foreground/60 font-medium">
-                  Insert variable information automatically to your message. These tags map to the same name column in your contacts grid — they will be replaced with each contact's actual data at send time. You can change the column name in the Contacts grid and it will reflect in these Personalization Tags.
-                </p>
               </div>
 
               {/* Message Content */}
@@ -628,7 +623,10 @@ export function TemplateEditor({
                   value={content}
                   onChange={setContent}
                   platform={defaultCategory}
-                  placeholder="Compose your outreach message here. Click or drag a tag above to personalize..."
+                  placeholder={defaultCategory === "email" && emailTemplateType === "footer" 
+                    ? `Here are my work links :-\n1. Feature Film\n2. Short Film `
+                    : `Compose your outreach message here. Click or drag a tag above to personalize...\nDear {{leadName}},\n\nMy name is CastHub. I would like to audition for {{actingContext}}, {{age}} for your upcoming {{project}}.\n\nPlease find my details below.\n\nThank you,\nCastHub`
+                  }
                   className="min-h-[200px] rounded-3xl bg-muted/30 border-border/50 shadow-inner"
                   textareaRef={textareaRef}
                 />

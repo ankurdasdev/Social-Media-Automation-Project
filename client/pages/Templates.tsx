@@ -94,14 +94,19 @@ function TemplateCard({
           {template.isAttachment ? (
             <p className="text-[10px] text-muted-foreground/60 font-bold uppercase tracking-widest mt-1">Attachment template</p>
           ) : (
-            <p className="text-xs text-muted-foreground truncate font-medium mt-1 pr-4">
-              {(template.content || "").replace(/<[^>]+>/g, "")}
+            <p className="text-[10px] text-muted-foreground/60 font-bold uppercase tracking-widest mt-1 flex gap-1.5 overflow-hidden pr-4">
+              <span className="shrink-0 text-foreground/70">Message template</span>
+              <span className="opacity-50 font-medium normal-case tracking-normal truncate">
+                · {(template.content || "").replace(/<[^>]+>/g, "")}
+              </span>
             </p>
           )}
         </div>
       </div>
       <div className="flex items-center gap-3 shrink-0 relative z-10">
-        {template.category === "email" && (
+        {template.isAttachment ? (
+          <Badge variant="secondary" className="text-[10px] h-4 px-1 shrink-0">Attachment</Badge>
+        ) : template.category === "email" ? (
           <Badge 
             variant="outline" 
             className={cn(
@@ -111,12 +116,9 @@ function TemplateCard({
                 : "bg-blue-500/10 text-blue-500 border-blue-500/20"
             )}
           >
-            {template.emailTemplateType === "footer" ? "Footer" : "Body"}
+            {template.emailTemplateType === "footer" ? "Signature" : "Email"}
           </Badge>
-        )}
-        {template.isAttachment && (
-          <Badge variant="secondary" className="text-[10px] h-4 px-1 shrink-0">Attachment</Badge>
-        )}
+        ) : null}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -132,7 +134,7 @@ function TemplateCard({
               <Pencil className="mr-2 h-3.5 w-3.5" /> Edit
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onRename(template)}>
-              <Pencil className="mr-2 h-3.5 w-3.5" /> Rename
+              <Pencil className="mr-2 h-3.5 w-3.5" /> Modify Name
             </DropdownMenuItem>
             {onDelete && (
               <>
@@ -201,6 +203,9 @@ function TemplateTabContent({
   onEdit,
   onRename,
   onDelete,
+  deletedTemplates,
+  onRestore,
+  onHardDelete,
 }: {
   category: TemplateCategory;
   templates: Template[];
@@ -208,8 +213,12 @@ function TemplateTabContent({
   onEdit: (t: Template) => void;
   onRename: (t: Template) => void;
   onDelete: (t: Template) => void;
+  deletedTemplates: Template[];
+  onRestore: (t: Template) => void;
+  onHardDelete: (t: Template) => void;
 }) {
   const categoryTemplates = templates.filter((t) => t.category === category);
+  const deletedCategoryTemplates = deletedTemplates.filter((t) => t.category === category);
 
   return (
     <div className="space-y-4 pt-2">
@@ -240,6 +249,28 @@ function TemplateTabContent({
           {category === "whatsapp" ? "Create Template for WhatsApp" : category === "email" ? "Create Template for Email" : "Create Template for Instagram"}
         </button>
       </div>
+
+      {/* Bin Section for this channel */}
+      {deletedCategoryTemplates.length > 0 && (
+        <div className="mt-8 pt-8 border-t border-border/50 animate-in fade-in duration-500">
+          <div className="flex items-center gap-2 mb-4">
+            <Trash2 className="w-4 h-4 text-destructive" />
+            <h3 className="text-sm font-black uppercase tracking-widest text-destructive">
+              {category} Bin ({deletedCategoryTemplates.length})
+            </h3>
+          </div>
+          <div className="space-y-4">
+            {deletedCategoryTemplates.map((t) => (
+              <BinCard
+                key={t.id}
+                template={t}
+                onRestore={onRestore}
+                onHardDelete={onHardDelete}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -389,10 +420,7 @@ export default function Templates() {
       <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-[calc(100vh-8rem)]">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
           <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-black tracking-widest uppercase text-primary">
-              <FileText className="w-3 h-3" />
-              Template Library
-            </div>
+
             <h1 id="tutorial-templates-title" className="text-4xl md:text-5xl font-black tracking-tighter text-foreground uppercase">
               Templates
             </h1>
@@ -429,14 +457,6 @@ export default function Templates() {
                   {templates.filter((t) => t.category === "instagram").length}
                 </Badge>
               </TabsTrigger>
-              <TabsTrigger value="bin" className="flex-1 rounded-xl gap-2 font-black data-[state=active]:bg-background transition-all data-[state=active]:text-destructive">
-                <Trash2 className="h-4 w-4" /> BIN
-                {deletedTemplates.length > 0 && (
-                  <Badge variant="secondary" className="ml-1 h-5 text-[10px] px-1.5 font-black bg-destructive/10 text-destructive border-none">
-                    {deletedTemplates.length}
-                  </Badge>
-                )}
-              </TabsTrigger>
             </TabsList>
 
             <div className="overflow-y-auto flex-1 pr-2 -mr-2 space-y-4">
@@ -449,30 +469,12 @@ export default function Templates() {
                     onEdit={handleEdit}
                     onRename={handleRenameOpen}
                     onDelete={handleDeleteOpen}
+                    deletedTemplates={deletedTemplates}
+                    onRestore={handleRestore}
+                    onHardDelete={handleHardDeleteOpen}
                   />
                 </TabsContent>
               ))}
-              
-              <TabsContent value="bin" className="m-0 space-y-3">
-                <div className="space-y-2 pt-2">
-                  {deletedTemplates.length === 0 ? (
-                    <div className="text-center py-12 text-muted-foreground">
-                      <Trash2 className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                      <p className="text-sm">Bin is empty.</p>
-                      <p className="text-xs mt-1">Deleted templates will appear here.</p>
-                    </div>
-                  ) : (
-                    deletedTemplates.map((t) => (
-                      <BinCard
-                        key={t.id}
-                        template={t}
-                        onRestore={handleRestore}
-                        onHardDelete={handleHardDeleteOpen}
-                      />
-                    ))
-                  )}
-                </div>
-              </TabsContent>
             </div>
         </Tabs>
       </div>
@@ -505,9 +507,9 @@ export default function Templates() {
               >
                 <FileText className="h-6 w-6 text-primary" />
                 <span className="text-sm font-black uppercase">
-                  {activeTab === "whatsapp" ? "WhatsApp" : "Instagram"} Message Template
+                  {activeTab} Message Template
                 </span>
-                <span className="text-[9px] text-muted-foreground/60 font-bold uppercase tracking-widest">
+                <span className="text-[9px] text-muted-foreground/60 font-bold uppercase tracking-widest text-center">
                   Plain text with personalization tags
                 </span>
               </button>
@@ -522,7 +524,15 @@ export default function Templates() {
                 >
                   <Mail className="h-6 w-6" />
                   <span className="text-sm font-black uppercase">Full Email Template</span>
-                  <span className="text-[9px] text-muted-foreground/60 font-bold uppercase tracking-widest">Subject &amp; Main Content</span>
+                  <span className="text-[9px] text-muted-foreground/60 font-bold uppercase tracking-widest text-center">Create a complete email with a subject and message with personalisation tags</span>
+                </button>
+                <button
+                  onClick={() => handleSelectType("attachment")}
+                  className="h-24 rounded-2xl flex flex-col items-center justify-center p-4 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-400 gap-1.5 transition-all"
+                >
+                  <Paperclip className="h-6 w-6" />
+                  <span className="text-sm font-black uppercase">Attachment Template</span>
+                  <span className="text-[9px] text-muted-foreground/60 font-bold uppercase tracking-widest text-center">Attach portfolios, PDFs, images or videos. Any file type.</span>
                 </button>
                 <button
                   onClick={() => handleSelectType("footer")}
@@ -530,25 +540,29 @@ export default function Templates() {
                 >
                   <FileText className="h-6 w-6" />
                   <span className="text-sm font-black uppercase">Email Signature Template</span>
-                  <span className="text-[9px] text-muted-foreground/60 font-bold uppercase tracking-widest">Appended to the bottom of drafts</span>
+                  <span className="text-[9px] text-muted-foreground/60 font-bold uppercase tracking-widest text-center">Save a reusable closing with your name, links and contact details.</span>
                 </button>
               </>
             )}
 
-            {/* Attachment — all platforms */}
-            <button
-              onClick={() => handleSelectType("attachment")}
-              className={`h-24 rounded-2xl flex flex-col items-center justify-center p-4 border gap-1.5 transition-all ${
-                activeTab === "whatsapp"
-                  ? "bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/30 text-emerald-400"
-                  : activeTab === "instagram"
-                  ? "bg-pink-500/10 hover:bg-pink-500/20 border-pink-500/30 text-pink-400"
-                  : "bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/30 text-purple-400"
-              }`}
-            >
-              <Paperclip className="h-6 w-6" />
-              <span className="text-sm font-black uppercase">Attachment Template</span>
-            </button>
+            {activeTab !== "email" && (
+              <button
+                onClick={() => handleSelectType("attachment")}
+                className={`h-24 rounded-2xl flex flex-col items-center justify-center p-4 border gap-1.5 transition-all ${
+                  activeTab === "whatsapp"
+                    ? "bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/30 text-emerald-400"
+                    : "bg-pink-500/10 hover:bg-pink-500/20 border-pink-500/30 text-pink-400"
+                }`}
+              >
+                <Paperclip className="h-6 w-6" />
+                <span className="text-sm font-black uppercase">Attachment Template</span>
+                <span className="text-[9px] text-muted-foreground/60 font-bold uppercase tracking-widest text-center">
+                  {activeTab === "whatsapp" 
+                    ? "Send File via WhatsApp from Google Drive to your contacts." 
+                    : "Send Images and Videos via IG DM from Google Drive to your contacts."}
+                </span>
+              </button>
+            )}
           </div>
         </DialogContent>
       </Dialog>

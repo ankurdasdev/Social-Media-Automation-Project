@@ -91,29 +91,29 @@ const TUTORIAL_STEPS: Record<string, TutorialStep[]> = {
   templates: [
     {
       targetId: "tutorial-templates-title",
-      title: "Step 1 of 4 — Templates",
-      content: "This is your Template Library. Here you can create, save and reuse outreach messages for all your channels.",
+      title: "Templates",
+      content: "Create reusable messages and attachments that can be sent to your contacts automatically.",
       placement: "bottom",
       path: "/templates"
     },
     {
       targetId: "tutorial-templates-tabs",
-      title: "Step 2 of 4 — Choose a Channel",
-      content: "Switch between WhatsApp, Email, and Instagram tabs to manage templates for each channel separately.",
+      title: "Choose a Channel",
+      content: "Templates can be created for: WhatsApp, Email, Instagram.\n\nEach channel has its own message format and delivery settings.",
       placement: "bottom",
       path: "/templates"
     },
     {
       targetId: "tutorial-templates-new",
-      title: "Step 3 of 4 — Create a Template",
-      content: "Click 'NEW TEMPLATE' to open the creation modal. Choose your template type and start composing your outreach message.",
+      title: "Create a Template",
+      content: "Click New Template to create: A Message Template or An Attachment Template\n\nUse placeholders like {Name} or {Project} to personalise messages automatically.",
       placement: "bottom",
       path: "/templates"
     },
     {
       targetId: "tutorial-contacts-nav",
-      title: "Step 4 of 4 — Use Templates in Campaigns",
-      content: "Head to the Contacts section to assign your templates to contacts and launch your outreach campaigns.",
+      title: "Use Templates in Campaigns",
+      content: "Once saved, templates become available throughout CastHub and can be sent to contacts directly from your outreach workflows.",
       placement: "right",
       path: "/templates"
     }

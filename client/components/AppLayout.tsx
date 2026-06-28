@@ -5,10 +5,11 @@ import {
   Menu,
   X,
   BarChart3,
-  Settings,
-  Table,
+  Settings2,
+  Users,
   LogOut,
   User,
+  Blocks,
   SlidersHorizontal,
   CheckCircle2,
   XCircle,
@@ -42,9 +43,14 @@ interface AppLayoutProps {
 // Nav items — Contacts moved above Source Manager per client request
 const navItems = [
   {
-    label: "Integrations Centre",
+    label: "Dashboard",
+    href: "/dashboard",
+    icon: LayoutDashboard,
+  },
+  {
+    label: "Channels",
     href: "/integrations",
-    icon: SlidersHorizontal,
+    icon: Blocks,
   },
   {
     label: "Template Library",
@@ -54,12 +60,12 @@ const navItems = [
   {
     label: "Contacts",
     href: "/contacts",
-    icon: Table,
+    icon: Users,
   },
   {
     label: "Source Manager",
     href: "/controller",
-    icon: Settings,
+    icon: Settings2,
   },
   {
     label: "Analytics",
@@ -305,7 +311,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 Connection Status
               </p>
               <ConnectionStatusPill
-                label="Google"
+                label="Google Drive"
                 isConnected={googleConnected}
                 loading={googleLoading}
                 href="/integrations?defaultTab=google"
@@ -370,15 +376,31 @@ export default function AppLayout({ children }: AppLayoutProps) {
             </Link>
           </div>
 
-          {/* Empty spacer for desktop layout balance */}
-          <div className="hidden md:block flex-1" />
+          {/* Empty spacer for layout balance */}
+          <div className="flex-1" />
 
           {/* Right actions */}
           <div className="flex items-center gap-3">
+            {/* Page Guide Button (Desktop) */}
+            <button 
+              onClick={() => window.dispatchEvent(new Event('open-page-guide'))}
+              className="hidden md:flex items-center gap-2 px-4 py-1.5 rounded-full border border-amber-500/30 bg-amber-500/5 text-amber-500 hover:bg-amber-500/10 transition-colors"
+            >
+              <svg viewBox="0 0 24 24" fill="none" className="w-3.5 h-3.5" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+              </svg>
+              <span className="text-[10px] font-black uppercase tracking-widest">Page Guide</span>
+            </button>
+
+            {/* Notification/Yellow Dot */}
+            <button className="hidden md:flex items-center justify-center w-8 h-8 rounded-full border border-border/40 bg-muted/30 hover:bg-muted/50 transition-colors">
+              <div className="w-2 h-2 rounded-full bg-amber-500" />
+            </button>
+
             {/* Dark Mode Toggle */}
             <button
               onClick={toggleTheme}
-              className="w-10 h-10 rounded-xl bg-muted/30 border border-border/30 flex items-center justify-center hover:bg-muted/50 transition-all text-foreground hover:border-primary/30"
+              className="w-10 h-10 rounded-xl bg-muted/30 border border-border/30 flex items-center justify-center hover:bg-muted/50 transition-all text-foreground hover:border-primary/30 ml-2"
               title={isDark ? "Switch to light mode" : "Switch to dark mode"}
             >
               <div className="relative w-5 h-5 flex items-center justify-center">
@@ -392,7 +414,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
             </button>
 
             <button
-              className="md:hidden w-10 h-10 rounded-xl bg-muted/30 border border-border/30 flex items-center justify-center hover:bg-muted/50 transition-all"
+              className="md:hidden w-10 h-10 rounded-xl bg-muted/30 border border-border/30 flex items-center justify-center hover:bg-muted/50 transition-all ml-1"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}

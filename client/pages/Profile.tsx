@@ -250,7 +250,7 @@ export default function Profile() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column: Avatar & Summary */}
           <div className="lg:col-span-1 space-y-6">
-            <Card className="glass-card border-border overflow-hidden relative group">
+            <Card className="bg-card/40 border-border/50 overflow-hidden relative group">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10 opacity-50" />
                 <CardContent className="pt-10 pb-8 flex flex-col items-center relative z-10">
                     <div className="w-32 h-32 rounded-[2.5rem] bg-gradient-to-tr from-primary via-primary/80 to-secondary p-1 shadow-2xl shadow-primary/20 mb-6 group-hover:scale-105 transition-all duration-500">
@@ -278,7 +278,7 @@ export default function Profile() {
           {/* Right Column: Edit Form */}
           <div className="lg:col-span-2">
             <form onSubmit={handleSubmit} className="space-y-8">
-              <Card className="glass-card border-border overflow-hidden">
+              <Card className="bg-card/40 border-border/50 overflow-hidden">
                 <CardHeader className="p-8 pb-4">
                   <CardTitle className="text-2xl font-black tracking-tight">Personal Details</CardTitle>
                   <CardDescription className="text-sm font-medium">Update your name and email address.</CardDescription>
@@ -358,7 +358,7 @@ export default function Profile() {
                 </CardContent>
               </Card>
 
-              <Card className="glass-card border-border overflow-hidden">
+              <Card className="bg-card/40 border-border/50 overflow-hidden">
                 <CardHeader className="p-8 pb-4">
                   <CardTitle className="text-2xl font-black tracking-tight">Security Credentials</CardTitle>
                   <CardDescription className="text-sm font-medium">Change your account password below. Leave blank to keep current.</CardDescription>
@@ -455,20 +455,20 @@ export default function Profile() {
 
             {/* Danger Zone */}
             <div className="mt-8">
-              <Card className="glass-card border-rose-500/20 bg-rose-500/5 overflow-hidden">
+              <Card className="bg-[#0a0a0a] border-white/5 overflow-hidden">
                 <CardHeader className="p-8 pb-4">
                   <CardTitle className="text-2xl font-black tracking-tight text-rose-500 flex items-center gap-2">
-                    <AlertTriangle className="w-6 h-6 animate-pulse shrink-0" />
+                    <AlertTriangle className="w-6 h-6 shrink-0" />
                     Danger Zone
                   </CardTitle>
-                  <CardDescription className="text-sm font-medium text-rose-400/80">
+                  <CardDescription className="text-sm font-medium text-muted-foreground">
                     Irreversible actions related to your account.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-8 pt-4 space-y-6">
-                  <div className="p-5 rounded-2xl bg-rose-500/10 border border-rose-500/20">
+                  <div className="p-5 rounded-2xl bg-rose-950/30 border border-rose-500/20">
                     <p className="text-sm font-bold text-rose-500 leading-relaxed">
-                      Permanently delete your CastHub account and all associated data. This action is absolute, immediate, and cannot be undone.
+                      Delete your account and all associated data. This action cannot be undone.
                     </p>
                   </div>
                   
@@ -490,8 +490,8 @@ export default function Profile() {
       </div>
 
       {/* ── Subscription & Billing Card ────────────────────────────────────── */}
-      <Card className="glass-card border-border">
-        <CardHeader className="flex flex-row items-center justify-between">
+      <Card className="bg-[#0a0a0a] border-white/5">
+        <CardHeader className="flex flex-row items-center justify-between p-8 pb-4">
           <div>
             <CardTitle className="text-xl font-black tracking-tight flex items-center gap-2">
               <Crown className="w-5 h-5 text-pink-500" /> Subscription & Billing
@@ -505,34 +505,34 @@ export default function Profile() {
             <CreditCard className="w-4 h-4" /> Manage Plan
           </Button>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6 p-8 pt-4">
           {/* Status Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="p-4 rounded-2xl bg-muted/30 border border-border/50 text-center">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 text-center flex flex-col justify-center">
               <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">Plan</p>
-              <p className="text-lg font-black text-foreground capitalize">{subStatus?.planType || "Trial"}</p>
+              <p className="text-xl font-black text-foreground capitalize">{subStatus?.planType || "Trial"}</p>
             </div>
-            <div className={`p-4 rounded-2xl border text-center ${
+            <div className={`p-6 rounded-2xl border flex flex-col justify-center items-center ${
               subStatus?.isExpired ? "bg-rose-500/10 border-rose-500/20" :
               subStatus?.isTrial ? "bg-blue-500/10 border-blue-500/20" : "bg-emerald-500/10 border-emerald-500/20"
             }`}>
               <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">Status</p>
-              <Badge className={`border-none font-black uppercase text-xs ${
+              <Badge className={`border-none font-black uppercase text-xs px-3 py-1 ${
                 subStatus?.isExpired ? "bg-rose-500/20 text-rose-500" :
                 subStatus?.isTrial ? "bg-blue-500/20 text-blue-500" : "bg-emerald-500/20 text-emerald-500"
               }`}>
                 {subStatus?.isExpired ? "Expired" : subStatus?.isTrial ? "Trial" : "Active"}
               </Badge>
             </div>
-            <div className="p-4 rounded-2xl bg-muted/30 border border-border/50 text-center">
+            <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 text-center flex flex-col justify-center">
               <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">Days Left</p>
               <p className={`text-2xl font-black ${(subStatus?.daysRemaining || 0) <= 2 ? "text-rose-500" : "text-foreground"}`}>
                 {subStatus?.daysRemaining ?? "—"}
               </p>
             </div>
-            <div className="p-4 rounded-2xl bg-muted/30 border border-border/50 text-center">
+            <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 text-center flex flex-col justify-center">
               <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">Expires</p>
-              <p className="text-xs font-bold text-foreground">
+              <p className="text-sm font-bold text-foreground">
                 {subStatus?.isTrial && subStatus.trialEnd
                   ? format(new Date(subStatus.trialEnd), "MMM d, yyyy")
                   : subStatus?.currentPeriodEnd
