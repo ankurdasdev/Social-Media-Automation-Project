@@ -437,7 +437,7 @@ export default function Signup() {
           {" "}·{" "}
           <Link to="/privacy" className="hover:text-foreground/40 transition-colors">Privacy</Link>
           {" "}·{" "}
-          <a href="mailto:support@casthub.in" className="hover:text-foreground/40 transition-colors">support@casthub.in</a>
+          <Link to="/contact" className="hover:text-foreground transition-colors">Contact Us</Link>
         </p>
       </div>
 

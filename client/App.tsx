@@ -28,6 +28,8 @@ import Subscription from "./pages/Subscription";
 import TermsOfService from "./pages/TermsOfService";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Help from "./pages/Help";
+import LandingPage from "./pages/LandingPage";
+import ContactUs from "./pages/ContactUs";
 
 import NotFound from "./pages/NotFound";
 import { isTokenValid } from "./lib/utils";
@@ -92,6 +94,7 @@ const App = () => (
             {/* Legal Pages — public, no auth required */}
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/contact" element={<ContactUs />} />
 
             {/* Protected App Routes */}
             <Route path="/setup" element={<ProtectedRoute element={<Onboarding />} />} />
@@ -107,8 +110,8 @@ const App = () => (
             <Route path="/admin" element={<AdminRoute element={<AdminDashboard />} />} />
             <Route path="/help" element={<ProtectedRoute element={<Help />} />} />
 
-            {/* Default redirect to dashboard (ProtectedRoute handles auth check) */}
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            {/* Landing Page */}
+            <Route path="/" element={<LandingPage />} />
 
             {/* Catch-all */}
             <Route path="*" element={<NotFound />} />

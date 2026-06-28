@@ -482,6 +482,7 @@ export default function TermsOfService() {
         <div className="pt-8 border-t border-border/50 flex flex-wrap gap-4 items-center justify-between">
           <p className="text-[11px] text-muted-foreground/40 font-medium">© {new Date().getFullYear()} CastHub. All rights reserved.</p>
           <div className="flex gap-4">
+            <Link to="/contact" className="text-[11px] text-muted-foreground/60 hover:text-muted-foreground font-bold transition-colors">Contact Us</Link>
             <Link to="/privacy" className="text-[11px] text-muted-foreground/60 hover:text-muted-foreground font-bold transition-colors">Privacy Policy</Link>
             <Link to={actionLink} className="text-[11px] text-muted-foreground/60 hover:text-muted-foreground font-bold transition-colors">Back to {actionText}</Link>
           </div>
