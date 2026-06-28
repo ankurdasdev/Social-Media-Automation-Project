@@ -455,7 +455,7 @@ export default function Profile() {
 
             {/* Danger Zone */}
             <div className="mt-8">
-              <Card className="bg-[#0a0a0a] border-white/5 overflow-hidden">
+              <Card className="bg-card dark:bg-[#0a0a0a] border-border dark:border-white/5 overflow-hidden">
                 <CardHeader className="p-8 pb-4">
                   <CardTitle className="text-2xl font-black tracking-tight text-foreground flex items-center gap-2">
                     <AlertTriangle className="w-6 h-6 shrink-0" />
@@ -466,7 +466,7 @@ export default function Profile() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-8 pt-4 space-y-6">
-                  <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5">
+                  <div className="p-5 rounded-2xl bg-muted/30 dark:bg-white/[0.02] border border-border dark:border-white/5">
                     <p className="text-sm font-bold text-foreground leading-relaxed">
                       Delete your account and all associated data. This action cannot be undone.
                     </p>
@@ -490,7 +490,7 @@ export default function Profile() {
       </div>
 
       {/* ── Subscription & Billing Card ────────────────────────────────────── */}
-      <Card className="bg-[#0a0a0a] border-white/5">
+      <Card className="bg-card dark:bg-[#0a0a0a] border-border dark:border-white/5">
         <CardHeader className="flex flex-row items-center justify-between p-8 pb-4">
           <div>
             <CardTitle className="text-xl font-black tracking-tight flex items-center gap-2">
@@ -508,7 +508,7 @@ export default function Profile() {
         <CardContent className="space-y-6 p-8 pt-4">
           {/* Status Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 text-center flex flex-col justify-center">
+            <div className="p-6 rounded-2xl bg-muted/30 dark:bg-white/[0.02] border border-border dark:border-white/5 text-center flex flex-col justify-center">
               <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">Plan</p>
               <p className="text-xl font-black text-foreground capitalize">{subStatus?.planType || "Trial"}</p>
             </div>
@@ -524,13 +524,13 @@ export default function Profile() {
                 {subStatus?.isExpired ? "Expired" : subStatus?.isTrial ? "Trial" : "Active"}
               </Badge>
             </div>
-            <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 text-center flex flex-col justify-center">
+            <div className="p-6 rounded-2xl bg-muted/30 dark:bg-white/[0.02] border border-border dark:border-white/5 text-center flex flex-col justify-center">
               <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">Days Left</p>
               <p className={`text-2xl font-black ${(subStatus?.daysRemaining || 0) <= 2 ? "text-rose-500" : "text-foreground"}`}>
                 {subStatus?.daysRemaining ?? "—"}
               </p>
             </div>
-            <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 text-center flex flex-col justify-center">
+            <div className="p-6 rounded-2xl bg-muted/30 dark:bg-white/[0.02] border border-border dark:border-white/5 text-center flex flex-col justify-center">
               <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">Expires</p>
               <p className="text-sm font-bold text-foreground">
                 {subStatus?.isTrial && subStatus.trialEnd
