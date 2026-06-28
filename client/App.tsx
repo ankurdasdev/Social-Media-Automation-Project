@@ -30,6 +30,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Help from "./pages/Help";
 import LandingPage from "./pages/LandingPage";
 import ContactUs from "./pages/ContactUs";
+import HowItWorks from "./pages/HowItWorks";
 
 import NotFound from "./pages/NotFound";
 import { isTokenValid } from "./lib/utils";
@@ -95,6 +96,7 @@ const App = () => (
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/contact" element={<ContactUs />} />
+            <Route path="/how-it-works" element={<HowItWorks />} />
 
             {/* Protected App Routes */}
             <Route path="/setup" element={<ProtectedRoute element={<Onboarding />} />} />

@@ -91,9 +91,9 @@ export default function LandingPage() {
           <Link to={hasToken ? "/dashboard" : "/signup"} className="w-full sm:w-auto flex items-center justify-center gap-2 h-14 px-10 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-sm uppercase tracking-widest shadow-xl shadow-primary/20 transition-all active:scale-[0.98]">
             {hasToken ? "Go To Dashboard" : "Start For Free"} <ArrowRight className="w-4 h-4" />
           </Link>
-          <a href="#how-it-works" className="w-full sm:w-auto flex items-center justify-center gap-2 h-14 px-10 rounded-2xl border border-white/10 hover:bg-white/5 font-bold text-sm transition-all active:scale-[0.98]">
+          <Link to="/how-it-works" className="w-full sm:w-auto flex items-center justify-center gap-2 h-14 px-10 rounded-2xl border border-white/10 hover:bg-white/5 font-bold text-sm transition-all active:scale-[0.98]">
             Learn How It Works
-          </a>
+          </Link>
         </div>
       </div>
 
