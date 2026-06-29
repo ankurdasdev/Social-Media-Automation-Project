@@ -387,8 +387,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-widest">{(userProfile?.email || currentUser?.email)?.split('@')[0]}</span>
                   </div>
                   <div className="w-9 h-9 rounded-xl overflow-hidden shrink-0 bg-primary/20 flex items-center justify-center">
-                    {userProfile?.profile_picture ? (
-                      <img src={userProfile.profile_picture} alt="Profile" className="w-full h-full object-cover" />
+                    {userProfile?.profile_picture || currentUser?.profile_picture ? (
+                      <img src={userProfile?.profile_picture || currentUser?.profile_picture} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
                       <User className="w-4 h-4 text-primary" />
                     )}
@@ -399,6 +399,11 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 <DropdownMenuItem asChild className="rounded-xl gap-2 cursor-pointer font-bold mb-1 hover:bg-muted/50 p-3">
                   <Link to="/profile" className="flex items-center gap-2 w-full">
                     <User className="w-4 h-4" /> Edit Profile
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="rounded-xl gap-2 cursor-pointer font-bold mb-1 hover:bg-muted/50 p-3">
+                  <Link to="/settings" className="flex items-center gap-2 w-full">
+                    <Settings2 className="w-4 h-4" /> Settings
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-border/30 mx-2" />

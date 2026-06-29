@@ -161,13 +161,15 @@ export default function Profile() {
 
   useEffect(() => {
     if (userProfile) {
-      if (userProfile.name) setName(userProfile.name);
-      if (userProfile.email) setEmail(userProfile.email);
-      if (userProfile.gender) setGender(userProfile.gender);
-      if (userProfile.dob) setDob(userProfile.dob);
-      if (userProfile.instagram) setInstagram(userProfile.instagram);
-      if (userProfile.location) setLocation(userProfile.location);
-      if (userProfile.profile_picture) setProfilePicture(userProfile.profile_picture);
+      setName(userProfile.name || "");
+      setEmail(userProfile.email || "");
+      setGender(userProfile.gender || "");
+      setDob(userProfile.dob || "");
+      setInstagram(userProfile.instagram || "");
+      setLocation(userProfile.location || { lat: 0, lng: 0 });
+      if (userProfile.profile_picture !== undefined) {
+        setProfilePicture(userProfile.profile_picture || "");
+      }
     }
   }, [userProfile]);
 
@@ -318,12 +320,16 @@ export default function Profile() {
                         </div>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className="glass-card rounded-2xl w-48 mt-2 p-2">
-                         <DropdownMenuItem className="font-bold cursor-pointer rounded-xl p-3" onClick={() => document.getElementById('profile-upload')?.click()}>
+                         <DropdownMenuItem className="font-bold cursor-pointer rounded-xl p-3" onSelect={(e) => {
+                             e.preventDefault();
+                             document.getElementById('profile-upload')?.click();
+                         }}>
                             Upload New Photo
                          </DropdownMenuItem>
                          {profilePicture && (
                            <>
-                             <DropdownMenuItem className="font-bold cursor-pointer rounded-xl p-3" onClick={() => {
+                             <DropdownMenuItem className="font-bold cursor-pointer rounded-xl p-3" onSelect={(e) => {
+                                 e.preventDefault();
                                  setSelectedFileBase64(profilePicture);
                                  setBrightness(100);
                                  setContrast(100);
@@ -333,7 +339,10 @@ export default function Profile() {
                                 Edit Photo
                              </DropdownMenuItem>
                              <DropdownMenuSeparator className="bg-border/30 mx-2" />
-                             <DropdownMenuItem className="font-bold cursor-pointer text-destructive focus:text-destructive hover:bg-destructive/10 rounded-xl p-3" onClick={() => setProfilePicture("")}>
+                             <DropdownMenuItem className="font-bold cursor-pointer text-destructive focus:text-destructive hover:bg-destructive/10 rounded-xl p-3" onSelect={(e) => {
+                                e.preventDefault();
+                                setProfilePicture("");
+                             }}>
                                 Remove Photo
                              </DropdownMenuItem>
                            </>
@@ -363,9 +372,9 @@ export default function Profile() {
                                     };
                                     reader.readAsDataURL(file);
                                 }
+                                e.target.value = '';
                             }}
                         />
-                    </div>
                     <h3 className="text-2xl font-black tracking-tight text-center truncate w-full">{user?.name || "Member"}</h3>
                     <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest mt-1">Premium Identity</p>
                     
