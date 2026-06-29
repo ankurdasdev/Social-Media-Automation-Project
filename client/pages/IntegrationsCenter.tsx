@@ -457,7 +457,7 @@ export default function IntegrationsCenter() {
                 CastHub utilizes AES-256 encryption for all OAuth tokens. Your credentials never touch our databases in plain text and are physically isolated to your unique environment.
               </p>
               <div className="flex items-center justify-center md:justify-start gap-2 pt-2">
-                <Badge variant="outline" className="px-3 py-1 rounded-full border-primary/30 text-primary bg-primary/5 font-bold text-[10px] uppercase">User ID: {userId}</Badge>
+                <Badge variant="outline" className="px-3 py-1 rounded-full border-primary/30 text-primary bg-primary/5 font-bold text-[10px] uppercase">Connection Status: Secured</Badge>
                 <Badge variant="outline" className="px-3 py-1 rounded-full border-border text-muted-foreground font-bold text-[10px] uppercase">Environment: Production</Badge>
               </div>
             </div>

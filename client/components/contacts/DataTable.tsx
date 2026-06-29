@@ -125,7 +125,7 @@ const MemoizedTableCell = React.memo(({
       id={`cell-${rowIndex}-${cellId}`}
       className={cn(
         "relative border-r border-border/10 last:border-r-0",
-        density === "compact" ? "py-1 px-4" : density === "spacious" ? "py-4 px-6" : "py-2 px-6",
+        density === "compact" ? "!py-1 !px-2 [&_input]:h-8 [&_input]:text-xs [&_button]:h-8 [&_button]:text-xs [&_.badge]:text-[8px] [&_.badge]:px-1" : density === "spacious" ? "!py-4 !px-6 [&_input]:h-12 [&_input]:text-base [&_button]:h-12" : "!py-2 !px-4",
         isPinned && "sticky z-[15] shadow-[2px_0_10px_-3px_rgba(0,0,0,0.3)]",
         isPinned && !isCustom && !cColor && "bg-background",
         isPinned && isLastPinned && "border-r-[3px] border-r-border/50"

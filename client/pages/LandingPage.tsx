@@ -210,7 +210,7 @@ export default function LandingPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-10%" }}
             transition={{ delay: 0.3 }}
-            className="md:col-span-2 relative overflow-hidden rounded-[2.5rem] bg-[#0a0a0a] border border-white/10 p-10 flex flex-col md:flex-row items-center gap-10"
+            className="md:col-span-2 relative overflow-hidden rounded-[2.5rem] bg-primary/5 border border-primary/10 p-10 flex flex-col md:flex-row items-center gap-10"
           >
              <div className="flex-1">
                <h3 className="text-3xl font-black tracking-tight mb-4">Scale Without Limits</h3>

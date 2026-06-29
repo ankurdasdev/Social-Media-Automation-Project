@@ -248,6 +248,16 @@ export default function AppLayout({ children }: AppLayoutProps) {
     staleTime: 5 * 60 * 1000,
   });
 
+  const { data: statsData } = useQuery({
+    queryKey: ["analytics-stats"],
+    queryFn: async () => {
+      const res = await fetch(`/api/analytics/stats?userId=${userId}`);
+      if (!res.ok) throw new Error("Failed to fetch stats");
+      return res.json();
+    }
+  });
+  const streak = statsData?.streak || 0;
+
   const { data: subStatus } = useQuery<{
     planType: string; status: string; trialEnd: string | null;
     currentPeriodEnd: string | null; daysRemaining: number;
@@ -304,7 +314,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 </div>
                 <div>
                   <p className="text-[9px] font-black uppercase tracking-widest text-orange-500/80">Outreach Streak</p>
-                  <p className="text-sm font-black text-foreground">5 Days 🔥</p>
+                  <p className="text-sm font-black text-foreground">
+                    {streak > 0 ? `${streak} Days 🔥` : "Start your streak!"}
+                  </p>
                 </div>
               </div>
             </div>

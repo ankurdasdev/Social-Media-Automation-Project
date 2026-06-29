@@ -486,6 +486,72 @@ export const handleGetAnalyticsStats: RequestHandler = async (req, res) => {
       { step: "Successfully Reached", value: parseInt(successRes?.count || "0") }
     ];
 
+    // Gamification: Live Feed (user_logs)
+    const recentLogs = await query<any>(`
+      SELECT action, status, created_at as date 
+      FROM user_logs 
+      WHERE user_id = $1 
+      ORDER BY created_at DESC 
+      LIMIT 5
+    `, [userId]);
+
+    // Gamification: Outreach Streak
+    const logDates = await query<{ activity_date: string }>(`
+      SELECT DISTINCT (created_at AT TIME ZONE 'UTC')::date as activity_date
+      FROM user_logs
+      WHERE user_id = $1
+      ORDER BY activity_date DESC
+    `, [userId]);
+
+    let streak = 0;
+    if (logDates.length > 0) {
+      const today = new Date();
+      today.setUTCHours(0,0,0,0);
+      let currentDate = new Date(logDates[0].activity_date);
+      currentDate.setUTCHours(0,0,0,0);
+
+      const diffTime = Math.abs(today.getTime() - currentDate.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+      
+      if (diffDays <= 1) {
+        streak = 1;
+        for (let i = 1; i < logDates.length; i++) {
+          const nextDate = new Date(logDates[i].activity_date);
+          nextDate.setUTCHours(0,0,0,0);
+          const prevDate = new Date(logDates[i-1].activity_date);
+          prevDate.setUTCHours(0,0,0,0);
+          const dayDiff = Math.ceil(Math.abs(prevDate.getTime() - nextDate.getTime()) / (1000 * 60 * 60 * 24));
+          if (dayDiff === 1) streak++;
+          else break;
+        }
+      }
+    }
+
+    // Gamification: Health Score & Trend
+    const last7DaysRes = await queryOne<{ total: string, success: string }>(`
+      SELECT COUNT(*) as total, COUNT(*) FILTER (WHERE email_completed = 'Yes' OR whatsapp_completed = 'Yes' OR instagram_completed = 'Yes') as success
+      FROM contacts WHERE user_id = $1 AND updated_at >= NOW() - INTERVAL '7 days'
+    `, [userId]);
+    const prev7DaysRes = await queryOne<{ total: string, success: string }>(`
+      SELECT COUNT(*) as total, COUNT(*) FILTER (WHERE email_completed = 'Yes' OR whatsapp_completed = 'Yes' OR instagram_completed = 'Yes') as success
+      FROM contacts WHERE user_id = $1 AND updated_at >= NOW() - INTERVAL '14 days' AND updated_at < NOW() - INTERVAL '7 days'
+    `, [userId]);
+
+    const l7Total = parseInt(last7DaysRes?.total || "0");
+    const l7Success = parseInt(last7DaysRes?.success || "0");
+    const p7Total = parseInt(prev7DaysRes?.total || "0");
+    const p7Success = parseInt(prev7DaysRes?.success || "0");
+    const l7Rate = l7Total > 0 ? (l7Success / l7Total) * 100 : 0;
+    const p7Rate = p7Total > 0 ? (p7Success / p7Total) * 100 : 0;
+    let trend = 0;
+    if (p7Total === 0 && l7Total > 0) trend = 100;
+    else if (p7Total > 0) trend = Math.round(l7Rate - p7Rate);
+
+    const health = {
+      score: parseInt(totalRes?.count || "0") > 0 ? Math.round((parseInt(successRes?.count || "0") / parseInt(totalRes?.count || "0")) * 100) : 0,
+      trend: trend
+    };
+
     res.json({
       total: parseInt(totalRes?.count || "0"),
       success: parseInt(successRes?.count || "0"),
@@ -535,7 +601,14 @@ export const handleGetAnalyticsStats: RequestHandler = async (req, res) => {
         instagram: r.instagram_completed,
         date: r.date ? new Date(r.date).toLocaleString() : "Recently"
       })),
-      funnel
+      funnel,
+      streak,
+      health,
+      liveFeed: recentLogs.map(l => ({
+        action: l.action,
+        status: l.status,
+        date: l.date
+      }))
     });
   } catch (err: any) {
     console.error("[Analytics Stats] Error:", err);

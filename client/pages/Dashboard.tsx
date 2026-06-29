@@ -23,6 +23,7 @@ import {
   MessageCircle,
   Instagram,
   CheckCircle2,
+  Lock,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn, getOrCreateUserId } from "@/lib/utils";
@@ -34,7 +35,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const userId = getOrCreateUserId();
 
-  const { data: statsData } = useQuery({
+  const { data: statsData, isLoading: isStatsLoading } = useQuery({
     queryKey: ["analytics-stats"],
     queryFn: async () => {
       const res = await fetch(`/api/analytics/stats?userId=${userId}`);
@@ -44,6 +45,20 @@ export default function Dashboard() {
   });
 
   const recentContacts = statsData?.recent || [];
+  
+  const healthScore = statsData?.health?.score ?? 0;
+  const healthTrend = statsData?.health?.trend ?? 0;
+  const liveFeed = statsData?.liveFeed || [];
+  const hasGamificationData = statsData?.total > 0 || liveFeed.length > 0;
+
+  const getActionIcon = (action: string) => {
+    const l = (action || "").toLowerCase();
+    if (l.includes("email")) return { icon: Mail, color: "text-blue-500", bg: "bg-blue-500/10" };
+    if (l.includes("whatsapp")) return { icon: MessageCircle, color: "text-emerald-500", bg: "bg-emerald-500/10" };
+    if (l.includes("instagram")) return { icon: Instagram, color: "text-pink-500", bg: "bg-pink-500/10" };
+    return { icon: CheckCircle2, color: "text-primary", bg: "bg-primary/10" };
+  };
+
 
   const stats = [
     {
@@ -97,35 +112,53 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Gamified Health Score & Live Feed */}
+            {/* Gamification Health Score & Live Feed */}
             <div className="hidden xl:flex flex-col gap-4 relative w-[400px]">
                <div className="absolute inset-0 bg-primary/20 rounded-[3rem] rotate-6 blur-3xl opacity-30 animate-pulse" />
                
+               {/* Locked State Overlay */}
+               {!hasGamificationData && !isStatsLoading && (
+                 <div className="absolute inset-0 z-20 backdrop-blur-md bg-background/50 rounded-[3rem] flex items-center justify-center border border-border/50">
+                    <div className="text-center p-6 space-y-2">
+                       <Lock className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-50" />
+                       <p className="text-xs font-black uppercase tracking-widest text-foreground">Awaiting Data</p>
+                       <p className="text-[10px] text-muted-foreground max-w-[200px]">Start reaching out to contacts to unlock health trends and live feed.</p>
+                    </div>
+                 </div>
+               )}
+
                {/* Health Score Box */}
-               <div className="glass-card relative w-full rounded-[2.5rem] p-6 border-border shadow-2xl flex items-center gap-6 group hover:border-emerald-500/30 transition-all duration-500">
+               <div className={cn("glass-card relative w-full rounded-[2.5rem] p-6 border-border shadow-2xl flex items-center gap-6 group transition-all duration-500", hasGamificationData ? "hover:border-emerald-500/30" : "opacity-30")}>
                   <div className="relative w-24 h-24 flex items-center justify-center shrink-0">
                     <svg className="absolute inset-0 w-full h-full transform -rotate-90">
                       <circle cx="48" cy="48" r="40" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-muted/20" />
-                      <circle cx="48" cy="48" r="40" stroke="currentColor" strokeWidth="8" fill="transparent" strokeDasharray="251.2" strokeDashoffset={251.2 * (1 - 0.92)} className="text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.8)] transition-all duration-1000 ease-out" />
+                      <circle cx="48" cy="48" r="40" stroke="currentColor" strokeWidth="8" fill="transparent" strokeDasharray="251.2" strokeDashoffset={251.2 * (1 - (healthScore / 100))} className={cn(healthScore > 50 ? "text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]" : "text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.8)]", "transition-all duration-1000 ease-out")} />
                     </svg>
-                    <span className="text-3xl font-black text-foreground group-hover:scale-110 transition-transform">92</span>
+                    <span className="text-3xl font-black text-foreground group-hover:scale-110 transition-transform">{healthScore}</span>
                   </div>
                   <div>
                     <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1">Outreach Health</h3>
-                    <p className="text-sm font-medium text-foreground/80 leading-tight">Your campaigns are performing optimally. Open rates are up <span className="text-emerald-500 font-bold">14%</span> today.</p>
+                    <p className="text-sm font-medium text-foreground/80 leading-tight">
+                      {healthScore === 0 ? "No outreach attempted yet." : `Your campaigns are performing optimally. Success rate trend is `}
+                      {healthScore > 0 && <span className={healthTrend >= 0 ? "text-emerald-500 font-bold" : "text-rose-500 font-bold"}>
+                        {healthTrend > 0 ? "+" : ""}{healthTrend}%
+                      </span>}
+                    </p>
                   </div>
                </div>
 
                {/* Live Activity Feed */}
-               <div className="glass-card relative w-full rounded-[2.5rem] p-6 border-border shadow-2xl space-y-4 overflow-hidden h-[200px]">
+               <div className={cn("glass-card relative w-full rounded-[2.5rem] p-6 border-border shadow-2xl space-y-4 overflow-hidden h-[200px]", !hasGamificationData && "opacity-30")}>
                   <div className="flex items-center justify-between">
                     <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Live Feed</h3>
                     <div className="flex items-center gap-2">
                       <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        <span className={cn("absolute inline-flex h-full w-full rounded-full opacity-75", hasGamificationData ? "animate-ping bg-emerald-400" : "bg-muted-foreground")}></span>
+                        <span className={cn("relative inline-flex rounded-full h-2 w-2", hasGamificationData ? "bg-emerald-500" : "bg-muted-foreground")}></span>
                       </span>
-                      <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest">Active</span>
+                      <span className={cn("text-[9px] font-bold uppercase tracking-widest", hasGamificationData ? "text-emerald-500" : "text-muted-foreground")}>
+                        {hasGamificationData ? "Active" : "Idle"}
+                      </span>
                     </div>
                   </div>
                   <div className="space-y-3 relative">
@@ -133,21 +166,25 @@ export default function Dashboard() {
                     <div className="absolute top-0 left-0 w-full h-4 bg-gradient-to-b from-card/80 to-transparent z-10" />
                     <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-card/80 to-transparent z-10" />
                     
-                    <div className="animate-[scroll_10s_linear_infinite] space-y-3 hover:[animation-play-state:paused]">
-                      {[
-                        { text: "Email to Sarah Jenkins delivered", icon: Mail, color: "text-blue-500", bg: "bg-blue-500/10" },
-                        { text: "WhatsApp: Client responded", icon: MessageCircle, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-                        { text: "Instagram sync completed", icon: Instagram, color: "text-pink-500", bg: "bg-pink-500/10" },
-                        { text: "Template 'Cold Pitch' saved", icon: CheckCircle2, color: "text-primary", bg: "bg-primary/10" },
-                      ].map((activity, i) => (
-                        <div key={i} className="flex items-center gap-3 p-2 rounded-xl hover:bg-muted/30 transition-colors cursor-default">
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${activity.bg}`}>
-                            <activity.icon className={`w-4 h-4 ${activity.color}`} />
+                    <div className={cn("space-y-3 hover:[animation-play-state:paused]", liveFeed.length > 3 && "animate-[scroll_10s_linear_infinite]")}>
+                      {liveFeed.map((activity: any, i: number) => {
+                        const style = getActionIcon(activity.action);
+                        const Icon = style.icon;
+                        return (
+                          <div key={i} className="flex items-center gap-3 p-2 rounded-xl hover:bg-muted/30 transition-colors cursor-default">
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${style.bg}`}>
+                              <Icon className={`w-4 h-4 ${style.color}`} />
+                            </div>
+                            <p className="text-xs font-bold text-foreground/80 truncate" title={activity.action}>{activity.action}</p>
+                            <span className="text-[9px] text-muted-foreground ml-auto font-medium shrink-0">
+                              {activity.date ? new Date(activity.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Just now"}
+                            </span>
                           </div>
-                          <p className="text-xs font-bold text-foreground/80 truncate">{activity.text}</p>
-                          <span className="text-[9px] text-muted-foreground ml-auto font-medium">Just now</span>
-                        </div>
-                      ))}
+                        );
+                      })}
+                      {liveFeed.length === 0 && hasGamificationData && (
+                        <p className="text-xs text-muted-foreground text-center py-4">No recent activity</p>
+                      )}
                     </div>
                   </div>
                </div>
