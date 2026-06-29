@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       extractBtn.disabled = true;
       statusEl.textContent = 'Searching for session...';
-      statusEl.style.color = '#e4e4e7';
+      statusEl.style.color = 'var(--foreground)';
 
       // Query the sessionid cookie from instagram.com
       const cookies = await chrome.cookies.getAll({ domain: 'instagram.com', name: 'sessionid' });
@@ -18,26 +18,30 @@ document.addEventListener('DOMContentLoaded', () => {
         await navigator.clipboard.writeText(sessionId);
         
         statusEl.textContent = 'COPIED TO CLIPBOARD!';
-        statusEl.style.color = '#10b981'; // Emerald 500
+        statusEl.style.color = 'hsl(142, 71%, 45%)'; // Success Green
         
         // Change button text temporarily
         const originalText = extractBtn.textContent;
         extractBtn.textContent = 'Success!';
-        extractBtn.style.background = '#10b981';
+        extractBtn.style.background = 'hsl(142, 71%, 45%)';
+        extractBtn.style.color = 'white';
+        extractBtn.style.boxShadow = '0 4px 14px 0 hsla(142, 71%, 45%, 0.3)';
         
         setTimeout(() => {
           extractBtn.textContent = originalText;
           extractBtn.style.background = '';
+          extractBtn.style.color = '';
+          extractBtn.style.boxShadow = '';
           extractBtn.disabled = false;
         }, 3000);
       } else {
         statusEl.textContent = 'Not found. Are you logged in to Instagram?';
-        statusEl.style.color = '#ef4444'; // Red 500
+        statusEl.style.color = 'hsl(0, 84%, 60%)'; // Destructive Red
         extractBtn.disabled = false;
       }
     } catch (err) {
       statusEl.textContent = 'Error: ' + err.message;
-      statusEl.style.color = '#ef4444';
+      statusEl.style.color = 'hsl(0, 84%, 60%)';
       extractBtn.disabled = false;
     }
   });
