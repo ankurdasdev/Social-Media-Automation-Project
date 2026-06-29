@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Mail, MessageCircle, Instagram, Zap, ArrowRight, ShieldCheck, ChevronRight, Sun, Moon } from "lucide-react";
+import { Mail, MessageCircle, Instagram, Zap, ArrowRight, ShieldCheck, ChevronRight, Sun, Moon, BarChart3 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -38,7 +38,7 @@ export default function LandingPage() {
         </Link>
         <div className="flex items-center gap-4 md:gap-6">
           <Link to="/how-it-works" className="hidden md:flex text-xs font-bold text-muted-foreground hover:text-foreground transition-colors">
-            How It Works
+            How CastHub Works
           </Link>
           <Link to="/contact" className="hidden md:flex text-xs font-bold text-muted-foreground hover:text-foreground transition-colors">
             Contact Us
@@ -101,7 +101,7 @@ export default function LandingPage() {
             {hasToken ? "Go To Dashboard" : "Start For Free"} <ArrowRight className="w-4 h-4" />
           </Link>
           <Link to="/how-it-works" className="w-full sm:w-auto flex items-center justify-center gap-2 h-14 px-10 rounded-2xl border border-white/10 hover:bg-white/5 font-bold text-sm transition-all active:scale-[0.98]">
-            Learn How It Works
+            Learn How CastHub Works
           </Link>
         </div>
         </motion.div>
@@ -141,107 +141,118 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* How it Works Section */}
-      <div id="how-it-works" className="max-w-5xl mx-auto px-6 py-32 space-y-20">
+      {/* Value Proposition Bento Grid */}
+      <div className="max-w-6xl mx-auto px-6 py-32 space-y-16">
         <div className="text-center space-y-4">
-          <h2 className="text-4xl md:text-5xl font-black tracking-tighter">How CastHub Works</h2>
-          <p className="text-muted-foreground font-medium max-w-xl mx-auto">Three simple steps to put your casting outreach on autopilot.</p>
+          <h2 className="text-4xl md:text-5xl font-black tracking-tighter">Why Choose CastHub?</h2>
+          <p className="text-muted-foreground font-medium max-w-xl mx-auto">Engineered for performance, designed for humans.</p>
         </div>
 
-        <div className="grid gap-12 md:gap-24">
-          {/* Step 1 */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Bento Item 1 */}
           <motion.div 
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: "-20%" }}
-            transition={{ duration: 0.8 }}
-            className="flex flex-col md:flex-row items-center gap-10"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-10%" }}
+            className="md:col-span-2 relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary/10 to-transparent border border-primary/20 p-10 group"
           >
-            <div className="flex-1 space-y-6">
-              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 font-black text-xl">1</div>
-              <h3 className="text-3xl font-black tracking-tight">Connect Your Channels</h3>
-              <p className="text-lg text-muted-foreground font-medium leading-relaxed">
-                Securely link your Gmail, WhatsApp, and Instagram accounts directly within our integrations center. We handle the session management so you can focus on outreach.
-              </p>
-              <ul className="space-y-3">
-                {["OAuth 2.0 Security", "QR Code session sync", "Official API support"].map((item, i) => (
-                  <li key={i} className="flex items-center gap-3 text-sm font-bold text-foreground">
-                    <ShieldCheck className="w-4 h-4 text-primary" /> {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="flex-1 w-full relative">
-              <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 to-blue-500/20 rounded-3xl blur-2xl opacity-50" />
-              <div className="relative aspect-video rounded-3xl bg-[#0a0a0a] border border-white/10 shadow-2xl overflow-hidden flex items-center justify-center">
-                <div className="flex gap-4">
-                  <div className="w-16 h-16 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center animate-pulse"><Mail className="w-8 h-8 text-blue-400" /></div>
-                  <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center animate-pulse" style={{animationDelay: '0.2s'}}><MessageCircle className="w-8 h-8 text-emerald-400" /></div>
-                  <div className="w-16 h-16 rounded-2xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center animate-pulse" style={{animationDelay: '0.4s'}}><Instagram className="w-8 h-8 text-pink-400" /></div>
-                </div>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-[100px] -z-10 group-hover:bg-primary/30 transition-colors" />
+            <h3 className="text-3xl font-black tracking-tight mb-4">Intelligent Personalization</h3>
+            <p className="text-lg text-muted-foreground font-medium max-w-lg mb-8">
+              Don't just blast messages. Use dynamic variables like <code className="text-primary bg-primary/10 px-2 py-0.5 rounded-md">{"{first_name}"}</code> and <code className="text-primary bg-primary/10 px-2 py-0.5 rounded-md">{"{company}"}</code> to ensure every single outreach feels uniquely handcrafted.
+            </p>
+            <div className="flex gap-4">
+              <div className="flex items-center gap-2 bg-background/50 border border-border/50 rounded-xl px-4 py-2 font-mono text-sm shadow-sm">
+                Hey {"{first_name}"}, loved your work at {"{company}"}!
               </div>
             </div>
           </motion.div>
 
-          {/* Step 2 */}
+          {/* Bento Item 2 */}
           <motion.div 
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: "-20%" }}
-            transition={{ duration: 0.8 }}
-            className="flex flex-col md:flex-row-reverse items-center gap-10"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-10%" }}
+            transition={{ delay: 0.1 }}
+            className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-bl from-blue-500/10 to-transparent border border-blue-500/20 p-10 group flex flex-col justify-between"
           >
-            <div className="flex-1 space-y-6">
-              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 font-black text-xl">2</div>
-              <h3 className="text-3xl font-black tracking-tight">Build Dynamic Templates</h3>
-              <p className="text-lg text-muted-foreground font-medium leading-relaxed">
-                Create reusable templates for emails and messages. Use smart variables like <code className="text-primary bg-primary/10 px-2 py-0.5 rounded-md">{"{name}"}</code> and <code className="text-primary bg-primary/10 px-2 py-0.5 rounded-md">{"{role}"}</code> to personalize every single message at scale.
-              </p>
-              <Link to="/signup" className="inline-flex items-center gap-2 text-primary font-bold hover:gap-3 transition-all">
-                Try building a template <ChevronRight className="w-4 h-4" />
-              </Link>
+            <div className="absolute bottom-0 left-0 w-40 h-40 bg-blue-500/20 rounded-full blur-[80px] -z-10 group-hover:bg-blue-500/30 transition-colors" />
+            <div>
+              <ShieldCheck className="w-12 h-12 text-blue-500 mb-6" />
+              <h3 className="text-2xl font-black tracking-tight mb-3">Bypass Spam Filters</h3>
             </div>
-            <div className="flex-1 w-full relative">
-              <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/20 to-primary/20 rounded-3xl blur-2xl opacity-50" />
-              <div className="relative aspect-video rounded-3xl bg-[#0a0a0a] border border-white/10 shadow-2xl p-6 flex flex-col justify-center space-y-4">
-                <div className="h-6 w-1/3 bg-white/5 rounded-lg" />
-                <div className="h-4 w-3/4 bg-white/5 rounded-lg" />
-                <div className="h-4 w-5/6 bg-white/5 rounded-lg" />
-                <div className="h-4 w-2/3 bg-white/5 rounded-lg" />
-                <div className="flex gap-2 mt-4">
-                  <div className="h-6 w-20 bg-primary/20 rounded-md" />
-                  <div className="h-6 w-24 bg-primary/20 rounded-md" />
-                </div>
-              </div>
-            </div>
+            <p className="text-muted-foreground font-medium">
+              We utilize residential IP routing and official APIs to ensure your accounts stay perfectly safe and messages land in the inbox.
+            </p>
           </motion.div>
 
-          {/* Step 3 */}
+          {/* Bento Item 3 */}
           <motion.div 
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: "-20%" }}
-            transition={{ duration: 0.8 }}
-            className="flex flex-col md:flex-row items-center gap-10"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-10%" }}
+            transition={{ delay: 0.2 }}
+            className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-tr from-emerald-500/10 to-transparent border border-emerald-500/20 p-10 group flex flex-col justify-between"
           >
-            <div className="flex-1 space-y-6">
-              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 font-black text-xl">3</div>
-              <h3 className="text-3xl font-black tracking-tight">Launch & Track</h3>
-              <p className="text-lg text-muted-foreground font-medium leading-relaxed">
-                Import your contacts, select your channels, and hit launch. CastHub's engine will queue and deliver your messages while you track success rates and responses in real-time.
-              </p>
+            <div className="absolute top-0 left-0 w-40 h-40 bg-emerald-500/20 rounded-full blur-[80px] -z-10 group-hover:bg-emerald-500/30 transition-colors" />
+            <div>
+              <BarChart3 className="w-12 h-12 text-emerald-500 mb-6" />
+              <h3 className="text-2xl font-black tracking-tight mb-3">Unified Analytics</h3>
             </div>
-            <div className="flex-1 w-full relative">
-              <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/20 to-primary/20 rounded-3xl blur-2xl opacity-50" />
-              <div className="relative aspect-video rounded-3xl bg-[#0a0a0a] border border-white/10 shadow-2xl flex items-center justify-center">
-                <div className="relative w-32 h-32">
-                  <div className="absolute inset-0 border-4 border-white/10 rounded-full" />
-                  <div className="absolute inset-0 border-4 border-primary rounded-full border-t-transparent animate-spin" />
-                  <div className="absolute inset-0 flex items-center justify-center text-2xl font-black">84%</div>
-                </div>
-              </div>
-            </div>
+            <p className="text-muted-foreground font-medium">
+              Track open rates, replies, and delivery status across all 3 channels simultaneously from a single, gorgeous dashboard.
+            </p>
           </motion.div>
+
+          {/* Bento Item 4 */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-10%" }}
+            transition={{ delay: 0.3 }}
+            className="md:col-span-2 relative overflow-hidden rounded-[2.5rem] bg-[#0a0a0a] border border-white/10 p-10 flex flex-col md:flex-row items-center gap-10"
+          >
+             <div className="flex-1">
+               <h3 className="text-3xl font-black tracking-tight mb-4">Scale Without Limits</h3>
+               <p className="text-lg text-muted-foreground font-medium">
+                 Whether you are reaching out to 10 casting directors or 10,000 influencers, our robust infrastructure handles the heavy lifting while you sleep.
+               </p>
+             </div>
+             <div className="flex-1 w-full flex justify-center">
+               <div className="relative w-48 h-48 rounded-full border-[8px] border-primary/20 flex items-center justify-center">
+                 <div className="absolute inset-0 rounded-full border-[8px] border-primary border-t-transparent animate-spin" />
+                 <div className="text-4xl font-black">∞</div>
+               </div>
+             </div>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Social Proof / Metrics */}
+      <div className="border-y border-border/50 bg-background/50 backdrop-blur-md relative overflow-hidden">
+        <div className="absolute inset-0 bg-primary/5 pattern-dots pattern-primary/20 pattern-bg-transparent pattern-size-4 opacity-50" />
+        <div className="max-w-6xl mx-auto px-6 py-20 relative z-10 grid grid-cols-2 md:grid-cols-4 gap-10 text-center">
+          {[
+            { value: "30+", label: "Hours Saved / Wk" },
+            { value: "99%", label: "Delivery Rate" },
+            { value: "10x", label: "Faster Outreach" },
+            { value: "24/7", label: "Automated Casting" },
+          ].map((metric, i) => (
+            <motion.div 
+              key={i}
+              initial={{ opacity: 0, scale: 0.5 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true, margin: "-10%" }}
+              transition={{ delay: i * 0.1, type: "spring" }}
+            >
+              <div className="text-4xl md:text-5xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-foreground to-foreground/50 mb-2">
+                {metric.value}
+              </div>
+              <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                {metric.label}
+              </div>
+            </motion.div>
+          ))}
         </div>
       </div>
 
