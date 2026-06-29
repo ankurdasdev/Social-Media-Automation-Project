@@ -249,44 +249,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
         <div className="flex flex-col min-h-full w-full relative z-10">
 
           {/* ── Logo — clicks go to landing page ── */}
-          <Link to="/" className="inline-block mb-6 relative group/logo px-2">
+          <Link to="/" className="inline-block mb-12 relative group/logo px-2">
             <CastHubLogo size="md" />
           </Link>
-
-          {/* ── User Section (Moved to Top) ── */}
-          <div className="flex items-center justify-between gap-3 p-3 mb-8 bg-muted/20 border border-border/30 rounded-xl">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary/30 to-amber-500/20 border border-primary/20 flex items-center justify-center shrink-0 overflow-hidden">
-                {userProfile?.profile_picture ? (
-                  <img src={userProfile.profile_picture} alt="Profile" className="w-full h-full object-cover" />
-                ) : (
-                  <User className="w-4 h-4 text-primary" />
-                )}
-              </div>
-              <div className="flex flex-col min-w-0">
-                <span className="text-xs font-bold truncate">{userProfile?.name || currentUser?.name || "Anonymous User"}</span>
-                <span className="text-[9px] font-medium text-muted-foreground truncate uppercase tracking-wide">{(userProfile?.email || currentUser?.email)?.split('@')[0]}</span>
-              </div>
-            </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-muted/50 shrink-0">
-                  <SlidersHorizontal className="w-3.5 h-3.5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" side="right" className="glass-card w-48 p-2 rounded-2xl">
-                <DropdownMenuItem asChild className="rounded-xl gap-2 cursor-pointer font-bold mb-1 hover:bg-muted/50">
-                  <Link to="/profile" className="flex items-center gap-2 w-full">
-                    <User className="w-4 h-4" /> View Profile
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-border/30 mx-2" />
-                <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive hover:bg-destructive/10 rounded-xl gap-2 cursor-pointer font-bold">
-                  <LogOut className="w-4 h-4" /> Logout System
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
 
           {/* ── Navigation (no label) ── */}
           <nav className="flex-1 space-y-1">
@@ -412,6 +377,36 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 </div>
               </div>
             </button>
+
+            {/* ── User Profile Dropdown ── */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 hover:bg-muted/50 p-1.5 pl-2 rounded-2xl transition-colors outline-none ml-2 border border-transparent hover:border-border/50">
+                  <div className="hidden md:flex flex-col text-right mr-1">
+                    <span className="text-xs font-bold leading-tight">{userProfile?.name || currentUser?.name || "User"}</span>
+                    <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-widest">{(userProfile?.email || currentUser?.email)?.split('@')[0]}</span>
+                  </div>
+                  <div className="w-9 h-9 rounded-xl overflow-hidden shrink-0 bg-primary/20 flex items-center justify-center">
+                    {userProfile?.profile_picture ? (
+                      <img src={userProfile.profile_picture} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      <User className="w-4 h-4 text-primary" />
+                    )}
+                  </div>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 p-2 rounded-2xl glass-card mt-2">
+                <DropdownMenuItem asChild className="rounded-xl gap-2 cursor-pointer font-bold mb-1 hover:bg-muted/50 p-3">
+                  <Link to="/profile" className="flex items-center gap-2 w-full">
+                    <User className="w-4 h-4" /> Edit Profile
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-border/30 mx-2" />
+                <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive hover:bg-destructive/10 rounded-xl gap-2 cursor-pointer font-bold p-3">
+                  <LogOut className="w-4 h-4" /> Logout System
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             <button
               className="md:hidden w-10 h-10 rounded-xl bg-muted/30 border border-border/30 flex items-center justify-center hover:bg-muted/50 transition-all ml-1"

@@ -10,8 +10,23 @@ import {
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Slider } from "@/components/ui/slider";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { getCurrentUser, setAuthToken } from "@/lib/utils";
+import { getCurrentUser, setAuthToken, getAuthToken, getOrCreateUserId } from "@/lib/utils";
 import { 
   User, 
   Mail, 
@@ -33,7 +48,7 @@ import {
 import { LocationPicker } from "@/components/ui/LocationPicker";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-import { getOrCreateUserId } from "@/lib/utils";
+import { format } from "date-fns";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -69,8 +84,39 @@ export default function Profile() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [profilePicture, setProfilePicture] = useState("");
   
+  const [isImageEditorOpen, setIsImageEditorOpen] = useState(false);
+  const [selectedFileBase64, setSelectedFileBase64] = useState("");
+  const [brightness, setBrightness] = useState(100);
+  const [contrast, setContrast] = useState(100);
+  const [saturation, setSaturation] = useState(100);
+  
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
+
+  const getAvatarColors = (gen: string) => {
+    if (gen?.toLowerCase() === "male") return "bg-blue-100 text-blue-500 dark:bg-blue-900/30 dark:text-blue-400";
+    if (gen?.toLowerCase() === "female") return "bg-pink-100 text-pink-500 dark:bg-pink-900/30 dark:text-pink-400";
+    return "bg-primary/20 text-primary";
+  };
+
+  const applyImageEdits = () => {
+    if (!selectedFileBase64) return;
+    const canvas = document.createElement("canvas");
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
+        ctx.drawImage(img, 0, 0);
+        setProfilePicture(canvas.toDataURL("image/png"));
+        setIsImageEditorOpen(false);
+      }
+    };
+    img.src = selectedFileBase64;
+  };
 
   const deleteAccountMutation = useMutation({
     mutationFn: async () => {
@@ -78,7 +124,7 @@ export default function Profile() {
         method: "DELETE",
         headers: { 
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("casthub_token")}`
+          Authorization: `Bearer ${getAuthToken()}`
         },
         body: JSON.stringify({ userId: user?.userId }),
       });
@@ -89,7 +135,7 @@ export default function Profile() {
       return res.json();
     },
     onSuccess: () => {
-      localStorage.removeItem("casthub_token");
+      localStorage.removeItem("casthub_auth_token");
       localStorage.removeItem("casthub_user_id");
       toast.success("Account permanently deleted");
       setTimeout(() => {
@@ -105,7 +151,7 @@ export default function Profile() {
     queryKey: ["userProfile"],
     queryFn: async () => {
       const res = await fetch("/api/auth/me", {
-        headers: { Authorization: `Bearer ${localStorage.getItem("casthub_token")}` }
+        headers: { Authorization: `Bearer ${getAuthToken()}` }
       });
       if (!res.ok) throw new Error("Failed to load user profile");
       const data = await res.json();
@@ -256,23 +302,48 @@ export default function Profile() {
             <Card className="bg-card/40 border-border/50 overflow-hidden relative group">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10 opacity-50" />
                 <CardContent className="pt-10 pb-8 flex flex-col items-center relative z-10">
-                    <div 
-                        className="w-32 h-32 rounded-[2.5rem] bg-gradient-to-tr from-primary via-primary/80 to-secondary p-1 shadow-2xl shadow-primary/20 mb-6 group-hover:scale-105 transition-all duration-500 cursor-pointer relative"
-                        onClick={() => document.getElementById('profile-upload')?.click()}
-                    >
-                        <div className="w-full h-full rounded-[2.3rem] bg-background flex items-center justify-center overflow-hidden">
-                            {profilePicture ? (
-                                <img src={profilePicture} className="w-full h-full object-cover" alt="Profile" />
-                            ) : (
-                                <User className="w-14 h-14 text-primary" />
-                            )}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <div className="w-32 h-32 rounded-[2.5rem] bg-gradient-to-tr from-primary via-primary/80 to-secondary p-1 shadow-2xl shadow-primary/20 mb-6 group-hover:scale-105 transition-all duration-500 cursor-pointer relative">
+                            <div className={`w-full h-full rounded-[2.3rem] flex items-center justify-center overflow-hidden ${profilePicture ? "bg-background" : getAvatarColors(gender)}`}>
+                                {profilePicture ? (
+                                    <img src={profilePicture} className="w-full h-full object-cover" alt="Profile" />
+                                ) : (
+                                    <User className="w-14 h-14" />
+                                )}
+                            </div>
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-[2.3rem] flex items-center justify-center m-1">
+                                <span className="text-white text-xs font-bold uppercase tracking-widest">Options</span>
+                            </div>
                         </div>
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-[2.3rem] flex items-center justify-center m-1">
-                            <span className="text-white text-xs font-bold uppercase tracking-widest">Change</span>
-                        </div>
-                        <input 
-                            type="file" 
-                            id="profile-upload" 
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="glass-card rounded-2xl w-48 mt-2 p-2">
+                         <DropdownMenuItem className="font-bold cursor-pointer rounded-xl p-3" onClick={() => document.getElementById('profile-upload')?.click()}>
+                            Upload New Photo
+                         </DropdownMenuItem>
+                         {profilePicture && (
+                           <>
+                             <DropdownMenuItem className="font-bold cursor-pointer rounded-xl p-3" onClick={() => {
+                                 setSelectedFileBase64(profilePicture);
+                                 setBrightness(100);
+                                 setContrast(100);
+                                 setSaturation(100);
+                                 setIsImageEditorOpen(true);
+                             }}>
+                                Edit Photo
+                             </DropdownMenuItem>
+                             <DropdownMenuSeparator className="bg-border/30 mx-2" />
+                             <DropdownMenuItem className="font-bold cursor-pointer text-destructive focus:text-destructive hover:bg-destructive/10 rounded-xl p-3" onClick={() => setProfilePicture("")}>
+                                Remove Photo
+                             </DropdownMenuItem>
+                           </>
+                         )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    <input 
+                        type="file" 
+                        id="profile-upload" 
                             className="hidden" 
                             accept="image/*"
                             onChange={(e) => {
@@ -284,7 +355,11 @@ export default function Profile() {
                                     }
                                     const reader = new FileReader();
                                     reader.onloadend = () => {
-                                        setProfilePicture(reader.result as string);
+                                        setSelectedFileBase64(reader.result as string);
+                                        setBrightness(100);
+                                        setContrast(100);
+                                        setSaturation(100);
+                                        setIsImageEditorOpen(true);
                                     };
                                     reader.readAsDataURL(file);
                                 }
@@ -654,6 +729,45 @@ export default function Profile() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={isImageEditorOpen} onOpenChange={setIsImageEditorOpen}>
+        <DialogContent className="glass-card rounded-3xl max-w-sm p-8 border-primary/20 z-[9999]">
+          <DialogHeader>
+            <DialogTitle className="font-black text-xl tracking-tight">Image Editor</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-8 py-4">
+            <div className="w-full aspect-square rounded-[2rem] overflow-hidden bg-black/5 flex items-center justify-center relative shadow-inner">
+              {selectedFileBase64 && (
+                 <img 
+                   src={selectedFileBase64} 
+                   alt="Preview"
+                   className="w-full h-full object-cover" 
+                   style={{ filter: `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)` }}
+                 />
+              )}
+            </div>
+            
+            <div className="space-y-6">
+               <div className="space-y-3">
+                 <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground"><label>Brightness</label><span className="text-primary">{brightness}%</span></div>
+                 <Slider value={[brightness]} onValueChange={(v) => setBrightness(v[0])} min={50} max={150} step={1} className="py-1" />
+               </div>
+               <div className="space-y-3">
+                 <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground"><label>Contrast</label><span className="text-primary">{contrast}%</span></div>
+                 <Slider value={[contrast]} onValueChange={(v) => setContrast(v[0])} min={50} max={150} step={1} className="py-1" />
+               </div>
+               <div className="space-y-3">
+                 <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground"><label>Saturation</label><span className="text-primary">{saturation}%</span></div>
+                 <Slider value={[saturation]} onValueChange={(v) => setSaturation(v[0])} min={0} max={200} step={1} className="py-1" />
+               </div>
+            </div>
+          </div>
+          <DialogFooter className="gap-3 sm:justify-center">
+             <Button variant="ghost" onClick={() => setIsImageEditorOpen(false)} className="h-12 rounded-xl font-bold px-6">Cancel</Button>
+             <Button onClick={applyImageEdits} className="h-12 rounded-xl font-black bg-primary text-white hover:bg-primary/90 px-6 shadow-xl shadow-primary/20">Apply Filters</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }
