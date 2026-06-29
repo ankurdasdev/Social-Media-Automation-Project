@@ -523,7 +523,8 @@ export default function Subscription() {
             </p>
           </div>
         </div>
-        )}
+      </div>
+      )}
 
         {/* Payment History */}
         {historyData?.payments && historyData.payments.length > 0 && (
