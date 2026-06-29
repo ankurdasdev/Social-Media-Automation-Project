@@ -69,11 +69,6 @@ export default function Dashboard() {
           
           <div className="relative flex flex-col lg:flex-row items-center gap-16 z-10">
             <div className="flex-1 space-y-8 text-center lg:text-left">
-              <div className="inline-flex items-center gap-3 px-4 py-2 rounded-2xl bg-primary/10 border border-primary/20">
-                <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(139,92,246,1)]" />
-                <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Casting Automation System</span>
-              </div>
-              
               <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black text-foreground tracking-tighter leading-[1.1] text-glow break-words sm:break-normal max-w-full">
                 AUTOMATE YOUR<br className="hidden sm:block" /> CASTING <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-accent">OUTREACH</span>
               </h1>
@@ -249,10 +244,17 @@ export default function Dashboard() {
 
         {/* How CastHub Works */}
         <section className="space-y-10 pt-10">
-           <div className="text-center space-y-3">
-              <h2 className="text-4xl font-black tracking-tighter">How CastHub Works</h2>
-              <p className="text-muted-foreground font-medium max-w-xl mx-auto">Three simple steps to automate your outreach at scale.</p>
-           </div>
+           <Link to="/how-it-works" className="group flex flex-col items-center justify-center text-center space-y-3 cursor-pointer outline-none">
+              <div className="inline-flex items-center gap-4">
+                <h2 className="text-4xl font-black tracking-tighter group-hover:text-primary transition-colors duration-300">How CastHub Works</h2>
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:translate-x-2 transition-all duration-300 shadow-sm group-hover:shadow-primary/30">
+                   <ArrowRight className="w-5 h-5 text-primary group-hover:text-primary-foreground transition-colors" />
+                </div>
+              </div>
+              <p className="text-muted-foreground font-medium max-w-xl mx-auto group-hover:text-foreground/80 transition-colors">
+                Three simple steps to automate your outreach at scale. <span className="text-primary font-bold hidden sm:inline">Click to read the full guide.</span>
+              </p>
+           </Link>
            
            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
               {[

@@ -641,10 +641,6 @@ export default function Contacts() {
           {/* Header Section */}
           <div id="tutorial-contacts-welcome" className="flex flex-col lg:flex-row items-center justify-between gap-8 px-6 pt-4">
             <div className="space-y-3 text-center lg:text-left">
-              <div className="inline-flex items-center gap-2.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[10px] font-black tracking-[0.2em] uppercase">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Contact List :: Active
-              </div>
               <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground uppercase">
                 Contacts
               </h1>

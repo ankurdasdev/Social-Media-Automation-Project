@@ -86,6 +86,24 @@ const PLANS = [
     shadow: "shadow-amber-500/20",
     icon: Crown,
   },
+  {
+    id: "yearly" as const,
+    name: "Yearly",
+    price: 4999,
+    priceLabel: "₹4999",
+    period: "/year",
+    popular: false,
+    features: [
+      "Everything in Monthly",
+      "Priority Concierge Support",
+      "Unlimited Automation",
+      "Save 15% vs Monthly",
+    ],
+    color: "pink",
+    gradient: "from-pink-500 via-purple-500 to-indigo-500",
+    shadow: "shadow-pink-500/20",
+    icon: Sparkles,
+  },
 ];
 
 export default function Subscription() {
@@ -93,7 +111,8 @@ export default function Subscription() {
   const userId = getOrCreateUserId();
   const user = getCurrentUser();
 
-  const [selectedPlan, setSelectedPlan] = useState<"weekly" | "monthly">("monthly");
+  const [selectedPlan, setSelectedPlan] = useState<"weekly" | "monthly" | "yearly">("monthly");
+  const [showUpgradeOptions, setShowUpgradeOptions] = useState(false);
   const [couponCode, setCouponCode] = useState("");
   const [couponApplied, setCouponApplied] = useState<{
     code: string;
@@ -295,25 +314,53 @@ export default function Subscription() {
           </p>
         </div>
 
-        {/* Active Subscription Banner */}
-        {subStatus?.isActive && !subStatus.isTrial && (
-          <div className="flex items-center gap-4 p-6 rounded-3xl bg-gradient-to-r from-emerald-500/10 to-green-500/10 border border-emerald-500/20 animate-in slide-in-from-top">
-            <CheckCircle2 className="w-8 h-8 text-emerald-500 shrink-0" />
-            <div className="flex-1">
-              <p className="text-lg font-black text-emerald-400 uppercase tracking-widest">Active Subscription</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Your <span className="font-bold text-foreground">{subStatus.planType}</span> plan is active until{" "}
-                <span className="font-bold text-foreground">{subStatus.currentPeriodEnd ? format(new Date(subStatus.currentPeriodEnd), "MMMM d, yyyy") : "—"}</span>
-                {subStatus.daysRemaining <= 5 && (
-                  <span className="text-amber-400 font-bold"> ({subStatus.daysRemaining} days remaining)</span>
-                )}
+        {/* Conditional View */}
+        {subStatus?.isActive && !subStatus.isTrial && !showUpgradeOptions ? (
+          <div className="space-y-8">
+            <div className="flex flex-col items-center text-center p-12 rounded-[3rem] bg-gradient-to-b from-primary/10 to-transparent border border-primary/20 shadow-2xl relative overflow-hidden animate-in fade-in zoom-in duration-500">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 blur-[100px] rounded-full -z-10" />
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-secondary/20 blur-[100px] rounded-full -z-10" />
+              
+              <Crown className="w-16 h-16 text-primary mb-6" />
+              <h2 className="text-4xl md:text-5xl font-black tracking-tighter mb-4 text-foreground">
+                Congratulations, you're a <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Pro</span>!
+              </h2>
+              <p className="text-muted-foreground text-lg max-w-xl mx-auto font-medium">
+                Your <span className="font-bold text-foreground uppercase tracking-wider">{subStatus.planType}</span> plan is fully active. You have access to all premium features.
               </p>
+              
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+                <div className="px-6 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 flex items-center gap-3">
+                  <CheckCircle2 className="w-5 h-5" />
+                  <div className="text-left">
+                    <p className="text-[10px] font-black uppercase tracking-widest">Valid Until</p>
+                    <p className="text-sm font-bold">
+                      {subStatus.currentPeriodEnd ? format(new Date(subStatus.currentPeriodEnd), "MMMM d, yyyy") : "—"}
+                    </p>
+                  </div>
+                </div>
+                {subStatus.planType !== "yearly" && (
+                  <Button 
+                    onClick={() => setShowUpgradeOptions(true)}
+                    className="h-[52px] px-8 rounded-2xl bg-foreground text-background hover:bg-foreground/90 font-black tracking-widest uppercase text-xs"
+                  >
+                    Upgrade Plan
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
-        )}
+        ) : (
+          <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8">
+            {showUpgradeOptions && (
+              <div className="flex items-center justify-between max-w-5xl mx-auto">
+                <h3 className="text-xl md:text-2xl font-black uppercase tracking-tight">Select your new plan</h3>
+                <Button variant="ghost" onClick={() => setShowUpgradeOptions(false)} className="rounded-xl font-bold">Cancel Upgrade</Button>
+              </div>
+            )}
 
-        {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            {/* Pricing Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {PLANS.map((p) => {
             const isSelected = selectedPlan === p.id;
             const Icon = p.icon;
@@ -476,6 +523,7 @@ export default function Subscription() {
             </p>
           </div>
         </div>
+        )}
 
         {/* Payment History */}
         {historyData?.payments && historyData.payments.length > 0 && (

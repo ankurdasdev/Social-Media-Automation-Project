@@ -439,12 +439,8 @@ export default function Controller() {
         {/* Header */}
         <div id="tutorial-controller-welcome" className="flex flex-col gap-6">
           <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-black tracking-widest uppercase text-primary">
-              <Radio className="w-3 h-3" />
-              Source Manager
-            </div>
             <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground uppercase">
-              Controller
+              Source Manager
             </h1>
             <p className="text-muted-foreground text-sm font-medium">
               Manage your message sources from WhatsApp and Instagram.
@@ -548,7 +544,7 @@ export default function Controller() {
           <div className="grid grid-cols-1 gap-10">
               <TabsContent value="whatsapp" className="m-0 focus-visible:outline-none">
                 <div className="space-y-8">
-                  <PlatformInfo platform="whatsapp" />
+                  {/* <PlatformInfo platform="whatsapp" /> Removed per user request */}
                   <GroupList
                     groups={filteredGroups}
                     isLoading={isLoading}
@@ -569,7 +565,7 @@ export default function Controller() {
 
               <TabsContent value="instagram" className="m-0 focus-visible:outline-none">
                 <div className="space-y-8">
-                  <PlatformInfo platform="instagram" />
+                  {/* <PlatformInfo platform="instagram" /> Removed per user request */}
                   <GroupList
                     groups={filteredGroups}
                     isLoading={isLoading}

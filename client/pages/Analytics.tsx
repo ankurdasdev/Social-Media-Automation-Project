@@ -504,10 +504,6 @@ export default function Analytics() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-black tracking-widest uppercase text-primary">
-              <BrainCircuit className="w-3 h-3" />
-              AI-Powered Analytics
-            </div>
             <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground uppercase">
               Analytics
             </h1>

@@ -32,6 +32,12 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { LayoutTemplate } from "lucide-react";
 import SubscriptionBanner from "./SubscriptionBanner";
@@ -131,7 +137,7 @@ function ConnectionStatusPill({
     );
   }
 
-  return (
+  const pill = (
     <Link
       to={href}
       className={cn(
@@ -165,6 +171,24 @@ function ConnectionStatusPill({
       )}
     </Link>
   );
+
+  if (isConnected) {
+    return (
+      <TooltipProvider delayDuration={0}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            {pill}
+          </TooltipTrigger>
+          <TooltipContent side="right" sideOffset={10} className="bg-emerald-500 text-white font-bold px-3 py-1.5 border-none shadow-xl shadow-emerald-500/20 text-[11px] flex items-center gap-2 uppercase tracking-widest">
+            <ShieldCheck className="w-3 h-3" />
+            {label} Connected
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
+  return pill;
 }
 
 
