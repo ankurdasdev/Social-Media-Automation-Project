@@ -67,6 +67,7 @@ export default function Profile() {
   const [location, setLocation] = useState<{lat: number; lng: number; address?: string}>({lat: 0, lng: 0});
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [profilePicture, setProfilePicture] = useState("");
   
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
@@ -120,6 +121,7 @@ export default function Profile() {
       if (userProfile.dob) setDob(userProfile.dob);
       if (userProfile.instagram) setInstagram(userProfile.instagram);
       if (userProfile.location) setLocation(userProfile.location);
+      if (userProfile.profile_picture) setProfilePicture(userProfile.profile_picture);
     }
   }, [userProfile]);
 
@@ -202,6 +204,7 @@ export default function Profile() {
       dob,
       instagram,
       location,
+      profile_picture: profilePicture,
       ...(password ? { password } : {})
     });
   };
@@ -253,10 +256,40 @@ export default function Profile() {
             <Card className="bg-card/40 border-border/50 overflow-hidden relative group">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10 opacity-50" />
                 <CardContent className="pt-10 pb-8 flex flex-col items-center relative z-10">
-                    <div className="w-32 h-32 rounded-[2.5rem] bg-gradient-to-tr from-primary via-primary/80 to-secondary p-1 shadow-2xl shadow-primary/20 mb-6 group-hover:scale-105 transition-all duration-500">
-                        <div className="w-full h-full rounded-[2.3rem] bg-background flex items-center justify-center">
-                            <User className="w-14 h-14 text-primary" />
+                    <div 
+                        className="w-32 h-32 rounded-[2.5rem] bg-gradient-to-tr from-primary via-primary/80 to-secondary p-1 shadow-2xl shadow-primary/20 mb-6 group-hover:scale-105 transition-all duration-500 cursor-pointer relative"
+                        onClick={() => document.getElementById('profile-upload')?.click()}
+                    >
+                        <div className="w-full h-full rounded-[2.3rem] bg-background flex items-center justify-center overflow-hidden">
+                            {profilePicture ? (
+                                <img src={profilePicture} className="w-full h-full object-cover" alt="Profile" />
+                            ) : (
+                                <User className="w-14 h-14 text-primary" />
+                            )}
                         </div>
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-[2.3rem] flex items-center justify-center m-1">
+                            <span className="text-white text-xs font-bold uppercase tracking-widest">Change</span>
+                        </div>
+                        <input 
+                            type="file" 
+                            id="profile-upload" 
+                            className="hidden" 
+                            accept="image/*"
+                            onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                    if (file.size > 2 * 1024 * 1024) {
+                                        toast.error("Image must be smaller than 2MB");
+                                        return;
+                                    }
+                                    const reader = new FileReader();
+                                    reader.onloadend = () => {
+                                        setProfilePicture(reader.result as string);
+                                    };
+                                    reader.readAsDataURL(file);
+                                }
+                            }}
+                        />
                     </div>
                     <h3 className="text-2xl font-black tracking-tight text-center truncate w-full">{user?.name || "Member"}</h3>
                     <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest mt-1">Premium Identity</p>

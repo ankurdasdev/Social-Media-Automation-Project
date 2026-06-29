@@ -157,7 +157,8 @@ async function runMigrations(): Promise<void> {
     `ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verify_token TEXT;`,
     `ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verify_expires TIMESTAMPTZ;`,
     `ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN DEFAULT FALSE;`,
-    `ALTER TABLE templates ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;`
+    `ALTER TABLE templates ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_picture TEXT;`
   ];
 
   for (const statement of alterStatements) {
@@ -172,6 +173,7 @@ async function runMigrations(): Promise<void> {
       name TEXT,
       gender TEXT,
       dob TEXT,
+      profile_picture TEXT,
       password_hash TEXT,
       ai_keywords JSONB DEFAULT '[]'::jsonb,
       is_admin BOOLEAN DEFAULT FALSE,

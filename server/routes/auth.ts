@@ -414,9 +414,9 @@ export const handleMe: RequestHandler = async (req, res) => {
 
     const user = await queryOne<{
       id: string; email: string; name: string; gender: string; dob: string;
-      phone: string; is_admin: boolean; email_verified: boolean; onboarding_completed: boolean;
+      phone: string; is_admin: boolean; email_verified: boolean; onboarding_completed: boolean; profile_picture: string;
     }>(
-      "SELECT id, email, name, gender, dob, phone, is_admin, email_verified, onboarding_completed FROM users WHERE id = $1",
+      "SELECT id, email, name, gender, dob, phone, is_admin, email_verified, onboarding_completed, profile_picture FROM users WHERE id = $1",
       [payload.userId]
     );
 
@@ -467,7 +467,7 @@ export function requireAuth(
 
 // ── PUT /api/auth/profile ─────────────────────────────────────────────────────
 export const handleUpdateProfile: RequestHandler = async (req, res) => {
-  const { userId, name, email, password, gender, dob, phone } = req.body;
+  const { userId, name, email, password, gender, dob, phone, profile_picture } = req.body;
 
   if (!userId) {
     return res.status(400).json({ error: "userId is required" });
@@ -487,13 +487,14 @@ export const handleUpdateProfile: RequestHandler = async (req, res) => {
     if (gender !== undefined) { updates.push(`gender = $${paramIndex++}`); values.push(gender); }
     if (dob !== undefined) { updates.push(`dob = $${paramIndex++}`); values.push(dob); }
     if (phone !== undefined) { updates.push(`phone = $${paramIndex++}`); values.push(phone); }
+    if (profile_picture !== undefined) { updates.push(`profile_picture = $${paramIndex++}`); values.push(profile_picture); }
 
     if (updates.length === 0) {
       return res.status(400).json({ error: "No fields to update" });
     }
 
     const updatedUser = await queryOne(
-      `UPDATE users SET ${updates.join(", ")}, updated_at = NOW() WHERE id = $1 RETURNING id, email, name, gender, dob, phone`,
+      `UPDATE users SET ${updates.join(", ")}, updated_at = NOW() WHERE id = $1 RETURNING id, email, name, gender, dob, phone, profile_picture`,
       values
     );
 
