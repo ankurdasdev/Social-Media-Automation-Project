@@ -223,10 +223,38 @@ function TemplateTabContent({
   return (
     <div className="space-y-4 pt-2">
       {categoryTemplates.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">
-          <FileText className="h-8 w-8 mx-auto mb-2 opacity-30" />
-          <p className="text-sm">No templates yet.</p>
-          <p className="text-xs mt-1">Use the buttons below or click "New Template" to get started.</p>
+        <div className="relative rounded-[2.5rem] border border-border/50 bg-card/10 overflow-hidden group">
+          {/* Dummy Blurred Templates background */}
+          <div className="absolute inset-0 opacity-[0.15] dark:opacity-20 blur-[6px] flex flex-col gap-4 p-6 pointer-events-none select-none transition-all duration-700 group-hover:blur-[8px]">
+            <div className="h-24 w-full rounded-2xl bg-foreground flex items-center px-6 gap-5">
+              <div className="w-12 h-12 rounded-xl bg-background" />
+              <div className="space-y-3 flex-1"><div className="h-4 w-1/3 bg-background rounded-full" /><div className="h-2 w-1/2 bg-background/50 rounded-full" /></div>
+            </div>
+            <div className="h-24 w-full rounded-2xl bg-foreground flex items-center px-6 gap-5">
+              <div className="w-12 h-12 rounded-xl bg-background" />
+              <div className="space-y-3 flex-1"><div className="h-4 w-1/4 bg-background rounded-full" /><div className="h-2 w-2/3 bg-background/50 rounded-full" /></div>
+            </div>
+            <div className="h-24 w-full rounded-2xl bg-foreground flex items-center px-6 gap-5">
+              <div className="w-12 h-12 rounded-xl bg-background" />
+              <div className="space-y-3 flex-1"><div className="h-4 w-2/5 bg-background rounded-full" /><div className="h-2 w-3/4 bg-background/50 rounded-full" /></div>
+            </div>
+          </div>
+          {/* CTA Content */}
+          <div className="relative z-10 flex flex-col items-center justify-center py-24 px-6 text-center">
+            <div className="w-20 h-20 rounded-[1.5rem] bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center mb-8 shadow-2xl shadow-primary/20 group-hover:scale-110 group-hover:-translate-y-2 transition-all duration-500 ease-out">
+              <FileText className="h-10 w-10 text-primary drop-shadow-md" />
+            </div>
+            <h3 className="text-2xl font-black tracking-tight text-foreground mb-3">No {category} templates yet</h3>
+            <p className="text-sm font-medium text-muted-foreground max-w-sm mx-auto mb-10 leading-relaxed">
+              Start building your outreach library. Create high-converting templates to save time and scale your casting campaigns.
+            </p>
+            <Button
+              onClick={onCreateNew}
+              className="h-14 px-10 rounded-2xl bg-foreground text-background font-black uppercase tracking-widest text-xs hover:bg-foreground/90 shadow-2xl shadow-primary/20 hover:-translate-y-1 hover:scale-105 transition-all duration-300"
+            >
+              <Plus className="w-5 h-5 mr-3" /> Create Your First Template
+            </Button>
+          </div>
         </div>
       ) : (
         categoryTemplates.map((t) => (

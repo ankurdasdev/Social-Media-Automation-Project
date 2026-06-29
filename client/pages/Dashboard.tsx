@@ -19,6 +19,10 @@ import {
   SlidersHorizontal,
   LayoutDashboard,
   RefreshCw,
+  Mail,
+  MessageCircle,
+  Instagram,
+  CheckCircle2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn, getOrCreateUserId } from "@/lib/utils";
@@ -93,16 +97,58 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Visual Element */}
-            <div className="hidden xl:block relative w-[380px] h-[380px]">
-               <div className="absolute inset-0 bg-primary/20 rounded-[4rem] rotate-12 blur-3xl opacity-30 animate-pulse" />
-               <div className="glass-card relative w-full h-full rounded-[4rem] flex items-center justify-center border-border shadow-[-20px_-20px_60px_-15px_rgba(139,92,246,0.3)]">
-                  <div className="text-center space-y-4">
-                     <p className="text-8xl font-black tracking-tighter text-glow translate-y-2">84%</p>
-                     <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Outreach Success</p>
-                     <div className="flex justify-center gap-1">
-                        {[1,2,3,4,5].map(i => <div key={i} className={`w-1 h-3 rounded-full ${i <= 4 ? 'bg-primary' : 'bg-muted/40'} animate-pulse`} style={{ animationDelay: `${i * 100}ms` }} />)}
-                     </div>
+            {/* Gamified Health Score & Live Feed */}
+            <div className="hidden xl:flex flex-col gap-4 relative w-[400px]">
+               <div className="absolute inset-0 bg-primary/20 rounded-[3rem] rotate-6 blur-3xl opacity-30 animate-pulse" />
+               
+               {/* Health Score Box */}
+               <div className="glass-card relative w-full rounded-[2.5rem] p-6 border-border shadow-2xl flex items-center gap-6 group hover:border-emerald-500/30 transition-all duration-500">
+                  <div className="relative w-24 h-24 flex items-center justify-center shrink-0">
+                    <svg className="absolute inset-0 w-full h-full transform -rotate-90">
+                      <circle cx="48" cy="48" r="40" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-muted/20" />
+                      <circle cx="48" cy="48" r="40" stroke="currentColor" strokeWidth="8" fill="transparent" strokeDasharray="251.2" strokeDashoffset={251.2 * (1 - 0.92)} className="text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.8)] transition-all duration-1000 ease-out" />
+                    </svg>
+                    <span className="text-3xl font-black text-foreground group-hover:scale-110 transition-transform">92</span>
+                  </div>
+                  <div>
+                    <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1">Outreach Health</h3>
+                    <p className="text-sm font-medium text-foreground/80 leading-tight">Your campaigns are performing optimally. Open rates are up <span className="text-emerald-500 font-bold">14%</span> today.</p>
+                  </div>
+               </div>
+
+               {/* Live Activity Feed */}
+               <div className="glass-card relative w-full rounded-[2.5rem] p-6 border-border shadow-2xl space-y-4 overflow-hidden h-[200px]">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Live Feed</h3>
+                    <div className="flex items-center gap-2">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                      </span>
+                      <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest">Active</span>
+                    </div>
+                  </div>
+                  <div className="space-y-3 relative">
+                    {/* Fading top/bottom mask for scrolling effect */}
+                    <div className="absolute top-0 left-0 w-full h-4 bg-gradient-to-b from-card/80 to-transparent z-10" />
+                    <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-card/80 to-transparent z-10" />
+                    
+                    <div className="animate-[scroll_10s_linear_infinite] space-y-3 hover:[animation-play-state:paused]">
+                      {[
+                        { text: "Email to Sarah Jenkins delivered", icon: Mail, color: "text-blue-500", bg: "bg-blue-500/10" },
+                        { text: "WhatsApp: Client responded", icon: MessageCircle, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+                        { text: "Instagram sync completed", icon: Instagram, color: "text-pink-500", bg: "bg-pink-500/10" },
+                        { text: "Template 'Cold Pitch' saved", icon: CheckCircle2, color: "text-primary", bg: "bg-primary/10" },
+                      ].map((activity, i) => (
+                        <div key={i} className="flex items-center gap-3 p-2 rounded-xl hover:bg-muted/30 transition-colors cursor-default">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${activity.bg}`}>
+                            <activity.icon className={`w-4 h-4 ${activity.color}`} />
+                          </div>
+                          <p className="text-xs font-bold text-foreground/80 truncate">{activity.text}</p>
+                          <span className="text-[9px] text-muted-foreground ml-auto font-medium">Just now</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                </div>
             </div>

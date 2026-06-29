@@ -20,6 +20,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { getOrCreateUserId, cn } from "@/lib/utils";
 import { DriveFilePicker, FilePreviewModal } from "@/components/drive/DriveFilePicker";
 import type { DriveFile } from "@shared/api";
+import { BrainCircuit } from "lucide-react";
 
 // ─── Variable Chips — synced with column headers in the Contacts grid ─────────
 
@@ -312,6 +313,21 @@ export function TemplateEditor({
 
   const attachRule = ATTACHMENT_RULES[defaultCategory];
 
+  const getSubjectScore = (subject: string) => {
+    if (!subject.trim()) return 0;
+    let score = 50;
+    if (subject.length > 20) score += 20;
+    if (subject.length > 60) score -= 15; // penalize too long
+    if (/(urgent|opportunity|casting|exclusive|quick|important|role)/i.test(subject)) score += 15;
+    if (subject.includes('?')) score += 5;
+    if (subject.includes('!')) score += 10;
+    return Math.min(score, 100);
+  };
+  
+  const aiScore = getSubjectScore(emailSubject);
+  const scoreColor = aiScore >= 80 ? "text-emerald-500" : aiScore >= 60 ? "text-amber-500" : "text-destructive";
+  const bgScoreColor = aiScore >= 80 ? "bg-emerald-500/10" : aiScore >= 60 ? "bg-amber-500/10" : "bg-destructive/10";
+
   const editorTitle = isAttachment
     ? `Attachment Template`
     : template
@@ -375,11 +391,31 @@ export function TemplateEditor({
                 )}
                 required
               />
-              <p className="text-[10px] text-muted-foreground/60 font-medium">
+                <p className="text-[10px] text-muted-foreground/60 font-medium">
                 This subject can be changed by writing the desired subject on the &apos;Email Subject&apos; column on the contacts grid.
               </p>
-              {!emailSubject.trim() && (
+              {!emailSubject.trim() ? (
                 <p className="text-[10px] text-red-500 font-bold">⚠ Subject is required for body templates — it will be used as the email subject line.</p>
+              ) : (
+                <div className="flex items-center gap-4 p-3 rounded-xl bg-card border border-border shadow-sm">
+                  <div className={`w-10 h-10 rounded-lg ${bgScoreColor} flex items-center justify-center`}>
+                    <BrainCircuit className={`w-5 h-5 ${scoreColor}`} />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">AI Subject Rater</p>
+                      <span className={`text-xs font-black ${scoreColor}`}>{aiScore}/100</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+                      <div className={`h-full ${scoreColor.replace('text-', 'bg-')} transition-all duration-500`} style={{ width: `${aiScore}%` }} />
+                    </div>
+                  </div>
+                  <div className="w-[120px]">
+                    <p className="text-[9px] font-bold text-muted-foreground/80 leading-tight">
+                      {aiScore >= 80 ? "Excellent urgency and length. High open rate predicted." : aiScore >= 60 ? "Good, but could use more action words (e.g. Casting, Opportunity)." : "Too short or lacking impact. Try adding a hook."}
+                    </p>
+                  </div>
+                </div>
               )}
             </div>
           )}

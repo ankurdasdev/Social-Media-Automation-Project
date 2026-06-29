@@ -476,7 +476,7 @@ export default function Controller() {
                 id="tutorial-controller-profiling"
                 variant="outline" 
                 onClick={() => setIsAIProfilingOpen(true)} 
-                className="h-12 px-6 rounded-xl font-bold bg-amber-500/5 border-amber-500/20 text-amber-600 gap-2 hover:bg-amber-500/10 transition-all shadow-sm"
+                className="h-12 px-6 rounded-xl font-bold bg-amber-500/5 border-amber-500/20 text-amber-600 gap-2 hover:bg-amber-500/10 transition-all duration-300 hover:-translate-y-1 shadow-sm"
             >
               <Brain className="w-4 h-4" />
               AI Profiling
@@ -485,7 +485,7 @@ export default function Controller() {
                 id="tutorial-controller-scheduler"
                 variant="outline" 
                 onClick={() => setIsAIScheduleOpen(true)} 
-                className="h-12 px-6 rounded-xl font-bold bg-amber-500/5 border-amber-500/20 text-amber-600 gap-2 hover:bg-amber-500/10 transition-all shadow-sm"
+                className="h-12 px-6 rounded-xl font-bold bg-amber-500/5 border-amber-500/20 text-amber-600 gap-2 hover:bg-amber-500/10 transition-all duration-300 hover:-translate-y-1 shadow-sm"
             >
               <Clock className="w-4 h-4" />
               Auto-Scheduler
@@ -493,7 +493,7 @@ export default function Controller() {
             <Button 
                 id="tutorial-controller-add"
                 onClick={openAddDialog} 
-                className="h-12 px-6 rounded-[1.5rem] font-black bg-primary hover:bg-primary/90 text-white gap-2 shadow-xl shadow-primary/20 transition-all active:scale-95"
+                className="h-12 px-6 rounded-[1.5rem] font-black bg-primary hover:bg-primary/90 text-white gap-2 shadow-xl shadow-primary/20 transition-all duration-300 hover:-translate-y-1 hover:scale-105 active:scale-95"
             >
               <Plus className="w-5 h-5" />
               ADD NEW SOURCE

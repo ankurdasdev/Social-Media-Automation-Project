@@ -34,6 +34,7 @@ import {
   ConditionalTextareaCell,
   SheetDropdownCell,
   PersonalizedCell,
+  TagsCell,
 } from "./GridCells";
 import { cn } from "@/lib/utils";
 import * as React from "react";
@@ -964,6 +965,17 @@ export const columns: ColumnDef<Contact>[] = [
               onUpdate={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { visit: val })}
             />
           </div>
+        ),
+      },
+      {
+        accessorKey: "tags",
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Tags" columnId="tags" />,
+        size: 200,
+        cell: ({ row, table }) => (
+          <TagsCell
+            tags={row.original.tags || []}
+            onUpdate={(val) => (table.options.meta as any)?.updateContact?.(row.original.id, { tags: val })}
+          />
         ),
       },
     

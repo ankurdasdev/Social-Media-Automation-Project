@@ -30,7 +30,7 @@ import {
   Area,
   ComposedChart
 } from "recharts";
-import { Mail, MessageCircle, TrendingUp, AlertCircle, Bot, Filter, Users, Instagram, Zap, CalendarDays, BrainCircuit, Play, Maximize2 } from "lucide-react";
+import { Mail, MessageCircle, TrendingUp, AlertCircle, Bot, Filter, Users, Instagram, Zap, CalendarDays, BrainCircuit, Play, Maximize2, Crown, ChevronDown, Lock } from "lucide-react";
 import { cn, getOrCreateUserId, getCurrentUser } from "@/lib/utils";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
@@ -490,8 +490,23 @@ export default function Analytics() {
   if (isLoading) {
     return (
       <AppLayout>
-        <div className="flex items-center justify-center h-[80vh]">
-          <div className="w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+        <div className="space-y-8 pb-20 mt-6 px-4 md:px-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div className="space-y-3">
+              <div className="h-10 w-48 bg-muted rounded-xl animate-pulse" />
+              <div className="h-4 w-72 bg-muted/60 rounded-lg animate-pulse" />
+            </div>
+          </div>
+          <div className="h-14 w-full md:w-[600px] bg-muted/40 rounded-2xl animate-pulse mb-6" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-32 glass-card rounded-2xl animate-pulse bg-white/5" />
+            ))}
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 h-[400px] glass-card rounded-3xl animate-pulse bg-white/5" />
+            <div className="h-[400px] glass-card rounded-3xl animate-pulse bg-white/5" />
+          </div>
         </div>
       </AppLayout>
     );
@@ -521,12 +536,37 @@ export default function Analytics() {
 
         {/* Dashboard Tabs Area */}
         <Tabs defaultValue="all" className="w-full">
-          <TabsList className="bg-muted/50 border border-border/50 p-1.5 h-14 rounded-2xl w-full md:w-auto overflow-x-auto justify-start">
-            <TabsTrigger value="all" className="data-[state=active]:bg-background data-[state=active]:shadow-lg rounded-xl gap-2 h-11 px-6 font-bold transition-all text-[11px] uppercase tracking-wide">Overview</TabsTrigger>
-            <TabsTrigger value="whatsapp" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl gap-2 h-11 px-6 font-bold transition-all text-[11px] uppercase tracking-wide"><MessageCircle className="w-3.5 h-3.5" /> WhatsApp</TabsTrigger>
-            <TabsTrigger value="email" className="data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl gap-2 h-11 px-6 font-bold transition-all text-[11px] uppercase tracking-wide"><Mail className="w-3.5 h-3.5" /> Email</TabsTrigger>
-            <TabsTrigger value="instagram" className="data-[state=active]:bg-pink-500 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl gap-2 h-11 px-6 font-bold transition-all text-[11px] uppercase tracking-wide"><Instagram className="w-3.5 h-3.5" /> Instagram</TabsTrigger>
-          </TabsList>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <TabsList className="bg-muted/50 border border-border/50 p-1.5 h-14 rounded-2xl w-full md:w-auto overflow-x-auto justify-start">
+              <TabsTrigger value="all" className="data-[state=active]:bg-background data-[state=active]:shadow-lg rounded-xl gap-2 h-11 px-6 font-bold transition-all text-[11px] uppercase tracking-wide">Overview</TabsTrigger>
+              <TabsTrigger value="whatsapp" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl gap-2 h-11 px-6 font-bold transition-all text-[11px] uppercase tracking-wide"><MessageCircle className="w-3.5 h-3.5" /> WhatsApp</TabsTrigger>
+              <TabsTrigger value="email" className="data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl gap-2 h-11 px-6 font-bold transition-all text-[11px] uppercase tracking-wide"><Mail className="w-3.5 h-3.5" /> Email</TabsTrigger>
+              <TabsTrigger value="instagram" className="data-[state=active]:bg-pink-500 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl gap-2 h-11 px-6 font-bold transition-all text-[11px] uppercase tracking-wide"><Instagram className="w-3.5 h-3.5" /> Instagram</TabsTrigger>
+            </TabsList>
+            
+            <div className="relative group shrink-0">
+              <Button variant="outline" className="h-14 px-6 rounded-2xl border-amber-500/20 bg-amber-500/5 text-amber-500 font-black tracking-widest uppercase hover:bg-amber-500/10 gap-2 transition-all duration-300 hover:scale-105 active:scale-95 hover:-translate-y-1">
+                <Crown className="w-4 h-4" /> Pro Filters
+                <ChevronDown className="w-4 h-4 ml-1 opacity-50" />
+              </Button>
+              <div className="absolute top-full right-0 mt-2 w-72 p-2 bg-card border border-border/50 rounded-[1.5rem] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)] opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto transition-all duration-300 z-50 origin-top-right">
+                <div className="p-4 text-center space-y-4">
+                  <div className="mx-auto w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                    <Lock className="w-6 h-6 text-amber-500" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <h4 className="font-black text-sm text-foreground uppercase tracking-widest">Unlock Pro Analytics</h4>
+                    <p className="text-[11px] text-muted-foreground font-medium leading-relaxed">
+                      Get access to Engagement Time filters, A/B Testing cohorts, and advanced demographic breakdowns.
+                    </p>
+                  </div>
+                  <Button className="w-full h-12 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl text-xs font-black tracking-widest shadow-lg shadow-amber-500/20 transition-all hover:scale-105 active:scale-95" onClick={() => navigate("/subscription")}>
+                    UPGRADE TO PRO
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
 
           <TabsContent value="all" className="mt-0 outline-none">
             {renderDashboard('all')}

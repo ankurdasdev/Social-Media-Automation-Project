@@ -914,3 +914,86 @@ export function SheetDropdownCell({
     </div>
   );
 }
+
+// ─── Tags Cell ─────────────────────────────────────────────────────────────
+
+export const TAG_COLORS = [
+  { name: "Blue", value: "bg-blue-500/20 text-blue-500 border-blue-500/30" },
+  { name: "Emerald", value: "bg-emerald-500/20 text-emerald-500 border-emerald-500/30" },
+  { name: "Amber", value: "bg-amber-500/20 text-amber-500 border-amber-500/30" },
+  { name: "Rose", value: "bg-rose-500/20 text-rose-500 border-rose-500/30" },
+  { name: "Purple", value: "bg-purple-500/20 text-purple-500 border-purple-500/30" },
+  { name: "Cyan", value: "bg-cyan-500/20 text-cyan-500 border-cyan-500/30" },
+];
+
+export function TagsCell({ tags = [], onUpdate }: { tags?: string[], onUpdate: (tags: string[]) => void }) {
+  const [open, setOpen] = React.useState(false);
+  const [newTagText, setNewTagText] = React.useState("");
+  const [newTagColor, setNewTagColor] = React.useState(TAG_COLORS[0].value);
+
+  const parsedTags = React.useMemo(() => {
+    return (tags || []).map(t => {
+      try { return JSON.parse(t); } catch { return { text: t, color: TAG_COLORS[0].value }; }
+    });
+  }, [tags]);
+
+  const handleAdd = () => {
+    if (!newTagText.trim()) return;
+    const newTag = JSON.stringify({ text: newTagText.trim(), color: newTagColor });
+    onUpdate([...(tags || []), newTag]);
+    setNewTagText("");
+    setOpen(false);
+  };
+
+  const handleRemove = (idx: number) => {
+    const next = [...(tags || [])];
+    next.splice(idx, 1);
+    onUpdate(next);
+  };
+
+  return (
+    <div className="flex flex-wrap items-center gap-1.5 p-1 min-h-[32px] w-full" onClick={(e) => e.stopPropagation()}>
+      {parsedTags.map((t, i) => (
+        <Badge key={i} variant="outline" className={cn("font-bold text-[9px] px-1.5 py-0 gap-1 flex items-center border", t.color)}>
+          {t.text}
+          <X className="w-2.5 h-2.5 cursor-pointer opacity-60 hover:opacity-100" onClick={(e) => { e.stopPropagation(); handleRemove(i); }} />
+        </Badge>
+      ))}
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button variant="ghost" size="icon" className="h-5 w-5 rounded-full hover:bg-primary/20 opacity-50 hover:opacity-100 shrink-0">
+            <Plus className="w-3 h-3" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-56 p-3 glass-card border-white/10 shadow-2xl rounded-2xl" onClick={e => e.stopPropagation()} side="bottom" align="start">
+          <div className="space-y-3">
+            <h4 className="font-black text-[10px] uppercase tracking-widest text-muted-foreground">Add Tag</h4>
+            <Input 
+              autoFocus 
+              value={newTagText} 
+              onChange={e => setNewTagText(e.target.value)} 
+              onKeyDown={e => e.key === 'Enter' && handleAdd()}
+              placeholder="Tag name..." 
+              className="h-8 text-xs bg-black/20"
+            />
+            <div className="flex gap-1.5 flex-wrap">
+              {TAG_COLORS.map(c => (
+                <div 
+                  key={c.name}
+                  onClick={() => setNewTagColor(c.value)}
+                  className={cn(
+                    "w-5 h-5 rounded-full cursor-pointer border-2 transition-all",
+                    c.value.split(' ')[0], 
+                    newTagColor === c.value ? "border-white scale-110" : "border-transparent hover:scale-105"
+                  )}
+                  title={c.name}
+                />
+              ))}
+            </div>
+            <Button onClick={handleAdd} className="w-full h-8 text-xs font-bold rounded-xl bg-primary hover:bg-primary/90 text-white" disabled={!newTagText.trim()}>Add</Button>
+          </div>
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+}

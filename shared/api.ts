@@ -137,6 +137,8 @@ export interface Contact {
   
   automationComment: string;
   
+  tags?: string[];
+  
   // Internal tracking flags
   whatsappRun?: boolean;
   instagramRun?: boolean;

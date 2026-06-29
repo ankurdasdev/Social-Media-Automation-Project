@@ -21,6 +21,7 @@ import {
   Crown,
   HelpCircle,
   Circle,
+  Flame,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getOrCreateUserId, clearAuthToken, getCurrentUser, getAuthToken } from "@/lib/utils";
@@ -289,9 +290,25 @@ export default function AppLayout({ children }: AppLayoutProps) {
         <div className="flex flex-col min-h-full w-full relative z-10">
 
           {/* ── Logo — clicks go to landing page ── */}
-          <Link to="/" className="inline-block mb-12 relative group/logo px-2">
+          <Link to="/" className="inline-block mb-8 relative group/logo px-2">
             <CastHubLogo size="md" />
           </Link>
+
+          {/* Gamification: Outreach Streak */}
+          <div className="mb-6 px-4 cursor-default">
+            <div className="flex items-center justify-between p-3 rounded-2xl bg-gradient-to-r from-orange-500/10 to-amber-500/5 border border-orange-500/20 shadow-sm relative overflow-hidden group transition-all duration-300 hover:shadow-orange-500/10 hover:border-orange-500/40">
+              <div className="absolute top-0 right-0 w-16 h-16 bg-orange-500/20 rounded-full blur-2xl group-hover:bg-orange-500/30 transition-colors duration-500" />
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-orange-500/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <Flame className="w-5 h-5 text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.8)]" />
+                </div>
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-orange-500/80">Outreach Streak</p>
+                  <p className="text-sm font-black text-foreground">5 Days 🔥</p>
+                </div>
+              </div>
+            </div>
+          </div>
 
           {/* ── Navigation (no label) ── */}
           <nav className="flex-1 space-y-1">
