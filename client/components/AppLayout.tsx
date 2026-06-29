@@ -223,6 +223,22 @@ export default function AppLayout({ children }: AppLayoutProps) {
     staleTime: 5 * 60 * 1000,
   });
 
+  const { data: subStatus } = useQuery<{
+    planType: string; status: string; trialEnd: string | null;
+    currentPeriodEnd: string | null; daysRemaining: number;
+    isActive: boolean; isTrial: boolean; isExpired: boolean;
+  }>({
+    queryKey: ["subscription-status", userId],
+    queryFn: async () => {
+      const res = await fetch(`/api/payments/subscription?userId=${userId}`);
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const isPremium = subStatus?.isActive && !subStatus?.isTrial;
+
   const handleLogout = () => {
     clearAuthToken();
     window.location.href = "/login";
@@ -383,7 +399,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 hover:bg-muted/50 p-1.5 pl-2 rounded-2xl transition-colors outline-none ml-2 border border-transparent hover:border-border/50">
                   <div className="hidden md:flex flex-col text-right mr-1">
-                    <span className="text-xs font-bold leading-tight">{userProfile?.name || currentUser?.name || "User"}</span>
+                    <div className="flex items-center justify-end gap-1.5 mb-0.5">
+                      {isPremium && (
+                        <div className="bg-gradient-to-r from-amber-200 via-amber-400 to-amber-500 text-amber-950 text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-sm flex items-center shadow-[0_0_10px_rgba(245,158,11,0.2)]">
+                           <Crown className="w-2.5 h-2.5 mr-0.5" /> PRO
+                        </div>
+                      )}
+                      <span className="text-xs font-bold leading-tight">{userProfile?.name || currentUser?.name || "User"}</span>
+                    </div>
                     <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-widest">{(userProfile?.email || currentUser?.email)?.split('@')[0]}</span>
                   </div>
                   <div className="w-9 h-9 rounded-xl overflow-hidden shrink-0 bg-primary/20 flex items-center justify-center">

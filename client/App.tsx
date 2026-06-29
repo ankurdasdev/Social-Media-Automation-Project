@@ -22,6 +22,7 @@ import Templates from "./pages/Templates";
 import Analytics from "./pages/Analytics";
 import IntegrationsCenter from "./pages/IntegrationsCenter";
 import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
 import AdminDashboard from "./pages/AdminDashboard";
 import Subscription from "./pages/Subscription";
 import TermsOfService from "./pages/TermsOfService";
@@ -106,6 +107,7 @@ const App = () => (
             <Route path="/analytics" element={<ProtectedRoute element={<Analytics />} />} />
             <Route path="/integrations" element={<ProtectedRoute element={<IntegrationsCenter />} />} />
             <Route path="/profile" element={<ProtectedRoute element={<Profile />} />} />
+            <Route path="/settings" element={<ProtectedRoute element={<Settings />} />} />
             <Route path="/subscription" element={<ProtectedRoute element={<Subscription />} />} />
             <Route path="/admin" element={<AdminRoute element={<AdminDashboard />} />} />
             <Route path="/help" element={<ProtectedRoute element={<Help />} />} />
