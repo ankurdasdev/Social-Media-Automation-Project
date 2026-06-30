@@ -54,15 +54,8 @@ export default function IntegrationsCenter() {
   // Google Pre-connection State
   const [googleAccepted, setGoogleAccepted] = React.useState(false);
   const [googleGuideOpen, setGoogleGuideOpen] = React.useState(false);
-  const [pageGuideOpen, setPageGuideOpen] = React.useState(false);
   const queryClient = useQueryClient();
   const userId = getOrCreateUserId();
-
-  React.useEffect(() => {
-    const handleOpenPageGuide = () => setPageGuideOpen(true);
-    window.addEventListener('open-page-guide', handleOpenPageGuide);
-    return () => window.removeEventListener('open-page-guide', handleOpenPageGuide);
-  }, []);
 
   // Read defaultTab from URL params
   const defaultTab = React.useMemo(() => {
@@ -464,48 +457,6 @@ export default function IntegrationsCenter() {
           </div>
         </section>
       </div>
-
-      {/* Page Guide Modal */}
-      <Dialog open={pageGuideOpen} onOpenChange={setPageGuideOpen}>
-        <DialogContent hideCloseButton className="max-w-md p-0 overflow-hidden border-white/10 shadow-2xl rounded-[2rem] bg-card/95 backdrop-blur-3xl">
-          <DialogHeader className="shrink-0 px-6 pt-6 pb-4 border-b border-white/5 bg-background/80 backdrop-blur-xl">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-                  <Globe className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <DialogTitle className="text-base font-black text-foreground tracking-tight">Integrations Center</DialogTitle>
-                  <p className="text-[10px] text-muted-foreground/80 mt-1 leading-relaxed">Connect and monitor your security-verified outreach networks. Set credentials, authentication, and API variables here.</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setPageGuideOpen(false)}
-                className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-muted-foreground hover:text-foreground transition-all shrink-0"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          </DialogHeader>
-
-          <div className="px-6 py-6 space-y-6">
-            <div className="space-y-2">
-              <h4 className="text-[13px] font-black uppercase text-foreground tracking-wide">1. Connect Your Channels</h4>
-              <p className="text-xs text-muted-foreground/80 leading-relaxed">
-                Connect Gmail, WhatsApp, or Instagram to enable outreach through CastHub.<br/>
-                You'll only need to do this once.
-              </p>
-            </div>
-            <div className="space-y-2">
-              <h4 className="text-[13px] font-black uppercase text-foreground tracking-wide">2. Connect Google</h4>
-              <p className="text-xs text-muted-foreground/80 leading-relaxed">
-                Follow the setup instructions and approve the requested permissions to connect Google.<br/>
-                Once connected you will be able to access your Drive for attachments/documents/assets and send mails from your Gmail.
-              </p>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </AppLayout>
   );
 }

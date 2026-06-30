@@ -100,6 +100,25 @@ const PAGE_GUIDES: Record<string, { title: string; icon: any; content: React.Rea
       </div>
     ),
   },
+  "/integrations": {
+    title: "Integrations Center",
+    icon: Settings2,
+    content: (
+      <div className="space-y-6 text-sm text-muted-foreground mt-6">
+        <p>Connect and monitor your security-verified outreach networks. Set credentials, authentication, and API variables here.</p>
+        <div className="space-y-4">
+          <div className="p-4 rounded-xl bg-muted/30 border border-border/50">
+            <h4 className="font-bold text-foreground mb-1">1. Connect Your Channels</h4>
+            <p>Connect Gmail, WhatsApp, or Instagram to enable outreach through CastHub. You'll only need to do this once.</p>
+          </div>
+          <div className="p-4 rounded-xl bg-muted/30 border border-border/50">
+            <h4 className="font-bold text-foreground mb-1">2. Connect Google</h4>
+            <p>Follow the setup instructions and approve the requested permissions to connect Google. Once connected you will be able to access your Drive for attachments/documents/assets and send mails from your Gmail.</p>
+          </div>
+        </div>
+      </div>
+    ),
+  },
 };
 
 // Fallback guide if the page doesn't have one specifically defined

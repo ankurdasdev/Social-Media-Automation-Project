@@ -208,7 +208,8 @@ const MemoizedTableRow = React.memo(({
     <TableRow
       data-state={isSelected && "selected"}
       className={cn(
-        "cursor-pointer border-b border-border/20 h-20 group relative border-l-[6px]",
+        "cursor-pointer border-b border-border/20 group relative border-l-[6px]",
+        density === "compact" ? "h-12" : density === "spacious" ? "h-28" : "h-20",
         "table-row-smooth",
         "hover:bg-muted/25",
         row.index % 2 === 0 ? "bg-muted/20" : "bg-transparent",

@@ -48,6 +48,8 @@ import {
 import { LocationPicker } from "@/components/ui/LocationPicker";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
+import Cropper from "react-easy-crop";
+import { getCroppedImg } from "@/lib/cropImage";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -83,11 +85,14 @@ export default function Profile() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [profilePicture, setProfilePicture] = useState("");
   
+  const [selectedFileBase64, setSelectedFileBase64] = useState<string>("");
   const [isImageEditorOpen, setIsImageEditorOpen] = useState(false);
-  const [selectedFileBase64, setSelectedFileBase64] = useState("");
   const [brightness, setBrightness] = useState(100);
   const [contrast, setContrast] = useState(100);
   const [saturation, setSaturation] = useState(100);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
   
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
@@ -98,8 +103,18 @@ export default function Profile() {
     return "bg-primary/20 text-primary";
   };
 
-  const applyImageEdits = () => {
+  const applyImageEdits = async () => {
     if (!selectedFileBase64) return;
+    
+    let baseImgUrl = selectedFileBase64;
+    if (croppedAreaPixels) {
+      try {
+        baseImgUrl = await getCroppedImg(selectedFileBase64, croppedAreaPixels);
+      } catch (e) {
+        console.error("Crop error", e);
+      }
+    }
+
     const canvas = document.createElement("canvas");
     const img = new Image();
     img.crossOrigin = "anonymous";
@@ -114,7 +129,7 @@ export default function Profile() {
         setIsImageEditorOpen(false);
       }
     };
-    img.src = selectedFileBase64;
+    img.src = baseImgUrl;
   };
 
   const deleteAccountMutation = useMutation({
@@ -333,6 +348,8 @@ export default function Profile() {
                                  setBrightness(100);
                                  setContrast(100);
                                  setSaturation(100);
+                                 setCrop({ x: 0, y: 0 });
+                                 setZoom(1);
                                  setIsImageEditorOpen(true);
                              }}>
                                 Edit Photo
@@ -367,6 +384,8 @@ export default function Profile() {
                                         setBrightness(100);
                                         setContrast(100);
                                         setSaturation(100);
+                                        setCrop({ x: 0, y: 0 });
+                                        setZoom(1);
                                         setIsImageEditorOpen(true);
                                     };
                                     reader.readAsDataURL(file);
@@ -746,16 +765,27 @@ export default function Profile() {
           <div className="flex flex-col gap-8 py-4">
             <div className="w-full aspect-square rounded-[2rem] overflow-hidden bg-black/5 flex items-center justify-center relative shadow-inner">
               {selectedFileBase64 && (
-                 <img 
-                   src={selectedFileBase64} 
-                   alt="Preview"
-                   className="w-full h-full object-cover" 
-                   style={{ filter: `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)` }}
-                 />
+                 <div className="absolute inset-0" style={{ filter: `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)` }}>
+                   <Cropper
+                     image={selectedFileBase64}
+                     crop={crop}
+                     zoom={zoom}
+                     aspect={1}
+                     cropShape="round"
+                     showGrid={false}
+                     onCropChange={setCrop}
+                     onZoomChange={setZoom}
+                     onCropComplete={(_, croppedAreaPixels) => setCroppedAreaPixels(croppedAreaPixels)}
+                   />
+                 </div>
               )}
             </div>
             
             <div className="space-y-6">
+               <div className="space-y-3">
+                 <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground"><label>Zoom</label><span className="text-primary">{zoom.toFixed(1)}x</span></div>
+                 <Slider value={[zoom]} onValueChange={(v) => setZoom(v[0])} min={1} max={3} step={0.1} className="py-1" />
+               </div>
                <div className="space-y-3">
                  <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground"><label>Brightness</label><span className="text-primary">{brightness}%</span></div>
                  <Slider value={[brightness]} onValueChange={(v) => setBrightness(v[0])} min={50} max={150} step={1} className="py-1" />
