@@ -634,12 +634,12 @@ export default function Contacts() {
 
   return (
       <AppLayout>
-        <div className="flex flex-col space-y-6 lg:space-y-10 pb-24 relative animate-in fade-in duration-300">
+        <div className="flex flex-col gap-6 pb-24 relative animate-in fade-in slide-in-from-bottom-4 duration-500">
           {/* Decorative Background */}
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] -z-10 animate-pulse-slow" />
 
           {/* Header Section */}
-          <div id="tutorial-contacts-welcome" className="flex flex-col lg:flex-row items-center justify-between gap-8 px-6 pt-4">
+          <div id="tutorial-contacts-welcome" className="flex flex-col lg:flex-row items-center justify-between gap-8">
             <div className="space-y-3 text-center lg:text-left">
               <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground uppercase">
                 Contacts
@@ -682,7 +682,7 @@ export default function Contacts() {
           </div>
 
           {ingestionStatus?.isRunning && (
-            <div className="px-2 sm:px-6">
+            <div>
               <div className="p-4 sm:p-6 rounded-3xl bg-blue-500/5 border border-blue-500/10 flex flex-row items-center justify-between group overflow-hidden relative">
                 <div className="absolute inset-0 dark:bg-white/[0.02] bg-black/5 -z-10 group-hover:scale-x-110 transition-transform duration-1000 origin-left" />
                 <div className="flex items-center gap-6 relative z-10">
@@ -701,7 +701,7 @@ export default function Contacts() {
           )}
 
           {/* Data Grid Section */}
-          <div className="flex-1 px-2 sm:px-6 pb-6 overflow-hidden flex flex-col min-h-[400px]">
+          <div className="flex-1 pb-6 overflow-hidden flex flex-col min-h-[400px]">
             {contactsLoading ? (
               <div className="flex-1 flex flex-col items-center justify-center gap-4 opacity-50">
                 <Loader2 className="h-12 w-12 animate-spin text-primary" />

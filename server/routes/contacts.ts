@@ -497,7 +497,7 @@ export const handleGetAnalyticsStats: RequestHandler = async (req, res) => {
 
     // Gamification: Outreach Streak
     const logDates = await query<{ activity_date: string }>(`
-      SELECT DISTINCT (created_at AT TIME ZONE 'UTC')::date as activity_date
+      SELECT DISTINCT TO_CHAR(created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD') as activity_date
       FROM user_logs
       WHERE user_id = $1
       ORDER BY activity_date DESC
@@ -505,22 +505,25 @@ export const handleGetAnalyticsStats: RequestHandler = async (req, res) => {
 
     let streak = 0;
     if (logDates.length > 0) {
-      const today = new Date();
-      today.setUTCHours(0,0,0,0);
-      let currentDate = new Date(logDates[0].activity_date);
-      currentDate.setUTCHours(0,0,0,0);
+      const now = new Date();
+      const todayStr = now.toISOString().split('T')[0];
+      
+      const parseDate = (d: string) => {
+        const [y, m, day] = d.split('-');
+        return Date.UTC(parseInt(y), parseInt(m) - 1, parseInt(day));
+      };
 
-      const diffTime = Math.abs(today.getTime() - currentDate.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+      const todayUTC = parseDate(todayStr);
+      let currentUTC = parseDate(logDates[0].activity_date);
+
+      const diffDays = Math.round((todayUTC - currentUTC) / (1000 * 60 * 60 * 24)); 
       
       if (diffDays <= 1) {
         streak = 1;
         for (let i = 1; i < logDates.length; i++) {
-          const nextDate = new Date(logDates[i].activity_date);
-          nextDate.setUTCHours(0,0,0,0);
-          const prevDate = new Date(logDates[i-1].activity_date);
-          prevDate.setUTCHours(0,0,0,0);
-          const dayDiff = Math.ceil(Math.abs(prevDate.getTime() - nextDate.getTime()) / (1000 * 60 * 60 * 24));
+          const nextUTC = parseDate(logDates[i].activity_date);
+          const prevUTC = parseDate(logDates[i-1].activity_date);
+          const dayDiff = Math.round((prevUTC - nextUTC) / (1000 * 60 * 60 * 24));
           if (dayDiff === 1) streak++;
           else break;
         }

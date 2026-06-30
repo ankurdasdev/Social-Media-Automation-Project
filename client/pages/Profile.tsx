@@ -48,7 +48,6 @@ import {
 import { LocationPicker } from "@/components/ui/LocationPicker";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-import { format } from "date-fns";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { 
