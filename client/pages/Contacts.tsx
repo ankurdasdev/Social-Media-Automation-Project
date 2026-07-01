@@ -299,6 +299,45 @@ export default function Contacts() {
     });
   };
 
+  const handleRenameSheet = (oldName: string, newName: string) => {
+    setLocalSheets(prev => {
+      const idx = prev.indexOf(oldName);
+      if (idx !== -1) {
+        const next = [...prev];
+        next[idx] = newName;
+        return next;
+      }
+      if (!prev.includes(newName)) {
+        return [...prev, newName];
+      }
+      return prev;
+    });
+
+    const contactsInSheet = (contactsData || []).filter(c => c.sheetName === oldName);
+    
+    // Only update if there are contacts in the old sheet
+    if (contactsInSheet.length > 0) {
+      const promises = contactsInSheet.map(c => 
+        fetch(`/api/contacts/${c.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sheetName: newName, userId }),
+        })
+      );
+
+      Promise.all(promises).then(() => {
+        queryClient.invalidateQueries({ queryKey: ["contacts"] });
+        if (activeTab === oldName) {
+          setActiveTab(newName);
+        }
+      });
+    } else {
+      if (activeTab === oldName) {
+        setActiveTab(newName);
+      }
+    }
+  };
+
   const aiSearchMutation = useMutation({
     mutationFn: async (prompt: string) => {
       const res = await fetch("/api/contacts/ai-search", {
@@ -755,27 +794,6 @@ export default function Contacts() {
             </div>
           )}
 
-          {/* Segment Builder Tabs (Visual Preview) */}
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-2 border-b border-border/50 mb-2">
-            <button className="px-4 py-2 rounded-t-xl border-b-2 border-primary text-foreground font-bold text-sm whitespace-nowrap bg-primary/5">
-              All Contacts
-            </button>
-            <button className="px-4 py-2 rounded-t-xl border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/30 font-medium text-sm whitespace-nowrap transition-colors">
-              🔥 Hot Leads
-            </button>
-            <button className="px-4 py-2 rounded-t-xl border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/30 font-medium text-sm whitespace-nowrap transition-colors">
-              📸 Missing Instagram
-            </button>
-            <button className="px-4 py-2 rounded-t-xl border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/30 font-medium text-sm whitespace-nowrap transition-colors">
-              ✉️ Bounced Emails
-            </button>
-            
-            <div className="ml-auto flex items-center gap-2 pl-4 border-l border-border/50">
-              <Button variant="ghost" size="sm" className="h-8 text-xs font-bold text-muted-foreground hover:text-primary">
-                + Create Segment
-              </Button>
-            </div>
-          </div>
 
           {/* Data Grid Section */}
           <div className="flex-1 pb-6 overflow-hidden flex flex-col min-h-[400px]">

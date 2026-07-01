@@ -61,6 +61,7 @@ interface DataTableToolbarProps<TData> {
   onToggleTitleFreeze?: (frozen: boolean) => void;
   density?: "compact" | "normal" | "spacious";
   onDensityChange?: (density: "compact" | "normal" | "spacious") => void;
+  onRenameSheet?: (oldName: string, newName: string) => void;
 }
 
 export function DataTableToolbar<TData>({
@@ -84,6 +85,7 @@ export function DataTableToolbar<TData>({
   onToggleTitleFreeze,
   density = "normal",
   onDensityChange,
+  onRenameSheet,
 }: DataTableToolbarProps<TData>) {
   const selectedRows = table.getFilteredSelectedRowModel().rows;
   const hasSelection = selectedRows.length > 0;
@@ -97,6 +99,8 @@ export function DataTableToolbar<TData>({
   const [isExcelImportOpen, setIsExcelImportOpen] = useState(false);
   const [isSmartClearOpen, setIsSmartClearOpen] = useState(false);
   const [isColumnManagerOpen, setIsColumnManagerOpen] = useState(false);
+  const [editingSheet, setEditingSheet] = useState<string | null>(null);
+  const [editingSheetName, setEditingSheetName] = useState("");
 
   const queryClient = useQueryClient();
 
@@ -157,16 +161,51 @@ export function DataTableToolbar<TData>({
                 All Contacts
               </TabsTrigger>
               {(table.options.meta as any)?.uniqueSheets?.map((sheet: string) => (
-                <TabsTrigger key={sheet} value={sheet} className="h-9 px-5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] group relative transition-all whitespace-nowrap data-[state=active]:bg-foreground data-[state=active]:text-background">
-                  {sheet}
-                  {activeTab === sheet && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setDeleteSheetConfirm(sheet); }}
-                      className="ml-2 opacity-0 group-hover:opacity-100 transition-all rounded-lg hover:bg-destructive/20 p-0.5"
-                      title={`Delete sheet "${sheet}"`}
-                    >
-                      <X className="h-3 w-3 text-destructive" />
-                    </button>
+                <TabsTrigger 
+                  key={sheet} 
+                  value={sheet} 
+                  onDoubleClick={() => {
+                    setEditingSheet(sheet);
+                    setEditingSheetName(sheet);
+                  }}
+                  className="h-9 px-5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] group relative transition-all whitespace-nowrap data-[state=active]:bg-foreground data-[state=active]:text-background"
+                >
+                  {editingSheet === sheet ? (
+                    <input
+                      autoFocus
+                      value={editingSheetName}
+                      onChange={e => setEditingSheetName(e.target.value)}
+                      onBlur={() => {
+                        if (editingSheetName.trim() && editingSheetName !== sheet) {
+                          onRenameSheet?.(sheet, editingSheetName.trim());
+                        }
+                        setEditingSheet(null);
+                      }}
+                      onKeyDown={e => {
+                        if (e.key === "Enter") {
+                          if (editingSheetName.trim() && editingSheetName !== sheet) {
+                            onRenameSheet?.(sheet, editingSheetName.trim());
+                          }
+                          setEditingSheet(null);
+                        } else if (e.key === "Escape") {
+                          setEditingSheet(null);
+                        }
+                      }}
+                      className="bg-transparent border-none outline-none text-center min-w-[80px]"
+                    />
+                  ) : (
+                    <>
+                      {sheet}
+                      {activeTab === sheet && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setDeleteSheetConfirm(sheet); }}
+                          className="ml-2 opacity-0 group-hover:opacity-100 transition-all rounded-lg hover:bg-destructive/20 p-0.5"
+                          title={`Delete sheet "${sheet}"`}
+                        >
+                          <X className="h-3 w-3 text-destructive" />
+                        </button>
+                      )}
+                    </>
                   )}
                 </TabsTrigger>
               ))}

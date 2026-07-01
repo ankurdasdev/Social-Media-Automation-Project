@@ -246,9 +246,9 @@ export function ColumnManagerDialog({ isOpen, onOpenChange, onSaved }: ColumnMan
       });
       localStorage.setItem("casthub-group-settings", JSON.stringify(settings));
       window.dispatchEvent(new Event("casthub-group-update"));
+      window.dispatchEvent(new Event("casthub-groups-changed"));
     } catch (e) {}
 
-    window.dispatchEvent(new Event("casthub-groups-changed"));
     onSaved();
     onOpenChange(false);
   };

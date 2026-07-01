@@ -62,6 +62,7 @@ interface DataTableProps<TData, TValue> {
   onBulkAction?: (action: string, contactIds: string[], payload?: any) => void;
   onAddSheet?: (sheetName: string) => void;
   onDeleteSheet?: (sheetName: string) => void;
+  onRenameSheet?: (oldName: string, newName: string) => void;
   onUpdateContact?: (id: string, data: Partial<Contact>) => void;
   uniqueSheets?: string[];
   activeTab?: string;
@@ -125,7 +126,11 @@ const MemoizedTableCell = React.memo(({
       id={`cell-${rowIndex}-${cellId}`}
       className={cn(
         "relative border-r border-border/10 last:border-r-0",
-        density === "compact" ? "!py-1 !px-2 [&_input]:h-8 [&_input]:text-xs [&_button]:h-8 [&_button]:text-xs [&_.badge]:text-[8px] [&_.badge]:px-1" : density === "spacious" ? "!py-4 !px-6 [&_input]:h-12 [&_input]:text-base [&_button]:h-12" : "!py-2 !px-4",
+        density === "compact" 
+          ? "!py-0.5 !px-2 [&_input]:!h-7 [&_input]:!text-[10px] [&_button]:!h-7 [&_button]:!text-[10px] [&_.badge]:!text-[8px] [&_.badge]:!px-1" 
+          : density === "spacious" 
+          ? "!py-4 !px-6 [&_input]:!h-12 [&_input]:!text-base [&_button]:!h-12" 
+          : "!py-2 !px-4",
         isPinned && "sticky z-[15] shadow-[2px_0_10px_-3px_rgba(0,0,0,0.3)]",
         isPinned && !isCustom && !cColor && "bg-background",
         isPinned && isLastPinned && "border-r-[3px] border-r-border/50"
@@ -189,6 +194,7 @@ const MemoizedTableCell = React.memo(({
   if (prev.colSize !== next.colSize) return false;
   if (prev.isPinned !== next.isPinned) return false;
   if (prev.isSelected !== next.isSelected) return false;
+  if (prev.density !== next.density) return false;
   return true;
 });
 
@@ -209,7 +215,7 @@ const MemoizedTableRow = React.memo(({
       data-state={isSelected && "selected"}
       className={cn(
         "cursor-pointer border-b border-border/20 group relative border-l-[6px]",
-        density === "compact" ? "h-12" : density === "spacious" ? "h-28" : "h-20",
+        density === "compact" ? "!h-10" : density === "spacious" ? "!h-28" : "!h-20",
         "table-row-smooth",
         "hover:bg-muted/25",
         row.index % 2 === 0 ? "bg-muted/20" : "bg-transparent",
@@ -269,6 +275,7 @@ const MemoizedTableRow = React.memo(({
   if (prev.row.index !== next.row.index) return false;
   if (prev.rColor !== next.rColor) return false;
   if (prev.isCustom !== next.isCustom) return false;
+  if (prev.density !== next.density) return false;
   return true;
 });
 
@@ -313,7 +320,10 @@ export function DataTable<TData, TValue>({
     const handleUpdate = () => {
       try {
         const saved = localStorage.getItem("casthub-column-groups");
-        if (saved) setColumnGroupConfig(JSON.parse(saved));
+        if (saved) {
+          setColumnGroupConfig(JSON.parse(saved));
+          setColumnOrder([]); // Reset the manual column order when groups change to ensure they render properly grouped
+        }
       } catch {}
     };
     window.addEventListener("casthub-groups-changed", handleUpdate);
@@ -393,6 +403,36 @@ export function DataTable<TData, TValue>({
   }, [columnFilters]);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = React.useState(initialGlobalFilter);
+  const [columnOrder, setColumnOrder] = React.useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem("casthub-column-order");
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [];
+  });
+
+  React.useEffect(() => {
+    if (columnOrder.length > 0) {
+      localStorage.setItem("casthub-column-order", JSON.stringify(columnOrder));
+    } else {
+      localStorage.removeItem("casthub-column-order");
+    }
+  }, [columnOrder]);
+
+  const handleDragHeader = (draggedId: string, targetId: string) => {
+    setColumnOrder(current => {
+      // If current is empty, TanStack uses the default order, so we need to compute it from table
+      const currentOrder = current.length > 0 ? current : table.getAllLeafColumns().map(c => c.id);
+      const oldIndex = currentOrder.indexOf(draggedId);
+      const newIndex = currentOrder.indexOf(targetId);
+      if (oldIndex === -1 || newIndex === -1) return current;
+      const newOrder = [...currentOrder];
+      newOrder.splice(oldIndex, 1);
+      newOrder.splice(newIndex, 0, draggedId);
+      return newOrder;
+    });
+  };
+
   const [columnPinning, setColumnPinning] = React.useState<any>(() => {
     try {
       const saved = localStorage.getItem("casthub-column-pinning");
@@ -564,6 +604,7 @@ export function DataTable<TData, TValue>({
           onBulkAction={onBulkAction}
           onAddSheet={onAddSheet}
           onDeleteSheet={onDeleteSheet}
+          onRenameSheet={onRenameSheet}
           activeTab={activeTab}
           onTabChange={onTabChange}
           onAISearch={onAISearch}
@@ -613,9 +654,9 @@ export function DataTable<TData, TValue>({
                         if (colId !== header.column.id) handleDragHeader(colId, header.column.id);
                       }}
                       className={cn(
-                        "group border-r border-white/5 last:border-r-0 backdrop-blur-3xl",
-                        isGroupHeader ? "p-0 border-b border-white/5 align-top" : "px-6 text-[10px] font-black uppercase text-muted-foreground tracking-[0.3em] cursor-move active:cursor-grabbing",
-                        isTitleFrozen && "sticky top-0 z-30 bg-background/95 shadow-sm",
+                        "group border-r border-white/5 last:border-r-0 backdrop-blur-3xl transition-all",
+                        isGroupHeader ? "p-0 border-b border-white/5 align-top bg-muted/50" : "px-6 text-[10px] font-black uppercase text-muted-foreground tracking-[0.3em] cursor-move active:cursor-grabbing hover:bg-white/5",
+                        isTitleFrozen && "sticky z-30 bg-background/95 shadow-sm",
                         header.column.getIsPinned() === "left" && "sticky left-0 z-[35] bg-card/95"
                       )}
                       style={{ 
