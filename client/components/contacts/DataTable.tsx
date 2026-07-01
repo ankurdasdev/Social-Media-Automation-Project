@@ -286,6 +286,7 @@ export function DataTable<TData, TValue>({
   onBulkAction,
   onAddSheet,
   onDeleteSheet,
+  onRenameSheet,
   onUpdateContact,
   uniqueSheets = [],
   activeTab,

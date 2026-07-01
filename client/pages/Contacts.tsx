@@ -849,6 +849,7 @@ export default function Contacts() {
                 isExternalTransitioning={false}
                 onAddSheet={(sheet) => setLocalSheets(prev => [...prev, sheet])}
                 onDeleteSheet={handleDeleteSheet}
+                onRenameSheet={handleRenameSheet}
                 onAISearch={(prompt) => aiSearchMutation.mutate(prompt)}
                 isAISearching={aiSearchMutation.isPending}
                 onClearAISearch={() => setAISearchResults(null)}
