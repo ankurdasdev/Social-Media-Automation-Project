@@ -71,6 +71,10 @@ export default function Contacts() {
   // Sequence Builder State
   const [sequenceOpen, setSequenceOpen] = useState(false);
   const [pendingSequenceIds, setPendingSequenceIds] = useState<string[]>([]);
+  
+  // Image Upload State
+  const [uploadProgress, setUploadProgress] = useState<{ current: number, total: number, message: string } | null>(null);
+  const [recentlyUploadedIds, setRecentlyUploadedIds] = useState<string[] | null>(null);
 
   const [newLead, setNewLead] = useState<Partial<Contact>>({
     name: "",
@@ -111,8 +115,10 @@ export default function Contacts() {
     },
   });
 
-  const contacts = aiSearchResults || contactsData || [];
-  
+  let contacts = aiSearchResults || contactsData || [];
+  if (recentlyUploadedIds && recentlyUploadedIds.length > 0) {
+    contacts = contacts.filter(c => recentlyUploadedIds.includes(c.id));
+  }
   const dynamicSheets = useMemo(() => {
     const sheets = new Set([...contacts.map(c => c.sheetName).filter(Boolean), ...localSheets]);
     return Array.from(sheets) as string[];
@@ -159,46 +165,68 @@ export default function Contacts() {
         throw new Error(data.error || "Failed to parse casting call image");
       }
       return res.json();
-    },
-    onSuccess: (data) => {
-      const count = data.contacts?.length || 0;
-      if (count === 0) {
-        toast({
-          title: "NO CONTACTS FOUND",
-          description: data.message || "The AI couldn't find any relevant casting calls in the image. Try a clearer screenshot.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "CASTING CALL PARSED",
-          description: `Successfully extracted ${count} contact${count === 1 ? '' : 's'} from the image.`,
-        });
-      }
-      queryClient.invalidateQueries({ queryKey: ["contacts", userId] });
-    },
-    onError: (err: any) => {
-      toast({
-        title: "UPLOAD FAILED",
-        description: err.message,
-        variant: "destructive",
-      });
     }
   });
 
-  const handleUploadImage = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
 
-    // Read as base64
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const base64String = (event.target?.result as string).split(',')[1];
-      uploadCastingCallMutation.mutate({ base64: base64String, mimeType: file.type });
-    };
-    reader.readAsDataURL(file);
+    const inputElement = e.target;
     
-    // Reset input
-    e.target.value = "";
+    setUploadProgress({ current: 1, total: files.length, message: `Starting upload of ${files.length} image(s)...` });
+    
+    let allProcessedIds: string[] = [];
+    let errorCount = 0;
+    
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      setUploadProgress({ current: i + 1, total: files.length, message: `Parsing image ${i + 1} of ${files.length}...` });
+      
+      try {
+        const base64String = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const res = (event.target?.result as string).split(',')[1];
+            resolve(res);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+
+        const data = await uploadCastingCallMutation.mutateAsync({ base64: base64String, mimeType: file.type });
+        if (data && data.contacts && data.contacts.length > 0) {
+          allProcessedIds.push(...data.contacts.map((c: any) => c.id));
+        }
+      } catch (err: any) {
+        console.error("Failed to upload image:", err);
+        errorCount++;
+      }
+    }
+    
+    setUploadProgress(null);
+    inputElement.value = "";
+    
+    if (allProcessedIds.length > 0) {
+       setRecentlyUploadedIds(allProcessedIds);
+       toast({
+         title: "UPLOAD COMPLETED",
+         description: `Successfully extracted ${allProcessedIds.length} contact(s) from ${files.length - errorCount} image(s).`,
+       });
+       queryClient.invalidateQueries({ queryKey: ["contacts", userId] });
+    } else if (errorCount === files.length) {
+       toast({
+         title: "UPLOAD FAILED",
+         description: "All images failed to process.",
+         variant: "destructive",
+       });
+    } else {
+       toast({
+         title: "NO CONTACTS FOUND",
+         description: "The AI couldn't find any relevant casting calls in the uploaded images.",
+         variant: "destructive",
+       });
+    }
   };
 
   const addLeadMutation = useMutation({
@@ -653,20 +681,21 @@ export default function Contacts() {
                 <input
                   type="file"
                   accept="image/*"
+                  multiple
                   id="casting-call-upload"
                   className="hidden"
                   onChange={handleUploadImage}
-                  disabled={uploadCastingCallMutation.isPending}
+                  disabled={!!uploadProgress}
                 />
                 <Label htmlFor="casting-call-upload">
                   <div
                     className={cn(
                       "inline-flex items-center justify-center whitespace-nowrap",
                       "h-16 border border-border bg-background/30 backdrop-blur-xl hover:bg-muted/50 rounded-2xl font-black px-8 shadow-xl transition-all cursor-pointer group",
-                      uploadCastingCallMutation.isPending ? "opacity-70 cursor-not-allowed" : "active:scale-[0.98]"
+                      !!uploadProgress ? "opacity-70 cursor-not-allowed" : "active:scale-[0.98]"
                     )}
                   >
-                    {uploadCastingCallMutation.isPending ? (
+                    {!!uploadProgress ? (
                       <Loader2 className="mr-3 h-5 w-5 animate-spin text-primary" />
                     ) : (
                       <Upload className="mr-3 h-5 w-5 text-primary group-hover:-translate-y-1 transition-transform duration-300" />
@@ -697,6 +726,32 @@ export default function Contacts() {
                    </div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {uploadProgress && (
+            <div>
+              <div className="p-4 sm:p-6 rounded-3xl bg-primary/5 border border-primary/10 flex flex-col gap-4 relative overflow-hidden">
+                <div className="flex items-center gap-6 relative z-10">
+                   <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center shadow-lg">
+                      <Loader2 className="h-7 w-7 text-primary animate-spin" />
+                   </div>
+                   <div className="space-y-1 flex-1">
+                      <h3 className="text-base font-black text-primary uppercase tracking-tighter">Parsing Images</h3>
+                      <p className="text-xs font-bold text-primary/70 tracking-widest uppercase">
+                        {uploadProgress.message}
+                      </p>
+                      <Progress value={(uploadProgress.current / uploadProgress.total) * 100} className="h-2 w-full mt-2" />
+                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {recentlyUploadedIds && recentlyUploadedIds.length > 0 && (
+            <div className="flex items-center justify-between p-4 bg-muted/30 rounded-xl border border-border">
+              <span className="text-sm font-medium">Showing {recentlyUploadedIds.length} recently uploaded contact(s).</span>
+              <Button size="sm" variant="outline" onClick={() => setRecentlyUploadedIds(null)}>Clear Filter</Button>
             </div>
           )}
 

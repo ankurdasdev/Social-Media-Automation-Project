@@ -268,7 +268,7 @@ export async function deleteContact(userId: string, id: string): Promise<boolean
 export async function upsertContact(
   userId: string,
   data: Partial<Contact>,
-  source: "auto-whatsapp" | "auto-instagram"
+  source: "auto-whatsapp" | "auto-instagram" | "manual"
 ): Promise<{ action: "created" | "updated" | "skipped"; contact: Contact }> {
 
   // Build deduplication query
@@ -306,33 +306,44 @@ export async function upsertContact(
   }
 
   existingSql += conditions.join(" OR ") + ")";
-  const existing = await queryOne(existingSql, vals);
+  const { rows: existingRows } = await query(existingSql, vals);
 
-  if (existing) {
+  let exactMatch = null;
+  if (existingRows && existingRows.length > 0) {
+    exactMatch = existingRows.find((row) => {
+      // If data provides a project, and the row has a project, they must match
+      if (data.project && row.project && data.project.toLowerCase() !== row.project.toLowerCase()) return false;
+      // If data provides a castingName, and the row has a castingName, they must match
+      if (data.castingName && row.casting_name && data.castingName.toLowerCase() !== row.casting_name.toLowerCase()) return false;
+      return true;
+    });
+  }
+
+  if (exactMatch) {
     // Build safe update — only fill in missing project/age/actingContext
     const setClause: string[] = ["updated_at = NOW()"];
     const updateVals: any[] = [];
 
-    if (data.project && !existing.project) {
+    if (data.project && !exactMatch.project) {
       setClause.push("project = $" + (updateVals.length + 1));
       updateVals.push(data.project);
     }
-    if (data.age && !existing.age) {
+    if (data.age && !exactMatch.age) {
       setClause.push("age = $" + (updateVals.length + 1));
       updateVals.push(data.age);
     }
-    if (data.actingContext && !existing.acting_context) {
+    if (data.actingContext && !exactMatch.acting_context) {
       setClause.push("acting_context = $" + (updateVals.length + 1));
       updateVals.push(data.actingContext);
     }
     if (data.notes && data.notes.trim()) {
       // Append notes without overwriting
-      const combined = [existing.notes, data.notes].filter(Boolean).join(" | ");
+      const combined = [exactMatch.notes, data.notes].filter(Boolean).join(" | ");
       setClause.push("notes = $" + (updateVals.length + 1));
       updateVals.push(combined);
     }
 
-    updateVals.push(existing.id, userId);
+    updateVals.push(exactMatch.id, userId);
     const idIdx = updateVals.length;
 
     const updateSql = `
@@ -342,19 +353,19 @@ export async function upsertContact(
       RETURNING *
     `;
     const updatedRow = await queryOne(updateSql, updateVals);
-    const contact = updatedRow ? mapRowToContact(updatedRow) : mapRowToContact(existing);
+    const contact = updatedRow ? mapRowToContact(updatedRow) : mapRowToContact(exactMatch);
 
     // If we only set row_color + updated_at (no real field changes), mark as skipped
     const hadRealUpdates = setClause.length > 2; // more than just row_color + updated_at
     return { action: hadRealUpdates ? "updated" : "skipped", contact };
   }
 
-  // No match → brand new contact
-  const newContact = await createContact(userId, {
+  // If we reach here, either no row matched identifiers, or all matches were for different projects.
+  // Insert a new row!
+  const contact = await createContact(userId, {
     ...data,
     rowColor: "yellow",
     source,
   });
-  return { action: "created", contact: newContact };
+  return { action: "created", contact };
 }
-

@@ -24,6 +24,36 @@ const client = new OpenAI({
   },
 });
 
+// ─── Helpers: Retry & JSON Extraction ─────────────────────────────────────────
+
+async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
+  let attempt = 0;
+  while (attempt < maxRetries) {
+    try {
+      return await fn();
+    } catch (err: any) {
+      attempt++;
+      if (attempt >= maxRetries) throw err;
+      const delay = Math.pow(2, attempt) * 1000;
+      console.warn(`[ai-parser] OpenAI API error: ${err.message}. Retrying in ${delay}ms (Attempt ${attempt}/${maxRetries})...`);
+      await new Promise(r => setTimeout(r, delay));
+    }
+  }
+  throw new Error("Unreachable");
+}
+
+function extractJsonObject(text: string): any {
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error("No JSON object found in response");
+  return JSON.parse(match[0]);
+}
+
+function extractJsonArray(text: string): any[] {
+  const match = text.match(/\[[\s\S]*\]/);
+  if (!match) throw new Error("No JSON array found in response");
+  return JSON.parse(match[0]);
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface ParsedContact {
@@ -93,7 +123,7 @@ export async function parseMessage(
   const userPrompt = `Platform: ${source}${keywordHint}\nMessage:\n${rawText.slice(0, 2500)}`;
 
   try {
-    const response = await client.chat.completions.create({
+    const response = await withRetry(() => client.chat.completions.create({
       model: TEXT_MODEL,
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
@@ -101,11 +131,10 @@ export async function parseMessage(
       ],
       temperature: 0.1,
       max_tokens: 500,
-    });
+    }));
 
     const content = response.choices[0]?.message?.content ?? "";
-    const cleaned = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-    const parsed: ParsedContact = JSON.parse(cleaned);
+    const parsed: ParsedContact = extractJsonObject(content);
     if (!parsed.isCastingCall) return null;
     return parsed;
   } catch (err) {
@@ -132,7 +161,7 @@ export async function parseImage(
       : "Include any casting call or talent requirement found in the image.";
 
   try {
-    const response = await client.chat.completions.create({
+    const response = await withRetry(() => client.chat.completions.create({
       model: VISION_MODEL,
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
@@ -152,11 +181,10 @@ export async function parseImage(
       ],
       temperature: 0.1,
       max_tokens: 600,
-    });
+    }));
 
     const content = response.choices[0]?.message?.content ?? "";
-    const cleaned = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-    const parsed: ParsedContact = JSON.parse(cleaned);
+    const parsed: ParsedContact = extractJsonObject(content);
     if (!parsed.isCastingCall) return null;
     return parsed;
   } catch (err) {
@@ -240,7 +268,7 @@ Example Output:
 ]`;
 
   try {
-    const response = await client.chat.completions.create({
+    const response = await withRetry(() => client.chat.completions.create({
       model: VISION_MODEL,
       messages: [
         { role: "system", content: dynamicPrompt },
@@ -260,19 +288,18 @@ Example Output:
       ],
       temperature: 0.1,
       max_tokens: 2000,
-    });
+    }));
 
     const content = response.choices[0]?.message?.content ?? "";
-    const cleaned = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+    
+    // Quick escape if model explicitly says empty array
+    if (content.trim() === "[]") return [];
 
-    // Handle case where model returns empty string or "[]" for non-casting images
-    if (!cleaned || cleaned === "[]") return [];
-
-    const parsed: ParsedMultipleContact[] = JSON.parse(cleaned);
+    const parsed: ParsedMultipleContact[] = extractJsonArray(content);
     return Array.isArray(parsed) ? parsed : [];
   } catch (err) {
     console.error("[ai-parser] Multiple Contacts Vision parse failed:", err);
-    return [];
+    throw err;
   }
 }
 

@@ -51,10 +51,7 @@ export async function getMessageBase64(
       method: "POST",
       headers: headers(),
       body: JSON.stringify({
-        message: {
-          key: message.key,
-          messageType: message.messageType,
-        },
+        message: message,
       }),
     });
     if (!res.ok) return null;

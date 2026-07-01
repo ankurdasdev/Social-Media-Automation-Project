@@ -15,6 +15,7 @@ import {
   createContact,
   updateContact,
   deleteContact,
+  upsertContact,
 } from "../store/contacts-store";
 import { runIngestionJob, getIngestionState } from "../jobs/ingestion-job";
 import { generateSearchSQL } from "../services/ai-service";
@@ -181,12 +182,13 @@ export const handleParseContactImage: RequestHandler = async (req, res) => {
       };
     });
 
-    const created = [];
+    const processed = [];
     for (const data of contactsToInsert) {
-      created.push(await createContact(userId, data));
+      const result = await upsertContact(userId, data, "manual");
+      processed.push(result.contact);
     }
 
-    res.status(201).json({ contacts: created });
+    res.status(201).json({ contacts: processed });
   } catch (err: any) {
     console.error("[handleParseContactImage] Error:", err);
     res.status(500).json({ error: "Failed to parse image and create contacts: " + err.message });
