@@ -8,12 +8,25 @@ import Animated3DBackground from "@/components/Animated3DBackground";
 function AnimatedBackground() {
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden dark:bg-[#0d0b08] bg-amber-50/30">
-      <div
-        className="absolute inset-0 opacity-[0.025]"
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 0.025 }}
+        transition={{ duration: 2, delay: 0.5 }}
+        className="absolute inset-0"
         style={{ backgroundImage: "linear-gradient(rgba(245,197,24,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(245,197,24,0.4) 1px, transparent 1px)", backgroundSize: "60px 60px" }}
       />
-      <div className="absolute top-0 right-0 w-[50vw] h-[50vw] bg-amber-600/10 rounded-full blur-[150px] animate-pulse" />
-      <div className="absolute bottom-0 left-0 w-[40vw] h-[40vw] bg-primary/5 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: "2s" }} />
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 2, delay: 0.8 }}
+        className="absolute top-0 right-0 w-[50vw] h-[50vw] bg-amber-600/10 rounded-full blur-[150px] animate-pulse" 
+      />
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 2, delay: 1.2 }}
+        className="absolute bottom-0 left-0 w-[40vw] h-[40vw] bg-primary/5 rounded-full blur-[120px] animate-pulse" 
+      />
     </div>
   );
 }
@@ -81,29 +94,46 @@ export default function LandingPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="max-w-5xl mx-auto px-6 pt-32 pb-20 text-center relative z-10"
+          className="max-w-5xl mx-auto px-6 pt-32 pb-10 text-center relative z-10"
         >
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 mb-8">
-          <Zap className="w-3.5 h-3.5 text-amber-500" />
-          <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">Multi-Channel Automation</span>
-        </div>
-        <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-foreground leading-[1.1] mb-6">
-          Automate Your Outreach.<br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-amber-400 to-amber-600">
-            Grow Your Opportunities.
-          </span>
-        </h1>
-        <p className="text-lg md:text-xl text-muted-foreground font-medium max-w-2xl mx-auto mb-10 leading-relaxed">
-          The ultimate casting automation platform. Manage your contacts and launch personalized campaigns across Gmail, WhatsApp, and Instagram from one unified dashboard.
-        </p>
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Link to={hasToken ? "/dashboard" : "/signup"} className="w-full sm:w-auto flex items-center justify-center gap-2 h-14 px-10 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-sm uppercase tracking-widest shadow-xl shadow-primary/20 transition-all active:scale-[0.98]">
-            {hasToken ? "Go To Dashboard" : "Start For Free"} <ArrowRight className="w-4 h-4" />
-          </Link>
-          <Link to="/how-it-works" className="w-full sm:w-auto flex items-center justify-center gap-2 h-14 px-10 rounded-2xl border border-white/10 hover:bg-white/5 font-bold text-sm transition-all active:scale-[0.98]">
-            Learn How CastHub Works
-          </Link>
-        </div>
+            <Zap className="w-3.5 h-3.5 text-amber-500" />
+            <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">Multi-Channel Automation</span>
+          </div>
+          <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-foreground leading-[1.1] mb-6">
+            Automate Your Outreach.<br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-amber-400 to-amber-600">
+              Grow Your Opportunities.
+            </span>
+          </h1>
+          <p className="text-lg md:text-xl text-muted-foreground font-medium max-w-2xl mx-auto mb-10 leading-relaxed">
+            The ultimate casting automation platform. Manage your contacts and launch personalized campaigns across Gmail, WhatsApp, and Instagram from one unified dashboard.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link to={hasToken ? "/dashboard" : "/signup"} className="w-full sm:w-auto flex items-center justify-center gap-2 h-14 px-10 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-sm uppercase tracking-widest shadow-xl shadow-primary/20 transition-all hover-scale">
+              {hasToken ? "Go To Dashboard" : "Start For Free"} <ArrowRight className="w-4 h-4" />
+            </Link>
+            <Link to="/how-it-works" className="w-full sm:w-auto flex items-center justify-center gap-2 h-14 px-10 rounded-2xl border border-white/10 hover:bg-white/5 font-bold text-sm transition-all hover-scale">
+              Learn How CastHub Works
+            </Link>
+          </div>
+        </motion.div>
+
+        {/* 3D Mockup Graphic */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, delay: 0.4, ease: "easeOut" }}
+          className="max-w-6xl mx-auto px-6 pb-20 relative z-20 flex justify-center"
+        >
+          <div className="relative w-full max-w-4xl mx-auto rounded-3xl overflow-hidden glass-card soft-shadow">
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background/50 z-10 pointer-events-none" />
+            <img 
+              src="/mockup.png" 
+              alt="CastHub App Interface Mockup" 
+              className="w-full h-auto object-cover transform hover:scale-[1.01] transition-transform duration-700" 
+            />
+          </div>
         </motion.div>
       </div>
 

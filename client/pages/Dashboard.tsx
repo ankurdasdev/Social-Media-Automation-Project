@@ -116,14 +116,51 @@ export default function Dashboard() {
             <div className="hidden xl:flex flex-col gap-4 relative w-[400px]">
                <div className="absolute inset-0 bg-primary/20 rounded-[3rem] rotate-6 blur-3xl opacity-30 animate-pulse" />
                
-               {/* Locked State Overlay */}
+               {/* Setup Checklist Overlay (When no data yet) */}
                {!hasGamificationData && !isStatsLoading && (
-                 <div className="absolute inset-0 z-20 backdrop-blur-md bg-background/50 rounded-[3rem] flex items-center justify-center border border-border/50">
-                    <div className="text-center p-6 space-y-2">
-                       <Lock className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-50" />
-                       <p className="text-xs font-black uppercase tracking-widest text-foreground">Awaiting Data</p>
-                       <p className="text-[10px] text-muted-foreground max-w-[200px]">Start reaching out to contacts to unlock health trends and live feed.</p>
+                 <div className="absolute inset-0 z-20 backdrop-blur-xl bg-background/70 rounded-[3rem] flex flex-col p-8 border border-border/50 overflow-hidden shadow-2xl">
+                    <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/20 blur-3xl rounded-full" />
+                    
+                    <h3 className="text-sm font-black uppercase tracking-widest text-foreground mb-1">Get Started</h3>
+                    <p className="text-xs text-muted-foreground mb-6 font-medium">Complete these steps to unlock your dashboard metrics.</p>
+                    
+                    <div className="space-y-4 flex-1">
+                      <div className="flex items-start gap-3 group cursor-pointer">
+                        <div className="w-6 h-6 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5 group-hover:scale-110 transition-transform">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-foreground">Create Account</p>
+                          <p className="text-[10px] text-muted-foreground font-medium">You're already here.</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3 group cursor-pointer">
+                        <div className="w-6 h-6 rounded-full bg-muted border border-border flex items-center justify-center shrink-0 mt-0.5 group-hover:border-primary/50 transition-colors">
+                          <span className="text-[10px] font-black text-muted-foreground group-hover:text-primary">2</span>
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-foreground">Connect a Source</p>
+                          <p className="text-[10px] text-muted-foreground font-medium">Link WhatsApp or Instagram.</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3 group cursor-pointer">
+                        <div className="w-6 h-6 rounded-full bg-muted border border-border flex items-center justify-center shrink-0 mt-0.5 group-hover:border-primary/50 transition-colors">
+                          <span className="text-[10px] font-black text-muted-foreground group-hover:text-primary">3</span>
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-foreground">Import Contacts</p>
+                          <p className="text-[10px] text-muted-foreground font-medium">Add people to your database.</p>
+                        </div>
+                      </div>
                     </div>
+                    
+                    <Link to="/integrations">
+                      <Button className="w-full mt-4 h-10 bg-foreground text-background hover:bg-foreground/90 font-black text-xs uppercase tracking-widest shadow-xl">
+                        Connect Source Now <ArrowRight className="w-3 h-3 ml-2" />
+                      </Button>
+                    </Link>
                  </div>
                )}
 

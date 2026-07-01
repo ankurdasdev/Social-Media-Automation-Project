@@ -755,6 +755,28 @@ export default function Contacts() {
             </div>
           )}
 
+          {/* Segment Builder Tabs (Visual Preview) */}
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-2 border-b border-border/50 mb-2">
+            <button className="px-4 py-2 rounded-t-xl border-b-2 border-primary text-foreground font-bold text-sm whitespace-nowrap bg-primary/5">
+              All Contacts
+            </button>
+            <button className="px-4 py-2 rounded-t-xl border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/30 font-medium text-sm whitespace-nowrap transition-colors">
+              🔥 Hot Leads
+            </button>
+            <button className="px-4 py-2 rounded-t-xl border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/30 font-medium text-sm whitespace-nowrap transition-colors">
+              📸 Missing Instagram
+            </button>
+            <button className="px-4 py-2 rounded-t-xl border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/30 font-medium text-sm whitespace-nowrap transition-colors">
+              ✉️ Bounced Emails
+            </button>
+            
+            <div className="ml-auto flex items-center gap-2 pl-4 border-l border-border/50">
+              <Button variant="ghost" size="sm" className="h-8 text-xs font-bold text-muted-foreground hover:text-primary">
+                + Create Segment
+              </Button>
+            </div>
+          </div>
+
           {/* Data Grid Section */}
           <div className="flex-1 pb-6 overflow-hidden flex flex-col min-h-[400px]">
             {contactsLoading ? (
