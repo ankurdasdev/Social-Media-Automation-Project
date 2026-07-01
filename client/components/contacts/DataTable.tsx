@@ -308,6 +308,14 @@ export function DataTable<TData, TValue>({
     return [];
   });
 
+  React.useEffect(() => {
+    if (columnOrder.length > 0) {
+      localStorage.setItem("casthub-column-order", JSON.stringify(columnOrder));
+    } else {
+      localStorage.removeItem("casthub-column-order");
+    }
+  }, [columnOrder]);
+
   const [columnGroupConfig, setColumnGroupConfig] = React.useState<any[] | null>(() => {
     try {
       const saved = localStorage.getItem("casthub-column-groups");
@@ -403,36 +411,6 @@ export function DataTable<TData, TValue>({
   }, [columnFilters]);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = React.useState(initialGlobalFilter);
-  const [columnOrder, setColumnOrder] = React.useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem("casthub-column-order");
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return [];
-  });
-
-  React.useEffect(() => {
-    if (columnOrder.length > 0) {
-      localStorage.setItem("casthub-column-order", JSON.stringify(columnOrder));
-    } else {
-      localStorage.removeItem("casthub-column-order");
-    }
-  }, [columnOrder]);
-
-  const handleDragHeader = (draggedId: string, targetId: string) => {
-    setColumnOrder(current => {
-      // If current is empty, TanStack uses the default order, so we need to compute it from table
-      const currentOrder = current.length > 0 ? current : table.getAllLeafColumns().map(c => c.id);
-      const oldIndex = currentOrder.indexOf(draggedId);
-      const newIndex = currentOrder.indexOf(targetId);
-      if (oldIndex === -1 || newIndex === -1) return current;
-      const newOrder = [...currentOrder];
-      newOrder.splice(oldIndex, 1);
-      newOrder.splice(newIndex, 0, draggedId);
-      return newOrder;
-    });
-  };
-
   const [columnPinning, setColumnPinning] = React.useState<any>(() => {
     try {
       const saved = localStorage.getItem("casthub-column-pinning");
@@ -558,14 +536,17 @@ export function DataTable<TData, TValue>({
       return;
     }
 
-    const newOrder = [...columnOrder];
-    const oldIdx = newOrder.indexOf(columnId);
-    const newIdx = newOrder.indexOf(targetId);
-    if (oldIdx !== -1 && newIdx !== -1) {
-      newOrder.splice(oldIdx, 1);
-      newOrder.splice(newIdx, 0, columnId);
-      setColumnOrder(newOrder);
-    }
+    setColumnOrder(current => {
+      // If current is empty, TanStack uses the default order, so we need to compute it from table
+      const currentOrder = current.length > 0 ? current : table.getAllLeafColumns().map(c => c.id);
+      const oldIndex = currentOrder.indexOf(columnId);
+      const newIndex = currentOrder.indexOf(targetId);
+      if (oldIndex === -1 || newIndex === -1) return current;
+      const newOrder = [...currentOrder];
+      newOrder.splice(oldIndex, 1);
+      newOrder.splice(newIndex, 0, columnId);
+      return newOrder;
+    });
   };
 
   const columnsFingerprint = React.useMemo(() => 
